@@ -5,7 +5,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { type CurrentUser, fetchMe, login as apiLogin } from "../api/client";
+import {
+  type CurrentUser,
+  clearToken,
+  fetchMe,
+  getToken,
+  login as apiLogin,
+  setToken as storeToken,
+} from "../api/client";
 
 interface AuthState {
   token: string | null;
@@ -16,12 +23,9 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
-const STORAGE_KEY = "portwiz_token";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem(STORAGE_KEY),
-  );
+  const [token, setTokenState] = useState<string | null>(() => getToken());
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -34,12 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       try {
-        const me = await fetchMe(token);
+        const me = await fetchMe();
         if (active) setUser(me);
       } catch {
         if (active) {
-          localStorage.removeItem(STORAGE_KEY);
-          setToken(null);
+          clearToken();
+          setTokenState(null);
           setUser(null);
         }
       } finally {
@@ -55,13 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, password: string) {
     const newToken = await apiLogin(email, password);
-    localStorage.setItem(STORAGE_KEY, newToken);
-    setToken(newToken);
+    storeToken(newToken);
+    setTokenState(newToken);
   }
 
   function logout() {
-    localStorage.removeItem(STORAGE_KEY);
-    setToken(null);
+    clearToken();
+    setTokenState(null);
     setUser(null);
   }
 

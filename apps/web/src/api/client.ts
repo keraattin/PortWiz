@@ -1,5 +1,6 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 const API_V1 = `${BASE_URL}/api/v1`;
+const TOKEN_KEY = "portwiz_token";
 
 export class ApiError extends Error {
   status: number;
@@ -8,6 +9,42 @@ export class ApiError extends Error {
     this.status = status;
   }
 }
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  const token = getToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  const res = await fetch(`${API_V1}${path}`, { ...init, headers });
+  if (res.status === 204) {
+    return undefined as T;
+  }
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const detail =
+      data && typeof data.detail === "string" ? data.detail : res.statusText;
+    throw new ApiError(res.status, detail);
+  }
+  return data as T;
+}
+
+// Types
+export type Criticality = "low" | "medium" | "high" | "critical";
+export type DataSensitivity = "none" | "pii" | "cde" | "ephi";
 
 export interface CurrentUser {
   id: string;
@@ -18,10 +55,28 @@ export interface CurrentUser {
   created_at: string;
 }
 
-function authHeaders(token: string | null): HeadersInit {
-  return token ? { Authorization: `Bearer ${token}` } : {};
+export interface Vlan {
+  id: string;
+  name: string;
+  vlan_tag: number | null;
+  description: string | null;
+  created_at: string;
 }
 
+export interface Asset {
+  id: string;
+  ip: string;
+  hostname: string | null;
+  vlan_id: string | null;
+  owner_id: string | null;
+  criticality: Criticality;
+  data_sensitivity: DataSensitivity;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Auth
 export async function login(email: string, password: string): Promise<string> {
   const body = new URLSearchParams({ username: email, password });
   const res = await fetch(`${API_V1}/auth/login`, {
@@ -36,15 +91,64 @@ export async function login(email: string, password: string): Promise<string> {
   return data.access_token;
 }
 
-export async function fetchMe(token: string): Promise<CurrentUser> {
-  const res = await fetch(`${API_V1}/auth/me`, { headers: authHeaders(token) });
-  if (!res.ok) {
-    throw new ApiError(res.status, "Failed to load profile");
-  }
-  return (await res.json()) as CurrentUser;
+export function fetchMe(): Promise<CurrentUser> {
+  return request<CurrentUser>("/auth/me");
 }
 
 export async function fetchHealth(): Promise<{ status: string }> {
   const res = await fetch(`${BASE_URL}/health`);
   return (await res.json()) as { status: string };
+}
+
+// Users
+export function listUsers(): Promise<CurrentUser[]> {
+  return request<CurrentUser[]>("/users");
+}
+
+// VLANs
+export function listVlans(): Promise<Vlan[]> {
+  return request<Vlan[]>("/vlans");
+}
+
+export function createVlan(payload: {
+  name: string;
+  vlan_tag?: number | null;
+  description?: string | null;
+}): Promise<Vlan> {
+  return request<Vlan>("/vlans", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function deleteVlan(id: string): Promise<void> {
+  return request<void>(`/vlans/${id}`, { method: "DELETE" });
+}
+
+// Assets
+export interface AssetInput {
+  ip: string;
+  hostname?: string | null;
+  vlan_id?: string | null;
+  owner_id?: string | null;
+  criticality?: Criticality;
+  data_sensitivity?: DataSensitivity;
+  description?: string | null;
+}
+
+export function listAssets(params?: { vlan_id?: string }): Promise<Asset[]> {
+  const query = params?.vlan_id ? `?vlan_id=${params.vlan_id}` : "";
+  return request<Asset[]>(`/assets${query}`);
+}
+
+export function createAsset(payload: AssetInput): Promise<Asset> {
+  return request<Asset>("/assets", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function updateAsset(id: string, payload: Partial<AssetInput>): Promise<Asset> {
+  return request<Asset>(`/assets/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteAsset(id: string): Promise<void> {
+  return request<void>(`/assets/${id}`, { method: "DELETE" });
 }
