@@ -285,3 +285,81 @@ export function updateChangeStatus(
     body: JSON.stringify({ status }),
   });
 }
+
+// Audit log
+export interface AuditEvent {
+  seq: number;
+  actor_id: string | null;
+  actor_email: string | null;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  payload: Record<string, unknown>;
+  prev_hash: string;
+  hash: string;
+  created_at: string;
+}
+
+export interface AuditPage {
+  total: number;
+  events: AuditEvent[];
+}
+
+export interface ChainVerification {
+  ok: boolean;
+  broken_seq: number | null;
+  total: number;
+}
+
+export function listAudit(params?: {
+  action?: string;
+  actor_email?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<AuditPage> {
+  const qs = new URLSearchParams();
+  if (params?.action) qs.set("action", params.action);
+  if (params?.actor_email) qs.set("actor_email", params.actor_email);
+  qs.set("limit", String(params?.limit ?? 50));
+  qs.set("offset", String(params?.offset ?? 0));
+  return request<AuditPage>(`/audit?${qs.toString()}`);
+}
+
+export function verifyAudit(): Promise<ChainVerification> {
+  return request<ChainVerification>("/audit/verify");
+}
+
+// Evidence downloads (auth header is required, so we fetch and save a blob)
+function triggerDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function authedFetch(path: string): Promise<Response> {
+  const token = getToken();
+  const res = await fetch(`${API_V1}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, "Download failed");
+  }
+  return res;
+}
+
+export async function downloadEvidenceJson(profileId: string, profileName: string): Promise<void> {
+  const res = await authedFetch(`/evidence/scan-profiles/${profileId}`);
+  const data = await res.json();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  triggerDownload(blob, `portwiz-evidence-${profileName}.json`);
+}
+
+export async function downloadEvidencePdf(profileId: string, profileName: string): Promise<void> {
+  const res = await authedFetch(`/evidence/scan-profiles/${profileId}/pdf`);
+  triggerDownload(await res.blob(), `portwiz-evidence-${profileName}.pdf`);
+}
