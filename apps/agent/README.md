@@ -23,7 +23,7 @@ Environment:
 |---|---|---|
 | `PORTWIZ_API_URL` | `http://localhost:8000` | Control plane base URL |
 | `PORTWIZ_AGENT_ID` | `agent-local` | Agent identity (assigned at enrollment in M2) |
-| `PORTWIZ_AGENT_TOKEN` | — | Bearer token used to authenticate to the control plane (M2) |
+| `PORTWIZ_AGENT_TOKEN` | (none) | Bearer token used to authenticate to the control plane (M2) |
 
 ## Notes
 

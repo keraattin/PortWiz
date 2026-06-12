@@ -5,8 +5,8 @@ The Go agent and the Python control plane both conform to these JSON schemas.
 A schema change is a breaking change affecting both sides; bump the `version`
 field accordingly.
 
-- `scan_job.schema.json` — the scan order sent from the control plane to an agent.
-- `scan_result.schema.json` — the scan result returned from an agent to the center.
+- `scan_job.schema.json`: the scan order sent from the control plane to an agent.
+- `scan_result.schema.json`: the scan result returned from an agent to the center.
 
 ## Transport
 

@@ -1,6 +1,6 @@
 # Normalize all text files to LF in the repository and on checkout.
 # Critical for shell scripts (entrypoint.sh) and any file run inside the
-# Linux containers — CRLF would break shebangs and parsing.
+# Linux containers, where CRLF would break shebangs and parsing.
 * text=auto eol=lf
 
 # Explicit binaries (none yet, but future-proof).
