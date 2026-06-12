@@ -7,6 +7,7 @@ Importing this package ensures every table is registered on SQLModel.metadata
 from .agent import Agent
 from .asset import Asset, Criticality, DataSensitivity, IPRange, VLAN
 from .audit import AuditEvent
+from .change import ChangeEvent, PortState
 from .scan import (
     Observation,
     ScanProfile,
@@ -21,6 +22,8 @@ __all__ = [
     "Agent",
     "Asset",
     "AuditEvent",
+    "ChangeEvent",
+    "PortState",
     "Criticality",
     "DataSensitivity",
     "IPRange",

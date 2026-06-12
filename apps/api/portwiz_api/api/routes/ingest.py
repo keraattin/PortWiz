@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.audit import append_audit
+from ...core.change_detection import detect_changes
 from ...core.db import get_session
 from ...models.agent import Agent
 from ...models.asset import Asset
@@ -86,13 +87,27 @@ async def ingest_scan_results(
     run.agent_id = str(agent.id)
     agent.last_seen_at = received_at
 
+    # Flush observations so change detection can read them, then run it.
+    await session.flush()
+    changes = await detect_changes(session, run)
+
     await append_audit(
         session,
         action="scan_run.ingested",
         actor_email=f"agent:{agent.name}",
         target_type="scan_run",
         target_id=str(run.id),
-        payload={"agent": agent.name, "observations": count, "status": payload.status},
+        payload={
+            "agent": agent.name,
+            "observations": count,
+            "status": payload.status,
+            "changes": len(changes),
+        },
     )
     await session.commit()
-    return {"scan_run_id": str(run.id), "observations": count, "status": payload.status}
+    return {
+        "scan_run_id": str(run.id),
+        "observations": count,
+        "status": payload.status,
+        "changes": len(changes),
+    }
