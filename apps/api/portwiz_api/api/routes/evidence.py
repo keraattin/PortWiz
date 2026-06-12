@@ -1,0 +1,140 @@
+"""One-click auditor evidence package.
+
+Bundles everything an auditor needs for a scan profile into a single payload:
+the profile, its scan runs, the current confirmed-open exposure, the confirmed
+changes, the relevant slice of the immutable audit log, and a fresh chain
+integrity check. Generating a package is itself audited (chain of custody).
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ...core.audit import append_audit, verify_chain
+from ...core.db import get_session
+from ...models.audit import AuditEvent
+from ...models.change import ChangeEvent, PortState
+from ...models.scan import ScanProfile, ScanRun
+from ...models.user import User, UserRole
+from ...schemas.audit import AuditEventRead, ChainVerification
+from ...schemas.change import ChangeEventRead
+from ...schemas.evidence import EvidencePackage, OpenPort
+from ...schemas.scan import ScanProfileRead, ScanRunRead
+from ..deps import require_roles
+
+router = APIRouter(prefix="/evidence", tags=["evidence"])
+
+ReadDep = require_roles(UserRole.admin, UserRole.auditor)
+
+
+def _utcnow() -> dt.datetime:
+    return dt.datetime.now(tz=dt.timezone.utc)
+
+
+async def build_evidence(
+    session: AsyncSession, profile: ScanProfile, generated_by: str
+) -> EvidencePackage:
+    runs = (
+        await session.execute(
+            select(ScanRun)
+            .where(ScanRun.scan_profile_id == profile.id)
+            .order_by(ScanRun.created_at.desc())
+            .limit(100)
+        )
+    ).scalars().all()
+    run_ids = [str(r.id) for r in runs]
+
+    changes = (
+        await session.execute(
+            select(ChangeEvent)
+            .where(ChangeEvent.scan_profile_id == profile.id)
+            .order_by(ChangeEvent.detected_at.desc())
+        )
+    ).scalars().all()
+    change_ids = [str(c.id) for c in changes]
+
+    states = (
+        await session.execute(
+            select(PortState)
+            .where(
+                PortState.scan_profile_id == profile.id,
+                PortState.confirmed_state == "open",
+            )
+            .order_by(PortState.ip, PortState.port)
+        )
+    ).scalars().all()
+
+    # Audit events touching this profile, its runs, or its changes.
+    audit_conditions = [
+        and_(AuditEvent.target_type == "scan_profile", AuditEvent.target_id == str(profile.id))
+    ]
+    if run_ids:
+        audit_conditions.append(
+            and_(AuditEvent.target_type == "scan_run", AuditEvent.target_id.in_(run_ids))
+        )
+    if change_ids:
+        audit_conditions.append(
+            and_(AuditEvent.target_type == "change_event", AuditEvent.target_id.in_(change_ids))
+        )
+    audit_rows = (
+        await session.execute(
+            select(AuditEvent).where(or_(*audit_conditions)).order_by(AuditEvent.seq.asc())
+        )
+    ).scalars().all()
+
+    ok, broken_seq = await verify_chain(session)
+    total = (
+        await session.execute(select(func.count()).select_from(AuditEvent))
+    ).scalar_one()
+
+    return EvidencePackage(
+        generated_at=_utcnow(),
+        generated_by=generated_by,
+        profile=ScanProfileRead.model_validate(profile),
+        chain_verification=ChainVerification(ok=ok, broken_seq=broken_seq, total=total),
+        current_open_ports=[
+            OpenPort(
+                ip=s.ip,
+                port=s.port,
+                protocol=s.protocol,
+                service=s.confirmed_service,
+                version=s.confirmed_version,
+                last_seen_open_at=s.last_seen_open_at,
+            )
+            for s in states
+        ],
+        scan_runs=[ScanRunRead.model_validate(r) for r in runs],
+        changes=[ChangeEventRead.model_validate(c) for c in changes],
+        audit_slice=[AuditEventRead.model_validate(a) for a in audit_rows],
+    )
+
+
+@router.get("/scan-profiles/{profile_id}", response_model=EvidencePackage)
+async def evidence_for_profile(
+    profile_id: uuid.UUID,
+    current_user: User = Depends(ReadDep),
+    session: AsyncSession = Depends(get_session),
+) -> EvidencePackage:
+    profile = await session.get(ScanProfile, profile_id)
+    if profile is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Scan profile not found")
+
+    package = await build_evidence(session, profile, current_user.email)
+
+    # Chain of custody: record who exported evidence and when.
+    await append_audit(
+        session,
+        action="evidence.exported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="scan_profile",
+        target_id=str(profile_id),
+        payload={"runs": len(package.scan_runs), "changes": len(package.changes)},
+    )
+    await session.commit()
+    return package
