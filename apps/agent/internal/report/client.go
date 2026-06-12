@@ -1,0 +1,104 @@
+// Package report is the agent's client for the control plane.
+package report
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/portwiz/portwiz/agent/internal/contracts"
+)
+
+// Client talks to the control plane using the agent bearer token.
+type Client struct {
+	BaseURL string
+	Token   string
+	AgentID string
+	HTTP    *http.Client
+}
+
+// New builds a client for the given control plane base URL.
+func New(baseURL, token, agentID string) *Client {
+	return &Client{
+		BaseURL: strings.TrimRight(baseURL, "/"),
+		Token:   token,
+		AgentID: agentID,
+		HTTP:    &http.Client{Timeout: 30 * time.Second},
+	}
+}
+
+func (c *Client) do(ctx context.Context, method, path string, body any) (*http.Response, error) {
+	var reader io.Reader
+	if body != nil {
+		encoded, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+		reader = bytes.NewReader(encoded)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, c.BaseURL+path, reader)
+	if err != nil {
+		return nil, err
+	}
+	if c.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.Token)
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	return c.HTTP.Do(req)
+}
+
+// Heartbeat tells the control plane the agent is alive.
+func (c *Client) Heartbeat(ctx context.Context) error {
+	resp, err := c.do(ctx, http.MethodPost, "/api/v1/agents/heartbeat", nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("heartbeat: unexpected status %d", resp.StatusCode)
+	}
+	return nil
+}
+
+// PollJob asks for the next assigned job. ok is false when there is none.
+func (c *Client) PollJob(ctx context.Context) (job *contracts.ScanJob, ok bool, err error) {
+	resp, err := c.do(ctx, http.MethodGet, "/api/v1/agents/jobs", nil)
+	if err != nil {
+		return nil, false, err
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case http.StatusNoContent:
+		return nil, false, nil
+	case http.StatusOK:
+		var decoded contracts.ScanJob
+		if err := json.NewDecoder(resp.Body).Decode(&decoded); err != nil {
+			return nil, false, err
+		}
+		return &decoded, true, nil
+	default:
+		b, _ := io.ReadAll(resp.Body)
+		return nil, false, fmt.Errorf("poll: status %d: %s", resp.StatusCode, strings.TrimSpace(string(b)))
+	}
+}
+
+// PostResult uploads a completed scan result to the ingest endpoint.
+func (c *Client) PostResult(ctx context.Context, result contracts.ScanResult) error {
+	resp, err := c.do(ctx, http.MethodPost, "/api/v1/ingest/scan-results", result)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusAccepted {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("ingest: status %d: %s", resp.StatusCode, strings.TrimSpace(string(b)))
+	}
+	return nil
+}
