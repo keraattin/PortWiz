@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
+import secrets
 from typing import Any
 
 import jwt
@@ -46,3 +48,13 @@ def create_access_token(
 def decode_access_token(token: str) -> dict[str, Any]:
     """Decode and validate a JWT access token. Raises jwt exceptions on failure."""
     return jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
+
+
+def generate_agent_token() -> str:
+    """Generate a high-entropy enrollment token for a scan agent."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_agent_token(token: str) -> str:
+    """SHA-256 hash of an agent token (high-entropy, so a fast hash is fine)."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()

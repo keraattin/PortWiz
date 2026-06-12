@@ -4,6 +4,7 @@ Importing this package ensures every table is registered on SQLModel.metadata
 (used by Alembic autogenerate and metadata.create_all in tests).
 """
 
+from .agent import Agent
 from .asset import Asset, Criticality, DataSensitivity, IPRange, VLAN
 from .audit import AuditEvent
 from .scan import (
@@ -17,6 +18,7 @@ from .scan import (
 from .user import User, UserRole
 
 __all__ = [
+    "Agent",
     "Asset",
     "AuditEvent",
     "Criticality",

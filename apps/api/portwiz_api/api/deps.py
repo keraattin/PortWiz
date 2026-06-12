@@ -8,12 +8,18 @@ from typing import Any
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import (
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+    OAuth2PasswordBearer,
+)
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.config import get_settings
 from ..core.db import get_session
-from ..core.security import decode_access_token
+from ..core.security import decode_access_token, hash_agent_token
+from ..models.agent import Agent
 from ..models.user import User, UserRole
 
 settings = get_settings()
@@ -61,3 +67,28 @@ def require_roles(
         return current_user
 
     return checker
+
+
+# Agent authentication (bearer token, validated against the stored hash).
+agent_scheme = HTTPBearer(auto_error=False)
+
+_agent_credentials_exc = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Invalid or missing agent token",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
+
+async def get_current_agent(
+    credentials: HTTPAuthorizationCredentials | None = Depends(agent_scheme),
+    session: AsyncSession = Depends(get_session),
+) -> Agent:
+    if credentials is None:
+        raise _agent_credentials_exc
+    token_hash = hash_agent_token(credentials.credentials)
+    agent = (
+        await session.execute(select(Agent).where(Agent.token_hash == token_hash))
+    ).scalar_one_or_none()
+    if agent is None or not agent.enabled:
+        raise _agent_credentials_exc
+    return agent

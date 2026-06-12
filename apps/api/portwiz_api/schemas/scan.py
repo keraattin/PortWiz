@@ -90,6 +90,37 @@ class ScanRunRead(BaseModel):
     created_at: dt.datetime
 
 
+# Scan result ingest (mirrors packages/contracts/scan_result.schema.json)
+class PortIn(BaseModel):
+    port: int = Field(ge=1, le=65535)
+    protocol: str = Field(pattern="^(tcp|udp)$")
+    state: str = Field(pattern="^(open|closed|filtered)$")
+    service: str | None = None
+    version: str | None = None
+    product: str | None = None
+    banner: str | None = None
+    banner_sha256: str | None = None
+    fingerprint_confidence: float | None = Field(default=None, ge=0, le=1)
+
+
+class HostIn(BaseModel):
+    ip: str
+    hostname: str | None = None
+    ports: list[PortIn]
+
+
+class ScanResultIn(BaseModel):
+    version: int = 1
+    job_id: uuid.UUID
+    scan_run_id: uuid.UUID
+    agent_id: str
+    started_at: dt.datetime
+    finished_at: dt.datetime
+    status: str = Field(default="completed", pattern="^(completed|partial|failed)$")
+    error: str | None = None
+    hosts: list[HostIn]
+
+
 # Observation
 class ObservationRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
