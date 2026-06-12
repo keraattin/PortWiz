@@ -1,10 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { type ReactNode } from "react";
+import Layout from "./components/Layout";
 import { useAuth } from "./auth/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
+import AssetsPage from "./pages/AssetsPage";
+import VlansPage from "./pages/VlansPage";
 
-function ProtectedRoute({ children }: { children: ReactNode }) {
+function ProtectedLayout() {
   const { token, loading } = useAuth();
   if (loading) {
     return (
@@ -16,21 +18,18 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  return <>{children}</>;
+  return <Layout />;
 }
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<ProtectedLayout />}>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/assets" element={<AssetsPage />} />
+        <Route path="/vlans" element={<VlansPage />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
