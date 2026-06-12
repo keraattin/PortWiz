@@ -1,0 +1,117 @@
+# PortWiz local development stack.
+#   cp .env.example .env && docker compose up --build
+#
+# Default `up` starts: db, valkey, api, worker, web, mailhog.
+# Optional services live behind profiles:
+#   --profile ai      -> ollama (local LLM)
+#   --profile agents  -> a sample scan agent
+name: portwiz
+
+services:
+  db:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-portwiz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-portwiz}
+      POSTGRES_DB: ${POSTGRES_DB:-portwiz}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-portwiz} -d ${POSTGRES_DB:-portwiz}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ../apps/api
+    env_file: .env
+    environment:
+      UVICORN_RELOAD: ${UVICORN_RELOAD:-}
+    volumes:
+      - ../apps/api:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    command: ["api"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  worker:
+    build:
+      context: ../apps/api
+    env_file: .env
+    volumes:
+      - ../apps/api:/app
+    depends_on:
+      valkey:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    command: ["worker"]
+
+  web:
+    build:
+      context: ../apps/web
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    volumes:
+      - ../apps/web:/app
+      - web-node-modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+  mailhog:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"   # web UI
+      - "1025:1025"   # SMTP
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai"]
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+
+  agent:
+    build:
+      context: ../apps/agent
+    profiles: ["agents"]
+    environment:
+      PORTWIZ_API_URL: http://api:8000
+      PORTWIZ_AGENT_TOKEN: ${PORTWIZ_AGENT_TOKEN:-dev-agent-token}
+    # SYN scanning needs CAP_NET_RAW; enable when wiring real scans (M2).
+    # cap_add: ["NET_RAW"]
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
+  ollama-data:
+  web-node-modules:

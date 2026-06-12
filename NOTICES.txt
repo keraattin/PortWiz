@@ -1,0 +1,40 @@
+PortWiz
+Copyright 2026 PortWiz contributors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes or interoperates with the following third-party
+components. Their licenses are noted for attribution and compliance.
+
+--------------------------------------------------------------------------------
+naabu  (https://github.com/projectdiscovery/naabu)
+  License: MIT
+  Use: embedded as a Go library inside the PortWiz scan agent for fast
+       port discovery.
+
+--------------------------------------------------------------------------------
+nmap-service-probes  (https://nmap.org/book/nmap-service-probes.html)
+  License: Nmap Public Source License / GPLv2 (the probe DATA file is
+           redistributable in its native format).
+  Use: service/version fingerprint pattern database consumed by the agent.
+  NOTE: PortWiz invokes nmap (if present) only as a separate process and
+        reuses the probe data file format. It does NOT link against nmap
+        source. Any bundled nmap binary remains under its own GPLv2 license.
+
+--------------------------------------------------------------------------------
+Ollama  (https://github.com/ollama/ollama)
+  License: MIT
+  Use: optional local LLM runtime for banner sanitization and offline
+       service fingerprinting.
+
+--------------------------------------------------------------------------------
+FastAPI, Starlette, Pydantic, SQLModel, SQLAlchemy, Alembic, Celery,
+Uvicorn, React, Vite, TailwindCSS, and other dependencies are distributed
+under their respective MIT/BSD/Apache-2.0 licenses; see each package's
+distribution for details.
+
+--------------------------------------------------------------------------------
+EXCLUDED BY DESIGN:
+  Masscan (AGPL-3.0) is intentionally NOT used to avoid copyleft obligations
+  on a network-accessible service. Do not add AGPL-licensed scanning
+  dependencies without legal review.

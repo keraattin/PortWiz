@@ -1,0 +1,54 @@
+# --- AI assistant local files (never committed) ---
+CLAUDE.md
+.claude/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# --- Node / Vite ---
+node_modules/
+apps/web/dist/
+apps/web/.vite/
+*.local
+
+# --- Go ---
+apps/agent/bin/
+apps/agent/portwiz-agent
+*.test
+*.out
+
+# --- Env & secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+!**/testdata/*.pem
+
+# --- Editors / OS ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# --- Data / runtime ---
+*.sqlite3
+*.db
+/data/
+postgres-data/
+valkey-data/
+ollama-data/

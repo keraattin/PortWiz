@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://portwiz.dev/contracts/scan_result.schema.json",
+  "title": "ScanResult",
+  "description": "Scan result POSTed from an agent to the control plane.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "job_id", "scan_run_id", "agent_id", "started_at", "finished_at", "hosts"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "job_id": { "type": "string", "format": "uuid" },
+    "scan_run_id": { "type": "string", "format": "uuid" },
+    "agent_id": { "type": "string", "description": "Agent identity assigned at enrollment." },
+    "started_at": { "type": "string", "format": "date-time" },
+    "finished_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["completed", "partial", "failed"],
+      "default": "completed"
+    },
+    "error": { "type": ["string", "null"] },
+    "hosts": {
+      "type": "array",
+      "description": "Only responding hosts; open ports per host.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ip", "ports"],
+        "properties": {
+          "ip": { "type": "string" },
+          "hostname": { "type": ["string", "null"] },
+          "ports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["port", "protocol", "state"],
+              "properties": {
+                "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                "protocol": { "type": "string", "enum": ["tcp", "udp"] },
+                "state": { "type": "string", "enum": ["open", "closed", "filtered"] },
+                "service": { "type": ["string", "null"], "description": "nmap-service-probes match." },
+                "version": { "type": ["string", "null"] },
+                "product": { "type": ["string", "null"] },
+                "banner": {
+                  "type": ["string", "null"],
+                  "description": "RAW banner. Treated as attacker-controlled; the center sanitizes/escapes it before passing to any LLM."
+                },
+                "banner_sha256": { "type": ["string", "null"], "description": "Hash of the banner content, used for diffing." },
+                "fingerprint_confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+                "tls": {
+                  "type": ["object", "null"],
+                  "additionalProperties": true,
+                  "description": "Optional TLS certificate summary (subject, issuer, SAN, notAfter)."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

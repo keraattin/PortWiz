@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://portwiz.dev/contracts/scan_job.schema.json",
+  "title": "ScanJob",
+  "description": "Scan order sent from the control plane to an agent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "job_id", "scan_run_id", "targets", "ports", "scan_type", "rate_limit_pps"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "job_id": { "type": "string", "format": "uuid" },
+    "scan_run_id": { "type": "string", "format": "uuid" },
+    "scan_profile_id": { "type": "string", "format": "uuid" },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "description": "List of CIDRs, IP ranges, or single IPs/hosts.",
+      "items": { "type": "string" }
+    },
+    "ports": {
+      "type": "string",
+      "description": "naabu port spec, e.g. '1-1000,3306,8080' or 'top-1000'.",
+      "default": "top-1000"
+    },
+    "scan_type": {
+      "type": "string",
+      "enum": ["syn", "connect", "udp"],
+      "description": "syn requires CAP_NET_RAW on the agent; otherwise use connect."
+    },
+    "service_detection": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to run service/version detection via nmap-service-probes."
+    },
+    "rate_limit_pps": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000,
+      "default": 1000,
+      "description": "Packets per second; IDS-friendly default of 1000 for internal networks."
+    },
+    "timeout_seconds": { "type": "integer", "minimum": 1, "default": 1800 },
+    "scan_source": {
+      "type": "string",
+      "enum": ["internal-authenticated", "internal-unauthenticated", "external-asv"],
+      "default": "internal-unauthenticated",
+      "description": "Compliance label. Internal scans do NOT satisfy the ASV requirement."
+    },
+    "issued_at": { "type": "string", "format": "date-time" }
+  }
+}
