@@ -6,6 +6,14 @@ Importing this package ensures every table is registered on SQLModel.metadata
 
 from .asset import Asset, Criticality, DataSensitivity, IPRange, VLAN
 from .audit import AuditEvent
+from .scan import (
+    Observation,
+    ScanProfile,
+    ScanRun,
+    ScanRunStatus,
+    ScanSource,
+    ScanType,
+)
 from .user import User, UserRole
 
 __all__ = [
@@ -14,6 +22,12 @@ __all__ = [
     "Criticality",
     "DataSensitivity",
     "IPRange",
+    "Observation",
+    "ScanProfile",
+    "ScanRun",
+    "ScanRunStatus",
+    "ScanSource",
+    "ScanType",
     "User",
     "UserRole",
     "VLAN",
