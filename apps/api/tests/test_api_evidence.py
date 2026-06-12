@@ -120,3 +120,15 @@ async def test_evidence_unknown_profile_404(client, admin_headers) -> None:
         f"/api/v1/evidence/scan-profiles/{uuid.uuid4()}", headers=admin_headers
     )
     assert resp.status_code == 404
+
+
+async def test_evidence_pdf_export(client, admin_headers) -> None:
+    profile = await _profile(client, admin_headers, "pdf-ev", "10.0.0.8", "22")
+    resp = await client.get(
+        f"/api/v1/evidence/scan-profiles/{profile['id']}/pdf", headers=admin_headers
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.headers["content-type"] == "application/pdf"
+    assert resp.content[:4] == b"%PDF"
+    assert len(resp.content) > 800
+    assert "attachment" in resp.headers.get("content-disposition", "")

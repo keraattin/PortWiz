@@ -11,7 +11,7 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -134,7 +134,43 @@ async def evidence_for_profile(
         actor_email=current_user.email,
         target_type="scan_profile",
         target_id=str(profile_id),
-        payload={"runs": len(package.scan_runs), "changes": len(package.changes)},
+        payload={"format": "json", "runs": len(package.scan_runs), "changes": len(package.changes)},
     )
     await session.commit()
     return package
+
+
+@router.get("/scan-profiles/{profile_id}/pdf")
+async def evidence_for_profile_pdf(
+    profile_id: uuid.UUID,
+    current_user: User = Depends(ReadDep),
+    session: AsyncSession = Depends(get_session),
+) -> Response:
+    # Imported lazily so the app does not require reportlab unless a PDF is built.
+    from ...core.evidence_pdf import render_evidence_pdf
+
+    profile = await session.get(ScanProfile, profile_id)
+    if profile is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Scan profile not found")
+
+    package = await build_evidence(session, profile, current_user.email)
+    pdf_bytes = render_evidence_pdf(package)
+
+    await append_audit(
+        session,
+        action="evidence.exported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="scan_profile",
+        target_id=str(profile_id),
+        payload={"format": "pdf", "runs": len(package.scan_runs), "changes": len(package.changes)},
+    )
+    await session.commit()
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="portwiz-evidence-{profile_id}.pdf"'
+        },
+    )
