@@ -6,6 +6,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AssetsPage from "./pages/AssetsPage";
 import VlansPage from "./pages/VlansPage";
 import ScansPage from "./pages/ScansPage";
+import ChangesPage from "./pages/ChangesPage";
 
 function ProtectedLayout() {
   const { token, loading } = useAuth();
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/assets" element={<AssetsPage />} />
         <Route path="/vlans" element={<VlansPage />} />
         <Route path="/scans" element={<ScansPage />} />
+        <Route path="/changes" element={<ChangesPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

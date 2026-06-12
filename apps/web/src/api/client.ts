@@ -244,3 +244,44 @@ export function listScanRuns(): Promise<ScanRun[]> {
 export function listRunObservations(runId: string): Promise<Observation[]> {
   return request<Observation[]>(`/scan-runs/${runId}/observations`);
 }
+
+// Changes
+export type ChangeType = "opened" | "closed" | "service_changed" | "version_changed";
+export type ChangeStatus = "open" | "acknowledged" | "resolved";
+
+export interface PortSnapshot {
+  state?: string;
+  service?: string | null;
+  version?: string | null;
+}
+
+export interface ChangeEvent {
+  id: string;
+  scan_profile_id: string;
+  scan_run_id: string | null;
+  asset_id: string | null;
+  ip: string;
+  port: number;
+  protocol: string;
+  change_type: ChangeType;
+  before: PortSnapshot;
+  after: PortSnapshot;
+  severity: string;
+  status: ChangeStatus;
+  detected_at: string;
+}
+
+export function listChanges(params?: { status?: string }): Promise<ChangeEvent[]> {
+  const query = params?.status ? `?status=${params.status}` : "";
+  return request<ChangeEvent[]>(`/changes${query}`);
+}
+
+export function updateChangeStatus(
+  id: string,
+  status: ChangeStatus,
+): Promise<ChangeEvent> {
+  return request<ChangeEvent>(`/changes/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}

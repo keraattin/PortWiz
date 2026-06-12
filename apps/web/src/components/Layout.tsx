@@ -6,6 +6,7 @@ const NAV = [
   { to: "/assets", label: "Assets", end: false },
   { to: "/vlans", label: "VLANs", end: false },
   { to: "/scans", label: "Scans", end: false },
+  { to: "/changes", label: "Changes", end: false },
 ];
 
 export default function Layout() {
