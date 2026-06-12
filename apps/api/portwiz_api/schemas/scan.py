@@ -90,6 +90,20 @@ class ScanRunRead(BaseModel):
     created_at: dt.datetime
 
 
+# Scan job dispatched to an agent (mirrors packages/contracts/scan_job.schema.json)
+class ScanJobOut(BaseModel):
+    version: int = 1
+    job_id: uuid.UUID
+    scan_run_id: uuid.UUID
+    scan_profile_id: uuid.UUID | None
+    targets: list[str]
+    ports: str
+    scan_type: ScanType
+    service_detection: bool
+    rate_limit_pps: int
+    scan_source: ScanSource
+
+
 # Scan result ingest (mirrors packages/contracts/scan_result.schema.json)
 class PortIn(BaseModel):
     port: int = Field(ge=1, le=65535)

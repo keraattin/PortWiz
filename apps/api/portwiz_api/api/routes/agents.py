@@ -9,7 +9,7 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,8 +17,10 @@ from ...core.audit import append_audit
 from ...core.db import get_session
 from ...core.security import generate_agent_token, hash_agent_token
 from ...models.agent import Agent
+from ...models.scan import ScanProfile, ScanRun, ScanRunStatus, ScanSource, ScanType
 from ...models.user import User, UserRole
 from ...schemas.agent import AgentCreate, AgentCreated, AgentRead
+from ...schemas.scan import ScanJobOut
 from ..deps import get_current_agent, require_roles
 
 router = APIRouter(prefix="/agents", tags=["agents"])
@@ -97,3 +99,63 @@ async def heartbeat(
     agent.last_seen_at = _utcnow()
     await session.commit()
     return {"status": "ok", "agent_id": str(agent.id)}
+
+
+@router.get("/jobs")
+async def poll_job(
+    agent: Agent = Depends(get_current_agent),
+    session: AsyncSession = Depends(get_session),
+):
+    """Claim the oldest pending scan run and return it as a ScanJob.
+
+    Returns 204 when there is no work. Note: for the MVP this claim is a simple
+    select-then-update; multi-agent claim contention is hardened in Phase 2.
+    """
+    run = (
+        await session.execute(
+            select(ScanRun)
+            .where(
+                ScanRun.status == ScanRunStatus.pending,
+                ScanRun.scan_profile_id.is_not(None),
+            )
+            .order_by(ScanRun.created_at.asc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if run is None:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    profile = await session.get(ScanProfile, run.scan_profile_id)
+    if profile is None:
+        run.status = ScanRunStatus.failed
+        run.error = "scan profile no longer exists"
+        await session.commit()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    now = _utcnow()
+    run.status = ScanRunStatus.running
+    run.agent_id = str(agent.id)
+    run.started_at = now
+    agent.last_seen_at = now
+
+    job = ScanJobOut(
+        job_id=uuid.uuid4(),
+        scan_run_id=run.id,
+        scan_profile_id=profile.id,
+        targets=list(profile.targets),
+        ports=profile.ports,
+        scan_type=ScanType(profile.scan_type),
+        service_detection=profile.service_detection,
+        rate_limit_pps=profile.rate_limit_pps,
+        scan_source=ScanSource(profile.scan_source),
+    )
+    await append_audit(
+        session,
+        action="scan_run.dispatched",
+        actor_email=f"agent:{agent.name}",
+        target_type="scan_run",
+        target_id=str(run.id),
+        payload={"agent": agent.name},
+    )
+    await session.commit()
+    return job
