@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.asset import Asset
 from ..models.change import ChangeEvent, PortState
 from ..models.scan import Observation, ScanRun, ScanRunStatus
+from ..models.task import Task, TaskStatus
 
 # Consecutive runs a new state must persist before it is confirmed.
 CONFIRMATIONS = 2
@@ -221,6 +222,19 @@ async def detect_changes(session: AsyncSession, run: ScanRun) -> list[ChangeEven
             )
             session.add(event)
             events.append(event)
+
+            # Open a follow-up task for every confirmed change.
+            session.add(
+                Task(
+                    title=f"Review {change_type} on {ip}:{port}/{protocol}",
+                    description=(
+                        f"Confirmed {change_type} change on {ip}:{port}/{protocol} "
+                        f"(severity {_SEVERITY.get(change_type, 'medium')})."
+                    ),
+                    status=TaskStatus.open,
+                    change_event_id=event.id,
+                )
+            )
 
             state.confirmed_state = desired.state
             state.confirmed_service = desired.service

@@ -16,6 +16,7 @@ from .scan import (
     ScanSource,
     ScanType,
 )
+from .task import Task, TaskStatus
 from .user import User, UserRole
 
 __all__ = [
@@ -33,6 +34,8 @@ __all__ = [
     "ScanRunStatus",
     "ScanSource",
     "ScanType",
+    "Task",
+    "TaskStatus",
     "User",
     "UserRole",
     "VLAN",
