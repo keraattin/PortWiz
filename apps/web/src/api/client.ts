@@ -216,6 +216,7 @@ export interface ScanProfileInput {
   ports?: string;
   scan_type?: ScanType;
   service_detection?: boolean;
+  cron?: string | null;
 }
 
 export function listScanProfiles(): Promise<ScanProfile[]> {
@@ -362,4 +363,40 @@ export async function downloadEvidenceJson(profileId: string, profileName: strin
 export async function downloadEvidencePdf(profileId: string, profileName: string): Promise<void> {
   const res = await authedFetch(`/evidence/scan-profiles/${profileId}/pdf`);
   triggerDownload(await res.blob(), `portwiz-evidence-${profileName}.pdf`);
+}
+
+// Tasks
+export type TaskStatus = "open" | "in_progress" | "done" | "cancelled";
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  change_event_id: string | null;
+  assignee_id: string | null;
+  created_by: string | null;
+  jira_key: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export function listTasks(params?: { status?: string }): Promise<Task[]> {
+  const query = params?.status ? `?task_status=${params.status}` : "";
+  return request<Task[]>(`/tasks${query}`);
+}
+
+export function updateTask(
+  id: string,
+  payload: { status?: TaskStatus; assignee_id?: string | null },
+): Promise<Task> {
+  return request<Task>(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export function linkTaskToJira(id: string): Promise<Task> {
+  return request<Task>(`/tasks/${id}/jira`, { method: "POST" });
+}
+
+export function syncTaskFromJira(id: string): Promise<Task> {
+  return request<Task>(`/tasks/${id}/jira/sync`, { method: "POST" });
 }

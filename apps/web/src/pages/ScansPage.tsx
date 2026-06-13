@@ -48,6 +48,7 @@ export default function ScansPage() {
   const [name, setName] = useState("");
   const [targets, setTargets] = useState("");
   const [ports, setPorts] = useState("top-1000");
+  const [cron, setCron] = useState("");
   const [scanType, setScanType] = useState<ScanType>("connect");
   const [serviceDetection, setServiceDetection] = useState(true);
 
@@ -78,10 +79,12 @@ export default function ScansPage() {
         ports,
         scan_type: scanType,
         service_detection: serviceDetection,
+        cron: cron || null,
       });
       setName("");
       setTargets("");
       setPorts("top-1000");
+      setCron("");
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -146,6 +149,12 @@ export default function ScansPage() {
             placeholder="Ports (e.g. top-1000, 1-1000, 22,80)"
             value={ports}
             onChange={(e) => setPorts(e.target.value)}
+          />
+          <input
+            className={inputClass}
+            placeholder="Cron (optional, e.g. 0 2 * * *)"
+            value={cron}
+            onChange={(e) => setCron(e.target.value)}
           />
           <select
             className={inputClass}

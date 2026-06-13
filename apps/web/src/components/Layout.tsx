@@ -7,6 +7,7 @@ const NAV = [
   { to: "/vlans", label: "VLANs", end: false },
   { to: "/scans", label: "Scans", end: false },
   { to: "/changes", label: "Changes", end: false },
+  { to: "/tasks", label: "Tasks", end: false },
   { to: "/compliance", label: "Compliance", end: false },
 ];
 
