@@ -33,3 +33,34 @@ celery_app.conf.update(
 def ping() -> str:
     """Trivial health task."""
     return "pong"
+
+
+@celery_app.task(name="portwiz.schedule_due_scans")
+def schedule_due_scans() -> int:
+    """Beat tick: trigger scan profiles whose cron schedule is due."""
+    import asyncio
+
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from ..core.scheduler import run_due_scans
+
+    async def _run() -> int:
+        # Use a fresh engine per tick to avoid cross-event-loop connection reuse.
+        engine = create_async_engine(settings.database_url)
+        maker = async_sessionmaker(engine, expire_on_commit=False)
+        try:
+            async with maker() as session:
+                created = await run_due_scans(session)
+                return len(created)
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(_run())
+
+
+celery_app.conf.beat_schedule = {
+    "schedule-due-scans": {
+        "task": "portwiz.schedule_due_scans",
+        "schedule": 60.0,
+    },
+}

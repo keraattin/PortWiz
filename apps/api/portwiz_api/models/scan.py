@@ -70,8 +70,12 @@ class ScanProfile(SQLModel, table=True):
             server_default=ScanSource.internal_unauthenticated.value,
         ),
     )
-    # Cron expression for scheduled runs (scheduling itself lands in M5).
+    # Cron expression for scheduled runs.
     cron: str | None = Field(default=None, sa_column=Column(String(64)))
+    # Last time the scheduler triggered a run for this profile (dedup guard).
+    last_scheduled_at: dt.datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True))
+    )
     enabled: bool = Field(default=True, nullable=False)
     created_by: uuid.UUID | None = Field(default=None, foreign_key="users.id")
     created_at: dt.datetime = Field(

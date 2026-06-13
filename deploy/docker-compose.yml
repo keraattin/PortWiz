@@ -71,6 +71,19 @@ services:
         condition: service_healthy
     command: ["worker"]
 
+  beat:
+    build:
+      context: ../apps/api
+    env_file: .env
+    volumes:
+      - ../apps/api:/app
+    depends_on:
+      valkey:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    command: ["beat"]
+
   web:
     build:
       context: ../apps/web

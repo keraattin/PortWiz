@@ -69,6 +69,7 @@ class ScanProfileRead(BaseModel):
     rate_limit_pps: int
     scan_source: ScanSource
     cron: str | None
+    last_scheduled_at: dt.datetime | None
     enabled: bool
     created_by: uuid.UUID | None
     created_at: dt.datetime
