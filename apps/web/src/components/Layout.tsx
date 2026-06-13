@@ -9,6 +9,7 @@ const NAV = [
   { to: "/changes", label: "Changes", end: false },
   { to: "/tasks", label: "Tasks", end: false },
   { to: "/compliance", label: "Compliance", end: false },
+  { to: "/assistant", label: "Assistant", end: false },
 ];
 
 export default function Layout() {

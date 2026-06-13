@@ -400,3 +400,35 @@ export function linkTaskToJira(id: string): Promise<Task> {
 export function syncTaskFromJira(id: string): Promise<Task> {
   return request<Task>(`/tasks/${id}/jira/sync`, { method: "POST" });
 }
+
+// AI (provider-agnostic: local Ollama by default, Claude optional)
+export interface FingerprintRequest {
+  banner: string;
+  port?: number | null;
+  protocol?: string | null;
+  service_hint?: string | null;
+}
+
+export interface FingerprintResult {
+  provider: string;
+  summary: string;
+}
+
+export interface AssistantResult {
+  provider: string;
+  answer: string;
+}
+
+export function fingerprintBanner(payload: FingerprintRequest): Promise<FingerprintResult> {
+  return request<FingerprintResult>("/ai/fingerprint", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function askAssistant(question: string): Promise<AssistantResult> {
+  return request<AssistantResult>("/ai/assistant", {
+    method: "POST",
+    body: JSON.stringify({ question }),
+  });
+}
