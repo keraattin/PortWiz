@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -16,13 +17,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.audit import append_audit
 from ...core.change_detection import detect_changes
+from ...core.config import get_settings
 from ...core.db import get_session
+from ...core.notifications import notify_changes
 from ...models.agent import Agent
 from ...models.asset import Asset
 from ...models.scan import Observation, ScanRun, ScanRunStatus
 from ...schemas.scan import ScanResultIn
 from ..deps import get_current_agent
 
+logger = logging.getLogger("portwiz.ingest")
 router = APIRouter(prefix="/ingest", tags=["ingest"])
 
 _FINALIZED = {ScanRunStatus.completed, ScanRunStatus.failed}
@@ -90,6 +94,16 @@ async def ingest_scan_results(
     # Flush observations so change detection can read them, then run it.
     await session.flush()
     changes = await detect_changes(session, run)
+    change_summaries = [
+        {
+            "change_type": c.change_type,
+            "ip": c.ip,
+            "port": c.port,
+            "protocol": c.protocol,
+            "severity": c.severity,
+        }
+        for c in changes
+    ]
 
     await append_audit(
         session,
@@ -105,6 +119,15 @@ async def ingest_scan_results(
         },
     )
     await session.commit()
+
+    # Best-effort notification: never fail ingest if email delivery fails.
+    if change_summaries:
+        settings = get_settings()
+        try:
+            await notify_changes(change_summaries, settings.notification_recipients)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("change notification failed: %s", exc)
+
     return {
         "scan_run_id": str(run.id),
         "observations": count,

@@ -54,6 +54,16 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-sonnet-4-6"
 
+    # Notifications (email). No emails are sent unless recipients are configured.
+    notifications_enabled: bool = True
+    smtp_host: str = "mailhog"
+    smtp_port: int = 1025
+    smtp_from: str = "portwiz@portwiz.local"
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_use_tls: bool = False
+    notification_recipients: list[str] = []
+
 
 @lru_cache
 def get_settings() -> Settings:
