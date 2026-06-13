@@ -16,6 +16,11 @@ env/
 .coverage
 htmlcov/
 dist/
+
+# Celery beat scheduler state (runtime artifact)
+celerybeat-schedule
+celerybeat-schedule.*
+celerybeat.pid
 build/
 
 # --- Node / Vite ---
