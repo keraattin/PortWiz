@@ -15,6 +15,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.audit import append_audit
 from ...core.db import get_session
+from ...core.issue_tracker import (
+    IssueTracker,
+    build_task_issue,
+    get_issue_tracker,
+    map_jira_status,
+)
 from ...models.change import ChangeEvent
 from ...models.task import Task
 from ...models.user import User, UserRole
@@ -145,3 +151,69 @@ async def delete_task(
         target_id=str(task_id),
     )
     await session.commit()
+
+
+@router.post("/{task_id}/jira", response_model=TaskRead)
+async def link_task_to_jira(
+    task_id: uuid.UUID,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    tracker: IssueTracker = Depends(get_issue_tracker),
+) -> Task:
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Task not found")
+    if task.jira_key:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Task already linked to Jira")
+
+    summary, description = build_task_issue(task)
+    key = await tracker.create_issue(summary, description)
+    if not key:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Issue tracker is not configured")
+
+    task.jira_key = key
+    task.updated_at = _utcnow()
+    await append_audit(
+        session,
+        action="task.jira_linked",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="task",
+        target_id=str(task.id),
+        payload={"jira_key": key},
+    )
+    await session.commit()
+    await session.refresh(task)
+    return task
+
+
+@router.post("/{task_id}/jira/sync", response_model=TaskRead)
+async def sync_task_from_jira(
+    task_id: uuid.UUID,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    tracker: IssueTracker = Depends(get_issue_tracker),
+) -> Task:
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Task not found")
+    if not task.jira_key:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Task is not linked to Jira")
+
+    jira_status = await tracker.get_status(task.jira_key)
+    mapped = map_jira_status(jira_status)
+    if mapped is not None:
+        task.status = mapped
+        task.updated_at = _utcnow()
+    await append_audit(
+        session,
+        action="task.jira_synced",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="task",
+        target_id=str(task.id),
+        payload={"jira_status": jira_status, "mapped": mapped},
+    )
+    await session.commit()
+    await session.refresh(task)
+    return task

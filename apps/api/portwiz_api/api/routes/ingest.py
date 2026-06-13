@@ -19,6 +19,7 @@ from ...core.audit import append_audit
 from ...core.change_detection import detect_changes
 from ...core.config import get_settings
 from ...core.db import get_session
+from ...core.issue_tracker import IssueTracker, get_issue_tracker, link_changes_to_tracker
 from ...core.notifications import notify_changes
 from ...models.agent import Agent
 from ...models.asset import Asset
@@ -41,6 +42,7 @@ async def ingest_scan_results(
     payload: ScanResultIn,
     agent: Agent = Depends(get_current_agent),
     session: AsyncSession = Depends(get_session),
+    tracker: IssueTracker = Depends(get_issue_tracker),
 ) -> dict[str, object]:
     run = await session.get(ScanRun, payload.scan_run_id)
     if run is None:
@@ -127,6 +129,13 @@ async def ingest_scan_results(
             await notify_changes(change_summaries, settings.notification_recipients)
         except Exception as exc:  # noqa: BLE001
             logger.warning("change notification failed: %s", exc)
+
+    # Best-effort issue-tracker sync (creates Jira issues for the new tasks).
+    if changes:
+        try:
+            await link_changes_to_tracker(session, changes, tracker)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("issue tracker sync failed: %s", exc)
 
     return {
         "scan_run_id": str(run.id),

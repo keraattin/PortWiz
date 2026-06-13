@@ -8,8 +8,16 @@ absent, so the pure-logic unit tests still run in a minimal environment.
 
 from __future__ import annotations
 
+import os
+
 import pytest
 import pytest_asyncio
+
+# Keep tests hermetic: never send real notifications or hit external services,
+# regardless of what the local .env configures.
+os.environ["PORTWIZ_NOTIFICATION_RECIPIENTS"] = "[]"
+os.environ["PORTWIZ_NOTIFICATIONS_ENABLED"] = "false"
+os.environ["PORTWIZ_JIRA_ENABLED"] = "false"
 
 
 @pytest_asyncio.fixture

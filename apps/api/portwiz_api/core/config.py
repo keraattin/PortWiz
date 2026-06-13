@@ -64,6 +64,13 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = False
     notification_recipients: list[str] = []
 
+    # Jira integration (issue tracker). Disabled unless fully configured.
+    jira_enabled: bool = False
+    jira_url: str | None = None  # e.g. https://yourorg.atlassian.net
+    jira_email: str | None = None
+    jira_api_token: str | None = None
+    jira_project_key: str = "PORT"
+
 
 @lru_cache
 def get_settings() -> Settings:
