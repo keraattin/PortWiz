@@ -45,6 +45,12 @@ def compute_event_hash(
     payload: dict[str, Any],
 ) -> str:
     """Compute the SHA-256 hash that links an event to its predecessor."""
+    # Normalize to aware UTC. SQLite (used in tests) drops tzinfo on
+    # DateTime(timezone=True), so a value read back is naive; we always store
+    # UTC, so treat a naive value as UTC. Without this, the write-side (aware)
+    # and verify-side (naive) hashes diverge whenever the local zone is not UTC.
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=dt.timezone.utc)
     hasher = hashlib.sha256()
     parts = [
         prev_hash,
