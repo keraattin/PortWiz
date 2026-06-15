@@ -9,16 +9,19 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.asset_import import parse_asset_file
 from ...core.audit import append_audit
 from ...core.db import get_session
 from ...models.asset import IPRange, VLAN, Asset
 from ...models.user import User, UserRole
 from ...schemas.asset import (
     AssetCreate,
+    AssetImportReport,
+    AssetImportRowResult,
     AssetRead,
     AssetUpdate,
     IPRangeCreate,
@@ -29,6 +32,9 @@ from ...schemas.asset import (
     VLANUpdate,
 )
 from ..deps import get_current_user, require_roles
+
+# Cap upload size so a huge file can't exhaust memory during parsing.
+MAX_IMPORT_BYTES = 5 * 1024 * 1024
 
 # Writes are restricted to admin/operator; reads to any authenticated user.
 WriteDep = require_roles(UserRole.admin, UserRole.operator)
@@ -231,6 +237,27 @@ async def _validate_asset_refs(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced owner does not exist")
 
 
+def _asset_kwargs(
+    values: dict[str, str], vlan_id: uuid.UUID | None, owner_id: uuid.UUID | None
+) -> dict[str, object]:
+    """Map a parsed import row to Asset fields, keeping only present columns so
+    an upsert never clobbers an existing value with a default."""
+    kwargs: dict[str, object] = {"ip": values["ip"]}
+    if "hostname" in values:
+        kwargs["hostname"] = values["hostname"]
+    if "vlan" in values:
+        kwargs["vlan_id"] = vlan_id
+    if "owner" in values:
+        kwargs["owner_id"] = owner_id
+    if "criticality" in values:
+        kwargs["criticality"] = values["criticality"]
+    if "data_sensitivity" in values:
+        kwargs["data_sensitivity"] = values["data_sensitivity"]
+    if "description" in values:
+        kwargs["description"] = values["description"]
+    return kwargs
+
+
 @assets_router.get("", response_model=list[AssetRead])
 async def list_assets(
     vlan_id: uuid.UUID | None = None,
@@ -281,6 +308,124 @@ async def create_asset(
     await session.commit()
     await session.refresh(asset)
     return asset
+
+
+@assets_router.post("/import", response_model=AssetImportReport)
+async def import_assets(
+    file: UploadFile = File(...),
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> AssetImportReport:
+    """Bulk-create or update assets from a CSV or .xlsx upload.
+
+    Rows are upserted by IP (``on_conflict`` controls update vs skip). VLANs are
+    matched by name and owners by email; an unknown reference fails just that
+    row. A per-row report is returned, and one summary event is appended to the
+    audit log.
+    """
+    content = await file.read()
+    if len(content) > MAX_IMPORT_BYTES:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File too large (max 5 MB)"
+        )
+    try:
+        rows = parse_asset_file(content, file.filename or "")
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    # Preload lookup maps so reference resolution is O(1) per row.
+    vlan_by_name = {
+        v.name.lower(): v.id for v in (await session.execute(select(VLAN))).scalars()
+    }
+    user_by_email = {
+        u.email.lower(): u.id for u in (await session.execute(select(User))).scalars()
+    }
+
+    results: list[AssetImportRowResult] = []
+    created = updated = skipped = errors = 0
+
+    for parsed in rows:
+        ip = parsed.values.get("ip")
+        if parsed.error:
+            errors += 1
+            results.append(
+                AssetImportRowResult(row=parsed.row, ip=ip, status="error", error=parsed.error)
+            )
+            continue
+
+        values = parsed.values
+        vlan_id: uuid.UUID | None = None
+        if "vlan" in values:
+            vlan_id = vlan_by_name.get(values["vlan"].lower())
+            if vlan_id is None:
+                errors += 1
+                results.append(
+                    AssetImportRowResult(
+                        row=parsed.row, ip=ip, status="error",
+                        error=f"Unknown VLAN '{values['vlan']}'",
+                    )
+                )
+                continue
+        owner_id: uuid.UUID | None = None
+        if "owner" in values:
+            owner_id = user_by_email.get(values["owner"].lower())
+            if owner_id is None:
+                errors += 1
+                results.append(
+                    AssetImportRowResult(
+                        row=parsed.row, ip=ip, status="error",
+                        error=f"Unknown owner '{values['owner']}'",
+                    )
+                )
+                continue
+
+        kwargs = _asset_kwargs(values, vlan_id, owner_id)
+        existing = (
+            await session.execute(select(Asset).where(Asset.ip == values["ip"]))
+        ).scalars().first()
+        if existing is not None:
+            if on_conflict == "skip":
+                skipped += 1
+                results.append(AssetImportRowResult(row=parsed.row, ip=ip, status="skipped"))
+                continue
+            for key, value in kwargs.items():
+                setattr(existing, key, value)
+            existing.updated_at = _utcnow()
+            updated += 1
+            results.append(AssetImportRowResult(row=parsed.row, ip=ip, status="updated"))
+        else:
+            session.add(Asset(**kwargs))
+            # Flush so a later row with the same IP upserts instead of duplicating.
+            await session.flush()
+            created += 1
+            results.append(AssetImportRowResult(row=parsed.row, ip=ip, status="created"))
+
+    await append_audit(
+        session,
+        action="asset.imported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=None,
+        payload={
+            "filename": file.filename,
+            "total": len(rows),
+            "created": created,
+            "updated": updated,
+            "skipped": skipped,
+            "errors": errors,
+        },
+    )
+    await session.commit()
+    return AssetImportReport(
+        total=len(rows),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        results=results,
+    )
 
 
 @assets_router.patch("/{asset_id}", response_model=AssetRead)

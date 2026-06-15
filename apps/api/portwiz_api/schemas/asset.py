@@ -121,3 +121,20 @@ class AssetRead(BaseModel):
     description: str | None
     created_at: dt.datetime
     updated_at: dt.datetime
+
+
+# Bulk import
+class AssetImportRowResult(BaseModel):
+    row: int  # 1-based row number in the source file
+    ip: str | None = None
+    status: str  # created | updated | skipped | error
+    error: str | None = None
+
+
+class AssetImportReport(BaseModel):
+    total: int
+    created: int
+    updated: int
+    skipped: int
+    errors: int
+    results: list[AssetImportRowResult]
