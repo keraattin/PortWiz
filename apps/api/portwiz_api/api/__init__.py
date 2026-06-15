@@ -11,6 +11,7 @@ from .routes import (
     evidence,
     ingest,
     settings,
+    stats,
     tasks,
     users,
 )
@@ -33,5 +34,6 @@ api_router.include_router(evidence.router)
 api_router.include_router(tasks.router)
 api_router.include_router(ai.router)
 api_router.include_router(settings.router)
+api_router.include_router(stats.router)
 
 __all__ = ["api_router"]
