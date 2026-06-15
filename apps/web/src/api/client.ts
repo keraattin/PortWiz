@@ -100,6 +100,22 @@ export async function fetchHealth(): Promise<{ status: string }> {
   return (await res.json()) as { status: string };
 }
 
+// Dashboard overview
+export interface DashboardStats {
+  assets: number;
+  vlans: number;
+  agents_total: number;
+  agents_online: number;
+  open_changes: number;
+  open_tasks: number;
+  pending_runs: number;
+  last_scan_at: string | null;
+}
+
+export function fetchStats(): Promise<DashboardStats> {
+  return request<DashboardStats>("/stats");
+}
+
 // Users
 export type Role = "admin" | "operator" | "auditor";
 
