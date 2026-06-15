@@ -153,6 +153,46 @@ export function deleteAsset(id: string): Promise<void> {
   return request<void>(`/assets/${id}`, { method: "DELETE" });
 }
 
+// Bulk import (CSV / Excel)
+export interface AssetImportRowResult {
+  row: number;
+  ip: string | null;
+  status: string; // created | updated | skipped | error
+  error: string | null;
+}
+
+export interface AssetImportReport {
+  total: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  results: AssetImportRowResult[];
+}
+
+export async function importAssets(
+  file: File,
+  onConflict: "update" | "skip" = "update",
+): Promise<AssetImportReport> {
+  // Multipart upload: let the browser set the Content-Type boundary, so we
+  // don't go through the JSON request() helper.
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_V1}/assets/import?on_conflict=${onConflict}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const detail =
+      data && typeof data.detail === "string" ? data.detail : res.statusText;
+    throw new ApiError(res.status, detail);
+  }
+  return data as AssetImportReport;
+}
+
 // Scans
 export type ScanType = "syn" | "connect" | "udp";
 export type ScanSource =
