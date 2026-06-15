@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +12,7 @@ from ...core.audit import append_audit
 from ...core.db import get_session
 from ...core.security import hash_password
 from ...models.user import User, UserRole
-from ...schemas.user import UserCreate, UserRead
+from ...schemas.user import UserCreate, UserRead, UserUpdate
 from ..deps import require_roles
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -60,3 +62,43 @@ async def list_users(
 ) -> list[User]:
     result = await session.execute(select(User).order_by(User.created_at))
     return list(result.scalars().all())
+
+
+@router.patch("/{user_id}", response_model=UserRead)
+async def update_user(
+    user_id: uuid.UUID,
+    payload: UserUpdate,
+    current_user: User = Depends(require_roles(UserRole.admin)),
+    session: AsyncSession = Depends(get_session),
+) -> User:
+    user = await session.get(User, user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+    changes = payload.model_dump(exclude_unset=True)
+    # Lockout guards: an admin must not demote or disable their own account, or
+    # they could lock themselves (and possibly everyone) out of administration.
+    if user.id == current_user.id:
+        if "role" in changes and changes["role"] != UserRole.admin:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "You cannot change your own admin role."
+            )
+        if changes.get("is_active") is False:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "You cannot deactivate your own account."
+            )
+
+    for key, value in changes.items():
+        setattr(user, key, value)
+    await append_audit(
+        session,
+        action="user.updated",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="user",
+        target_id=str(user.id),
+        payload={"changes": list(changes.keys())},
+    )
+    await session.commit()
+    await session.refresh(user)
+    return user
