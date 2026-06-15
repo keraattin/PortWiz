@@ -169,6 +169,31 @@ export function deleteVlan(id: string): Promise<void> {
   return request<void>(`/vlans/${id}`, { method: "DELETE" });
 }
 
+// IP ranges
+export interface IpRange {
+  id: string;
+  cidr: string;
+  vlan_id: string | null;
+  description: string | null;
+  created_at: string;
+}
+
+export function listIpRanges(): Promise<IpRange[]> {
+  return request<IpRange[]>("/ip-ranges");
+}
+
+export function createIpRange(payload: {
+  cidr: string;
+  vlan_id?: string | null;
+  description?: string | null;
+}): Promise<IpRange> {
+  return request<IpRange>("/ip-ranges", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function deleteIpRange(id: string): Promise<void> {
+  return request<void>(`/ip-ranges/${id}`, { method: "DELETE" });
+}
+
 // Assets
 export interface AssetInput {
   ip: string;
