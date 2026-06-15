@@ -15,6 +15,7 @@ import {
   listVlans,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import Pagination, { usePagination } from "../components/Pagination";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -54,6 +55,8 @@ export default function AssetsPage() {
   const [importReport, setImportReport] = useState<AssetImportReport | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+
+  const assetsPage = usePagination(assets, 15);
 
   async function reload() {
     setLoading(true);
@@ -293,7 +296,7 @@ export default function AssetsPage() {
                 </td>
               </tr>
             ) : (
-              assets.map((a) => (
+              assetsPage.slice.map((a) => (
                 <tr key={a.id} className="bg-slate-950">
                   <td className="px-4 py-2 font-mono text-slate-100">{a.ip}</td>
                   <td className="px-4 py-2 text-slate-300">{a.hostname ?? "-"}</td>
@@ -321,6 +324,12 @@ export default function AssetsPage() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={assetsPage.page}
+        pageCount={assetsPage.pageCount}
+        total={assetsPage.total}
+        onPage={assetsPage.setPage}
+      />
     </div>
   );
 }

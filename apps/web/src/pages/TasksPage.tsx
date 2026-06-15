@@ -11,6 +11,7 @@ import {
   updateTask,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import Pagination, { usePagination } from "../components/Pagination";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -36,6 +37,7 @@ export default function TasksPage() {
   const [users, setUsers] = useState<CurrentUser[]>([]);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [error, setError] = useState<string | null>(null);
+  const tasksPage = usePagination(tasks, 15);
 
   async function reload(f = filter) {
     setError(null);
@@ -71,6 +73,7 @@ export default function TasksPage() {
 
   function onFilter(f: (typeof FILTERS)[number]) {
     setFilter(f);
+    tasksPage.setPage(0);
     void reload(f);
   }
 
@@ -121,7 +124,7 @@ export default function TasksPage() {
                 </td>
               </tr>
             ) : (
-              tasks.map((t) => (
+              tasksPage.slice.map((t) => (
                 <tr key={t.id} className="bg-slate-950">
                   <td className="px-4 py-2 text-slate-100">{t.title}</td>
                   <td className="px-4 py-2">
@@ -201,6 +204,12 @@ export default function TasksPage() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={tasksPage.page}
+        pageCount={tasksPage.pageCount}
+        total={tasksPage.total}
+        onPage={tasksPage.setPage}
+      />
     </div>
   );
 }

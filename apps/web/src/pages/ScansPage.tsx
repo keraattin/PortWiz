@@ -14,6 +14,8 @@ import {
   runScanProfile,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import Modal from "../components/Modal";
+import Pagination, { usePagination } from "../components/Pagination";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -47,6 +49,7 @@ export default function ScansPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRun, setSelectedRun] = useState<ScanRun | null>(null);
   const [observations, setObservations] = useState<Observation[]>([]);
+  const obsPage = usePagination(observations, 12);
 
   const [name, setName] = useState("");
   const [targets, setTargets] = useState("");
@@ -118,6 +121,8 @@ export default function ScansPage() {
   async function onViewRun(run: ScanRun) {
     setError(null);
     setSelectedRun(run);
+    setObservations([]);
+    obsPage.setPage(0);
     try {
       setObservations(await listRunObservations(run.id));
     } catch (e) {
@@ -309,57 +314,59 @@ export default function ScansPage() {
         </div>
       </section>
 
-      {selectedRun && (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-slate-200">
-              Observations ({observations.length}) for run {selectedRun.id.slice(0, 8)}
-            </h3>
-            <button
-              onClick={() => setSelectedRun(null)}
-              className="text-xs text-slate-400 hover:text-slate-200"
-            >
-              Close
-            </button>
-          </div>
-          <div className="overflow-hidden rounded-xl border border-slate-800">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-900 text-slate-400">
+      <Modal
+        open={selectedRun !== null}
+        onClose={() => setSelectedRun(null)}
+        title={
+          selectedRun
+            ? `Results for run ${selectedRun.id.slice(0, 8)} (${observations.length} open ports)`
+            : ""
+        }
+        wide
+      >
+        <div className="overflow-hidden rounded-xl border border-slate-800">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-900 text-slate-400">
+              <tr>
+                <th className="px-4 py-2 font-medium">Host</th>
+                <th className="px-4 py-2 font-medium">Port</th>
+                <th className="px-4 py-2 font-medium">State</th>
+                <th className="px-4 py-2 font-medium">Service</th>
+                <th className="px-4 py-2 font-medium">Version</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800">
+              {observations.length === 0 ? (
                 <tr>
-                  <th className="px-4 py-2 font-medium">Host</th>
-                  <th className="px-4 py-2 font-medium">Port</th>
-                  <th className="px-4 py-2 font-medium">State</th>
-                  <th className="px-4 py-2 font-medium">Service</th>
-                  <th className="px-4 py-2 font-medium">Version</th>
+                  <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                    No open ports recorded for this run.
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {observations.length === 0 ? (
-                  <tr>
-                    <td className="px-4 py-3 text-slate-500" colSpan={5}>
-                      No open ports recorded for this run.
+              ) : (
+                obsPage.slice.map((o) => (
+                  <tr key={o.id} className="bg-slate-950">
+                    <td className="px-4 py-2 font-mono text-slate-100">{o.ip}</td>
+                    <td className="px-4 py-2 text-slate-300">
+                      {o.port}/{o.protocol}
+                    </td>
+                    <td className="px-4 py-2 text-emerald-400">{o.state}</td>
+                    <td className="px-4 py-2 text-slate-300">{o.service ?? "-"}</td>
+                    <td className="px-4 py-2 text-slate-400">
+                      {[o.product, o.version].filter(Boolean).join(" ") || "-"}
                     </td>
                   </tr>
-                ) : (
-                  observations.map((o) => (
-                    <tr key={o.id} className="bg-slate-950">
-                      <td className="px-4 py-2 font-mono text-slate-100">{o.ip}</td>
-                      <td className="px-4 py-2 text-slate-300">
-                        {o.port}/{o.protocol}
-                      </td>
-                      <td className="px-4 py-2 text-emerald-400">{o.state}</td>
-                      <td className="px-4 py-2 text-slate-300">{o.service ?? "-"}</td>
-                      <td className="px-4 py-2 text-slate-400">
-                        {[o.product, o.version].filter(Boolean).join(" ") || "-"}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <Pagination
+          page={obsPage.page}
+          pageCount={obsPage.pageCount}
+          total={obsPage.total}
+          onPage={obsPage.setPage}
+        />
+      </Modal>
     </div>
   );
 }

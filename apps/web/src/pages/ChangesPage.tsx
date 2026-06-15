@@ -9,6 +9,7 @@ import {
   updateChangeStatus,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import Pagination, { usePagination } from "../components/Pagination";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -49,6 +50,7 @@ export default function ChangesPage() {
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
   const [error, setError] = useState<string | null>(null);
+  const changesPage = usePagination(changes, 15);
 
   async function reload(filter = statusFilter) {
     try {
@@ -75,6 +77,7 @@ export default function ChangesPage() {
 
   function onFilter(filter: (typeof STATUS_FILTERS)[number]) {
     setStatusFilter(filter);
+    changesPage.setPage(0);
     void reload(filter);
   }
 
@@ -127,7 +130,7 @@ export default function ChangesPage() {
                 </td>
               </tr>
             ) : (
-              changes.map((c) => (
+              changesPage.slice.map((c) => (
                 <tr key={c.id} className="bg-slate-950">
                   <td className="px-4 py-2 text-xs text-slate-400">
                     {new Date(c.detected_at).toLocaleString()}
@@ -179,6 +182,12 @@ export default function ChangesPage() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={changesPage.page}
+        pageCount={changesPage.pageCount}
+        total={changesPage.total}
+        onPage={changesPage.setPage}
+      />
     </div>
   );
 }
