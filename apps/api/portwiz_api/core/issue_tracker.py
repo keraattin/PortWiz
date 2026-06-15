@@ -23,6 +23,7 @@ logger = logging.getLogger("portwiz.issue_tracker")
 class IssueTracker(Protocol):
     async def create_issue(self, summary: str, description: str) -> str | None: ...
     async def get_status(self, key: str) -> str | None: ...
+    async def verify(self) -> tuple[bool, str]: ...
 
 
 class NullTracker:
@@ -33,6 +34,9 @@ class NullTracker:
 
     async def get_status(self, key: str) -> str | None:
         return None
+
+    async def verify(self) -> tuple[bool, str]:
+        return False, "Jira is not configured."
 
 
 def _adf(text: str) -> dict[str, Any]:
@@ -75,6 +79,17 @@ class JiraTracker:
             )
             resp.raise_for_status()
             return resp.json().get("fields", {}).get("status", {}).get("name")
+
+    async def verify(self) -> tuple[bool, str]:
+        """Check connectivity and credentials without creating an issue."""
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get(f"{self._base}/rest/api/3/myself", auth=self._auth)
+                resp.raise_for_status()
+                name = resp.json().get("displayName", "unknown")
+                return True, f"Connected to Jira as {name}"
+        except Exception as exc:  # surface any connectivity/auth failure to the UI
+            return False, str(exc)
 
 
 def get_issue_tracker() -> IssueTracker:
