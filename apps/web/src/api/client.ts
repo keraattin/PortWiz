@@ -286,6 +286,37 @@ export function listRunObservations(runId: string): Promise<Observation[]> {
   return request<Observation[]>(`/scan-runs/${runId}/observations`);
 }
 
+// Scan agents
+export interface Agent {
+  id: string;
+  name: string;
+  enabled: boolean;
+  last_seen_at: string | null;
+  created_at: string;
+}
+
+export interface EnrolledAgent {
+  id: string;
+  name: string;
+  token: string; // shown only once, at enrollment
+  created_at: string;
+}
+
+export function listAgents(): Promise<Agent[]> {
+  return request<Agent[]>("/agents");
+}
+
+export function enrollAgent(name: string): Promise<EnrolledAgent> {
+  return request<EnrolledAgent>("/agents", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function deleteAgent(id: string): Promise<void> {
+  return request<void>(`/agents/${id}`, { method: "DELETE" });
+}
+
 // Changes
 export type ChangeType = "opened" | "closed" | "service_changed" | "version_changed";
 export type ChangeStatus = "open" | "acknowledged" | "resolved";
