@@ -441,6 +441,49 @@ export function syncTaskFromJira(id: string): Promise<Task> {
   return request<Task>(`/tasks/${id}/jira/sync`, { method: "POST" });
 }
 
+// Settings / integrations (non-secret status + admin test actions)
+export interface SettingsStatus {
+  app_name: string;
+  environment: string;
+  version: string;
+  ai_provider: string;
+  ai_model: string;
+  ai_configured: boolean;
+  email_enabled: boolean;
+  smtp_host: string;
+  smtp_port: number;
+  smtp_from: string;
+  email_recipients: string[];
+  jira_enabled: boolean;
+  jira_url: string | null;
+  jira_project_key: string;
+  jira_configured: boolean;
+}
+
+export interface TestResult {
+  ok: boolean;
+  detail: string;
+}
+
+export function fetchSettings(): Promise<SettingsStatus> {
+  return request<SettingsStatus>("/settings");
+}
+
+export function testAi(): Promise<TestResult> {
+  return request<TestResult>("/settings/test/ai", { method: "POST" });
+}
+
+export function testEmail(recipient?: string): Promise<TestResult> {
+  return request<TestResult>("/settings/test/email", {
+    method: "POST",
+    body: JSON.stringify({ recipient: recipient || null }),
+  });
+}
+
+export function testJira(): Promise<TestResult> {
+  return request<TestResult>("/settings/test/jira", { method: "POST" });
+}
+
 // AI (provider-agnostic: local Ollama by default, Claude optional)
 export interface FingerprintRequest {
   banner: string;
