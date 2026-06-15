@@ -12,6 +12,7 @@ import TasksPage from "./pages/TasksPage";
 import AssistantPage from "./pages/AssistantPage";
 import SettingsPage from "./pages/SettingsPage";
 import AgentsPage from "./pages/AgentsPage";
+import UsersPage from "./pages/UsersPage";
 
 function ProtectedLayout() {
   const { token, loading } = useAuth();
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/compliance" element={<CompliancePage />} />
         <Route path="/assistant" element={<AssistantPage />} />
+        <Route path="/users" element={<UsersPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

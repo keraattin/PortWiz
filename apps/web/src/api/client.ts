@@ -101,8 +101,24 @@ export async function fetchHealth(): Promise<{ status: string }> {
 }
 
 // Users
+export type Role = "admin" | "operator" | "auditor";
+
+export interface UserCreateInput {
+  email: string;
+  password: string;
+  full_name?: string | null;
+  role: Role;
+}
+
 export function listUsers(): Promise<CurrentUser[]> {
   return request<CurrentUser[]>("/users");
+}
+
+export function createUser(payload: UserCreateInput): Promise<CurrentUser> {
+  return request<CurrentUser>("/users", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 // VLANs

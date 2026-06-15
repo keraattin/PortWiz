@@ -11,6 +11,7 @@ const NAV = [
   { to: "/tasks", label: "Tasks", end: false },
   { to: "/compliance", label: "Compliance", end: false },
   { to: "/assistant", label: "Assistant", end: false },
+  { to: "/users", label: "Users", end: false },
   { to: "/settings", label: "Settings", end: false },
 ];
 
