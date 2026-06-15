@@ -12,6 +12,7 @@ import {
   getToken,
   login as apiLogin,
   setToken as storeToken,
+  setUnauthorizedHandler,
 } from "../api/client";
 
 interface AuthState {
@@ -28,6 +29,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(() => getToken());
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Any API 401 (expired/invalid token) clears auth and the ProtectedLayout
+  // then redirects to /login.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearToken();
+      setTokenState(null);
+      setUser(null);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   useEffect(() => {
     let active = true;

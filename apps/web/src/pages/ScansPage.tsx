@@ -13,6 +13,7 @@ import {
   listScanRuns,
   runScanProfile,
 } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -39,6 +40,8 @@ function parseTargets(raw: string): string[] {
 }
 
 export default function ScansPage() {
+  const { user } = useAuth();
+  const canWrite = user?.role === "admin" || user?.role === "operator";
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [runs, setRuns] = useState<ScanRun[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -126,6 +129,12 @@ export default function ScansPage() {
     <div className="space-y-8">
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-slate-200">Scan profiles</h2>
+        <p className="text-sm text-slate-500">
+          A profile defines what to scan (targets, ports) and, optionally, a cron
+          schedule. Runs are picked up by an online agent; without one they stay
+          pending.
+        </p>
+        {canWrite && (
         <form
           onSubmit={onCreate}
           className="grid grid-cols-1 gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:grid-cols-3 lg:grid-cols-5"
@@ -182,6 +191,7 @@ export default function ScansPage() {
             Add profile
           </button>
         </form>
+        )}
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
@@ -213,18 +223,24 @@ export default function ScansPage() {
                     <td className="px-4 py-2 text-slate-300">{p.ports}</td>
                     <td className="px-4 py-2 text-slate-400">{p.scan_type}</td>
                     <td className="px-4 py-2 text-right">
-                      <button
-                        onClick={() => onRun(p)}
-                        className="mr-3 text-xs font-medium text-emerald-400 hover:text-emerald-300"
-                      >
-                        Run now
-                      </button>
-                      <button
-                        onClick={() => onDeleteProfile(p.id)}
-                        className="text-xs text-red-400 hover:text-red-300"
-                      >
-                        Delete
-                      </button>
+                      {canWrite ? (
+                        <>
+                          <button
+                            onClick={() => onRun(p)}
+                            className="mr-3 text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                          >
+                            Run now
+                          </button>
+                          <button
+                            onClick={() => onDeleteProfile(p.id)}
+                            className="text-xs text-red-400 hover:text-red-300"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-xs text-slate-600">read-only</span>
+                      )}
                     </td>
                   </tr>
                 ))

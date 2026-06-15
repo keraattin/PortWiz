@@ -8,6 +8,7 @@ import {
   listChanges,
   updateChangeStatus,
 } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -43,6 +44,8 @@ function describe(snapshot: PortSnapshot): string {
 }
 
 export default function ChangesPage() {
+  const { user } = useAuth();
+  const canWrite = user?.role === "admin" || user?.role === "operator";
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
   const [error, setError] = useState<string | null>(null);
@@ -153,7 +156,7 @@ export default function ChangesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-2 text-right">
-                    {c.status !== "acknowledged" && (
+                    {canWrite && c.status !== "acknowledged" && (
                       <button
                         onClick={() => onStatusChange(c.id, "acknowledged")}
                         className="mr-3 text-xs text-amber-400 hover:text-amber-300"
@@ -161,7 +164,7 @@ export default function ChangesPage() {
                         Acknowledge
                       </button>
                     )}
-                    {c.status !== "resolved" && (
+                    {canWrite && c.status !== "resolved" && (
                       <button
                         onClick={() => onStatusChange(c.id, "resolved")}
                         className="text-xs text-emerald-400 hover:text-emerald-300"

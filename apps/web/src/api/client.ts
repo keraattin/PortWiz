@@ -22,6 +22,20 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+// Global 401 handler: AuthContext registers this so an expired or invalid token
+// logs the user out and bounces to /login, instead of stranding them behind
+// repeated "could not validate credentials" errors. 403 (insufficient role) is
+// deliberately not handled here.
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(fn: (() => void) | null): void {
+  onUnauthorized = fn;
+}
+
+function handleUnauthorized(): void {
+  clearToken();
+  onUnauthorized?.();
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   const token = getToken();
@@ -35,6 +49,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   const data = await res.json().catch(() => null);
   if (!res.ok) {
+    if (res.status === 401) handleUnauthorized();
     const detail =
       data && typeof data.detail === "string" ? data.detail : res.statusText;
     throw new ApiError(res.status, detail);
@@ -218,6 +233,7 @@ export async function importAssets(
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) {
+    if (res.status === 401) handleUnauthorized();
     const detail =
       data && typeof data.detail === "string" ? data.detail : res.statusText;
     throw new ApiError(res.status, detail);
@@ -451,6 +467,7 @@ async function authedFetch(path: string): Promise<Response> {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) {
+    if (res.status === 401) handleUnauthorized();
     throw new ApiError(res.status, "Download failed");
   }
   return res;

@@ -1,22 +1,34 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
-const NAV = [
+// `roles`, when present, limits the nav item to those roles. Items without
+// `roles` are visible to every authenticated user.
+interface NavItem {
+  to: string;
+  label: string;
+  end: boolean;
+  roles?: string[];
+}
+
+const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", end: true },
   { to: "/assets", label: "Assets", end: false },
   { to: "/vlans", label: "VLANs", end: false },
   { to: "/scans", label: "Scans", end: false },
-  { to: "/agents", label: "Agents", end: false },
+  { to: "/agents", label: "Agents", end: false, roles: ["admin", "auditor"] },
   { to: "/changes", label: "Changes", end: false },
   { to: "/tasks", label: "Tasks", end: false },
   { to: "/compliance", label: "Compliance", end: false },
   { to: "/assistant", label: "Assistant", end: false },
-  { to: "/users", label: "Users", end: false },
+  { to: "/users", label: "Users", end: false, roles: ["admin", "auditor"] },
   { to: "/settings", label: "Settings", end: false },
 ];
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const navItems = NAV.filter(
+    (item) => !item.roles || (user != null && item.roles.includes(user.role)),
+  );
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -24,7 +36,7 @@ export default function Layout() {
         <div className="flex items-center gap-8">
           <span className="text-lg font-bold text-emerald-400">PortWiz</span>
           <nav className="flex gap-1">
-            {NAV.map((item) => (
+            {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

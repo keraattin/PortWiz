@@ -14,6 +14,7 @@ import {
   listUsers,
   listVlans,
 } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -33,6 +34,8 @@ const CRIT_BADGE: Record<Criticality, string> = {
 };
 
 export default function AssetsPage() {
+  const { user } = useAuth();
+  const canWrite = user?.role === "admin" || user?.role === "operator";
   const [assets, setAssets] = useState<Asset[]>([]);
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [users, setUsers] = useState<CurrentUser[]>([]);
@@ -129,8 +132,15 @@ export default function AssetsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-slate-200">Assets</h2>
+      <div>
+        <h2 className="text-lg font-semibold text-slate-200">Assets</h2>
+        <p className="text-sm text-slate-500">
+          The hosts PortWiz scans. Add them one at a time or import a CSV/Excel file;
+          each carries an owner, criticality, and data-sensitivity for compliance.
+        </p>
+      </div>
 
+      {canWrite && (
       <form
         onSubmit={onCreate}
         className="grid grid-cols-1 gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:grid-cols-3 lg:grid-cols-4"
@@ -193,9 +203,11 @@ export default function AssetsPage() {
           Add asset
         </button>
       </form>
+      )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
+      {canWrite && (
       <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-medium text-slate-200">Bulk import</h3>
@@ -252,6 +264,7 @@ export default function AssetsPage() {
           </div>
         )}
       </section>
+      )}
 
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
@@ -293,12 +306,14 @@ export default function AssetsPage() {
                   </td>
                   <td className="px-4 py-2 uppercase text-slate-400">{a.data_sensitivity}</td>
                   <td className="px-4 py-2 text-right">
-                    <button
-                      onClick={() => onDelete(a.id)}
-                      className="text-xs text-red-400 hover:text-red-300"
-                    >
-                      Delete
-                    </button>
+                    {canWrite && (
+                      <button
+                        onClick={() => onDelete(a.id)}
+                        className="text-xs text-red-400 hover:text-red-300"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

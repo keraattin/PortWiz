@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { ApiError, type Vlan, createVlan, deleteVlan, listVlans } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -9,6 +10,8 @@ const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
 export default function VlansPage() {
+  const { user } = useAuth();
+  const canWrite = user?.role === "admin" || user?.role === "operator";
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,8 +66,14 @@ export default function VlansPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-slate-200">VLANs</h2>
+      <div>
+        <h2 className="text-lg font-semibold text-slate-200">VLANs</h2>
+        <p className="text-sm text-slate-500">
+          Group assets by network segment. Add a VLAN, then assign assets to it.
+        </p>
+      </div>
 
+      {canWrite && (
       <form
         onSubmit={onCreate}
         className="grid grid-cols-1 gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:grid-cols-4"
@@ -98,6 +107,7 @@ export default function VlansPage() {
           Add VLAN
         </button>
       </form>
+      )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
@@ -131,12 +141,14 @@ export default function VlansPage() {
                   <td className="px-4 py-2 text-slate-300">{v.vlan_tag ?? "-"}</td>
                   <td className="px-4 py-2 text-slate-400">{v.description ?? "-"}</td>
                   <td className="px-4 py-2 text-right">
-                    <button
-                      onClick={() => onDelete(v.id)}
-                      className="text-xs text-red-400 hover:text-red-300"
-                    >
-                      Delete
-                    </button>
+                    {canWrite && (
+                      <button
+                        onClick={() => onDelete(v.id)}
+                        className="text-xs text-red-400 hover:text-red-300"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

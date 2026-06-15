@@ -10,6 +10,7 @@ import {
   syncTaskFromJira,
   updateTask,
 } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -29,6 +30,8 @@ const selectClass =
   "rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-500";
 
 export default function TasksPage() {
+  const { user } = useAuth();
+  const canWrite = user?.role === "admin" || user?.role === "operator";
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<CurrentUser[]>([]);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
@@ -126,39 +129,44 @@ export default function TasksPage() {
                       <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_BADGE[t.status]}`}>
                         {t.status.replace("_", " ")}
                       </span>
-                      <select
-                        className={selectClass}
-                        value={t.status}
-                        onChange={(e) =>
-                          act(() => updateTask(t.id, { status: e.target.value as TaskStatus }))
-                        }
-                      >
-                        {STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {s.replace("_", " ")}
-                          </option>
-                        ))}
-                      </select>
+                      {canWrite && (
+                        <select
+                          className={selectClass}
+                          value={t.status}
+                          onChange={(e) =>
+                            act(() => updateTask(t.id, { status: e.target.value as TaskStatus }))
+                          }
+                        >
+                          {STATUSES.map((s) => (
+                            <option key={s} value={s}>
+                              {s.replace("_", " ")}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-2">
-                    <select
-                      className={selectClass}
-                      value={t.assignee_id ?? ""}
-                      onChange={(e) =>
-                        act(() => updateTask(t.id, { assignee_id: e.target.value || null }))
-                      }
-                    >
-                      <option value="">Unassigned</option>
-                      {users.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.email}
-                        </option>
-                      ))}
-                    </select>
-                    {t.assignee_id && !users.length ? (
-                      <span className="ml-2 text-xs text-slate-500">{ownerEmail(t.assignee_id)}</span>
-                    ) : null}
+                    {canWrite ? (
+                      <select
+                        className={selectClass}
+                        value={t.assignee_id ?? ""}
+                        onChange={(e) =>
+                          act(() => updateTask(t.id, { assignee_id: e.target.value || null }))
+                        }
+                      >
+                        <option value="">Unassigned</option>
+                        {users.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.email}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-xs text-slate-300">
+                        {t.assignee_id ? ownerEmail(t.assignee_id) : "Unassigned"}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-2 text-xs text-slate-400">
                     {t.change_event_id ? "change" : "manual"}
@@ -167,20 +175,24 @@ export default function TasksPage() {
                     {t.jira_key ? (
                       <span className="flex items-center gap-2 text-xs">
                         <span className="font-mono text-slate-300">{t.jira_key}</span>
-                        <button
-                          onClick={() => act(() => syncTaskFromJira(t.id))}
-                          className="text-sky-400 hover:text-sky-300"
-                        >
-                          Sync
-                        </button>
+                        {canWrite && (
+                          <button
+                            onClick={() => act(() => syncTaskFromJira(t.id))}
+                            className="text-sky-400 hover:text-sky-300"
+                          >
+                            Sync
+                          </button>
+                        )}
                       </span>
-                    ) : (
+                    ) : canWrite ? (
                       <button
                         onClick={() => act(() => linkTaskToJira(t.id))}
                         className="text-xs text-emerald-400 hover:text-emerald-300"
                       >
                         Link to Jira
                       </button>
+                    ) : (
+                      <span className="text-xs text-slate-600">-</span>
                     )}
                   </td>
                 </tr>
