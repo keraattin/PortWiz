@@ -152,6 +152,19 @@ export function createUser(payload: UserCreateInput): Promise<CurrentUser> {
   });
 }
 
+export interface UserUpdateInput {
+  full_name?: string | null;
+  role?: Role;
+  is_active?: boolean;
+}
+
+export function updateUser(id: string, payload: UserUpdateInput): Promise<CurrentUser> {
+  return request<CurrentUser>(`/users/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 // VLANs
 export function listVlans(): Promise<Vlan[]> {
   return request<Vlan[]>("/vlans");
