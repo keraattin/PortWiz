@@ -71,3 +71,59 @@ async def test_segment_persisted_on_enroll(client, admin_headers) -> None:
     agents = (await client.get("/api/v1/agents", headers=admin_headers)).json()
     agent = next(a for a in agents if a["name"] == "vlan10")
     assert agent["segment"] == "vlan10"
+
+
+async def _agent_id(client, admin_headers, name) -> str:
+    agents = (await client.get("/api/v1/agents", headers=admin_headers)).json()
+    return next(a for a in agents if a["name"] == name)["id"]
+
+
+async def test_update_agent_segment(client, admin_headers) -> None:
+    await _enroll(client, admin_headers, "movable")  # no segment
+    aid = await _agent_id(client, admin_headers, "movable")
+    resp = await client.patch(
+        f"/api/v1/agents/{aid}", json={"segment": "dmz"}, headers=admin_headers
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["segment"] == "dmz"
+
+
+async def test_disable_agent_blocks_polling(client, admin_headers) -> None:
+    token = await _enroll(client, admin_headers, "toggle")
+    aid = await _agent_id(client, admin_headers, "toggle")
+    # Disable, then the agent token can no longer authenticate.
+    resp = await client.patch(
+        f"/api/v1/agents/{aid}", json={"enabled": False}, headers=admin_headers
+    )
+    assert resp.status_code == 200
+    assert resp.json()["enabled"] is False
+    assert (await _poll(client, token)).status_code == 401
+
+
+async def test_update_agent_requires_admin(client, admin_headers) -> None:
+    await _enroll(client, admin_headers, "target-agent")
+    aid = await _agent_id(client, admin_headers, "target-agent")
+    # Reuse the db via a second login: create an operator and try the PATCH.
+    resp = await client.post(
+        "/api/v1/users",
+        json={"email": "op2@test.local", "password": "Secret123!", "role": "operator"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 201
+    login = await client.post(
+        "/api/v1/auth/login", data={"username": "op2@test.local", "password": "Secret123!"}
+    )
+    op_headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    resp = await client.patch(
+        f"/api/v1/agents/{aid}", json={"segment": "x"}, headers=op_headers
+    )
+    assert resp.status_code == 403
+
+
+async def test_update_agent_404(client, admin_headers) -> None:
+    import uuid
+
+    resp = await client.patch(
+        f"/api/v1/agents/{uuid.uuid4()}", json={"segment": "x"}, headers=admin_headers
+    )
+    assert resp.status_code == 404

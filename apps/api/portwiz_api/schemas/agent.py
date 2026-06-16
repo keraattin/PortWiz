@@ -13,6 +13,11 @@ class AgentCreate(BaseModel):
     segment: str | None = Field(default=None, max_length=64)
 
 
+class AgentUpdate(BaseModel):
+    segment: str | None = Field(default=None, max_length=64)
+    enabled: bool | None = None
+
+
 class AgentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

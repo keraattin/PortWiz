@@ -19,7 +19,7 @@ from ...core.security import generate_agent_token, hash_agent_token
 from ...models.agent import Agent
 from ...models.scan import ScanProfile, ScanRun, ScanRunStatus, ScanSource, ScanType
 from ...models.user import User, UserRole
-from ...schemas.agent import AgentCreate, AgentCreated, AgentRead
+from ...schemas.agent import AgentCreate, AgentCreated, AgentRead, AgentUpdate
 from ...schemas.scan import ScanJobOut
 from ..deps import get_current_agent, require_roles
 
@@ -76,6 +76,33 @@ async def list_agents(
 ) -> list[Agent]:
     result = await session.execute(select(Agent).order_by(Agent.name))
     return list(result.scalars().all())
+
+
+@router.patch("/{agent_id}", response_model=AgentRead)
+async def update_agent(
+    agent_id: uuid.UUID,
+    payload: AgentUpdate,
+    current_user: User = Depends(require_roles(UserRole.admin)),
+    session: AsyncSession = Depends(get_session),
+) -> Agent:
+    agent = await session.get(Agent, agent_id)
+    if agent is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Agent not found")
+    changes = payload.model_dump(exclude_unset=True)
+    for key, value in changes.items():
+        setattr(agent, key, value)
+    await append_audit(
+        session,
+        action="agent.updated",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="agent",
+        target_id=str(agent.id),
+        payload={"changes": list(changes.keys())},
+    )
+    await session.commit()
+    await session.refresh(agent)
+    return agent
 
 
 @router.delete("/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
