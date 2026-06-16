@@ -7,6 +7,7 @@ import {
   testAi,
   testEmail,
   testJira,
+  testNetbox,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 
@@ -59,6 +60,7 @@ export default function SettingsPage() {
   const [aiResult, setAiResult] = useState<TestResult | null>(null);
   const [emailResult, setEmailResult] = useState<TestResult | null>(null);
   const [jiraResult, setJiraResult] = useState<TestResult | null>(null);
+  const [netboxResult, setNetboxResult] = useState<TestResult | null>(null);
   const [emailTo, setEmailTo] = useState("");
   const [testing, setTesting] = useState<string | null>(null);
 
@@ -96,7 +98,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* AI */}
         <section className={cardClass}>
           <div className="flex items-center justify-between">
@@ -176,6 +178,30 @@ export default function SettingsPage() {
             </button>
           )}
           <TestRow result={jiraResult} />
+        </section>
+
+        {/* NetBox */}
+        <section className={cardClass}>
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-slate-100">NetBox (IPAM)</h3>
+            <StatusDot
+              ok={status.netbox_configured}
+              label={status.netbox_configured ? "configured" : "off"}
+            />
+          </div>
+          <dl className="space-y-1 text-sm">
+            <Field label="URL" value={status.netbox_url ?? "-"} />
+          </dl>
+          {isAdmin && (
+            <button
+              className={testBtn}
+              disabled={testing === "netbox"}
+              onClick={() => runTest("netbox", testNetbox, setNetboxResult)}
+            >
+              {testing === "netbox" ? "Testing…" : "Test connection"}
+            </button>
+          )}
+          <TestRow result={netboxResult} />
         </section>
       </div>
 

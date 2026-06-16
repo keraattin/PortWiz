@@ -279,6 +279,23 @@ export async function importAssets(
   return data as AssetImportReport;
 }
 
+// Sync from an external inventory source (NetBox)
+export interface AssetSyncReport {
+  source: string;
+  total: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  errors_detail: string[];
+}
+
+export function syncAssets(onConflict: "update" | "skip" = "update"): Promise<AssetSyncReport> {
+  return request<AssetSyncReport>(`/assets/sync?on_conflict=${onConflict}`, {
+    method: "POST",
+  });
+}
+
 // Scans
 export type ScanType = "syn" | "connect" | "udp";
 export type ScanSource =
@@ -576,6 +593,9 @@ export interface SettingsStatus {
   jira_url: string | null;
   jira_project_key: string;
   jira_configured: boolean;
+  netbox_enabled: boolean;
+  netbox_url: string | null;
+  netbox_configured: boolean;
 }
 
 export interface TestResult {
@@ -600,6 +620,10 @@ export function testEmail(recipient?: string): Promise<TestResult> {
 
 export function testJira(): Promise<TestResult> {
   return request<TestResult>("/settings/test/jira", { method: "POST" });
+}
+
+export function testNetbox(): Promise<TestResult> {
+  return request<TestResult>("/settings/test/netbox", { method: "POST" });
 }
 
 // AI (provider-agnostic: local Ollama by default, Claude optional)

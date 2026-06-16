@@ -3,6 +3,7 @@ import {
   ApiError,
   type Asset,
   type AssetImportReport,
+  type AssetSyncReport,
   type Criticality,
   type CurrentUser,
   type DataSensitivity,
@@ -13,6 +14,7 @@ import {
   listAssets,
   listUsers,
   listVlans,
+  syncAssets,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Pagination, { usePagination } from "../components/Pagination";
@@ -55,6 +57,10 @@ export default function AssetsPage() {
   const [importReport, setImportReport] = useState<AssetImportReport | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+
+  const [syncReport, setSyncReport] = useState<AssetSyncReport | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   const assetsPage = usePagination(assets, 15);
 
@@ -130,6 +136,21 @@ export default function AssetsPage() {
       setImportError(errorMessage(err));
     } finally {
       setImporting(false);
+    }
+  }
+
+  async function onSync() {
+    setSyncError(null);
+    setSyncReport(null);
+    setSyncing(true);
+    try {
+      const report = await syncAssets(onConflict);
+      setSyncReport(report);
+      await reload();
+    } catch (err) {
+      setSyncError(errorMessage(err));
+    } finally {
+      setSyncing(false);
     }
   }
 
@@ -266,6 +287,32 @@ export default function AssetsPage() {
             )}
           </div>
         )}
+
+        <div className="space-y-2 border-t border-slate-800 pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm font-medium text-slate-200">Sync from NetBox</span>
+            <span className="text-xs text-slate-500">
+              Pulls hosts from your configured NetBox and upserts them by IP.
+            </span>
+          </div>
+          <button
+            onClick={onSync}
+            disabled={syncing}
+            className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+          >
+            {syncing ? "Syncing…" : "Sync from NetBox"}
+          </button>
+          {syncError && <p className="text-sm text-red-400">{syncError}</p>}
+          {syncReport && (
+            <p className="text-sm text-slate-300">
+              {syncReport.source}: {syncReport.total} hosts.{" "}
+              <span className="text-emerald-400">{syncReport.created} created</span>,{" "}
+              <span className="text-sky-400">{syncReport.updated} updated</span>,{" "}
+              <span className="text-slate-400">{syncReport.skipped} skipped</span>,{" "}
+              <span className="text-red-400">{syncReport.errors} errors</span>.
+            </p>
+          )}
+        </div>
       </section>
       )}
 
