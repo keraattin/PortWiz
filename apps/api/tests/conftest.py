@@ -18,6 +18,7 @@ import pytest_asyncio
 os.environ["PORTWIZ_NOTIFICATION_RECIPIENTS"] = "[]"
 os.environ["PORTWIZ_NOTIFICATIONS_ENABLED"] = "false"
 os.environ["PORTWIZ_JIRA_ENABLED"] = "false"
+os.environ["PORTWIZ_NETBOX_ENABLED"] = "false"
 
 
 @pytest_asyncio.fixture

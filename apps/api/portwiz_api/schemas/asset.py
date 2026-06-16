@@ -138,3 +138,13 @@ class AssetImportReport(BaseModel):
     skipped: int
     errors: int
     results: list[AssetImportRowResult]
+
+
+class AssetSyncReport(BaseModel):
+    source: str
+    total: int
+    created: int
+    updated: int
+    skipped: int
+    errors: int
+    errors_detail: list[str]

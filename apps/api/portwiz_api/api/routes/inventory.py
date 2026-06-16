@@ -7,6 +7,7 @@ Every create/update/delete is recorded in the immutable audit log.
 from __future__ import annotations
 
 import datetime as dt
+import ipaddress
 import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
@@ -14,15 +15,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.asset_import import parse_asset_file
+from ...core.asset_store import upsert_asset
 from ...core.audit import append_audit
 from ...core.db import get_session
-from ...models.asset import IPRange, VLAN, Asset
+from ...core.inventory_source import InventorySource, get_inventory_source
+from ...models.asset import VLAN, Asset, IPRange
 from ...models.user import User, UserRole
 from ...schemas.asset import (
     AssetCreate,
     AssetImportReport,
     AssetImportRowResult,
     AssetRead,
+    AssetSyncReport,
     AssetUpdate,
     IPRangeCreate,
     IPRangeRead,
@@ -425,6 +429,82 @@ async def import_assets(
         skipped=skipped,
         errors=errors,
         results=results,
+    )
+
+
+@assets_router.post("/sync", response_model=AssetSyncReport)
+async def sync_assets(
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    source: InventorySource = Depends(get_inventory_source),
+) -> AssetSyncReport:
+    """Pull hosts from the configured external inventory source (NetBox) and
+    upsert them by IP. Returns a summary; one asset.synced event is audited."""
+    if source.name == "none":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No inventory source is configured.")
+    try:
+        items = await source.fetch_assets()
+    except Exception as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Inventory source unavailable: {exc}"
+        ) from exc
+
+    vlan_by_name = {
+        v.name.lower(): v.id for v in (await session.execute(select(VLAN))).scalars()
+    }
+
+    created = updated = skipped = errors = 0
+    errors_detail: list[str] = []
+    for item in items:
+        try:
+            ipaddress.ip_address(item.ip)
+        except ValueError:
+            errors += 1
+            errors_detail.append(f"Invalid IP '{item.ip}'")
+            continue
+        fields: dict[str, object] = {}
+        if item.hostname:
+            fields["hostname"] = item.hostname
+        if item.description:
+            fields["description"] = item.description
+        if item.vlan_name:
+            vlan_id = vlan_by_name.get(item.vlan_name.lower())
+            if vlan_id is not None:
+                fields["vlan_id"] = vlan_id
+        outcome = await upsert_asset(session, item.ip, fields, on_conflict)
+        if outcome == "created":
+            created += 1
+        elif outcome == "updated":
+            updated += 1
+        else:
+            skipped += 1
+
+    await append_audit(
+        session,
+        action="asset.synced",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=None,
+        payload={
+            "source": source.name,
+            "total": len(items),
+            "created": created,
+            "updated": updated,
+            "skipped": skipped,
+            "errors": errors,
+        },
+    )
+    await session.commit()
+    return AssetSyncReport(
+        source=source.name,
+        total=len(items),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        errors_detail=errors_detail[:50],
     )
 
 

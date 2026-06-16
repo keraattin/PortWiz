@@ -71,6 +71,11 @@ class Settings(BaseSettings):
     jira_api_token: str | None = None
     jira_project_key: str = "PORT"
 
+    # NetBox (IPAM) inventory source. Disabled unless fully configured.
+    netbox_enabled: bool = False
+    netbox_url: str | None = None  # e.g. https://netbox.example.com
+    netbox_token: str | None = None
+
 
 @lru_cache
 def get_settings() -> Settings:
