@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends
 from ... import __version__
 from ...core.ai import AIProvider, get_ai_provider
 from ...core.config import get_settings
+from ...core.inventory_source import InventorySource, get_inventory_source
 from ...core.issue_tracker import IssueTracker, get_issue_tracker
 from ...core.notifications import Notifier, NullNotifier, get_notifier
 from ...models.user import User, UserRole
@@ -37,6 +38,7 @@ async def get_settings_status(_: User = Depends(get_current_user)) -> SettingsSt
     jira_configured = bool(
         s.jira_enabled and s.jira_url and s.jira_email and s.jira_api_token
     )
+    netbox_configured = bool(s.netbox_enabled and s.netbox_url and s.netbox_token)
     return SettingsStatus(
         app_name=s.app_name,
         environment=s.environment,
@@ -53,6 +55,9 @@ async def get_settings_status(_: User = Depends(get_current_user)) -> SettingsSt
         jira_url=s.jira_url,
         jira_project_key=s.jira_project_key,
         jira_configured=jira_configured,
+        netbox_enabled=s.netbox_enabled,
+        netbox_url=s.netbox_url,
+        netbox_configured=netbox_configured,
     )
 
 
@@ -105,4 +110,13 @@ async def test_jira(
     tracker: IssueTracker = Depends(get_issue_tracker),
 ) -> TestResult:
     ok, detail = await tracker.verify()
+    return TestResult(ok=ok, detail=detail)
+
+
+@router.post("/test/netbox", response_model=TestResult)
+async def test_netbox(
+    _: User = Depends(AdminDep),
+    source: InventorySource = Depends(get_inventory_source),
+) -> TestResult:
+    ok, detail = await source.verify()
     return TestResult(ok=ok, detail=detail)

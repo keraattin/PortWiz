@@ -17,6 +17,8 @@ async def test_status_exposes_no_secrets(client, admin_headers) -> None:
     assert body["email_enabled"] is False
     assert body["jira_enabled"] is False
     assert body["jira_configured"] is False
+    assert body["netbox_enabled"] is False
+    assert body["netbox_configured"] is False
     assert isinstance(body["email_recipients"], list)
     # No secret field should ever be serialized.
     blob = resp.text.lower()
@@ -86,6 +88,24 @@ async def test_test_jira_uses_tracker_verify(client, admin_headers) -> None:
     body = resp.json()
     assert body["ok"] is True
     assert "Tester" in body["detail"]
+
+
+async def test_test_netbox_uses_source_verify(client, admin_headers) -> None:
+    from portwiz_api.core.inventory_source import get_inventory_source
+    from portwiz_api.main import app
+
+    class FakeSource:
+        name = "netbox"
+
+        async def verify(self) -> tuple[bool, str]:
+            return True, "Connected to NetBox 4.1.0"
+
+    app.dependency_overrides[get_inventory_source] = lambda: FakeSource()
+    resp = await client.post("/api/v1/settings/test/netbox", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["ok"] is True
+    assert "NetBox" in body["detail"]
 
 
 async def test_test_actions_are_admin_only(client, db) -> None:

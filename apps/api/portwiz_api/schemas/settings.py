@@ -32,6 +32,11 @@ class SettingsStatus(BaseModel):
     jira_project_key: str
     jira_configured: bool
 
+    # NetBox (IPAM)
+    netbox_enabled: bool
+    netbox_url: str | None
+    netbox_configured: bool
+
 
 class TestResult(BaseModel):
     ok: bool
