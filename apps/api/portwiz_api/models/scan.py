@@ -70,6 +70,8 @@ class ScanProfile(SQLModel, table=True):
             server_default=ScanSource.internal_unauthenticated.value,
         ),
     )
+    # Network segment for routing runs to the responsible agent.
+    segment: str | None = Field(default=None, sa_column=Column(String(64), index=True))
     # Cron expression for scheduled runs.
     cron: str | None = Field(default=None, sa_column=Column(String(64)))
     # Last time the scheduler triggered a run for this profile (dedup guard).

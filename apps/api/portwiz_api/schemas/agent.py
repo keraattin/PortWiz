@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class AgentCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
+    segment: str | None = Field(default=None, max_length=64)
 
 
 class AgentRead(BaseModel):
@@ -17,6 +18,7 @@ class AgentRead(BaseModel):
 
     id: uuid.UUID
     name: str
+    segment: str | None
     enabled: bool
     last_seen_at: dt.datetime | None
     created_at: dt.datetime
@@ -27,5 +29,6 @@ class AgentCreated(BaseModel):
 
     id: uuid.UUID
     name: str
+    segment: str | None
     token: str
     created_at: dt.datetime

@@ -28,6 +28,9 @@ class Agent(SQLModel, table=True):
     token_hash: str = Field(
         sa_column=Column(String(64), unique=True, index=True, nullable=False)
     )
+    # Network segment this agent scans. Runs are routed to an agent whose segment
+    # matches the scan profile's segment (a null segment matches null profiles).
+    segment: str | None = Field(default=None, sa_column=Column(String(64), index=True))
     enabled: bool = Field(default=True, nullable=False)
     last_seen_at: dt.datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True))

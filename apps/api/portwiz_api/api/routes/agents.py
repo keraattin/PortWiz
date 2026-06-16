@@ -43,7 +43,9 @@ async def enroll_agent(
         raise HTTPException(status.HTTP_409_CONFLICT, "Agent name already exists")
 
     token = generate_agent_token()
-    agent = Agent(name=payload.name, token_hash=hash_agent_token(token))
+    agent = Agent(
+        name=payload.name, token_hash=hash_agent_token(token), segment=payload.segment
+    )
     session.add(agent)
     await session.flush()
     await append_audit(
@@ -53,12 +55,18 @@ async def enroll_agent(
         actor_email=current_user.email,
         target_type="agent",
         target_id=str(agent.id),
-        payload={"name": agent.name},
+        payload={"name": agent.name, "segment": agent.segment},
     )
     await session.commit()
     await session.refresh(agent)
     # The token is shown only here; only its hash is stored.
-    return AgentCreated(id=agent.id, name=agent.name, token=token, created_at=agent.created_at)
+    return AgentCreated(
+        id=agent.id,
+        name=agent.name,
+        segment=agent.segment,
+        token=token,
+        created_at=agent.created_at,
+    )
 
 
 @router.get("", response_model=list[AgentRead])
@@ -106,18 +114,24 @@ async def poll_job(
     agent: Agent = Depends(get_current_agent),
     session: AsyncSession = Depends(get_session),
 ):
-    """Claim the oldest pending scan run and return it as a ScanJob.
+    """Claim the oldest pending scan run for this agent's segment.
 
-    Returns 204 when there is no work. Note: for the MVP this claim is a simple
-    select-then-update; multi-agent claim contention is hardened in Phase 2.
+    Runs are routed by segment: an agent only claims runs whose scan profile has
+    the same segment, and an agent with no segment claims unsegmented profiles.
+    Returns 204 when there is no matching work. Note: for the MVP this claim is a
+    simple select-then-update; multi-agent claim contention is hardened later.
     """
+    segment_match = (
+        ScanProfile.segment.is_(None)
+        if agent.segment is None
+        else ScanProfile.segment == agent.segment
+    )
     run = (
         await session.execute(
             select(ScanRun)
-            .where(
-                ScanRun.status == ScanRunStatus.pending,
-                ScanRun.scan_profile_id.is_not(None),
-            )
+            .join(ScanProfile, ScanRun.scan_profile_id == ScanProfile.id)
+            .where(ScanRun.status == ScanRunStatus.pending)
+            .where(segment_match)
             .order_by(ScanRun.created_at.asc())
             .limit(1)
         )
