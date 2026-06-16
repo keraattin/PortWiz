@@ -6,8 +6,10 @@ import {
   deleteAgent,
   enrollAgent,
   listAgents,
+  updateAgent,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import Modal from "../components/Modal";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -37,6 +39,10 @@ export default function AgentsPage() {
   const [segment, setSegment] = useState("");
   const [enrolled, setEnrolled] = useState<EnrolledAgent | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const [editAgent, setEditAgent] = useState<Agent | null>(null);
+  const [editSegment, setEditSegment] = useState("");
+  const [editEnabled, setEditEnabled] = useState(true);
 
   async function reload() {
     setLoading(true);
@@ -73,6 +79,30 @@ export default function AgentsPage() {
     setError(null);
     try {
       await deleteAgent(id);
+      await reload();
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  }
+
+  function openEdit(a: Agent) {
+    if (!isAdmin) return;
+    setError(null);
+    setEditAgent(a);
+    setEditSegment(a.segment ?? "");
+    setEditEnabled(a.enabled);
+  }
+
+  async function onSaveEdit(e: FormEvent) {
+    e.preventDefault();
+    if (!editAgent) return;
+    setError(null);
+    try {
+      await updateAgent(editAgent.id, {
+        segment: editSegment || null,
+        enabled: editEnabled,
+      });
+      setEditAgent(null);
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -173,15 +203,25 @@ export default function AgentsPage() {
               agents.map((a) => {
                 const status = agentStatus(a.last_seen_at);
                 return (
-                  <tr key={a.id} className="bg-slate-950">
+                  <tr
+                    key={a.id}
+                    onClick={() => openEdit(a)}
+                    className={`bg-slate-950 ${isAdmin ? "cursor-pointer hover:bg-slate-900" : ""}`}
+                  >
                     <td className="px-4 py-2 text-slate-100">{a.name}</td>
                     <td className="px-4 py-2 text-slate-300">
                       {a.segment ?? <span className="text-slate-600">any</span>}
                     </td>
                     <td className="px-4 py-2">
-                      <span className={`rounded-full px-2 py-0.5 text-xs ${status.cls}`}>
-                        {status.label}
-                      </span>
+                      {a.enabled ? (
+                        <span className={`rounded-full px-2 py-0.5 text-xs ${status.cls}`}>
+                          {status.label}
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-400">
+                          disabled
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-2 text-xs text-slate-400">
                       {a.last_seen_at ? new Date(a.last_seen_at).toLocaleString() : "-"}
@@ -192,7 +232,10 @@ export default function AgentsPage() {
                     {isAdmin && (
                       <td className="px-4 py-2 text-right">
                         <button
-                          onClick={() => onDelete(a.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void onDelete(a.id);
+                          }}
                           className="text-xs text-red-400 hover:text-red-300"
                         >
                           Delete
@@ -206,6 +249,44 @@ export default function AgentsPage() {
           </tbody>
         </table>
       </div>
+
+      <Modal
+        open={editAgent !== null}
+        onClose={() => setEditAgent(null)}
+        title={`Edit ${editAgent?.name ?? ""}`}
+      >
+        <form onSubmit={onSaveEdit} className="space-y-3">
+          <div>
+            <label className="block text-sm text-slate-300">Segment</label>
+            <input
+              className={inputClass}
+              placeholder="Segment (e.g. vlan10; blank = any)"
+              value={editSegment}
+              onChange={(e) => setEditSegment(e.target.value)}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={editEnabled}
+              onChange={(e) => setEditEnabled(e.target.checked)}
+            />
+            Enabled
+          </label>
+          <p className="text-xs text-slate-500">
+            Disabling an agent immediately blocks its token from scanning.
+          </p>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              Save changes
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

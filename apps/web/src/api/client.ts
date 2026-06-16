@@ -420,6 +420,18 @@ export function enrollAgent(name: string, segment?: string | null): Promise<Enro
   });
 }
 
+export interface AgentUpdateInput {
+  segment?: string | null;
+  enabled?: boolean;
+}
+
+export function updateAgent(id: string, payload: AgentUpdateInput): Promise<Agent> {
+  return request<Agent>(`/agents/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function deleteAgent(id: string): Promise<void> {
   return request<void>(`/agents/${id}`, { method: "DELETE" });
 }
