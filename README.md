@@ -25,12 +25,16 @@ that requirement and takes it a step further:
 - 📦 **One-click evidence package**: scan report + change diff + linked
   task/approval + audit-log slice → signed JSON/PDF.
 - 🛰️ **Distributed scan agents**: a lightweight Go agent placed in each
-  VLAN/segment; `naabu` + `nmap-service-probes`.
+  VLAN/segment; `naabu` + `nmap-service-probes`. Runs are routed per segment, and
+  a run an agent claims but never finishes is automatically requeued.
+- 🗂️ **Inventory at scale**: manage assets by hand, bulk-import from CSV/Excel,
+  or sync from NetBox (IPAM). Each asset carries owner, criticality, and
+  data-sensitivity for scoping.
 - 🤖 **Provider-agnostic AI**: fingerprints unknown services and a natural-language
   assistant. Local model (Ollama) by default, Claude optional; data never leaves
   the network.
-- 🔗 **Workflow integrations**: in-app tasks, email, Jira (bidirectional).
-  Phase 2: Slack/Teams, AD/SSO.
+- 🔗 **Workflow integrations**: in-app tasks, email, Jira (bidirectional), with a
+  settings page that tests each connection. Phase 2: Slack/Teams, AD/SSO.
 
 ## Architecture
 
@@ -82,10 +86,13 @@ The first admin user is seeded from the `PORTWIZ_FIRST_ADMIN_*` values in `.env`
 
 ## Roadmap
 
-- **Phase 1 (MVP):** asset/VLAN/IP management → scanning → flapping-aware diff →
-  audit + evidence export → task/Jira/email + scheduling → AI v0.
-- **Phase 2:** compliance cadence templates, agent fleet, Keycloak
-  (AD/LDAP/SSO), Slack/Teams, SIEM/WORM forwarding.
+- **Phase 1 (MVP) — done:** asset/VLAN/IP management → scanning → flapping-aware
+  diff → audit + evidence export → task/Jira/email + scheduling → AI v0, plus a
+  live dashboard, role-based UI, and admin pages (users, agents, settings).
+- **Phase 2 — in progress:** ✅ bulk CSV/Excel import, ✅ NetBox/IPAM sync,
+  ✅ per-segment agent routing + stale-run requeue, ✅ integration connection
+  tests. Next: compliance cadence templates, Keycloak (AD/LDAP/SSO), Slack/Teams,
+  SIEM/WORM forwarding.
 - **Phase 3:** MCP/RAG AI assistant, local-only mode, Kubernetes/Helm, passive
   discovery correlation.
 
