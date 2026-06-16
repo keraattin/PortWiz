@@ -112,6 +112,11 @@ class ScanRun(SQLModel, table=True):
     finished_at: dt.datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
+    # Number of times an agent has claimed this run; used to requeue stale runs
+    # and to give up after too many failed attempts.
+    attempts: int = Field(
+        default=0, sa_column=Column(Integer, nullable=False, server_default="0")
+    )
     error: str | None = None
     created_at: dt.datetime = Field(
         default_factory=_utcnow,

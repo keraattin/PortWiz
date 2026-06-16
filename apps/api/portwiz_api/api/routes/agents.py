@@ -134,6 +134,9 @@ async def poll_job(
             .where(segment_match)
             .order_by(ScanRun.created_at.asc())
             .limit(1)
+            # Lock the claimed row and let concurrent agents skip it (PostgreSQL;
+            # SQLite ignores row locking). Prevents two agents claiming one run.
+            .with_for_update(skip_locked=True, of=ScanRun)
         )
     ).scalar_one_or_none()
     if run is None:
@@ -150,6 +153,7 @@ async def poll_job(
     run.status = ScanRunStatus.running
     run.agent_id = str(agent.id)
     run.started_at = now
+    run.attempts = run.attempts + 1
     agent.last_seen_at = now
 
     job = ScanJobOut(

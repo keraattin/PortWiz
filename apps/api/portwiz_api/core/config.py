@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     celery_broker_url: str = "redis://valkey:6379/0"
     celery_result_backend: str = "redis://valkey:6379/1"
 
+    # Scan reliability: a run an agent claimed but did not finish within
+    # scan_stale_minutes is requeued, up to scan_max_attempts before it fails.
+    scan_stale_minutes: int = 30
+    scan_max_attempts: int = 3
+
     # --- AI layer (provider-agnostic) ---
     # Provider for fingerprint enrichment and the assistant: "ollama" | "claude" | "none".
     ai_provider: str = "ollama"

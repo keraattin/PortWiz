@@ -13,8 +13,8 @@ import datetime as dt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .audit import append_audit
 from ..models.scan import ScanProfile, ScanRun, ScanRunStatus, ScanSource
+from .audit import append_audit
 
 
 def _utcnow() -> dt.datetime:
@@ -75,3 +75,57 @@ async def run_due_scans(session: AsyncSession, now: dt.datetime | None = None) -
     if created:
         await session.commit()
     return created
+
+
+async def requeue_stale_runs(
+    session: AsyncSession,
+    now: dt.datetime | None = None,
+    timeout_minutes: int = 30,
+    max_attempts: int = 3,
+) -> dict[str, int]:
+    """Recover runs an agent claimed but never finished.
+
+    A run that has been ``running`` longer than ``timeout_minutes`` is put back
+    to ``pending`` for another agent to claim, unless it has already been tried
+    ``max_attempts`` times, in which case it is marked ``failed``.
+    """
+    now = _utcnow() if now is None else _aware(now)
+    cutoff = now - dt.timedelta(minutes=timeout_minutes)
+
+    running = (
+        await session.execute(
+            select(ScanRun).where(
+                ScanRun.status == ScanRunStatus.running,
+                ScanRun.started_at.is_not(None),
+            )
+        )
+    ).scalars().all()
+
+    requeued = failed = 0
+    for run in running:
+        if run.started_at is None or _aware(run.started_at) >= cutoff:
+            continue  # not stale yet
+        if run.attempts >= max_attempts:
+            run.status = ScanRunStatus.failed
+            run.error = f"Agent did not return results after {run.attempts} attempts"
+            run.finished_at = now
+            failed += 1
+            action = "scan_run.failed"
+        else:
+            run.status = ScanRunStatus.pending
+            run.agent_id = None
+            run.started_at = None
+            requeued += 1
+            action = "scan_run.requeued"
+        await append_audit(
+            session,
+            action=action,
+            actor_email="system:scheduler",
+            target_type="scan_run",
+            target_id=str(run.id),
+            payload={"attempts": run.attempts},
+        )
+
+    if requeued or failed:
+        await session.commit()
+    return {"requeued": requeued, "failed": failed}
