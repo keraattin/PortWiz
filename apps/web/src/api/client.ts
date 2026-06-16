@@ -318,6 +318,7 @@ export interface ScanProfile {
   service_detection: boolean;
   rate_limit_pps: number;
   scan_source: ScanSource;
+  segment: string | null;
   cron: string | null;
   enabled: boolean;
   created_by: string | null;
@@ -359,6 +360,7 @@ export interface ScanProfileInput {
   ports?: string;
   scan_type?: ScanType;
   service_detection?: boolean;
+  segment?: string | null;
   cron?: string | null;
 }
 
@@ -393,6 +395,7 @@ export function listRunObservations(runId: string): Promise<Observation[]> {
 export interface Agent {
   id: string;
   name: string;
+  segment: string | null;
   enabled: boolean;
   last_seen_at: string | null;
   created_at: string;
@@ -401,6 +404,7 @@ export interface Agent {
 export interface EnrolledAgent {
   id: string;
   name: string;
+  segment: string | null;
   token: string; // shown only once, at enrollment
   created_at: string;
 }
@@ -409,10 +413,10 @@ export function listAgents(): Promise<Agent[]> {
   return request<Agent[]>("/agents");
 }
 
-export function enrollAgent(name: string): Promise<EnrolledAgent> {
+export function enrollAgent(name: string, segment?: string | null): Promise<EnrolledAgent> {
   return request<EnrolledAgent>("/agents", {
     method: "POST",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, segment: segment || null }),
   });
 }
 

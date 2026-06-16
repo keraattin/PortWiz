@@ -34,6 +34,7 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [segment, setSegment] = useState("");
   const [enrolled, setEnrolled] = useState<EnrolledAgent | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -57,9 +58,10 @@ export default function AgentsPage() {
     setError(null);
     setCopied(false);
     try {
-      const result = await enrollAgent(name);
+      const result = await enrollAgent(name, segment || null);
       setEnrolled(result);
       setName("");
+      setSegment("");
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -117,13 +119,19 @@ export default function AgentsPage() {
       )}
 
       {isAdmin && (
-        <form onSubmit={onEnroll} className="flex gap-3">
+        <form onSubmit={onEnroll} className="flex flex-wrap gap-3">
           <input
-            className={inputClass}
+            className={`${inputClass} flex-1`}
             placeholder="Agent name (e.g. vlan10-scanner)"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+          />
+          <input
+            className={`${inputClass} sm:w-48`}
+            placeholder="Segment (optional, e.g. vlan10)"
+            value={segment}
+            onChange={(e) => setSegment(e.target.value)}
           />
           <button
             type="submit"
@@ -141,6 +149,7 @@ export default function AgentsPage() {
           <thead className="bg-slate-900 text-slate-400">
             <tr>
               <th className="px-4 py-2 font-medium">Name</th>
+              <th className="px-4 py-2 font-medium">Segment</th>
               <th className="px-4 py-2 font-medium">Status</th>
               <th className="px-4 py-2 font-medium">Last seen</th>
               <th className="px-4 py-2 font-medium">Enrolled</th>
@@ -150,13 +159,13 @@ export default function AgentsPage() {
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                <td className="px-4 py-3 text-slate-500" colSpan={6}>
                   Loading…
                 </td>
               </tr>
             ) : agents.length === 0 ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                <td className="px-4 py-3 text-slate-500" colSpan={6}>
                   No agents enrolled yet. Enroll one to start scanning.
                 </td>
               </tr>
@@ -166,6 +175,9 @@ export default function AgentsPage() {
                 return (
                   <tr key={a.id} className="bg-slate-950">
                     <td className="px-4 py-2 text-slate-100">{a.name}</td>
+                    <td className="px-4 py-2 text-slate-300">
+                      {a.segment ?? <span className="text-slate-600">any</span>}
+                    </td>
                     <td className="px-4 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs ${status.cls}`}>
                         {status.label}

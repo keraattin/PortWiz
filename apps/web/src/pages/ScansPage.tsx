@@ -54,6 +54,7 @@ export default function ScansPage() {
   const [name, setName] = useState("");
   const [targets, setTargets] = useState("");
   const [ports, setPorts] = useState("top-1000");
+  const [segment, setSegment] = useState("");
   const [cron, setCron] = useState("");
   const [scanType, setScanType] = useState<ScanType>("connect");
   const [serviceDetection, setServiceDetection] = useState(true);
@@ -85,11 +86,13 @@ export default function ScansPage() {
         ports,
         scan_type: scanType,
         service_detection: serviceDetection,
+        segment: segment || null,
         cron: cron || null,
       });
       setName("");
       setTargets("");
       setPorts("top-1000");
+      setSegment("");
       setCron("");
       await reload();
     } catch (e) {
@@ -166,6 +169,12 @@ export default function ScansPage() {
           />
           <input
             className={inputClass}
+            placeholder="Segment (optional, e.g. vlan10)"
+            value={segment}
+            onChange={(e) => setSegment(e.target.value)}
+          />
+          <input
+            className={inputClass}
             placeholder="Cron (optional, e.g. 0 2 * * *)"
             value={cron}
             onChange={(e) => setCron(e.target.value)}
@@ -207,6 +216,7 @@ export default function ScansPage() {
                 <th className="px-4 py-2 font-medium">Name</th>
                 <th className="px-4 py-2 font-medium">Targets</th>
                 <th className="px-4 py-2 font-medium">Ports</th>
+                <th className="px-4 py-2 font-medium">Segment</th>
                 <th className="px-4 py-2 font-medium">Type</th>
                 <th className="px-4 py-2"></th>
               </tr>
@@ -214,7 +224,7 @@ export default function ScansPage() {
             <tbody className="divide-y divide-slate-800">
               {profiles.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                  <td className="px-4 py-3 text-slate-500" colSpan={6}>
                     No scan profiles yet.
                   </td>
                 </tr>
@@ -226,6 +236,9 @@ export default function ScansPage() {
                       {p.targets.join(", ")}
                     </td>
                     <td className="px-4 py-2 text-slate-300">{p.ports}</td>
+                    <td className="px-4 py-2 text-slate-300">
+                      {p.segment ?? <span className="text-slate-600">any</span>}
+                    </td>
                     <td className="px-4 py-2 text-slate-400">{p.scan_type}</td>
                     <td className="px-4 py-2 text-right">
                       {canWrite ? (
