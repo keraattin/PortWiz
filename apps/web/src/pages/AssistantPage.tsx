@@ -4,13 +4,17 @@ import {
   askAssistant,
   fingerprintBanner,
 } from "../api/client";
+import { type TKey } from "../i18n/locales/en";
+import { useI18n } from "../i18n/I18nContext";
 
-function errorMessage(e: unknown): string {
+type Translate = (key: TKey, vars?: Record<string, string | number>) => string;
+
+function errorMessage(e: unknown, t: Translate): string {
   return e instanceof ApiError
     ? e.status === 502
-      ? "AI provider is unavailable. Check that Ollama is running or a Claude API key is set."
+      ? t("assistant.providerUnavailable")
       : e.message
-    : "Something went wrong";
+    : t("common.error");
 }
 
 const inputClass =
@@ -28,6 +32,7 @@ function ProviderBadge({ provider }: { provider: string }) {
 }
 
 export default function AssistantPage() {
+  const { t } = useI18n();
   // Fingerprint helper state.
   const [banner, setBanner] = useState("");
   const [port, setPort] = useState("");
@@ -55,7 +60,7 @@ export default function AssistantPage() {
       });
       setFpResult(result);
     } catch (err) {
-      setFpError(errorMessage(err));
+      setFpError(errorMessage(err, t));
     } finally {
       setFpLoading(false);
     }
@@ -69,7 +74,7 @@ export default function AssistantPage() {
     try {
       setAnswer(await askAssistant(question));
     } catch (err) {
-      setQError(errorMessage(err));
+      setQError(errorMessage(err, t));
     } finally {
       setQLoading(false);
     }
@@ -77,22 +82,17 @@ export default function AssistantPage() {
 
   return (
     <div className="space-y-8">
-      <p className="text-sm text-slate-500">
-        AI is an optional, provider-agnostic layer. By default it runs against a
-        local Ollama model so scan data never leaves your network; a Claude API
-        key can be configured instead. Service banners are treated as untrusted
-        input and sanitized before reaching any model.
-      </p>
+      <p className="text-sm text-slate-500">{t("assistant.intro")}</p>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-200">Fingerprint a banner</h2>
+        <h2 className="text-lg font-semibold text-slate-200">{t("assistant.fingerprintTitle")}</h2>
         <form
           onSubmit={onFingerprint}
           className="space-y-3 rounded-xl border border-slate-800 bg-slate-900 p-4"
         >
           <textarea
             className={`${inputClass} h-24 font-mono`}
-            placeholder="Paste a service banner (e.g. SSH-2.0-OpenSSH_9.6)"
+            placeholder={t("assistant.bannerPlaceholder")}
             value={banner}
             onChange={(e) => setBanner(e.target.value)}
             required
@@ -100,19 +100,19 @@ export default function AssistantPage() {
           <div className="flex flex-wrap gap-3">
             <input
               className={`${inputClass} sm:w-32`}
-              placeholder="Port"
+              placeholder={t("assistant.portPlaceholder")}
               inputMode="numeric"
               value={port}
               onChange={(e) => setPort(e.target.value)}
             />
             <input
               className={`${inputClass} sm:w-32`}
-              placeholder="Protocol"
+              placeholder={t("assistant.protocolPlaceholder")}
               value={protocol}
               onChange={(e) => setProtocol(e.target.value)}
             />
             <button type="submit" className={buttonClass} disabled={fpLoading}>
-              {fpLoading ? "Analyzing…" : "Identify service"}
+              {fpLoading ? t("assistant.analyzing") : t("assistant.identify")}
             </button>
           </div>
         </form>
@@ -126,17 +126,17 @@ export default function AssistantPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-200">Ask the assistant</h2>
+        <h2 className="text-lg font-semibold text-slate-200">{t("assistant.askTitle")}</h2>
         <form onSubmit={onAsk} className="flex gap-3">
           <input
             className={inputClass}
-            placeholder="Ask about a port, service, or protocol (e.g. What runs on port 3389?)"
+            placeholder={t("assistant.questionPlaceholder")}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             required
           />
           <button type="submit" className={buttonClass} disabled={qLoading}>
-            {qLoading ? "Thinking…" : "Ask"}
+            {qLoading ? t("assistant.thinking") : t("assistant.ask")}
           </button>
         </form>
         {qError && <p className="text-sm text-red-400">{qError}</p>}

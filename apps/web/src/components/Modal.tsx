@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect } from "react";
+import { useI18n } from "../i18n/I18nContext";
 
 interface ModalProps {
   open: boolean;
@@ -9,6 +10,7 @@ interface ModalProps {
 }
 
 export default function Modal({ open, onClose, title, children, wide }: ModalProps) {
+  const { t } = useI18n();
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -37,7 +39,7 @@ export default function Modal({ open, onClose, title, children, wide }: ModalPro
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-200"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             ✕
           </button>

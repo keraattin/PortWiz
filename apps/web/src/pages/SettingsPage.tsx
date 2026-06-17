@@ -16,6 +16,10 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import { useToast } from "../components/Toast";
+import { type TKey } from "../i18n/locales/en";
+import { useI18n } from "../i18n/I18nContext";
+
+type Translate = (key: TKey, vars?: Record<string, string | number>) => string;
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -79,8 +83,8 @@ function fromConfig(c: SettingsConfig): FormState {
   };
 }
 
-function secretHint(isSet: boolean): string {
-  return isSet ? "Set. Leave blank to keep the current value." : "Not set.";
+function secretHint(isSet: boolean, t: Translate): string {
+  return isSet ? t("settings.secretSet") : t("settings.secretNotSet");
 }
 
 function Toggle({
@@ -112,6 +116,7 @@ function TestRow({ result }: { result: TestResult | null }) {
 export default function SettingsPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const { t } = useI18n();
   const isAdmin = user?.role === "admin";
 
   const [config, setConfig] = useState<SettingsConfig | null>(null);
@@ -154,7 +159,7 @@ export default function SettingsPage() {
       const c = await updateSettingsConfig(payload);
       setConfig(c);
       setForm(fromConfig(c)); // clears the secret inputs
-      toast.success("Settings saved");
+      toast.success(t("settings.saved"));
     } catch (e) {
       toast.error(errorMessage(e));
     } finally {
@@ -181,93 +186,93 @@ export default function SettingsPage() {
 
   // Read-only view for non-admins (auditors).
   if (!isAdmin) {
-    if (!status) return <p className="text-sm text-slate-400">Loading…</p>;
+    if (!status) return <p className="text-sm text-slate-400">{t("common.loading")}</p>;
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-200">Settings &amp; integrations</h2>
-        <p className="text-sm text-slate-500">
-          Read-only. Only administrators can change configuration.
-        </p>
+        <h2 className="text-lg font-semibold text-slate-200">{t("settings.title")}</h2>
+        <p className="text-sm text-slate-500">{t("settings.readonlySubtitle")}</p>
         <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div className={cardClass}>
-            <h3 className="font-medium text-slate-100">AI</h3>
+            <h3 className="font-medium text-slate-100">{t("settings.section.ai")}</h3>
             <p className="text-slate-300">
-              {status.ai_provider} ({status.ai_configured ? "configured" : "off"})
+              {status.ai_provider} (
+              {status.ai_configured ? t("settings.configured") : t("settings.off")})
             </p>
           </div>
           <div className={cardClass}>
-            <h3 className="font-medium text-slate-100">Email</h3>
+            <h3 className="font-medium text-slate-100">{t("settings.section.email")}</h3>
             <p className="text-slate-300">
               {status.smtp_host}:{status.smtp_port} (
-              {status.email_enabled ? "enabled" : "disabled"})
+              {status.email_enabled ? t("settings.enabled") : t("settings.disabled")})
             </p>
           </div>
           <div className={cardClass}>
-            <h3 className="font-medium text-slate-100">Jira</h3>
-            <p className="text-slate-300">{status.jira_configured ? "configured" : "off"}</p>
+            <h3 className="font-medium text-slate-100">{t("settings.section.jira")}</h3>
+            <p className="text-slate-300">
+              {status.jira_configured ? t("settings.configured") : t("settings.off")}
+            </p>
           </div>
           <div className={cardClass}>
-            <h3 className="font-medium text-slate-100">NetBox</h3>
-            <p className="text-slate-300">{status.netbox_configured ? "configured" : "off"}</p>
+            <h3 className="font-medium text-slate-100">{t("settings.section.netbox")}</h3>
+            <p className="text-slate-300">
+              {status.netbox_configured ? t("settings.configured") : t("settings.off")}
+            </p>
           </div>
         </dl>
       </div>
     );
   }
 
-  if (!config || !form) return <p className="text-sm text-slate-400">Loading…</p>;
+  if (!config || !form) return <p className="text-sm text-slate-400">{t("common.loading")}</p>;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-slate-200">Settings &amp; integrations</h2>
-        <p className="text-sm text-slate-500">
-          Configure each integration here; changes take effect immediately. Secret
-          fields are write-only and never shown.
-        </p>
+        <h2 className="text-lg font-semibold text-slate-200">{t("settings.title")}</h2>
+        <p className="text-sm text-slate-500">{t("settings.adminSubtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* AI */}
         <section className={cardClass}>
-          <h3 className="font-medium text-slate-100">AI assistant</h3>
-          <FormField label="Provider" hint="ollama keeps data local; claude calls the Anthropic API; none disables AI.">
+          <h3 className="font-medium text-slate-100">{t("settings.ai.title")}</h3>
+          <FormField label={t("settings.ai.provider")} hint={t("settings.ai.providerHint")}>
             <select
               className={inputClass}
               value={form.ai_provider}
               onChange={(e) => set("ai_provider", e.target.value)}
             >
-              <option value="ollama">Ollama (local)</option>
-              <option value="claude">Claude (Anthropic)</option>
-              <option value="none">None</option>
+              <option value="ollama">{t("settings.ai.ollamaLocal")}</option>
+              <option value="claude">{t("settings.ai.claude")}</option>
+              <option value="none">{t("settings.ai.none")}</option>
             </select>
           </FormField>
-          <FormField label="Ollama base URL">
+          <FormField label={t("settings.ai.ollamaUrl")}>
             <input
               className={inputClass}
               value={form.ollama_base_url}
               onChange={(e) => set("ollama_base_url", e.target.value)}
             />
           </FormField>
-          <FormField label="Ollama model">
+          <FormField label={t("settings.ai.ollamaModel")}>
             <input
               className={inputClass}
               value={form.ollama_model}
               onChange={(e) => set("ollama_model", e.target.value)}
             />
           </FormField>
-          <FormField label="Claude model">
+          <FormField label={t("settings.ai.claudeModel")}>
             <input
               className={inputClass}
               value={form.anthropic_model}
               onChange={(e) => set("anthropic_model", e.target.value)}
             />
           </FormField>
-          <FormField label="Anthropic API key" hint={secretHint(config.anthropic_api_key_set)}>
+          <FormField label={t("settings.ai.anthropicKey")} hint={secretHint(config.anthropic_api_key_set, t)}>
             <input
               className={inputClass}
               type="password"
-              placeholder={config.anthropic_api_key_set ? "••••••••" : "not set"}
+              placeholder={config.anthropic_api_key_set ? "••••••••" : t("settings.notSetPlaceholder")}
               value={form.anthropic_api_key}
               onChange={(e) => set("anthropic_api_key", e.target.value)}
             />
@@ -286,14 +291,14 @@ export default function SettingsPage() {
                 })
               }
             >
-              {saving === "ai" ? "Saving…" : "Save"}
+              {saving === "ai" ? t("common.saving") : t("common.save")}
             </button>
             <button
               className={testBtn}
               disabled={testing === "ai"}
               onClick={() => runTest("ai", testAi, setAiResult)}
             >
-              {testing === "ai" ? "Testing…" : "Test provider"}
+              {testing === "ai" ? t("settings.testing") : t("settings.ai.test")}
             </button>
           </div>
           <TestRow result={aiResult} />
@@ -301,20 +306,20 @@ export default function SettingsPage() {
 
         {/* Email */}
         <section className={cardClass}>
-          <h3 className="font-medium text-slate-100">Email (SMTP)</h3>
+          <h3 className="font-medium text-slate-100">{t("settings.email.title")}</h3>
           <Toggle
-            label="Notifications enabled"
+            label={t("settings.email.notificationsEnabled")}
             checked={form.notifications_enabled}
             onChange={(v) => set("notifications_enabled", v)}
           />
-          <FormField label="SMTP host">
+          <FormField label={t("settings.email.host")}>
             <input
               className={inputClass}
               value={form.smtp_host}
               onChange={(e) => set("smtp_host", e.target.value)}
             />
           </FormField>
-          <FormField label="SMTP port">
+          <FormField label={t("settings.email.port")}>
             <input
               className={inputClass}
               inputMode="numeric"
@@ -322,38 +327,35 @@ export default function SettingsPage() {
               onChange={(e) => set("smtp_port", e.target.value)}
             />
           </FormField>
-          <FormField label="From address">
+          <FormField label={t("settings.email.from")}>
             <input
               className={inputClass}
               value={form.smtp_from}
               onChange={(e) => set("smtp_from", e.target.value)}
             />
           </FormField>
-          <FormField label="Username" hint="Optional, if your SMTP server requires auth.">
+          <FormField label={t("settings.email.username")} hint={t("settings.email.usernameHint")}>
             <input
               className={inputClass}
               value={form.smtp_username}
               onChange={(e) => set("smtp_username", e.target.value)}
             />
           </FormField>
-          <FormField label="Password" hint={secretHint(config.smtp_password_set)}>
+          <FormField label={t("settings.email.password")} hint={secretHint(config.smtp_password_set, t)}>
             <input
               className={inputClass}
               type="password"
-              placeholder={config.smtp_password_set ? "••••••••" : "not set"}
+              placeholder={config.smtp_password_set ? "••••••••" : t("settings.notSetPlaceholder")}
               value={form.smtp_password}
               onChange={(e) => set("smtp_password", e.target.value)}
             />
           </FormField>
           <Toggle
-            label="Use TLS"
+            label={t("settings.email.useTls")}
             checked={form.smtp_use_tls}
             onChange={(v) => set("smtp_use_tls", v)}
           />
-          <FormField
-            label="Recipients"
-            hint="Comma-separated. Confirmed changes are emailed here."
-          >
+          <FormField label={t("settings.email.recipients")} hint={t("settings.email.recipientsHint")}>
             <input
               className={inputClass}
               placeholder="security@example.com, ops@example.com"
@@ -381,11 +383,11 @@ export default function SettingsPage() {
                 })
               }
             >
-              {saving === "email" ? "Saving…" : "Save"}
+              {saving === "email" ? t("common.saving") : t("common.save")}
             </button>
             <input
               className={`${inputClass} sm:w-56`}
-              placeholder="Test recipient (optional)"
+              placeholder={t("settings.email.testRecipient")}
               value={emailTo}
               onChange={(e) => setEmailTo(e.target.value)}
             />
@@ -394,7 +396,7 @@ export default function SettingsPage() {
               disabled={testing === "email"}
               onClick={() => runTest("email", () => testEmail(emailTo || undefined), setEmailResult)}
             >
-              {testing === "email" ? "Sending…" : "Send test"}
+              {testing === "email" ? t("settings.email.sending") : t("settings.email.sendTest")}
             </button>
           </div>
           <TestRow result={emailResult} />
@@ -402,36 +404,36 @@ export default function SettingsPage() {
 
         {/* Jira */}
         <section className={cardClass}>
-          <h3 className="font-medium text-slate-100">Jira</h3>
+          <h3 className="font-medium text-slate-100">{t("settings.jira.title")}</h3>
           <Toggle
-            label="Jira enabled"
+            label={t("settings.jira.enabled")}
             checked={form.jira_enabled}
             onChange={(v) => set("jira_enabled", v)}
           />
-          <FormField label="URL" hint="e.g. https://your-org.atlassian.net">
+          <FormField label={t("settings.jira.url")} hint={t("settings.jira.urlHint")}>
             <input
               className={inputClass}
               value={form.jira_url}
               onChange={(e) => set("jira_url", e.target.value)}
             />
           </FormField>
-          <FormField label="Email">
+          <FormField label={t("settings.jira.email")}>
             <input
               className={inputClass}
               value={form.jira_email}
               onChange={(e) => set("jira_email", e.target.value)}
             />
           </FormField>
-          <FormField label="API token" hint={secretHint(config.jira_api_token_set)}>
+          <FormField label={t("settings.jira.token")} hint={secretHint(config.jira_api_token_set, t)}>
             <input
               className={inputClass}
               type="password"
-              placeholder={config.jira_api_token_set ? "••••••••" : "not set"}
+              placeholder={config.jira_api_token_set ? "••••••••" : t("settings.notSetPlaceholder")}
               value={form.jira_api_token}
               onChange={(e) => set("jira_api_token", e.target.value)}
             />
           </FormField>
-          <FormField label="Project key" hint="e.g. PORT">
+          <FormField label={t("settings.jira.projectKey")} hint={t("settings.jira.projectKeyHint")}>
             <input
               className={inputClass}
               value={form.jira_project_key}
@@ -452,14 +454,14 @@ export default function SettingsPage() {
                 })
               }
             >
-              {saving === "jira" ? "Saving…" : "Save"}
+              {saving === "jira" ? t("common.saving") : t("common.save")}
             </button>
             <button
               className={testBtn}
               disabled={testing === "jira"}
               onClick={() => runTest("jira", testJira, setJiraResult)}
             >
-              {testing === "jira" ? "Testing…" : "Test connection"}
+              {testing === "jira" ? t("settings.testing") : t("settings.testConnection")}
             </button>
           </div>
           <TestRow result={jiraResult} />
@@ -467,24 +469,24 @@ export default function SettingsPage() {
 
         {/* NetBox */}
         <section className={cardClass}>
-          <h3 className="font-medium text-slate-100">NetBox (IPAM)</h3>
+          <h3 className="font-medium text-slate-100">{t("settings.netbox.title")}</h3>
           <Toggle
-            label="NetBox enabled"
+            label={t("settings.netbox.enabled")}
             checked={form.netbox_enabled}
             onChange={(v) => set("netbox_enabled", v)}
           />
-          <FormField label="URL" hint="e.g. https://netbox.example.com">
+          <FormField label={t("settings.netbox.url")} hint={t("settings.netbox.urlHint")}>
             <input
               className={inputClass}
               value={form.netbox_url}
               onChange={(e) => set("netbox_url", e.target.value)}
             />
           </FormField>
-          <FormField label="API token" hint={secretHint(config.netbox_token_set)}>
+          <FormField label={t("settings.netbox.token")} hint={secretHint(config.netbox_token_set, t)}>
             <input
               className={inputClass}
               type="password"
-              placeholder={config.netbox_token_set ? "••••••••" : "not set"}
+              placeholder={config.netbox_token_set ? "••••••••" : t("settings.notSetPlaceholder")}
               value={form.netbox_token}
               onChange={(e) => set("netbox_token", e.target.value)}
             />
@@ -501,14 +503,14 @@ export default function SettingsPage() {
                 })
               }
             >
-              {saving === "netbox" ? "Saving…" : "Save"}
+              {saving === "netbox" ? t("common.saving") : t("common.save")}
             </button>
             <button
               className={testBtn}
               disabled={testing === "netbox"}
               onClick={() => runTest("netbox", testNetbox, setNetboxResult)}
             >
-              {testing === "netbox" ? "Testing…" : "Test connection"}
+              {testing === "netbox" ? t("settings.testing") : t("settings.testConnection")}
             </button>
           </div>
           <TestRow result={netboxResult} />
