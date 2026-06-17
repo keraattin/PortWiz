@@ -13,6 +13,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
+import { useToast } from "../components/Toast";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -23,6 +24,7 @@ const inputClass =
 
 export default function VlansPage() {
   const { user } = useAuth();
+  const toast = useToast();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [ipRanges, setIpRanges] = useState<IpRange[]>([]);
@@ -77,6 +79,7 @@ export default function VlansPage() {
         description: description || null,
       });
       setVlanOpen(false);
+      toast.success("VLAN added");
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -85,12 +88,12 @@ export default function VlansPage() {
 
   async function onDelete(id: string) {
     if (!window.confirm("Delete this VLAN?")) return;
-    setError(null);
     try {
       await deleteVlan(id);
+      toast.success("VLAN deleted");
       await reload();
     } catch (e) {
-      setError(errorMessage(e));
+      toast.error(errorMessage(e));
     }
   }
 
@@ -112,6 +115,7 @@ export default function VlansPage() {
         description: rangeDesc || null,
       });
       setRangeOpen(false);
+      toast.success("IP range added");
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -120,12 +124,12 @@ export default function VlansPage() {
 
   async function onDeleteRange(id: string) {
     if (!window.confirm("Delete this IP range?")) return;
-    setError(null);
     try {
       await deleteIpRange(id);
+      toast.success("IP range deleted");
       await reload();
     } catch (e) {
-      setError(errorMessage(e));
+      toast.error(errorMessage(e));
     }
   }
 

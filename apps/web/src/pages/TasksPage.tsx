@@ -12,6 +12,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Pagination, { usePagination } from "../components/Pagination";
+import { useToast } from "../components/Toast";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -32,6 +33,7 @@ const selectClass =
 
 export default function TasksPage() {
   const { user } = useAuth();
+  const toast = useToast();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<CurrentUser[]>([]);
@@ -65,9 +67,10 @@ export default function TasksPage() {
     setError(null);
     try {
       await fn();
+      toast.success("Task updated");
       await reload();
     } catch (e) {
-      setError(errorMessage(e));
+      toast.error(errorMessage(e));
     }
   }
 

@@ -10,6 +10,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
+import { useToast } from "../components/Toast";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -37,6 +38,7 @@ const primaryBtn =
 
 export default function UsersPage() {
   const { user } = useAuth();
+  const toast = useToast();
   const isAdmin = user?.role === "admin";
 
   const [users, setUsers] = useState<CurrentUser[]>([]);
@@ -96,6 +98,7 @@ export default function UsersPage() {
     try {
       await createUser({ email, password, full_name: fullName || null, role });
       setAddOpen(false);
+      toast.success("User created");
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -113,6 +116,7 @@ export default function UsersPage() {
         is_active: editActive,
       });
       setEditUser(null);
+      toast.success("User updated");
       await reload();
     } catch (e) {
       setError(errorMessage(e));

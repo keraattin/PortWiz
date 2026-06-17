@@ -10,6 +10,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Modal from "../components/Modal";
+import { useToast } from "../components/Toast";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -30,6 +31,7 @@ const inputClass =
 
 export default function AgentsPage() {
   const { user } = useAuth();
+  const toast = useToast();
   const isAdmin = user?.role === "admin";
 
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -68,6 +70,7 @@ export default function AgentsPage() {
       setEnrolled(result);
       setName("");
       setSegment("");
+      toast.success("Agent enrolled");
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -76,12 +79,12 @@ export default function AgentsPage() {
 
   async function onDelete(id: string) {
     if (!window.confirm("Delete this agent? Its token will stop working.")) return;
-    setError(null);
     try {
       await deleteAgent(id);
+      toast.success("Agent deleted");
       await reload();
     } catch (e) {
-      setError(errorMessage(e));
+      toast.error(errorMessage(e));
     }
   }
 
@@ -103,6 +106,7 @@ export default function AgentsPage() {
         enabled: editEnabled,
       });
       setEditAgent(null);
+      toast.success("Agent updated");
       await reload();
     } catch (e) {
       setError(errorMessage(e));

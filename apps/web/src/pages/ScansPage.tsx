@@ -18,6 +18,7 @@ import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
+import { useToast } from "../components/Toast";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -45,6 +46,7 @@ function parseTargets(raw: string): string[] {
 
 export default function ScansPage() {
   const { user } = useAuth();
+  const toast = useToast();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [runs, setRuns] = useState<ScanRun[]>([]);
@@ -108,6 +110,7 @@ export default function ScansPage() {
         cron: cron || null,
       });
       setAddOpen(false);
+      toast.success("Scan profile added");
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -115,23 +118,23 @@ export default function ScansPage() {
   }
 
   async function onRun(profile: ScanProfile) {
-    setError(null);
     try {
       await runScanProfile(profile.id);
+      toast.success(`Scan queued for ${profile.name}`);
       await reload();
     } catch (e) {
-      setError(errorMessage(e));
+      toast.error(errorMessage(e));
     }
   }
 
   async function onDeleteProfile(id: string) {
     if (!window.confirm("Delete this scan profile?")) return;
-    setError(null);
     try {
       await deleteScanProfile(id);
+      toast.success("Scan profile deleted");
       await reload();
     } catch (e) {
-      setError(errorMessage(e));
+      toast.error(errorMessage(e));
     }
   }
 

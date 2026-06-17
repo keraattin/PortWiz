@@ -20,6 +20,7 @@ import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
+import { useToast } from "../components/Toast";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -40,6 +41,7 @@ const CRIT_BADGE: Record<Criticality, string> = {
 
 export default function AssetsPage() {
   const { user } = useAuth();
+  const toast = useToast();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [assets, setAssets] = useState<Asset[]>([]);
   const [vlans, setVlans] = useState<Vlan[]>([]);
@@ -114,6 +116,7 @@ export default function AssetsPage() {
         data_sensitivity: sensitivity,
       });
       setAddOpen(false);
+      toast.success("Asset added");
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -122,12 +125,12 @@ export default function AssetsPage() {
 
   async function onDelete(id: string) {
     if (!window.confirm("Delete this asset?")) return;
-    setError(null);
     try {
       await deleteAsset(id);
+      toast.success("Asset deleted");
       await reload();
     } catch (e) {
-      setError(errorMessage(e));
+      toast.error(errorMessage(e));
     }
   }
 

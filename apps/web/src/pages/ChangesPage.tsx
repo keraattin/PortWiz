@@ -10,6 +10,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Pagination, { usePagination } from "../components/Pagination";
+import { useToast } from "../components/Toast";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -46,6 +47,7 @@ function describe(snapshot: PortSnapshot): string {
 
 export default function ChangesPage() {
   const { user } = useAuth();
+  const toast = useToast();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
@@ -66,12 +68,12 @@ export default function ChangesPage() {
   }, []);
 
   async function onStatusChange(id: string, status: ChangeStatus) {
-    setError(null);
     try {
       await updateChangeStatus(id, status);
+      toast.success(`Marked ${status}`);
       await reload();
     } catch (e) {
-      setError(errorMessage(e));
+      toast.error(errorMessage(e));
     }
   }
 
