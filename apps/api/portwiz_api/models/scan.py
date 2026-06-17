@@ -44,6 +44,16 @@ class ScanRunStatus(str, enum.Enum):
     failed = "failed"
 
 
+class ComplianceFramework(str, enum.Enum):
+    """Frameworks whose periodic-scan cadence PortWiz tracks."""
+
+    pci = "pci"  # PCI-DSS, quarterly
+    hipaa = "hipaa"  # HIPAA, semi-annual (common practice)
+    soc2 = "soc2"
+    iso27001 = "iso27001"
+    nist = "nist"
+
+
 class ScanProfile(SQLModel, table=True):
     __tablename__ = "scan_profiles"
 
@@ -72,6 +82,10 @@ class ScanProfile(SQLModel, table=True):
     )
     # Network segment for routing runs to the responsible agent.
     segment: str | None = Field(default=None, sa_column=Column(String(64), index=True))
+    # Compliance framework whose scan cadence this profile is tracked against.
+    compliance_framework: ComplianceFramework | None = Field(
+        default=None, sa_column=Column(String(16))
+    )
     # Cron expression for scheduled runs.
     cron: str | None = Field(default=None, sa_column=Column(String(64)))
     # Last time the scheduler triggered a run for this profile (dedup guard).

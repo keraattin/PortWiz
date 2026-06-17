@@ -8,6 +8,7 @@ from .routes import (
     audit,
     auth,
     changes,
+    compliance,
     evidence,
     ingest,
     settings,
@@ -35,5 +36,6 @@ api_router.include_router(tasks.router)
 api_router.include_router(ai.router)
 api_router.include_router(settings.router)
 api_router.include_router(stats.router)
+api_router.include_router(compliance.router)
 
 __all__ = ["api_router"]

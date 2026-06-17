@@ -8,7 +8,7 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ..models.scan import ScanRunStatus, ScanSource, ScanType
+from ..models.scan import ComplianceFramework, ScanRunStatus, ScanSource, ScanType
 
 
 def _validate_targets(targets: list[str]) -> list[str]:
@@ -32,6 +32,7 @@ class ScanProfileCreate(BaseModel):
     rate_limit_pps: int = Field(default=1000, ge=1, le=100000)
     scan_source: ScanSource = ScanSource.internal_unauthenticated
     segment: str | None = Field(default=None, max_length=64)
+    compliance_framework: ComplianceFramework | None = None
     cron: str | None = Field(default=None, max_length=64)
     enabled: bool = True
 
@@ -50,6 +51,7 @@ class ScanProfileUpdate(BaseModel):
     rate_limit_pps: int | None = Field(default=None, ge=1, le=100000)
     scan_source: ScanSource | None = None
     segment: str | None = Field(default=None, max_length=64)
+    compliance_framework: ComplianceFramework | None = None
     cron: str | None = Field(default=None, max_length=64)
     enabled: bool | None = None
 
@@ -71,6 +73,7 @@ class ScanProfileRead(BaseModel):
     rate_limit_pps: int
     scan_source: ScanSource
     segment: str | None
+    compliance_framework: ComplianceFramework | None
     cron: str | None
     last_scheduled_at: dt.datetime | None
     enabled: bool
