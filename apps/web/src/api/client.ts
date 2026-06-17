@@ -662,6 +662,67 @@ export function testNetbox(): Promise<TestResult> {
   return request<TestResult>("/settings/test/netbox", { method: "POST" });
 }
 
+// Editable settings (admin). Secrets are never returned; a `*_set` flag reports
+// whether each is currently set.
+export interface SettingsConfig {
+  ai_provider: string;
+  ollama_base_url: string;
+  ollama_model: string;
+  anthropic_model: string;
+  anthropic_api_key_set: boolean;
+  notifications_enabled: boolean;
+  smtp_host: string;
+  smtp_port: number;
+  smtp_from: string;
+  smtp_username: string | null;
+  smtp_use_tls: boolean;
+  smtp_password_set: boolean;
+  notification_recipients: string[];
+  jira_enabled: boolean;
+  jira_url: string | null;
+  jira_email: string | null;
+  jira_project_key: string;
+  jira_api_token_set: boolean;
+  netbox_enabled: boolean;
+  netbox_url: string | null;
+  netbox_token_set: boolean;
+}
+
+export type SettingsConfigUpdate = Partial<{
+  ai_provider: string;
+  ollama_base_url: string;
+  ollama_model: string;
+  anthropic_api_key: string;
+  anthropic_model: string;
+  notifications_enabled: boolean;
+  smtp_host: string;
+  smtp_port: number;
+  smtp_from: string;
+  smtp_username: string;
+  smtp_password: string;
+  smtp_use_tls: boolean;
+  notification_recipients: string[];
+  jira_enabled: boolean;
+  jira_url: string;
+  jira_email: string;
+  jira_api_token: string;
+  jira_project_key: string;
+  netbox_enabled: boolean;
+  netbox_url: string;
+  netbox_token: string;
+}>;
+
+export function fetchSettingsConfig(): Promise<SettingsConfig> {
+  return request<SettingsConfig>("/settings/config");
+}
+
+export function updateSettingsConfig(payload: SettingsConfigUpdate): Promise<SettingsConfig> {
+  return request<SettingsConfig>("/settings/config", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 // AI (provider-agnostic: local Ollama by default, Claude optional)
 export interface FingerprintRequest {
   banner: string;
