@@ -37,3 +37,55 @@ async def test_stats_counts_reflect_data(client, admin_headers) -> None:
     assert body["agents_total"] == 1
     assert body["agents_online"] == 0  # never heartbeat
     assert body["open_tasks"] == 1
+
+
+async def test_charts_requires_auth(client) -> None:
+    assert (await client.get("/api/v1/stats/charts")).status_code == 401
+
+
+async def test_charts_empty_is_zero_filled(client, admin_headers) -> None:
+    body = (await client.get("/api/v1/stats/charts", headers=admin_headers)).json()
+    assert len(body["changes_by_day"]) == 30
+    assert all(point["count"] == 0 for point in body["changes_by_day"])
+    # Dates are sorted ascending and unique.
+    dates = [point["date"] for point in body["changes_by_day"]]
+    assert dates == sorted(dates)
+    assert len(set(dates)) == 30
+
+    assert [s["name"] for s in body["changes_by_type"]] == [
+        "opened",
+        "closed",
+        "service_changed",
+        "version_changed",
+    ]
+    assert [s["name"] for s in body["assets_by_criticality"]] == [
+        "low",
+        "medium",
+        "high",
+        "critical",
+    ]
+    assert [s["name"] for s in body["compliance_by_status"]] == [
+        "compliant",
+        "due_soon",
+        "overdue",
+        "never",
+    ]
+    for key in ("changes_by_type", "assets_by_criticality", "runs_by_status"):
+        assert all(s["value"] == 0 for s in body[key])
+
+
+async def test_charts_assets_by_criticality(client, admin_headers) -> None:
+    await client.post(
+        "/api/v1/assets",
+        json={"ip": "10.0.0.10", "criticality": "high"},
+        headers=admin_headers,
+    )
+    await client.post(
+        "/api/v1/assets",
+        json={"ip": "10.0.0.11", "criticality": "high"},
+        headers=admin_headers,
+    )
+    body = (await client.get("/api/v1/stats/charts", headers=admin_headers)).json()
+    by_crit = {s["name"]: s["value"] for s in body["assets_by_criticality"]}
+    assert by_crit["high"] == 2
+    assert sum(s["value"] for s in body["assets_by_criticality"]) == 2

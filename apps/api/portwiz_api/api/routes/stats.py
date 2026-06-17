@@ -13,20 +13,28 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.compliance import compliance_status
 from ...core.db import get_session
 from ...models.agent import Agent
-from ...models.asset import VLAN, Asset
+from ...models.asset import VLAN, Asset, Criticality
 from ...models.change import ChangeEvent
-from ...models.scan import ScanRun
+from ...models.scan import ScanRun, ScanRunStatus
 from ...models.task import Task
 from ...models.user import User
-from ...schemas.stats import DashboardStats
+from ...schemas.stats import DashboardCharts, DashboardStats, Slice, TimePoint
 from ..deps import get_current_user
 
 router = APIRouter(prefix="/stats", tags=["stats"])
 
 # An agent that has heartbeat within this window counts as online.
 _ONLINE_WINDOW = dt.timedelta(minutes=2)
+
+# Fixed category orders so charts stay stable and zero-fill empty buckets.
+_CHANGE_TYPES = ["opened", "closed", "service_changed", "version_changed"]
+_CRITICALITIES = [c.value for c in Criticality]
+_RUN_STATUSES = [s.value for s in ScanRunStatus]
+_COMPLIANCE_STATUSES = ["compliant", "due_soon", "overdue", "never"]
+_CHART_DAYS = 30
 
 
 def _is_online(last_seen: dt.datetime | None, now: dt.datetime) -> bool:
@@ -35,6 +43,18 @@ def _is_online(last_seen: dt.datetime | None, now: dt.datetime) -> bool:
     if last_seen.tzinfo is None:  # SQLite drops tzinfo; stored values are UTC
         last_seen = last_seen.replace(tzinfo=dt.timezone.utc)
     return (now - last_seen) < _ONLINE_WINDOW
+
+
+def _aware(value: dt.datetime) -> dt.datetime:
+    return value if value.tzinfo is not None else value.replace(tzinfo=dt.timezone.utc)
+
+
+def _slices(counts: dict[str, int], order: list[str]) -> list[Slice]:
+    """Zero-filled slices in a fixed order, then any unexpected extras."""
+    out = [Slice(name=k, value=counts.get(k, 0)) for k in order]
+    extras = sorted(k for k in counts if k not in order)
+    out.extend(Slice(name=k, value=counts[k]) for k in extras)
+    return out
 
 
 @router.get("", response_model=DashboardStats)
@@ -72,4 +92,55 @@ async def get_stats(
         open_tasks=open_tasks,
         pending_runs=pending_runs,
         last_scan_at=last_scan_at,
+    )
+
+
+@router.get("/charts", response_model=DashboardCharts)
+async def get_charts(
+    _: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> DashboardCharts:
+    """Aggregated series for the dashboard charts. Counts only, no secrets.
+
+    Grouping is done in Python over small result sets so the SQLite test
+    backend and PostgreSQL agree (no date_trunc portability concerns).
+    """
+
+    async def grouped(col) -> dict[str, int]:
+        rows = (await session.execute(select(col, func.count()).group_by(col))).all()
+        counts: dict[str, int] = {}
+        for value, n in rows:
+            key = value.value if hasattr(value, "value") else str(value)
+            counts[key] = counts.get(key, 0) + n
+        return counts
+
+    # Changes per day over the trailing window, zero-filled.
+    now = dt.datetime.now(tz=dt.timezone.utc)
+    start = (now - dt.timedelta(days=_CHART_DAYS - 1)).date()
+    detected = (await session.execute(select(ChangeEvent.detected_at))).scalars().all()
+    per_day: dict[str, int] = {}
+    for value in detected:
+        day = _aware(value).date()
+        if day >= start:
+            key = day.isoformat()
+            per_day[key] = per_day.get(key, 0) + 1
+    changes_by_day = [
+        TimePoint(
+            date=(start + dt.timedelta(days=i)).isoformat(),
+            count=per_day.get((start + dt.timedelta(days=i)).isoformat(), 0),
+        )
+        for i in range(_CHART_DAYS)
+    ]
+
+    compliance = await compliance_status(session, now)
+    compliance_counts: dict[str, int] = {}
+    for item in compliance:
+        compliance_counts[item["status"]] = compliance_counts.get(item["status"], 0) + 1
+
+    return DashboardCharts(
+        changes_by_day=changes_by_day,
+        changes_by_type=_slices(await grouped(ChangeEvent.change_type), _CHANGE_TYPES),
+        assets_by_criticality=_slices(await grouped(Asset.criticality), _CRITICALITIES),
+        runs_by_status=_slices(await grouped(ScanRun.status), _RUN_STATUSES),
+        compliance_by_status=_slices(compliance_counts, _COMPLIANCE_STATUSES),
     )
