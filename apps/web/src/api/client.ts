@@ -298,6 +298,7 @@ export function syncAssets(onConflict: "update" | "skip" = "update"): Promise<As
 
 // Scans
 export type ScanType = "syn" | "connect" | "udp";
+export type ComplianceFramework = "pci" | "hipaa" | "soc2" | "iso27001" | "nist";
 export type ScanSource =
   | "internal-authenticated"
   | "internal-unauthenticated"
@@ -319,6 +320,7 @@ export interface ScanProfile {
   rate_limit_pps: number;
   scan_source: ScanSource;
   segment: string | null;
+  compliance_framework: ComplianceFramework | null;
   cron: string | null;
   enabled: boolean;
   created_by: string | null;
@@ -361,6 +363,7 @@ export interface ScanProfileInput {
   scan_type?: ScanType;
   service_detection?: boolean;
   segment?: string | null;
+  compliance_framework?: ComplianceFramework | null;
   cron?: string | null;
 }
 
@@ -554,6 +557,23 @@ export async function downloadEvidenceJson(profileId: string, profileName: strin
 export async function downloadEvidencePdf(profileId: string, profileName: string): Promise<void> {
   const res = await authedFetch(`/evidence/scan-profiles/${profileId}/pdf`);
   triggerDownload(await res.blob(), `portwiz-evidence-${profileName}.pdf`);
+}
+
+// Compliance cadence
+export interface ComplianceStatusItem {
+  profile_id: string;
+  profile_name: string;
+  framework: string;
+  cadence_days: number;
+  last_scan_at: string | null;
+  days_since: number | null;
+  status: string; // compliant | due_soon | overdue | never
+  scan_source: string;
+  asv_satisfied: boolean;
+}
+
+export function fetchComplianceStatus(): Promise<ComplianceStatusItem[]> {
+  return request<ComplianceStatusItem[]>("/compliance/status");
 }
 
 // Tasks

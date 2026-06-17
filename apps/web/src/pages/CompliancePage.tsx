@@ -3,9 +3,11 @@ import {
   ApiError,
   type AuditEvent,
   type ChainVerification,
+  type ComplianceStatusItem,
   type ScanProfile,
   downloadEvidenceJson,
   downloadEvidencePdf,
+  fetchComplianceStatus,
   listAudit,
   listScanProfiles,
   verifyAudit,
@@ -19,6 +21,21 @@ const PAGE_SIZE = 50;
 const inputClass =
   "rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
+const CADENCE_BADGE: Record<string, string> = {
+  compliant: "bg-emerald-900 text-emerald-300",
+  due_soon: "bg-amber-900 text-amber-300",
+  overdue: "bg-red-900 text-red-300",
+  never: "bg-slate-700 text-slate-400",
+};
+
+const FRAMEWORK_LABEL: Record<string, string> = {
+  pci: "PCI-DSS",
+  hipaa: "HIPAA",
+  soc2: "SOC 2",
+  iso27001: "ISO 27001",
+  nist: "NIST",
+};
+
 export default function CompliancePage() {
   const [chain, setChain] = useState<ChainVerification | null>(null);
   const [events, setEvents] = useState<AuditEvent[]>([]);
@@ -26,6 +43,7 @@ export default function CompliancePage() {
   const [offset, setOffset] = useState(0);
   const [actionFilter, setActionFilter] = useState("");
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
+  const [cadence, setCadence] = useState<ComplianceStatusItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   async function verify() {
@@ -60,6 +78,9 @@ export default function CompliancePage() {
     listScanProfiles()
       .then(setProfiles)
       .catch((e) => setError(errorMessage(e)));
+    fetchComplianceStatus()
+      .then(setCadence)
+      .catch((e) => setError(errorMessage(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -79,6 +100,68 @@ export default function CompliancePage() {
 
   return (
     <div className="space-y-8">
+      {/* Scan cadence */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-slate-200">Scan cadence</h2>
+        <p className="text-sm text-slate-500">
+          Whether each framework-tagged scan profile has been scanned within its
+          required interval.
+        </p>
+        {cadence.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            No scan profiles are tagged with a compliance framework yet. Tag one when
+            creating a scan profile.
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-slate-800">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-900 text-slate-400">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Profile</th>
+                  <th className="px-4 py-2 font-medium">Framework</th>
+                  <th className="px-4 py-2 font-medium">Required</th>
+                  <th className="px-4 py-2 font-medium">Last scan</th>
+                  <th className="px-4 py-2 font-medium">Status</th>
+                  <th className="px-4 py-2 font-medium">ASV</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {cadence.map((c) => (
+                  <tr key={c.profile_id} className="bg-slate-950">
+                    <td className="px-4 py-2 text-slate-100">{c.profile_name}</td>
+                    <td className="px-4 py-2 text-slate-300">
+                      {FRAMEWORK_LABEL[c.framework] ?? c.framework}
+                    </td>
+                    <td className="px-4 py-2 text-slate-400">every {c.cadence_days}d</td>
+                    <td className="px-4 py-2 text-xs text-slate-400">
+                      {c.last_scan_at
+                        ? `${new Date(c.last_scan_at).toLocaleDateString()} (${c.days_since}d ago)`
+                        : "never"}
+                    </td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs ${CADENCE_BADGE[c.status] ?? CADENCE_BADGE.never}`}
+                      >
+                        {c.status.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-xs">
+                      {c.framework !== "pci" ? (
+                        <span className="text-slate-600">-</span>
+                      ) : c.asv_satisfied ? (
+                        <span className="text-emerald-400">external (ASV)</span>
+                      ) : (
+                        <span className="text-amber-400">internal (not ASV)</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       {/* Chain integrity */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">

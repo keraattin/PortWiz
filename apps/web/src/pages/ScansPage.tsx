@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import {
   ApiError,
+  type ComplianceFramework,
   type Observation,
   type ScanProfile,
   type ScanRun,
@@ -55,6 +56,7 @@ export default function ScansPage() {
   const [targets, setTargets] = useState("");
   const [ports, setPorts] = useState("top-1000");
   const [segment, setSegment] = useState("");
+  const [framework, setFramework] = useState<ComplianceFramework | "">("");
   const [cron, setCron] = useState("");
   const [scanType, setScanType] = useState<ScanType>("connect");
   const [serviceDetection, setServiceDetection] = useState(true);
@@ -87,12 +89,14 @@ export default function ScansPage() {
         scan_type: scanType,
         service_detection: serviceDetection,
         segment: segment || null,
+        compliance_framework: framework || null,
         cron: cron || null,
       });
       setName("");
       setTargets("");
       setPorts("top-1000");
       setSegment("");
+      setFramework("");
       setCron("");
       await reload();
     } catch (e) {
@@ -173,6 +177,18 @@ export default function ScansPage() {
             value={segment}
             onChange={(e) => setSegment(e.target.value)}
           />
+          <select
+            className={inputClass}
+            value={framework}
+            onChange={(e) => setFramework(e.target.value as ComplianceFramework | "")}
+          >
+            <option value="">No framework</option>
+            <option value="pci">PCI-DSS</option>
+            <option value="hipaa">HIPAA</option>
+            <option value="soc2">SOC 2</option>
+            <option value="iso27001">ISO 27001</option>
+            <option value="nist">NIST</option>
+          </select>
           <input
             className={inputClass}
             placeholder="Cron (optional, e.g. 0 2 * * *)"
