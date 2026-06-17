@@ -70,3 +70,26 @@
   --chart-tooltip-border: #cbd5e1;
   --chart-tooltip-text: #0f172a;
 }
+
+/*
+ * Light-mode structural fixes that a single inverted token cannot express,
+ * because the same neutral shade plays two roles (page vs. card, header vs.
+ * row). These target the semantic elements, which are used uniformly across
+ * every page, and are scoped to .light so the dark theme is untouched.
+ */
+
+/* Tables: tinted header cap over white rows (the conventional light look),
+ * instead of the inverted "white header, grey rows" the raw flip produces. */
+.light thead {
+  background-color: #f1f5f9;
+}
+.light tr.bg-slate-950 {
+  background-color: #ffffff;
+}
+
+/* Form fields read cleaner as white with a grey border than as grey fills. */
+.light input:not([type="checkbox"]):not([type="radio"]),
+.light textarea,
+.light select {
+  background-color: #ffffff;
+}
