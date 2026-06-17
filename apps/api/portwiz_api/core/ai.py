@@ -23,6 +23,11 @@ import logging
 import re
 from typing import Protocol
 
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .db import get_session
+
 logger = logging.getLogger("portwiz.ai")
 
 # Banner enrichment only pays off below this confidence; the deterministic
@@ -179,16 +184,19 @@ class ClaudeProvider:
             ).strip()
 
 
-def get_ai_provider() -> AIProvider:
-    from .config import get_settings
-
-    settings = get_settings()
+def build_ai_provider(settings) -> AIProvider:
     provider = (settings.ai_provider or "none").lower()
     if provider == "claude" and settings.anthropic_api_key:
         return ClaudeProvider(settings.anthropic_api_key, settings.anthropic_model)
     if provider == "ollama" and settings.ollama_base_url:
         return OllamaProvider(settings.ollama_base_url, settings.ollama_model)
     return NullProvider()
+
+
+async def get_ai_provider(session: AsyncSession = Depends(get_session)) -> AIProvider:
+    from .app_settings import effective_settings
+
+    return build_ai_provider(await effective_settings(session))
 
 
 async def enrich_fingerprint(

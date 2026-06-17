@@ -11,11 +11,13 @@ import logging
 from typing import Any, Protocol
 
 import httpx
+from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.change import ChangeEvent
 from ..models.task import Task
+from .db import get_session
 
 logger = logging.getLogger("portwiz.issue_tracker")
 
@@ -92,10 +94,7 @@ class JiraTracker:
             return False, str(exc)
 
 
-def get_issue_tracker() -> IssueTracker:
-    from .config import get_settings
-
-    settings = get_settings()
+def build_issue_tracker(settings) -> IssueTracker:
     if not (
         settings.jira_enabled
         and settings.jira_url
@@ -106,6 +105,12 @@ def get_issue_tracker() -> IssueTracker:
     return JiraTracker(
         settings.jira_url, settings.jira_email, settings.jira_api_token, settings.jira_project_key
     )
+
+
+async def get_issue_tracker(session: AsyncSession = Depends(get_session)) -> IssueTracker:
+    from .app_settings import effective_settings
+
+    return build_issue_tracker(await effective_settings(session))
 
 
 def build_change_issue(change: ChangeEvent) -> tuple[str, str]:

@@ -15,12 +15,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.app_settings import effective_settings
 from ...core.audit import append_audit
 from ...core.change_detection import detect_changes
-from ...core.config import get_settings
 from ...core.db import get_session
 from ...core.issue_tracker import IssueTracker, get_issue_tracker, link_changes_to_tracker
-from ...core.notifications import notify_changes
+from ...core.notifications import build_notifier, notify_changes
 from ...models.agent import Agent
 from ...models.asset import Asset
 from ...models.scan import Observation, ScanRun, ScanRunStatus
@@ -124,9 +124,11 @@ async def ingest_scan_results(
 
     # Best-effort notification: never fail ingest if email delivery fails.
     if change_summaries:
-        settings = get_settings()
+        eff = await effective_settings(session)
         try:
-            await notify_changes(change_summaries, settings.notification_recipients)
+            await notify_changes(
+                change_summaries, eff.notification_recipients, build_notifier(eff)
+            )
         except Exception as exc:  # noqa: BLE001
             logger.warning("change notification failed: %s", exc)
 

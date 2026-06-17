@@ -89,25 +89,15 @@ async def test_ask_assistant_uses_assistant_system() -> None:
     assert user == "What is port 443?"
 
 
-def test_get_ai_provider_selection(monkeypatch) -> None:
-    from portwiz_api.core import ai
-    from portwiz_api.core.config import get_settings
+def test_build_ai_provider_selection() -> None:
+    from portwiz_api.core.ai import build_ai_provider
+    from portwiz_api.core.config import Settings
 
-    def reload(**env: str):
-        for key, value in env.items():
-            monkeypatch.setenv(key, value)
-        get_settings.cache_clear()
-        return ai.get_ai_provider()
-
-    try:
-        assert reload(PORTWIZ_AI_PROVIDER="none").name == "none"
-        assert reload(PORTWIZ_AI_PROVIDER="ollama").name == "ollama"
-        assert reload(
-            PORTWIZ_AI_PROVIDER="claude", PORTWIZ_ANTHROPIC_API_KEY="sk-test"
-        ).name == "claude"
-        # claude selected but no key -> falls back to the no-op provider
-        monkeypatch.delenv("PORTWIZ_ANTHROPIC_API_KEY", raising=False)
-        assert reload(PORTWIZ_AI_PROVIDER="claude").name == "none"
-    finally:
-        # Drop the test settings so other tests re-read the real environment.
-        get_settings.cache_clear()
+    assert build_ai_provider(Settings(ai_provider="none")).name == "none"
+    assert build_ai_provider(Settings(ai_provider="ollama")).name == "ollama"
+    assert (
+        build_ai_provider(Settings(ai_provider="claude", anthropic_api_key="sk-test")).name
+        == "claude"
+    )
+    # Claude selected without a key falls back to the no-op provider.
+    assert build_ai_provider(Settings(ai_provider="claude")).name == "none"

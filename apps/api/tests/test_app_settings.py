@@ -1,0 +1,114 @@
+"""Tests for DB-backed settings overrides and the config endpoints."""
+
+from __future__ import annotations
+
+
+async def test_effective_settings_applies_overrides(db) -> None:
+    from portwiz_api.core.app_settings import effective_settings, set_overrides
+
+    async with db() as session:
+        await set_overrides(
+            session,
+            {"smtp_host": "mail.example.com", "smtp_port": 2525, "notifications_enabled": True},
+            actor_id=None,
+            actor_email="tester",
+        )
+    async with db() as session:
+        s = await effective_settings(session)
+        assert s.smtp_host == "mail.example.com"
+        assert s.smtp_port == 2525  # cast back to int
+        assert s.notifications_enabled is True  # cast back to bool
+
+
+async def test_blank_secret_is_not_cleared(db) -> None:
+    from portwiz_api.core.app_settings import effective_settings, set_overrides
+
+    async with db() as session:
+        await set_overrides(
+            session, {"anthropic_api_key": "sk-real"}, actor_id=None, actor_email="t"
+        )
+    async with db() as session:
+        await set_overrides(
+            session, {"anthropic_api_key": ""}, actor_id=None, actor_email="t"
+        )
+    async with db() as session:
+        s = await effective_settings(session)
+        assert s.anthropic_api_key == "sk-real"
+
+
+async def test_admin_can_read_config(client, admin_headers) -> None:
+    resp = await client.get("/api/v1/settings/config", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # Default (no overrides) reflects the hermetic env.
+    assert body["ai_provider"] == "ollama"
+    assert body["anthropic_api_key_set"] is False
+
+
+async def test_update_config_applies_and_masks_secrets(client, admin_headers) -> None:
+    resp = await client.patch(
+        "/api/v1/settings/config",
+        json={
+            "ai_provider": "claude",
+            "anthropic_api_key": "sk-secret-value",
+            "anthropic_model": "claude-opus-4-8",
+        },
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["ai_provider"] == "claude"
+    assert body["anthropic_model"] == "claude-opus-4-8"
+    assert body["anthropic_api_key_set"] is True
+    assert "anthropic_api_key" not in body  # secret never serialized
+    assert "sk-secret-value" not in resp.text
+
+    # The status endpoint now reflects the override.
+    status = (await client.get("/api/v1/settings", headers=admin_headers)).json()
+    assert status["ai_provider"] == "claude"
+    assert status["ai_configured"] is True
+
+    # The secret never appears in the config view either.
+    cfg = await client.get("/api/v1/settings/config", headers=admin_headers)
+    assert "sk-secret-value" not in cfg.text
+    assert cfg.json()["anthropic_api_key_set"] is True
+
+
+async def test_update_config_keeps_existing_secret_on_blank(client, admin_headers) -> None:
+    await client.patch(
+        "/api/v1/settings/config", json={"jira_api_token": "tok-123"}, headers=admin_headers
+    )
+    # A later update that omits the token must not clear it.
+    await client.patch(
+        "/api/v1/settings/config",
+        json={"jira_url": "https://acme.atlassian.net", "jira_enabled": True},
+        headers=admin_headers,
+    )
+    cfg = (await client.get("/api/v1/settings/config", headers=admin_headers)).json()
+    assert cfg["jira_api_token_set"] is True
+    assert cfg["jira_url"] == "https://acme.atlassian.net"
+    assert cfg["jira_enabled"] is True
+
+
+async def test_config_update_requires_admin(client, db) -> None:
+    from portwiz_api.core.security import hash_password
+    from portwiz_api.models.user import User, UserRole
+
+    async with db() as session:
+        session.add(
+            User(
+                email="op-cfg@test.local",
+                hashed_password=hash_password("Secret123!"),
+                full_name="Op",
+                role=UserRole.operator,
+            )
+        )
+        await session.commit()
+    login = await client.post(
+        "/api/v1/auth/login", data={"username": "op-cfg@test.local", "password": "Secret123!"}
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    assert (await client.get("/api/v1/settings/config", headers=headers)).status_code == 403
+    assert (
+        await client.patch("/api/v1/settings/config", json={"smtp_host": "x"}, headers=headers)
+    ).status_code == 403

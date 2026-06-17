@@ -1,26 +1,32 @@
 """Settings and integration status.
 
-Exposes the *non-secret* effective configuration (provider names, hosts, ports,
-enabled flags) so operators can see how PortWiz is wired, plus admin-only "test"
-actions that exercise each integration (send a test email, ping the AI provider,
-verify the Jira connection). Secrets are never returned.
-
-Configuration itself is environment-driven and read-only here; runtime-editable,
-database-backed settings are a later concern.
+Exposes the *non-secret* effective configuration (environment defaults overlaid
+with DB overrides) plus admin-only editing and "test" actions. Secrets are never
+returned: GET reports only whether each secret is set; PATCH ignores blank
+secret fields so an existing value is kept.
 """
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ... import __version__
 from ...core.ai import AIProvider, get_ai_provider
-from ...core.config import get_settings
+from ...core.app_settings import effective_settings, set_overrides
+from ...core.config import Settings
+from ...core.db import get_session
 from ...core.inventory_source import InventorySource, get_inventory_source
 from ...core.issue_tracker import IssueTracker, get_issue_tracker
 from ...core.notifications import Notifier, NullNotifier, get_notifier
 from ...models.user import User, UserRole
-from ...schemas.settings import EmailTestRequest, SettingsStatus, TestResult
+from ...schemas.settings import (
+    EmailTestRequest,
+    SettingsConfig,
+    SettingsConfigUpdate,
+    SettingsStatus,
+    TestResult,
+)
 from ..deps import get_current_user, require_roles
 
 router = APIRouter(prefix="/settings", tags=["settings"])
@@ -28,9 +34,38 @@ router = APIRouter(prefix="/settings", tags=["settings"])
 AdminDep = require_roles(UserRole.admin)
 
 
+def _config_from(s: Settings) -> SettingsConfig:
+    return SettingsConfig(
+        ai_provider=s.ai_provider,
+        ollama_base_url=s.ollama_base_url,
+        ollama_model=s.ollama_model,
+        anthropic_model=s.anthropic_model,
+        anthropic_api_key_set=bool(s.anthropic_api_key),
+        notifications_enabled=s.notifications_enabled,
+        smtp_host=s.smtp_host,
+        smtp_port=s.smtp_port,
+        smtp_from=s.smtp_from,
+        smtp_username=s.smtp_username,
+        smtp_use_tls=s.smtp_use_tls,
+        smtp_password_set=bool(s.smtp_password),
+        notification_recipients=list(s.notification_recipients),
+        jira_enabled=s.jira_enabled,
+        jira_url=s.jira_url,
+        jira_email=s.jira_email,
+        jira_project_key=s.jira_project_key,
+        jira_api_token_set=bool(s.jira_api_token),
+        netbox_enabled=s.netbox_enabled,
+        netbox_url=s.netbox_url,
+        netbox_token_set=bool(s.netbox_token),
+    )
+
+
 @router.get("", response_model=SettingsStatus)
-async def get_settings_status(_: User = Depends(get_current_user)) -> SettingsStatus:
-    s = get_settings()
+async def get_settings_status(
+    _: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> SettingsStatus:
+    s = await effective_settings(session)
     ai_model = s.anthropic_model if s.ai_provider == "claude" else s.ollama_model
     ai_configured = s.ai_provider != "none" and (
         s.ai_provider != "claude" or bool(s.anthropic_api_key)
@@ -61,6 +96,29 @@ async def get_settings_status(_: User = Depends(get_current_user)) -> SettingsSt
     )
 
 
+@router.get("/config", response_model=SettingsConfig)
+async def get_config(
+    _: User = Depends(AdminDep),
+    session: AsyncSession = Depends(get_session),
+) -> SettingsConfig:
+    return _config_from(await effective_settings(session))
+
+
+@router.patch("/config", response_model=SettingsConfig)
+async def update_config(
+    payload: SettingsConfigUpdate,
+    current_user: User = Depends(AdminDep),
+    session: AsyncSession = Depends(get_session),
+) -> SettingsConfig:
+    await set_overrides(
+        session,
+        payload.model_dump(exclude_unset=True),
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+    )
+    return _config_from(await effective_settings(session))
+
+
 @router.post("/test/ai", response_model=TestResult)
 async def test_ai(
     _: User = Depends(AdminDep),
@@ -82,18 +140,19 @@ async def test_email(
     payload: EmailTestRequest,
     _: User = Depends(AdminDep),
     notifier: Notifier = Depends(get_notifier),
+    session: AsyncSession = Depends(get_session),
 ) -> TestResult:
     if isinstance(notifier, NullNotifier):
         return TestResult(ok=False, detail="Email is disabled or SMTP is not configured.")
     recipients = (
         [payload.recipient]
         if payload.recipient
-        else list(get_settings().notification_recipients)
+        else list((await effective_settings(session)).notification_recipients)
     )
     if not recipients:
         return TestResult(
             ok=False,
-            detail="No recipient. Provide one or set PORTWIZ_NOTIFICATION_RECIPIENTS.",
+            detail="No recipient. Provide one or configure notification recipients.",
         )
     try:
         await notifier.send(

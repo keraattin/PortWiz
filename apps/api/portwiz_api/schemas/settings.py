@@ -45,3 +45,62 @@ class TestResult(BaseModel):
 
 class EmailTestRequest(BaseModel):
     recipient: str | None = None
+
+
+class SettingsConfig(BaseModel):
+    """Editable configuration. Secret values are never included; a `*_set`
+    boolean reports whether each secret currently has a value."""
+
+    ai_provider: str
+    ollama_base_url: str
+    ollama_model: str
+    anthropic_model: str
+    anthropic_api_key_set: bool
+
+    notifications_enabled: bool
+    smtp_host: str
+    smtp_port: int
+    smtp_from: str
+    smtp_username: str | None
+    smtp_use_tls: bool
+    smtp_password_set: bool
+    notification_recipients: list[str]
+
+    jira_enabled: bool
+    jira_url: str | None
+    jira_email: str | None
+    jira_project_key: str
+    jira_api_token_set: bool
+
+    netbox_enabled: bool
+    netbox_url: str | None
+    netbox_token_set: bool
+
+
+class SettingsConfigUpdate(BaseModel):
+    """PATCH payload. Only provided fields change; a blank secret is ignored."""
+
+    ai_provider: str | None = None
+    ollama_base_url: str | None = None
+    ollama_model: str | None = None
+    anthropic_api_key: str | None = None
+    anthropic_model: str | None = None
+
+    notifications_enabled: bool | None = None
+    smtp_host: str | None = None
+    smtp_port: int | None = None
+    smtp_from: str | None = None
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_use_tls: bool | None = None
+    notification_recipients: list[str] | None = None
+
+    jira_enabled: bool | None = None
+    jira_url: str | None = None
+    jira_email: str | None = None
+    jira_api_token: str | None = None
+    jira_project_key: str | None = None
+
+    netbox_enabled: bool | None = None
+    netbox_url: str | None = None
+    netbox_token: str | None = None

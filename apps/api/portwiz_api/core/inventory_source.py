@@ -13,6 +13,11 @@ import logging
 from dataclasses import dataclass
 from typing import Protocol
 
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .db import get_session
+
 logger = logging.getLogger("portwiz.inventory_source")
 
 
@@ -92,10 +97,15 @@ class NetBoxSource:
             return False, str(exc)
 
 
-def get_inventory_source() -> InventorySource:
-    from .config import get_settings
-
-    settings = get_settings()
+def build_inventory_source(settings) -> InventorySource:
     if settings.netbox_enabled and settings.netbox_url and settings.netbox_token:
         return NetBoxSource(settings.netbox_url, settings.netbox_token)
     return NullSource()
+
+
+async def get_inventory_source(
+    session: AsyncSession = Depends(get_session),
+) -> InventorySource:
+    from .app_settings import effective_settings
+
+    return build_inventory_source(await effective_settings(session))

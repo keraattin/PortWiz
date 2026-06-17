@@ -12,6 +12,11 @@ import logging
 from email.message import EmailMessage
 from typing import Any, Protocol
 
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .db import get_session
+
 logger = logging.getLogger("portwiz.notifications")
 
 
@@ -61,10 +66,7 @@ class EmailNotifier:
         )
 
 
-def get_notifier() -> Notifier:
-    from .config import get_settings
-
-    settings = get_settings()
+def build_notifier(settings) -> Notifier:
     if not settings.notifications_enabled or not settings.smtp_host:
         return NullNotifier()
     return EmailNotifier(
@@ -75,6 +77,12 @@ def get_notifier() -> Notifier:
         username=settings.smtp_username,
         password=settings.smtp_password,
     )
+
+
+async def get_notifier(session: AsyncSession = Depends(get_session)) -> Notifier:
+    from .app_settings import effective_settings
+
+    return build_notifier(await effective_settings(session))
 
 
 def build_change_email(summaries: list[dict[str, Any]]) -> tuple[str, str]:
@@ -91,12 +99,11 @@ def build_change_email(summaries: list[dict[str, Any]]) -> tuple[str, str]:
 async def notify_changes(
     summaries: list[dict[str, Any]],
     recipients: list[str],
-    notifier: Notifier | None = None,
+    notifier: Notifier,
 ) -> bool:
     """Send a change-summary email. Returns True if an email was dispatched."""
     if not summaries or not recipients:
         return False
-    notifier = notifier or get_notifier()
     subject, body = build_change_email(summaries)
     await notifier.send(subject, body, recipients)
     return True
