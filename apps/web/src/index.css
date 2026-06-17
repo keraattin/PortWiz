@@ -20,11 +20,13 @@
 .light {
   color-scheme: light;
 
-  /* Neutral ramp: high shades are dark surfaces, low shades are light text. */
-  --color-slate-950: #f1f5f9; /* app background  */
-  --color-slate-900: #ffffff; /* cards / surfaces */
-  --color-slate-800: #f1f5f9; /* inputs, raised surfaces, dividers */
-  --color-slate-700: #cbd5e1; /* borders, secondary buttons */
+  /* Neutral ramp: high shades are dark surfaces, low shades are light text.
+   * 800 must stay distinct from the 950 page background, since it carries every
+   * border, divider and table-row hover; if it matches the page those vanish. */
+  --color-slate-950: #f1f5f9; /* app background, table rows */
+  --color-slate-900: #ffffff; /* cards, table headers, modals */
+  --color-slate-800: #e2e8f0; /* borders, dividers, inputs, active tab */
+  --color-slate-700: #cbd5e1; /* stronger borders, neutral pills */
   --color-slate-600: #94a3b8; /* faint text / icons */
   --color-slate-500: #64748b; /* muted text (reads on both) */
   --color-slate-400: #475569; /* secondary text */
