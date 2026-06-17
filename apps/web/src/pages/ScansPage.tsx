@@ -19,6 +19,8 @@ import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
 import { useToast } from "../components/Toast";
+import { type TKey } from "../i18n/locales/en";
+import { useI18n } from "../i18n/I18nContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -47,6 +49,7 @@ function parseTargets(raw: string): string[] {
 export default function ScansPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const { t } = useI18n();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [runs, setRuns] = useState<ScanRun[]>([]);
@@ -80,7 +83,7 @@ export default function ScansPage() {
   }, []);
 
   const profileName = (id: string | null) =>
-    id ? (profiles.find((p) => p.id === id)?.name ?? "(deleted)") : "(ad-hoc)";
+    id ? (profiles.find((p) => p.id === id)?.name ?? t("scans.deletedProfile")) : t("scans.adhoc");
 
   function openAdd() {
     setError(null);
@@ -110,7 +113,7 @@ export default function ScansPage() {
         cron: cron || null,
       });
       setAddOpen(false);
-      toast.success("Scan profile added");
+      toast.success(t("scans.added"));
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -120,7 +123,7 @@ export default function ScansPage() {
   async function onRun(profile: ScanProfile) {
     try {
       await runScanProfile(profile.id);
-      toast.success(`Scan queued for ${profile.name}`);
+      toast.success(t("scans.queued", { name: profile.name }));
       await reload();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -128,10 +131,10 @@ export default function ScansPage() {
   }
 
   async function onDeleteProfile(id: string) {
-    if (!window.confirm("Delete this scan profile?")) return;
+    if (!window.confirm(t("scans.confirmDelete"))) return;
     try {
       await deleteScanProfile(id);
-      toast.success("Scan profile deleted");
+      toast.success(t("scans.deleted"));
       await reload();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -155,19 +158,15 @@ export default function ScansPage() {
       <section className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-200">Scan profiles</h2>
-            <p className="text-sm text-slate-500">
-              A profile defines what to scan (targets, ports) and, optionally, a cron
-              schedule. Runs are picked up by an online agent; without one they stay
-              pending.
-            </p>
+            <h2 className="text-lg font-semibold text-slate-200">{t("scans.profilesTitle")}</h2>
+            <p className="text-sm text-slate-500">{t("scans.profilesSubtitle")}</p>
           </div>
           {canWrite && (
             <button
               onClick={openAdd}
               className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
-              Add scan
+              {t("scans.add")}
             </button>
           )}
         </div>
@@ -178,11 +177,11 @@ export default function ScansPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-900 text-slate-400">
               <tr>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">Targets</th>
-                <th className="px-4 py-2 font-medium">Ports</th>
-                <th className="px-4 py-2 font-medium">Segment</th>
-                <th className="px-4 py-2 font-medium">Type</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.name")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.targets")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.ports")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.segment")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.type")}</th>
                 <th className="px-4 py-2"></th>
               </tr>
             </thead>
@@ -190,7 +189,7 @@ export default function ScansPage() {
               {profiles.length === 0 ? (
                 <tr>
                   <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
-                    No scan profiles yet.
+                    {t("scans.empty")}
                     {canWrite && (
                       <>
                         {" "}
@@ -198,7 +197,7 @@ export default function ScansPage() {
                           onClick={openAdd}
                           className="font-medium text-emerald-400 hover:text-emerald-300"
                         >
-                          Create your first scan
+                          {t("scans.createFirst")}
                         </button>
                       </>
                     )}
@@ -213,7 +212,7 @@ export default function ScansPage() {
                     </td>
                     <td className="px-4 py-2 text-slate-300">{p.ports}</td>
                     <td className="px-4 py-2 text-slate-300">
-                      {p.segment ?? <span className="text-slate-600">any</span>}
+                      {p.segment ?? <span className="text-slate-600">{t("scans.any")}</span>}
                     </td>
                     <td className="px-4 py-2 text-slate-400">{p.scan_type}</td>
                     <td className="px-4 py-2 text-right">
@@ -223,17 +222,17 @@ export default function ScansPage() {
                             onClick={() => onRun(p)}
                             className="mr-3 text-xs font-medium text-emerald-400 hover:text-emerald-300"
                           >
-                            Run now
+                            {t("scans.runNow")}
                           </button>
                           <button
                             onClick={() => onDeleteProfile(p.id)}
                             className="text-xs text-red-400 hover:text-red-300"
                           >
-                            Delete
+                            {t("common.delete")}
                           </button>
                         </>
                       ) : (
-                        <span className="text-xs text-slate-600">read-only</span>
+                        <span className="text-xs text-slate-600">{t("scans.readOnly")}</span>
                       )}
                     </td>
                   </tr>
@@ -246,22 +245,22 @@ export default function ScansPage() {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-200">Recent scan runs</h2>
+          <h2 className="text-lg font-semibold text-slate-200">{t("scans.runsTitle")}</h2>
           <button
             onClick={reload}
             className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800"
           >
-            Refresh
+            {t("scans.refresh")}
           </button>
         </div>
         <div className="overflow-hidden rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-900 text-slate-400">
               <tr>
-                <th className="px-4 py-2 font-medium">Profile</th>
-                <th className="px-4 py-2 font-medium">Status</th>
-                <th className="px-4 py-2 font-medium">Started</th>
-                <th className="px-4 py-2 font-medium">Finished</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.profile")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.status")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.started")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.finished")}</th>
                 <th className="px-4 py-2"></th>
               </tr>
             </thead>
@@ -269,7 +268,7 @@ export default function ScansPage() {
               {runs.length === 0 ? (
                 <tr>
                   <td className="px-4 py-3 text-slate-500" colSpan={5}>
-                    No scan runs yet.
+                    {t("scans.runsEmpty")}
                   </td>
                 </tr>
               ) : (
@@ -278,7 +277,7 @@ export default function ScansPage() {
                     <td className="px-4 py-2 text-slate-100">{profileName(r.scan_profile_id)}</td>
                     <td className="px-4 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_BADGE[r.status]}`}>
-                        {r.status}
+                        {t(`runStatus.${r.status}` as TKey)}
                       </span>
                     </td>
                     <td className="px-4 py-2 text-xs text-slate-400">
@@ -292,7 +291,7 @@ export default function ScansPage() {
                         onClick={() => onViewRun(r)}
                         className="text-xs font-medium text-sky-400 hover:text-sky-300"
                       >
-                        View results
+                        {t("scans.viewResults")}
                       </button>
                     </td>
                   </tr>
@@ -303,9 +302,9 @@ export default function ScansPage() {
         </div>
       </section>
 
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add scan profile" wide>
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t("scans.addTitle")} wide>
         <form onSubmit={onCreate} className="space-y-3">
-          <FormField label="Name" hint="A label for this scan, e.g. DMZ weekly">
+          <FormField label={t("scans.f.name")} hint={t("scans.f.nameHint")}>
             <input
               className={inputClass}
               placeholder="DMZ weekly"
@@ -314,10 +313,7 @@ export default function ScansPage() {
               required
             />
           </FormField>
-          <FormField
-            label="Targets"
-            hint="IPs or CIDR blocks, separated by commas or spaces. e.g. 10.0.0.0/24, 192.168.1.5"
-          >
+          <FormField label={t("scans.f.targets")} hint={t("scans.f.targetsHint")}>
             <input
               className={inputClass}
               placeholder="10.0.0.0/24, 192.168.1.5"
@@ -326,10 +322,7 @@ export default function ScansPage() {
               required
             />
           </FormField>
-          <FormField
-            label="Ports"
-            hint="'top-1000' for common ports, a range like 1-1000, or a list like 22,80,443"
-          >
+          <FormField label={t("scans.f.ports")} hint={t("scans.f.portsHint")}>
             <input
               className={inputClass}
               placeholder="top-1000"
@@ -337,10 +330,7 @@ export default function ScansPage() {
               onChange={(e) => setPorts(e.target.value)}
             />
           </FormField>
-          <FormField
-            label="Segment"
-            hint="Optional. Routes this scan to the agent responsible for that VLAN (must match the agent's segment)."
-          >
+          <FormField label={t("scans.f.segment")} hint={t("scans.f.segmentHint")}>
             <input
               className={inputClass}
               placeholder="vlan10"
@@ -348,16 +338,13 @@ export default function ScansPage() {
               onChange={(e) => setSegment(e.target.value)}
             />
           </FormField>
-          <FormField
-            label="Compliance framework"
-            hint="Optional. Tracks this scan's cadence on the Compliance page."
-          >
+          <FormField label={t("scans.f.framework")} hint={t("scans.f.frameworkHint")}>
             <select
               className={inputClass}
               value={framework}
               onChange={(e) => setFramework(e.target.value as ComplianceFramework | "")}
             >
-              <option value="">No framework</option>
+              <option value="">{t("scans.f.noFramework")}</option>
               <option value="pci">PCI-DSS</option>
               <option value="hipaa">HIPAA</option>
               <option value="soc2">SOC 2</option>
@@ -365,10 +352,7 @@ export default function ScansPage() {
               <option value="nist">NIST</option>
             </select>
           </FormField>
-          <FormField
-            label="Schedule (cron)"
-            hint="Optional. Cron expression to run automatically, e.g. 0 2 * * * = every day at 02:00."
-          >
+          <FormField label={t("scans.f.cron")} hint={t("scans.f.cronHint")}>
             <input
               className={inputClass}
               placeholder="0 2 * * *"
@@ -376,15 +360,15 @@ export default function ScansPage() {
               onChange={(e) => setCron(e.target.value)}
             />
           </FormField>
-          <FormField label="Scan type" hint="connect is the safe default; syn is faster but needs raw-socket privileges.">
+          <FormField label={t("scans.f.scanType")} hint={t("scans.f.scanTypeHint")}>
             <select
               className={inputClass}
               value={scanType}
               onChange={(e) => setScanType(e.target.value as ScanType)}
             >
-              {SCAN_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              {SCAN_TYPES.map((st) => (
+                <option key={st} value={st}>
+                  {st}
                 </option>
               ))}
             </select>
@@ -395,7 +379,7 @@ export default function ScansPage() {
               checked={serviceDetection}
               onChange={(e) => setServiceDetection(e.target.checked)}
             />
-            Service detection (identify the software behind each open port)
+            {t("scans.f.serviceDetection")}
           </label>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
@@ -403,7 +387,7 @@ export default function ScansPage() {
               type="submit"
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
-              Add scan profile
+              {t("scans.addTitle")}
             </button>
           </div>
         </form>
@@ -414,7 +398,10 @@ export default function ScansPage() {
         onClose={() => setSelectedRun(null)}
         title={
           selectedRun
-            ? `Results for run ${selectedRun.id.slice(0, 8)} (${observations.length} open ports)`
+            ? t("scans.resultsTitle", {
+                id: selectedRun.id.slice(0, 8),
+                count: observations.length,
+              })
             : ""
         }
         wide
@@ -423,18 +410,18 @@ export default function ScansPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-900 text-slate-400">
               <tr>
-                <th className="px-4 py-2 font-medium">Host</th>
-                <th className="px-4 py-2 font-medium">Port</th>
-                <th className="px-4 py-2 font-medium">State</th>
-                <th className="px-4 py-2 font-medium">Service</th>
-                <th className="px-4 py-2 font-medium">Version</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.host")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.port")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.state")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.service")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.version")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {observations.length === 0 ? (
                 <tr>
                   <td className="px-4 py-3 text-slate-500" colSpan={5}>
-                    No open ports recorded for this run.
+                    {t("scans.noOpenPorts")}
                   </td>
                 </tr>
               ) : (
