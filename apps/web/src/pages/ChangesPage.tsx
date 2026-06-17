@@ -11,6 +11,8 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import Pagination, { usePagination } from "../components/Pagination";
 import { useToast } from "../components/Toast";
+import { type TKey } from "../i18n/locales/en";
+import { useI18n } from "../i18n/I18nContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -37,17 +39,20 @@ const STATUS_BADGE: Record<ChangeStatus, string> = {
 
 const STATUS_FILTERS = ["all", "open", "acknowledged", "resolved"] as const;
 
-function describe(snapshot: PortSnapshot): string {
+type Translate = (key: TKey, vars?: Record<string, string | number>) => string;
+
+function describe(snapshot: PortSnapshot, t: Translate): string {
   if (snapshot.state !== "open") {
-    return "closed";
+    return t("changes.closed");
   }
   const detail = [snapshot.service, snapshot.version].filter(Boolean).join(" ");
-  return detail ? `open (${detail})` : "open";
+  return detail ? t("changes.openWith", { detail }) : t("changes.open");
 }
 
 export default function ChangesPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const { t } = useI18n();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
@@ -70,7 +75,7 @@ export default function ChangesPage() {
   async function onStatusChange(id: string, status: ChangeStatus) {
     try {
       await updateChangeStatus(id, status);
-      toast.success(`Marked ${status}`);
+      toast.success(t("changes.marked", { status: t(`changeStatus.${status}` as TKey) }));
       await reload();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -86,7 +91,7 @@ export default function ChangesPage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-200">Confirmed changes</h2>
+        <h2 className="text-lg font-semibold text-slate-200">{t("changes.title")}</h2>
         <div className="flex items-center gap-2">
           {STATUS_FILTERS.map((f) => (
             <button
@@ -98,16 +103,13 @@ export default function ChangesPage() {
                   : "text-slate-400 hover:bg-slate-900"
               }`}
             >
-              {f}
+              {f === "all" ? t("filters.all") : t(`changeStatus.${f}` as TKey)}
             </button>
           ))}
         </div>
       </div>
 
-      <p className="text-sm text-slate-500">
-        Only changes confirmed across consecutive scans appear here, so network
-        flapping does not raise noise.
-      </p>
+      <p className="text-sm text-slate-500">{t("changes.subtitle")}</p>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
@@ -115,12 +117,12 @@ export default function ChangesPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">Detected</th>
-              <th className="px-4 py-2 font-medium">Host</th>
-              <th className="px-4 py-2 font-medium">Change</th>
-              <th className="px-4 py-2 font-medium">Before / After</th>
-              <th className="px-4 py-2 font-medium">Severity</th>
-              <th className="px-4 py-2 font-medium">Status</th>
+              <th className="px-4 py-2 font-medium">{t("changes.col.detected")}</th>
+              <th className="px-4 py-2 font-medium">{t("changes.col.host")}</th>
+              <th className="px-4 py-2 font-medium">{t("changes.col.change")}</th>
+              <th className="px-4 py-2 font-medium">{t("changes.col.beforeAfter")}</th>
+              <th className="px-4 py-2 font-medium">{t("changes.col.severity")}</th>
+              <th className="px-4 py-2 font-medium">{t("changes.col.status")}</th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -128,7 +130,7 @@ export default function ChangesPage() {
             {changes.length === 0 ? (
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={7}>
-                  No changes recorded.
+                  {t("changes.empty")}
                 </td>
               </tr>
             ) : (
@@ -142,22 +144,22 @@ export default function ChangesPage() {
                   </td>
                   <td className="px-4 py-2">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${CHANGE_BADGE[c.change_type]}`}>
-                      {c.change_type.replace("_", " ")}
+                      {t(`changeType.${c.change_type}` as TKey)}
                     </span>
                   </td>
                   <td className="px-4 py-2 text-xs text-slate-300">
-                    <span className="text-slate-500">{describe(c.before)}</span>
-                    <span className="px-1 text-slate-500">to</span>
-                    <span className="text-slate-100">{describe(c.after)}</span>
+                    <span className="text-slate-500">{describe(c.before, t)}</span>
+                    <span className="px-1 text-slate-500">{t("changes.to")}</span>
+                    <span className="text-slate-100">{describe(c.after, t)}</span>
                   </td>
                   <td className="px-4 py-2">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${SEVERITY_BADGE[c.severity] ?? SEVERITY_BADGE.low}`}>
-                      {c.severity}
+                      {t(`severity.${c.severity}` as TKey)}
                     </span>
                   </td>
                   <td className="px-4 py-2">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_BADGE[c.status]}`}>
-                      {c.status}
+                      {t(`changeStatus.${c.status}` as TKey)}
                     </span>
                   </td>
                   <td className="px-4 py-2 text-right">
@@ -166,7 +168,7 @@ export default function ChangesPage() {
                         onClick={() => onStatusChange(c.id, "acknowledged")}
                         className="mr-3 text-xs text-amber-400 hover:text-amber-300"
                       >
-                        Acknowledge
+                        {t("changes.acknowledge")}
                       </button>
                     )}
                     {canWrite && c.status !== "resolved" && (
@@ -174,7 +176,7 @@ export default function ChangesPage() {
                         onClick={() => onStatusChange(c.id, "resolved")}
                         className="text-xs text-emerald-400 hover:text-emerald-300"
                       >
-                        Resolve
+                        {t("changes.resolve")}
                       </button>
                     )}
                   </td>

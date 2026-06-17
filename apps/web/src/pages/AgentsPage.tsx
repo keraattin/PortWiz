@@ -11,6 +11,8 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import Modal from "../components/Modal";
 import { useToast } from "../components/Toast";
+import { type TKey } from "../i18n/locales/en";
+import { useI18n } from "../i18n/I18nContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -19,11 +21,13 @@ function errorMessage(e: unknown): string {
 // An agent heartbeats periodically; treat a recent heartbeat as "online".
 const ONLINE_WINDOW_MS = 2 * 60 * 1000;
 
-function agentStatus(lastSeen: string | null): { label: string; cls: string } {
-  if (!lastSeen) return { label: "never seen", cls: "bg-slate-700 text-slate-400" };
+// Returns the i18n key for the status label plus its badge classes.
+function agentStatus(lastSeen: string | null): { key: TKey; cls: string } {
+  if (!lastSeen) return { key: "agents.status.neverSeen", cls: "bg-slate-700 text-slate-400" };
   const ageMs = Date.now() - new Date(lastSeen).getTime();
-  if (ageMs < ONLINE_WINDOW_MS) return { label: "online", cls: "bg-emerald-900 text-emerald-300" };
-  return { label: "offline", cls: "bg-red-900 text-red-300" };
+  if (ageMs < ONLINE_WINDOW_MS)
+    return { key: "agents.status.online", cls: "bg-emerald-900 text-emerald-300" };
+  return { key: "agents.status.offline", cls: "bg-red-900 text-red-300" };
 }
 
 const inputClass =
@@ -32,6 +36,7 @@ const inputClass =
 export default function AgentsPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const { t } = useI18n();
   const isAdmin = user?.role === "admin";
 
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -70,7 +75,7 @@ export default function AgentsPage() {
       setEnrolled(result);
       setName("");
       setSegment("");
-      toast.success("Agent enrolled");
+      toast.success(t("agents.enrolled"));
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -78,10 +83,10 @@ export default function AgentsPage() {
   }
 
   async function onDelete(id: string) {
-    if (!window.confirm("Delete this agent? Its token will stop working.")) return;
+    if (!window.confirm(t("agents.confirmDelete"))) return;
     try {
       await deleteAgent(id);
-      toast.success("Agent deleted");
+      toast.success(t("agents.deleted"));
       await reload();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -106,7 +111,7 @@ export default function AgentsPage() {
         enabled: editEnabled,
       });
       setEditAgent(null);
-      toast.success("Agent updated");
+      toast.success(t("agents.updated"));
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -116,18 +121,14 @@ export default function AgentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-slate-200">Scan agents</h2>
-        <p className="text-sm text-slate-500">
-          Agents are the distributed scanners you deploy per VLAN. Enroll one here,
-          then run it with its token (set <code className="text-slate-400">PORTWIZ_AGENT_TOKEN</code>).
-          A scan run stays pending until an online agent picks it up.
-        </p>
+        <h2 className="text-lg font-semibold text-slate-200">{t("agents.title")}</h2>
+        <p className="text-sm text-slate-500">{t("agents.subtitle")}</p>
       </div>
 
       {enrolled && (
         <div className="space-y-2 rounded-xl border border-emerald-800 bg-emerald-950/40 p-4">
           <p className="text-sm text-emerald-300">
-            Agent "{enrolled.name}" enrolled. Copy its token now — it will not be shown again.
+            {t("agents.enrolledNotice", { name: enrolled.name })}
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 overflow-x-auto rounded bg-slate-900 px-3 py-2 font-mono text-xs text-slate-200">
@@ -140,13 +141,13 @@ export default function AgentsPage() {
               }}
               className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
-              {copied ? "Copied" : "Copy"}
+              {copied ? t("agents.copied") : t("agents.copy")}
             </button>
             <button
               onClick={() => setEnrolled(null)}
               className="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
             >
-              Dismiss
+              {t("agents.dismiss")}
             </button>
           </div>
         </div>
@@ -156,14 +157,14 @@ export default function AgentsPage() {
         <form onSubmit={onEnroll} className="flex flex-wrap gap-3">
           <input
             className={`${inputClass} flex-1`}
-            placeholder="Agent name (e.g. vlan10-scanner)"
+            placeholder={t("agents.namePlaceholder")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
           />
           <input
             className={`${inputClass} sm:w-48`}
-            placeholder="Segment (optional, e.g. vlan10)"
+            placeholder={t("agents.segmentPlaceholder")}
             value={segment}
             onChange={(e) => setSegment(e.target.value)}
           />
@@ -171,7 +172,7 @@ export default function AgentsPage() {
             type="submit"
             className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
           >
-            Enroll agent
+            {t("agents.enroll")}
           </button>
         </form>
       )}
@@ -182,11 +183,11 @@ export default function AgentsPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">Name</th>
-              <th className="px-4 py-2 font-medium">Segment</th>
-              <th className="px-4 py-2 font-medium">Status</th>
-              <th className="px-4 py-2 font-medium">Last seen</th>
-              <th className="px-4 py-2 font-medium">Enrolled</th>
+              <th className="px-4 py-2 font-medium">{t("agents.col.name")}</th>
+              <th className="px-4 py-2 font-medium">{t("agents.col.segment")}</th>
+              <th className="px-4 py-2 font-medium">{t("agents.col.status")}</th>
+              <th className="px-4 py-2 font-medium">{t("agents.col.lastSeen")}</th>
+              <th className="px-4 py-2 font-medium">{t("agents.col.enrolledAt")}</th>
               {isAdmin && <th className="px-4 py-2"></th>}
             </tr>
           </thead>
@@ -194,13 +195,13 @@ export default function AgentsPage() {
             {loading ? (
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={6}>
-                  Loading…
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : agents.length === 0 ? (
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={6}>
-                  No agents enrolled yet. Enroll one to start scanning.
+                  {t("agents.empty")}
                 </td>
               </tr>
             ) : (
@@ -214,16 +215,16 @@ export default function AgentsPage() {
                   >
                     <td className="px-4 py-2 text-slate-100">{a.name}</td>
                     <td className="px-4 py-2 text-slate-300">
-                      {a.segment ?? <span className="text-slate-600">any</span>}
+                      {a.segment ?? <span className="text-slate-600">{t("agents.any")}</span>}
                     </td>
                     <td className="px-4 py-2">
                       {a.enabled ? (
                         <span className={`rounded-full px-2 py-0.5 text-xs ${status.cls}`}>
-                          {status.label}
+                          {t(status.key)}
                         </span>
                       ) : (
                         <span className="rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-400">
-                          disabled
+                          {t("agents.status.disabled")}
                         </span>
                       )}
                     </td>
@@ -242,7 +243,7 @@ export default function AgentsPage() {
                           }}
                           className="text-xs text-red-400 hover:text-red-300"
                         >
-                          Delete
+                          {t("common.delete")}
                         </button>
                       </td>
                     )}
@@ -257,14 +258,14 @@ export default function AgentsPage() {
       <Modal
         open={editAgent !== null}
         onClose={() => setEditAgent(null)}
-        title={`Edit ${editAgent?.name ?? ""}`}
+        title={t("agents.editTitle", { name: editAgent?.name ?? "" })}
       >
         <form onSubmit={onSaveEdit} className="space-y-3">
           <div>
-            <label className="block text-sm text-slate-300">Segment</label>
+            <label className="block text-sm text-slate-300">{t("agents.f.segment")}</label>
             <input
               className={inputClass}
-              placeholder="Segment (e.g. vlan10; blank = any)"
+              placeholder={t("agents.f.segmentPlaceholder")}
               value={editSegment}
               onChange={(e) => setEditSegment(e.target.value)}
             />
@@ -275,18 +276,16 @@ export default function AgentsPage() {
               checked={editEnabled}
               onChange={(e) => setEditEnabled(e.target.checked)}
             />
-            Enabled
+            {t("agents.f.enabled")}
           </label>
-          <p className="text-xs text-slate-500">
-            Disabling an agent immediately blocks its token from scanning.
-          </p>
+          <p className="text-xs text-slate-500">{t("agents.f.enabledHint")}</p>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
             <button
               type="submit"
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
-              Save changes
+              {t("agents.saveChanges")}
             </button>
           </div>
         </form>
