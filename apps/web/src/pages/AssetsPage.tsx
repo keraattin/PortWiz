@@ -21,6 +21,8 @@ import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
 import { useToast } from "../components/Toast";
+import { type TKey } from "../i18n/locales/en";
+import { useI18n } from "../i18n/I18nContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -42,6 +44,7 @@ const CRIT_BADGE: Record<Criticality, string> = {
 export default function AssetsPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const { t } = useI18n();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [assets, setAssets] = useState<Asset[]>([]);
   const [vlans, setVlans] = useState<Vlan[]>([]);
@@ -116,7 +119,7 @@ export default function AssetsPage() {
         data_sensitivity: sensitivity,
       });
       setAddOpen(false);
-      toast.success("Asset added");
+      toast.success(t("assets.added"));
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -124,10 +127,10 @@ export default function AssetsPage() {
   }
 
   async function onDelete(id: string) {
-    if (!window.confirm("Delete this asset?")) return;
+    if (!window.confirm(t("assets.confirmDelete"))) return;
     try {
       await deleteAsset(id);
-      toast.success("Asset deleted");
+      toast.success(t("assets.deleted"));
       await reload();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -170,18 +173,15 @@ export default function AssetsPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-200">Assets</h2>
-          <p className="text-sm text-slate-500">
-            The hosts PortWiz scans. Each carries an owner, criticality, and
-            data-sensitivity so scans and changes can be scoped for compliance.
-          </p>
+          <h2 className="text-lg font-semibold text-slate-200">{t("assets.title")}</h2>
+          <p className="text-sm text-slate-500">{t("assets.subtitle")}</p>
         </div>
         {canWrite && (
           <button
             onClick={openAdd}
             className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
           >
-            Add asset
+            {t("assets.add")}
           </button>
         )}
       </div>
@@ -191,11 +191,8 @@ export default function AssetsPage() {
       {canWrite && (
       <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-medium text-slate-200">Bulk import</h3>
-          <span className="text-xs text-slate-500">
-            CSV or .xlsx with an "ip" column. Optional: hostname, vlan, owner,
-            criticality, sensitivity, description.
-          </span>
+          <h3 className="font-medium text-slate-200">{t("assets.bulkImport")}</h3>
+          <span className="text-xs text-slate-500">{t("assets.bulkImportHint")}</span>
         </div>
         <form onSubmit={onImport} className="flex flex-wrap items-center gap-3">
           <input
@@ -209,26 +206,37 @@ export default function AssetsPage() {
             value={onConflict}
             onChange={(e) => setOnConflict(e.target.value as "update" | "skip")}
           >
-            <option value="update">Update existing</option>
-            <option value="skip">Skip existing</option>
+            <option value="update">{t("assets.updateExisting")}</option>
+            <option value="skip">{t("assets.skipExisting")}</option>
           </select>
           <button
             type="submit"
             disabled={!importFile || importing}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
           >
-            {importing ? "Importing…" : "Import"}
+            {importing ? t("assets.importing") : t("assets.import")}
           </button>
         </form>
         {importError && <p className="text-sm text-red-400">{importError}</p>}
         {importReport && (
           <div className="space-y-2 text-sm">
             <p className="text-slate-300">
-              {importReport.total} rows:{" "}
-              <span className="text-emerald-400">{importReport.created} created</span>,{" "}
-              <span className="text-sky-400">{importReport.updated} updated</span>,{" "}
-              <span className="text-slate-400">{importReport.skipped} skipped</span>,{" "}
-              <span className="text-red-400">{importReport.errors} errors</span>
+              {importReport.total} {t("assets.rows")}:{" "}
+              <span className="text-emerald-400">
+                {importReport.created} {t("assets.created")}
+              </span>
+              ,{" "}
+              <span className="text-sky-400">
+                {importReport.updated} {t("assets.updated")}
+              </span>
+              ,{" "}
+              <span className="text-slate-400">
+                {importReport.skipped} {t("assets.skipped")}
+              </span>
+              ,{" "}
+              <span className="text-red-400">
+                {importReport.errors} {t("assets.errors")}
+              </span>
             </p>
             {importReport.errors > 0 && (
               <ul className="space-y-1 text-xs text-red-400">
@@ -236,7 +244,7 @@ export default function AssetsPage() {
                   .filter((r) => r.status === "error")
                   .map((r) => (
                     <li key={r.row}>
-                      Row {r.row}
+                      {t("assets.row")} {r.row}
                       {r.ip ? ` (${r.ip})` : ""}: {r.error}
                     </li>
                   ))}
@@ -247,26 +255,36 @@ export default function AssetsPage() {
 
         <div className="space-y-2 border-t border-slate-800 pt-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm font-medium text-slate-200">Sync from NetBox</span>
-            <span className="text-xs text-slate-500">
-              Pulls hosts from your configured NetBox and upserts them by IP.
-            </span>
+            <span className="text-sm font-medium text-slate-200">{t("assets.syncTitle")}</span>
+            <span className="text-xs text-slate-500">{t("assets.syncHint")}</span>
           </div>
           <button
             onClick={onSync}
             disabled={syncing}
             className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50"
           >
-            {syncing ? "Syncing…" : "Sync from NetBox"}
+            {syncing ? t("assets.syncing") : t("assets.syncTitle")}
           </button>
           {syncError && <p className="text-sm text-red-400">{syncError}</p>}
           {syncReport && (
             <p className="text-sm text-slate-300">
-              {syncReport.source}: {syncReport.total} hosts.{" "}
-              <span className="text-emerald-400">{syncReport.created} created</span>,{" "}
-              <span className="text-sky-400">{syncReport.updated} updated</span>,{" "}
-              <span className="text-slate-400">{syncReport.skipped} skipped</span>,{" "}
-              <span className="text-red-400">{syncReport.errors} errors</span>.
+              {syncReport.source}: {syncReport.total} {t("assets.hosts")}.{" "}
+              <span className="text-emerald-400">
+                {syncReport.created} {t("assets.created")}
+              </span>
+              ,{" "}
+              <span className="text-sky-400">
+                {syncReport.updated} {t("assets.updated")}
+              </span>
+              ,{" "}
+              <span className="text-slate-400">
+                {syncReport.skipped} {t("assets.skipped")}
+              </span>
+              ,{" "}
+              <span className="text-red-400">
+                {syncReport.errors} {t("assets.errors")}
+              </span>
+              .
             </p>
           )}
         </div>
@@ -277,12 +295,12 @@ export default function AssetsPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">IP</th>
-              <th className="px-4 py-2 font-medium">Hostname</th>
-              <th className="px-4 py-2 font-medium">VLAN</th>
-              <th className="px-4 py-2 font-medium">Owner</th>
-              <th className="px-4 py-2 font-medium">Criticality</th>
-              <th className="px-4 py-2 font-medium">Sensitivity</th>
+              <th className="px-4 py-2 font-medium">{t("assets.col.ip")}</th>
+              <th className="px-4 py-2 font-medium">{t("assets.col.hostname")}</th>
+              <th className="px-4 py-2 font-medium">{t("assets.col.vlan")}</th>
+              <th className="px-4 py-2 font-medium">{t("assets.col.owner")}</th>
+              <th className="px-4 py-2 font-medium">{t("assets.col.criticality")}</th>
+              <th className="px-4 py-2 font-medium">{t("assets.col.sensitivity")}</th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -290,13 +308,13 @@ export default function AssetsPage() {
             {loading ? (
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={7}>
-                  Loading…
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : assets.length === 0 ? (
               <tr>
                 <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
-                  No assets yet.
+                  {t("assets.empty")}
                   {canWrite && (
                     <>
                       {" "}
@@ -304,9 +322,9 @@ export default function AssetsPage() {
                         onClick={openAdd}
                         className="font-medium text-emerald-400 hover:text-emerald-300"
                       >
-                        Add your first asset
+                        {t("assets.addFirst")}
                       </button>{" "}
-                      or import a CSV/Excel file below.
+                      {t("assets.orImport")}
                     </>
                   )}
                 </td>
@@ -320,7 +338,7 @@ export default function AssetsPage() {
                   <td className="px-4 py-2 text-slate-300">{ownerEmail(a.owner_id)}</td>
                   <td className="px-4 py-2">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${CRIT_BADGE[a.criticality]}`}>
-                      {a.criticality}
+                      {t(`crit.${a.criticality}` as TKey)}
                     </span>
                   </td>
                   <td className="px-4 py-2 uppercase text-slate-400">{a.data_sensitivity}</td>
@@ -330,7 +348,7 @@ export default function AssetsPage() {
                         onClick={() => onDelete(a.id)}
                         className="text-xs text-red-400 hover:text-red-300"
                       >
-                        Delete
+                        {t("common.delete")}
                       </button>
                     )}
                   </td>
@@ -347,9 +365,9 @@ export default function AssetsPage() {
         onPage={assetsPage.setPage}
       />
 
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add asset">
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t("assets.add")}>
         <form onSubmit={onCreate} className="space-y-3">
-          <FormField label="IP address" hint="The host to scan. IPv4 or IPv6, e.g. 10.0.0.5">
+          <FormField label={t("assets.f.ip")} hint={t("assets.f.ipHint")}>
             <input
               className={inputClass}
               placeholder="10.0.0.5"
@@ -358,7 +376,7 @@ export default function AssetsPage() {
               required
             />
           </FormField>
-          <FormField label="Hostname" hint="Optional, for your own reference, e.g. web-01">
+          <FormField label={t("assets.f.hostname")} hint={t("assets.f.hostnameHint")}>
             <input
               className={inputClass}
               placeholder="web-01"
@@ -366,9 +384,9 @@ export default function AssetsPage() {
               onChange={(e) => setHostname(e.target.value)}
             />
           </FormField>
-          <FormField label="VLAN" hint="Which network segment this host lives on. Create VLANs under Inventory.">
+          <FormField label={t("assets.f.vlan")} hint={t("assets.f.vlanHint")}>
             <select className={inputClass} value={vlanId} onChange={(e) => setVlanId(e.target.value)}>
-              <option value="">No VLAN</option>
+              <option value="">{t("assets.f.noVlan")}</option>
               {vlans.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.name}
@@ -376,9 +394,9 @@ export default function AssetsPage() {
               ))}
             </select>
           </FormField>
-          <FormField label="Owner" hint="The person accountable for this host.">
+          <FormField label={t("assets.f.owner")} hint={t("assets.f.ownerHint")}>
             <select className={inputClass} value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
-              <option value="">No owner</option>
+              <option value="">{t("assets.f.noOwner")}</option>
               {users.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.email}
@@ -386,7 +404,7 @@ export default function AssetsPage() {
               ))}
             </select>
           </FormField>
-          <FormField label="Criticality" hint="How important this host is, for prioritizing changes.">
+          <FormField label={t("assets.f.criticality")} hint={t("assets.f.criticalityHint")}>
             <select
               className={inputClass}
               value={criticality}
@@ -394,15 +412,12 @@ export default function AssetsPage() {
             >
               {CRITICALITIES.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {t(`crit.${c}` as TKey)}
                 </option>
               ))}
             </select>
           </FormField>
-          <FormField
-            label="Data sensitivity"
-            hint="cde = PCI cardholder data, ephi = HIPAA health data, pii = personal data."
-          >
+          <FormField label={t("assets.f.sensitivity")} hint={t("assets.f.sensitivityHint")}>
             <select
               className={inputClass}
               value={sensitivity}
@@ -421,7 +436,7 @@ export default function AssetsPage() {
               type="submit"
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
-              Add asset
+              {t("assets.add")}
             </button>
           </div>
         </form>

@@ -14,6 +14,7 @@ import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import { useToast } from "../components/Toast";
+import { useI18n } from "../i18n/I18nContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -25,6 +26,7 @@ const inputClass =
 export default function VlansPage() {
   const { user } = useAuth();
   const toast = useToast();
+  const { t } = useI18n();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [ipRanges, setIpRanges] = useState<IpRange[]>([]);
@@ -79,7 +81,7 @@ export default function VlansPage() {
         description: description || null,
       });
       setVlanOpen(false);
-      toast.success("VLAN added");
+      toast.success(t("vlans.added"));
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -87,10 +89,10 @@ export default function VlansPage() {
   }
 
   async function onDelete(id: string) {
-    if (!window.confirm("Delete this VLAN?")) return;
+    if (!window.confirm(t("vlans.confirmDelete"))) return;
     try {
       await deleteVlan(id);
-      toast.success("VLAN deleted");
+      toast.success(t("vlans.deleted"));
       await reload();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -115,7 +117,7 @@ export default function VlansPage() {
         description: rangeDesc || null,
       });
       setRangeOpen(false);
-      toast.success("IP range added");
+      toast.success(t("ranges.added"));
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -123,10 +125,10 @@ export default function VlansPage() {
   }
 
   async function onDeleteRange(id: string) {
-    if (!window.confirm("Delete this IP range?")) return;
+    if (!window.confirm(t("ranges.confirmDelete"))) return;
     try {
       await deleteIpRange(id);
-      toast.success("IP range deleted");
+      toast.success(t("ranges.deleted"));
       await reload();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -137,17 +139,15 @@ export default function VlansPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-200">VLANs</h2>
-          <p className="text-sm text-slate-500">
-            Group assets by network segment. Add a VLAN, then assign assets to it.
-          </p>
+          <h2 className="text-lg font-semibold text-slate-200">{t("vlans.title")}</h2>
+          <p className="text-sm text-slate-500">{t("vlans.subtitle")}</p>
         </div>
         {canWrite && (
           <button
             onClick={openAddVlan}
             className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
           >
-            Add VLAN
+            {t("vlans.add")}
           </button>
         )}
       </div>
@@ -158,9 +158,9 @@ export default function VlansPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">Name</th>
-              <th className="px-4 py-2 font-medium">Tag</th>
-              <th className="px-4 py-2 font-medium">Description</th>
+              <th className="px-4 py-2 font-medium">{t("vlans.col.name")}</th>
+              <th className="px-4 py-2 font-medium">{t("vlans.col.tag")}</th>
+              <th className="px-4 py-2 font-medium">{t("vlans.col.description")}</th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -168,13 +168,13 @@ export default function VlansPage() {
             {loading ? (
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={4}>
-                  Loading…
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : vlans.length === 0 ? (
               <tr>
                 <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
-                  No VLANs yet.
+                  {t("vlans.empty")}
                   {canWrite && (
                     <>
                       {" "}
@@ -182,7 +182,7 @@ export default function VlansPage() {
                         onClick={openAddVlan}
                         className="font-medium text-emerald-400 hover:text-emerald-300"
                       >
-                        Add your first VLAN
+                        {t("vlans.addFirst")}
                       </button>
                     </>
                   )}
@@ -200,7 +200,7 @@ export default function VlansPage() {
                         onClick={() => onDelete(v.id)}
                         className="text-xs text-red-400 hover:text-red-300"
                       >
-                        Delete
+                        {t("common.delete")}
                       </button>
                     )}
                   </td>
@@ -213,18 +213,15 @@ export default function VlansPage() {
 
       <div className="flex items-start justify-between gap-3 pt-2">
         <div>
-          <h2 className="text-lg font-semibold text-slate-200">IP ranges</h2>
-          <p className="text-sm text-slate-500">
-            CIDR blocks, optionally tied to a VLAN. They document the address space
-            you expect to scan.
-          </p>
+          <h2 className="text-lg font-semibold text-slate-200">{t("ranges.title")}</h2>
+          <p className="text-sm text-slate-500">{t("ranges.subtitle")}</p>
         </div>
         {canWrite && (
           <button
             onClick={openAddRange}
             className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
           >
-            Add IP range
+            {t("ranges.add")}
           </button>
         )}
       </div>
@@ -233,9 +230,9 @@ export default function VlansPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">CIDR</th>
-              <th className="px-4 py-2 font-medium">VLAN</th>
-              <th className="px-4 py-2 font-medium">Description</th>
+              <th className="px-4 py-2 font-medium">{t("ranges.col.cidr")}</th>
+              <th className="px-4 py-2 font-medium">{t("ranges.col.vlan")}</th>
+              <th className="px-4 py-2 font-medium">{t("ranges.col.description")}</th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -243,13 +240,13 @@ export default function VlansPage() {
             {loading ? (
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={4}>
-                  Loading…
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : ipRanges.length === 0 ? (
               <tr>
                 <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
-                  No IP ranges yet.
+                  {t("ranges.empty")}
                   {canWrite && (
                     <>
                       {" "}
@@ -257,7 +254,7 @@ export default function VlansPage() {
                         onClick={openAddRange}
                         className="font-medium text-emerald-400 hover:text-emerald-300"
                       >
-                        Add your first IP range
+                        {t("ranges.addFirst")}
                       </button>
                     </>
                   )}
@@ -275,7 +272,7 @@ export default function VlansPage() {
                         onClick={() => onDeleteRange(r.id)}
                         className="text-xs text-red-400 hover:text-red-300"
                       >
-                        Delete
+                        {t("common.delete")}
                       </button>
                     )}
                   </td>
@@ -286,9 +283,9 @@ export default function VlansPage() {
         </table>
       </div>
 
-      <Modal open={vlanOpen} onClose={() => setVlanOpen(false)} title="Add VLAN">
+      <Modal open={vlanOpen} onClose={() => setVlanOpen(false)} title={t("vlans.add")}>
         <form onSubmit={onCreate} className="space-y-3">
-          <FormField label="Name" hint="A label for the segment, e.g. DMZ, Servers, Office-Wifi">
+          <FormField label={t("vlans.f.name")} hint={t("vlans.f.nameHint")}>
             <input
               className={inputClass}
               placeholder="DMZ"
@@ -297,7 +294,7 @@ export default function VlansPage() {
               required
             />
           </FormField>
-          <FormField label="VLAN tag" hint="Optional 802.1Q tag, 1-4094. Leave blank if not applicable.">
+          <FormField label={t("vlans.f.tag")} hint={t("vlans.f.tagHint")}>
             <input
               className={inputClass}
               type="number"
@@ -308,7 +305,7 @@ export default function VlansPage() {
               onChange={(e) => setTag(e.target.value)}
             />
           </FormField>
-          <FormField label="Description" hint="Optional note about what lives on this segment.">
+          <FormField label={t("vlans.f.description")} hint={t("vlans.f.descriptionHint")}>
             <input
               className={inputClass}
               placeholder="Internet-facing servers"
@@ -322,15 +319,15 @@ export default function VlansPage() {
               type="submit"
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
-              Add VLAN
+              {t("vlans.add")}
             </button>
           </div>
         </form>
       </Modal>
 
-      <Modal open={rangeOpen} onClose={() => setRangeOpen(false)} title="Add IP range">
+      <Modal open={rangeOpen} onClose={() => setRangeOpen(false)} title={t("ranges.add")}>
         <form onSubmit={onCreateRange} className="space-y-3">
-          <FormField label="CIDR" hint="An address block in CIDR notation, e.g. 10.0.0.0/24 or 192.168.1.0/27">
+          <FormField label={t("ranges.f.cidr")} hint={t("ranges.f.cidrHint")}>
             <input
               className={inputClass}
               placeholder="10.0.0.0/24"
@@ -339,13 +336,13 @@ export default function VlansPage() {
               required
             />
           </FormField>
-          <FormField label="VLAN" hint="Optionally tie this range to a VLAN.">
+          <FormField label={t("ranges.f.vlan")} hint={t("ranges.f.vlanHint")}>
             <select
               className={inputClass}
               value={rangeVlanId}
               onChange={(e) => setRangeVlanId(e.target.value)}
             >
-              <option value="">No VLAN</option>
+              <option value="">{t("ranges.f.noVlan")}</option>
               {vlans.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.name}
@@ -353,7 +350,7 @@ export default function VlansPage() {
               ))}
             </select>
           </FormField>
-          <FormField label="Description" hint="Optional note.">
+          <FormField label={t("ranges.f.description")} hint={t("ranges.f.descriptionHint")}>
             <input
               className={inputClass}
               placeholder="Server subnet"
@@ -367,7 +364,7 @@ export default function VlansPage() {
               type="submit"
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
-              Add IP range
+              {t("ranges.add")}
             </button>
           </div>
         </form>

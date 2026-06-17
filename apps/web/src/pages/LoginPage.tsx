@@ -1,9 +1,12 @@
 import { type FormEvent, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import LanguageSwitcher from "../components/LanguageSwitcher";
+import { useI18n } from "../i18n/I18nContext";
 
 export default function LoginPage() {
   const { token, login } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +25,7 @@ export default function LoginPage() {
       await login(email, password);
       navigate("/", { replace: true });
     } catch {
-      setError("Incorrect email or password.");
+      setError(t("login.invalid"));
     } finally {
       setSubmitting(false);
     }
@@ -30,16 +33,17 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
+      <div className="absolute right-4 top-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-emerald-400">PortWiz</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Port &amp; service change monitoring
-          </p>
+          <p className="mt-1 text-sm text-slate-400">{t("login.tagline")}</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm text-slate-300">Email</label>
+            <label className="mb-1 block text-sm text-slate-300">{t("login.email")}</label>
             <input
               type="email"
               required
@@ -50,7 +54,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-slate-300">Password</label>
+            <label className="mb-1 block text-sm text-slate-300">{t("login.password")}</label>
             <input
               type="password"
               required
@@ -66,7 +70,7 @@ export default function LoginPage() {
             disabled={submitting}
             className="w-full rounded-lg bg-emerald-600 py-2 font-medium text-white transition hover:bg-emerald-500 disabled:opacity-50"
           >
-            {submitting ? "Signing in…" : "Sign in"}
+            {submitting ? t("login.signingIn") : t("login.signIn")}
           </button>
         </form>
       </div>
