@@ -131,6 +131,28 @@ export function fetchStats(): Promise<DashboardStats> {
   return request<DashboardStats>("/stats");
 }
 
+export interface TimePoint {
+  date: string;
+  count: number;
+}
+
+export interface ChartSlice {
+  name: string;
+  value: number;
+}
+
+export interface DashboardCharts {
+  changes_by_day: TimePoint[];
+  changes_by_type: ChartSlice[];
+  assets_by_criticality: ChartSlice[];
+  runs_by_status: ChartSlice[];
+  compliance_by_status: ChartSlice[];
+}
+
+export function fetchCharts(): Promise<DashboardCharts> {
+  return request<DashboardCharts>("/stats/charts");
+}
+
 // Users
 export type Role = "admin" | "operator" | "auditor";
 

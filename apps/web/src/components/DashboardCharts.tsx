@@ -1,0 +1,208 @@
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import type { ChartSlice, DashboardCharts as Charts } from "../api/client";
+
+const AXIS = "#64748b";
+const GRID = "#1e293b";
+const ACCENT = "#10b981";
+const TOOLTIP_STYLE = {
+  backgroundColor: "#0f172a",
+  border: "1px solid #334155",
+  borderRadius: 8,
+  color: "#e2e8f0",
+  fontSize: 12,
+} as const;
+
+const CRIT_COLORS: Record<string, string> = {
+  low: "#64748b",
+  medium: "#0ea5e9",
+  high: "#f59e0b",
+  critical: "#ef4444",
+};
+const COMPLIANCE_COLORS: Record<string, string> = {
+  compliant: "#10b981",
+  due_soon: "#f59e0b",
+  overdue: "#ef4444",
+  never: "#64748b",
+};
+
+function prettify(name: string): string {
+  return name.replace(/_/g, " ");
+}
+
+function total(slices: ChartSlice[]): number {
+  return slices.reduce((acc, s) => acc + s.value, 0);
+}
+
+function dayLabel(iso: string): string {
+  return iso.slice(5); // MM-DD
+}
+
+function ChartCard({
+  title,
+  hint,
+  empty,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  empty?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+      <h3 className="text-sm font-medium text-slate-300">{title}</h3>
+      {hint && <p className="mt-0.5 text-xs text-slate-600">{hint}</p>}
+      <div className="mt-3">
+        {empty ? (
+          <p className="py-12 text-center text-sm text-slate-600">No data yet</p>
+        ) : (
+          children
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Donut({
+  data,
+  colors,
+}: {
+  data: ChartSlice[];
+  colors: Record<string, string>;
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <PieChart>
+        <Pie
+          data={data}
+          dataKey="value"
+          nameKey="name"
+          innerRadius={48}
+          outerRadius={80}
+          paddingAngle={2}
+          stroke="none"
+        >
+          {data.map((s) => (
+            <Cell key={s.name} fill={colors[s.name] ?? "#475569"} />
+          ))}
+        </Pie>
+        <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v, n) => [v, prettify(String(n))]} />
+        <Legend
+          formatter={(value) => <span className="text-xs text-slate-400">{prettify(String(value))}</span>}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+function CountBars({ data }: { data: ChartSlice[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
+        <XAxis
+          dataKey="name"
+          tickFormatter={prettify}
+          tick={{ fill: AXIS, fontSize: 11 }}
+          axisLine={{ stroke: GRID }}
+          tickLine={false}
+        />
+        <YAxis
+          allowDecimals={false}
+          tick={{ fill: AXIS, fontSize: 11 }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <Tooltip
+          contentStyle={TOOLTIP_STYLE}
+          cursor={{ fill: "#1e293b55" }}
+          labelFormatter={(l) => prettify(String(l))}
+        />
+        <Bar dataKey="value" fill={ACCENT} radius={[4, 4, 0, 0]} maxBarSize={48} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+export default function DashboardCharts({ data }: { data: Charts }) {
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-semibold text-slate-200">Trends</h2>
+
+      <ChartCard
+        title="Confirmed changes (last 30 days)"
+        hint="Daily count of confirmed port and service changes."
+        empty={total(data.changes_by_day.map((p) => ({ name: p.date, value: p.count }))) === 0}
+      >
+        <ResponsiveContainer width="100%" height={240}>
+          <AreaChart data={data.changes_by_day} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
+            <defs>
+              <linearGradient id="changesFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={ACCENT} stopOpacity={0.35} />
+                <stop offset="100%" stopColor={ACCENT} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
+            <XAxis
+              dataKey="date"
+              tickFormatter={dayLabel}
+              minTickGap={24}
+              tick={{ fill: AXIS, fontSize: 11 }}
+              axisLine={{ stroke: GRID }}
+              tickLine={false}
+            />
+            <YAxis
+              allowDecimals={false}
+              tick={{ fill: AXIS, fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ stroke: AXIS }} />
+            <Area
+              type="monotone"
+              dataKey="count"
+              stroke={ACCENT}
+              strokeWidth={2}
+              fill="url(#changesFill)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ChartCard
+          title="Assets by criticality"
+          empty={total(data.assets_by_criticality) === 0}
+        >
+          <Donut data={data.assets_by_criticality} colors={CRIT_COLORS} />
+        </ChartCard>
+
+        <ChartCard title="Compliance status" empty={total(data.compliance_by_status) === 0}>
+          <Donut data={data.compliance_by_status} colors={COMPLIANCE_COLORS} />
+        </ChartCard>
+
+        <ChartCard title="Scan runs by status" empty={total(data.runs_by_status) === 0}>
+          <CountBars data={data.runs_by_status} />
+        </ChartCard>
+
+        <ChartCard title="Changes by type" empty={total(data.changes_by_type) === 0}>
+          <CountBars data={data.changes_by_type} />
+        </ChartCard>
+      </div>
+    </section>
+  );
+}

@@ -1,6 +1,14 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ApiError, type DashboardStats, fetchHealth, fetchStats } from "../api/client";
+import {
+  ApiError,
+  type DashboardCharts as Charts,
+  type DashboardStats,
+  fetchCharts,
+  fetchHealth,
+  fetchStats,
+} from "../api/client";
+import DashboardCharts from "../components/DashboardCharts";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -38,6 +46,7 @@ interface Step {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [charts, setCharts] = useState<Charts | null>(null);
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,6 +56,9 @@ export default function DashboardPage() {
       .catch(() => setApiHealthy(false));
     fetchStats()
       .then(setStats)
+      .catch((e) => setError(errorMessage(e)));
+    fetchCharts()
+      .then(setCharts)
       .catch((e) => setError(errorMessage(e)));
   }, []);
 
@@ -129,6 +141,8 @@ export default function DashboardPage() {
         />
         <Metric to="/scans" label="Pending runs" value={stats?.pending_runs ?? "…"} />
       </div>
+
+      {charts && <DashboardCharts data={charts} />}
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-slate-200">Getting started</h2>
