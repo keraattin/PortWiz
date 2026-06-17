@@ -9,6 +9,8 @@ import {
   fetchStats,
 } from "../api/client";
 import DashboardCharts from "../components/DashboardCharts";
+import { type TKey } from "../i18n/locales/en";
+import { useI18n } from "../i18n/I18nContext";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -37,14 +39,15 @@ function Metric({
 }
 
 interface Step {
-  label: string;
+  labelKey: TKey;
   done: boolean;
   to: string;
-  cta: string;
-  note?: string;
+  ctaKey: TKey;
+  note?: TKey;
 }
 
 export default function DashboardPage() {
+  const { t } = useI18n();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [charts, setCharts] = useState<Charts | null>(null);
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
@@ -64,29 +67,34 @@ export default function DashboardPage() {
 
   const steps: Step[] = stats
     ? [
-        { label: "Add a VLAN", done: stats.vlans > 0, to: "/vlans", cta: "VLANs" },
-        { label: "Add assets to scan", done: stats.assets > 0, to: "/assets", cta: "Assets" },
+        { labelKey: "dashboard.step.addVlan", done: stats.vlans > 0, to: "/vlans", ctaKey: "nav.vlans" },
         {
-          label: "Enroll a scan agent",
+          labelKey: "dashboard.step.addAssets",
+          done: stats.assets > 0,
+          to: "/assets",
+          ctaKey: "nav.assets",
+        },
+        {
+          labelKey: "dashboard.step.enrollAgent",
           done: stats.agents_total > 0,
           to: "/agents",
-          cta: "Agents",
+          ctaKey: "nav.agents",
           note:
             stats.agents_total > 0 && stats.agents_online === 0
-              ? "enrolled, but none online"
+              ? "dashboard.enrolledNoneOnline"
               : undefined,
         },
         {
-          label: "Create a scan profile and run it",
+          labelKey: "dashboard.step.createScan",
           done: stats.last_scan_at !== null,
           to: "/scans",
-          cta: "Scans",
+          ctaKey: "nav.scans",
         },
         {
-          label: "Review confirmed changes",
+          labelKey: "dashboard.step.reviewChanges",
           done: stats.open_changes > 0,
           to: "/changes",
-          cta: "Changes",
+          ctaKey: "nav.changes",
         },
       ]
     : [];
@@ -100,8 +108,12 @@ export default function DashboardPage() {
           }`}
         />
         <span className="text-sm text-slate-400">
-          API status:{" "}
-          {apiHealthy === null ? "checking…" : apiHealthy ? "healthy" : "unreachable"}
+          {t("dashboard.apiStatus")}{" "}
+          {apiHealthy === null
+            ? t("dashboard.checking")
+            : apiHealthy
+              ? t("dashboard.healthy")
+              : t("dashboard.unreachable")}
         </span>
       </div>
 
@@ -109,46 +121,47 @@ export default function DashboardPage() {
 
       {stats && stats.pending_runs > 0 && stats.agents_online === 0 && (
         <div className="rounded-xl border border-amber-800 bg-amber-950/40 p-4 text-sm text-amber-300">
-          {stats.pending_runs} scan run{stats.pending_runs === 1 ? "" : "s"} waiting, but no
-          agent is online.{" "}
+          {t("dashboard.scanWaiting", { count: stats.pending_runs })}{" "}
           <Link to="/agents" className="underline">
-            Check your agents
+            {t("dashboard.checkAgents")}
           </Link>
           .
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <Metric to="/assets" label="Assets" value={stats?.assets ?? "…"} />
-        <Metric to="/vlans" label="VLANs" value={stats?.vlans ?? "…"} />
+        <Metric to="/assets" label={t("dashboard.metric.assets")} value={stats?.assets ?? "…"} />
+        <Metric to="/vlans" label={t("dashboard.metric.vlans")} value={stats?.vlans ?? "…"} />
         <Metric
           to="/agents"
-          label="Agents online"
+          label={t("dashboard.metric.agentsOnline")}
           value={stats ? `${stats.agents_online}/${stats.agents_total}` : "…"}
           accent={stats && stats.agents_online > 0 ? "text-emerald-400" : undefined}
         />
         <Metric
           to="/changes"
-          label="Open changes"
+          label={t("dashboard.metric.openChanges")}
           value={stats?.open_changes ?? "…"}
           accent={stats && stats.open_changes > 0 ? "text-amber-400" : undefined}
         />
         <Metric
           to="/tasks"
-          label="Open tasks"
+          label={t("dashboard.metric.openTasks")}
           value={stats?.open_tasks ?? "…"}
           accent={stats && stats.open_tasks > 0 ? "text-sky-400" : undefined}
         />
-        <Metric to="/scans" label="Pending runs" value={stats?.pending_runs ?? "…"} />
+        <Metric
+          to="/scans"
+          label={t("dashboard.metric.pendingRuns")}
+          value={stats?.pending_runs ?? "…"}
+        />
       </div>
 
       {charts && <DashboardCharts data={charts} />}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-slate-200">Getting started</h2>
-        <p className="text-sm text-slate-500">
-          Follow these steps to go from an empty install to confirmed change detection.
-        </p>
+        <h2 className="text-lg font-semibold text-slate-200">{t("dashboard.gettingStarted")}</h2>
+        <p className="text-sm text-slate-500">{t("dashboard.gettingStartedHint")}</p>
         <ol className="space-y-2">
           {steps.map((s, i) => (
             <li
@@ -163,11 +176,11 @@ export default function DashboardPage() {
                 {s.done ? "✓" : i + 1}
               </span>
               <span className="flex-1 text-sm text-slate-200">
-                {s.label}
-                {s.note && <span className="ml-2 text-xs text-amber-400">({s.note})</span>}
+                {t(s.labelKey)}
+                {s.note && <span className="ml-2 text-xs text-amber-400">({t(s.note)})</span>}
               </span>
               <Link to={s.to} className="text-xs font-medium text-emerald-400 hover:text-emerald-300">
-                {s.cta} →
+                {t(s.ctaKey)} →
               </Link>
             </li>
           ))}
@@ -176,7 +189,7 @@ export default function DashboardPage() {
 
       {stats?.last_scan_at && (
         <p className="text-xs text-slate-600">
-          Last scan: {new Date(stats.last_scan_at).toLocaleString()}
+          {t("dashboard.lastScan", { when: new Date(stats.last_scan_at).toLocaleString() })}
         </p>
       )}
     </div>

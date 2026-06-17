@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import type { ChartSlice, DashboardCharts as Charts } from "../api/client";
+import { useI18n } from "../i18n/I18nContext";
 import { useTheme } from "../theme/ThemeContext";
 
 const AXIS = "#64748b"; // mid-gray, reads on both themes
@@ -72,13 +73,14 @@ function ChartCard({
   empty?: boolean;
   children: React.ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
       <h3 className="text-sm font-medium text-slate-300">{title}</h3>
       {hint && <p className="mt-0.5 text-xs text-slate-600">{hint}</p>}
       <div className="mt-3">
         {empty ? (
-          <p className="py-12 text-center text-sm text-slate-600">No data yet</p>
+          <p className="py-12 text-center text-sm text-slate-600">{t("common.noData")}</p>
         ) : (
           children
         )}
@@ -152,13 +154,14 @@ function CountBars({ data }: { data: ChartSlice[] }) {
 
 export default function DashboardCharts({ data }: { data: Charts }) {
   const { grid, tooltip } = useChartTheme();
+  const { t } = useI18n();
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-semibold text-slate-200">Trends</h2>
+      <h2 className="text-lg font-semibold text-slate-200">{t("trends.title")}</h2>
 
       <ChartCard
-        title="Confirmed changes (last 30 days)"
-        hint="Daily count of confirmed port and service changes."
+        title={t("trends.changes30d")}
+        hint={t("trends.changes30dHint")}
         empty={total(data.changes_by_day.map((p) => ({ name: p.date, value: p.count }))) === 0}
       >
         <ResponsiveContainer width="100%" height={240}>
@@ -198,21 +201,21 @@ export default function DashboardCharts({ data }: { data: Charts }) {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ChartCard
-          title="Assets by criticality"
+          title={t("trends.assetsByCriticality")}
           empty={total(data.assets_by_criticality) === 0}
         >
           <Donut data={data.assets_by_criticality} colors={CRIT_COLORS} />
         </ChartCard>
 
-        <ChartCard title="Compliance status" empty={total(data.compliance_by_status) === 0}>
+        <ChartCard title={t("trends.complianceStatus")} empty={total(data.compliance_by_status) === 0}>
           <Donut data={data.compliance_by_status} colors={COMPLIANCE_COLORS} />
         </ChartCard>
 
-        <ChartCard title="Scan runs by status" empty={total(data.runs_by_status) === 0}>
+        <ChartCard title={t("trends.runsByStatus")} empty={total(data.runs_by_status) === 0}>
           <CountBars data={data.runs_by_status} />
         </ChartCard>
 
-        <ChartCard title="Changes by type" empty={total(data.changes_by_type) === 0}>
+        <ChartCard title={t("trends.changesByType")} empty={total(data.changes_by_type) === 0}>
           <CountBars data={data.changes_by_type} />
         </ChartCard>
       </div>

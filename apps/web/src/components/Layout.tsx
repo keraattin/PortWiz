@@ -1,52 +1,55 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { type TKey } from "../i18n/locales/en";
+import { useI18n } from "../i18n/I18nContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 
 // Navigation is grouped into a few top-level sections; each section reveals its
 // pages as contextual sub-tabs. `roles`, when present, limits visibility.
 interface Tab {
   to: string;
-  label: string;
+  labelKey: TKey;
   roles?: string[];
 }
 
 interface Section {
-  label: string;
+  labelKey: TKey;
   tabs: Tab[];
   roles?: string[];
 }
 
 const SECTIONS: Section[] = [
-  { label: "Dashboard", tabs: [{ to: "/", label: "Dashboard" }] },
+  { labelKey: "nav.dashboard", tabs: [{ to: "/", labelKey: "nav.dashboard" }] },
   {
-    label: "Inventory",
+    labelKey: "nav.inventory",
     tabs: [
-      { to: "/assets", label: "Assets" },
-      { to: "/vlans", label: "VLANs" },
+      { to: "/assets", labelKey: "nav.assets" },
+      { to: "/vlans", labelKey: "nav.vlans" },
     ],
   },
   {
-    label: "Scanning",
+    labelKey: "nav.scanning",
     tabs: [
-      { to: "/scans", label: "Scans" },
-      { to: "/agents", label: "Agents", roles: ["admin", "auditor"] },
+      { to: "/scans", labelKey: "nav.scans" },
+      { to: "/agents", labelKey: "nav.agents", roles: ["admin", "auditor"] },
     ],
   },
   {
-    label: "Changes",
+    labelKey: "nav.changes",
     tabs: [
-      { to: "/changes", label: "Changes" },
-      { to: "/tasks", label: "Tasks" },
+      { to: "/changes", labelKey: "nav.changes" },
+      { to: "/tasks", labelKey: "nav.tasks" },
     ],
   },
-  { label: "Compliance", tabs: [{ to: "/compliance", label: "Compliance" }] },
-  { label: "Assistant", tabs: [{ to: "/assistant", label: "Assistant" }] },
+  { labelKey: "nav.compliance", tabs: [{ to: "/compliance", labelKey: "nav.compliance" }] },
+  { labelKey: "nav.assistant", tabs: [{ to: "/assistant", labelKey: "nav.assistant" }] },
   {
-    label: "Admin",
+    labelKey: "nav.admin",
     roles: ["admin", "auditor"],
     tabs: [
-      { to: "/users", label: "Users", roles: ["admin", "auditor"] },
-      { to: "/settings", label: "Settings" },
+      { to: "/users", labelKey: "nav.users", roles: ["admin", "auditor"] },
+      { to: "/settings", labelKey: "nav.settings" },
     ],
   },
 ];
@@ -57,6 +60,7 @@ function pathInTab(pathname: string, to: string): boolean {
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { t } = useI18n();
   const { pathname } = useLocation();
   const role = user?.role;
 
@@ -81,7 +85,7 @@ export default function Layout() {
                 const active = s === activeSection;
                 return (
                   <Link
-                    key={s.label}
+                    key={s.labelKey}
                     to={s.tabs[0].to}
                     className={`rounded-lg px-3 py-1.5 text-sm ${
                       active
@@ -89,7 +93,7 @@ export default function Layout() {
                         : "text-slate-300 hover:bg-slate-900"
                     }`}
                   >
-                    {s.label}
+                    {t(s.labelKey)}
                   </Link>
                 );
               })}
@@ -100,23 +104,24 @@ export default function Layout() {
               <p className="text-slate-200">{user?.email}</p>
               <p className="text-xs uppercase tracking-wide text-emerald-500">{user?.role}</p>
             </div>
+            <LanguageSwitcher />
             <ThemeToggle />
             <button
               onClick={logout}
               className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800"
             >
-              Sign out
+              {t("chrome.signOut")}
             </button>
           </div>
         </div>
 
         {activeSection && activeSection.tabs.length > 1 && (
           <nav className="flex gap-1 px-8 pb-2">
-            {activeSection.tabs.map((t) => (
+            {activeSection.tabs.map((tab) => (
               <NavLink
-                key={t.to}
-                to={t.to}
-                end={t.to === "/"}
+                key={tab.to}
+                to={tab.to}
+                end={tab.to === "/"}
                 className={({ isActive }) =>
                   `rounded-lg px-3 py-1 text-sm ${
                     isActive
@@ -125,7 +130,7 @@ export default function Layout() {
                   }`
                 }
               >
-                {t.label}
+                {t(tab.labelKey)}
               </NavLink>
             ))}
           </nav>
