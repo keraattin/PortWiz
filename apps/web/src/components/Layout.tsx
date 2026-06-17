@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import ThemeToggle from "./ThemeToggle";
 
 // Navigation is grouped into a few top-level sections; each section reveals its
 // pages as contextual sub-tabs. `roles`, when present, limits visibility.
@@ -99,6 +100,7 @@ export default function Layout() {
               <p className="text-slate-200">{user?.email}</p>
               <p className="text-xs uppercase tracking-wide text-emerald-500">{user?.role}</p>
             </div>
+            <ThemeToggle />
             <button
               onClick={logout}
               className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800"

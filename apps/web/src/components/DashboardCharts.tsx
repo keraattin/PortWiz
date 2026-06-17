@@ -14,17 +14,27 @@ import {
   YAxis,
 } from "recharts";
 import type { ChartSlice, DashboardCharts as Charts } from "../api/client";
+import { useTheme } from "../theme/ThemeContext";
 
-const AXIS = "#64748b";
-const GRID = "#1e293b";
+const AXIS = "#64748b"; // mid-gray, reads on both themes
 const ACCENT = "#10b981";
-const TOOLTIP_STYLE = {
-  backgroundColor: "#0f172a",
-  border: "1px solid #334155",
-  borderRadius: 8,
-  color: "#e2e8f0",
-  fontSize: 12,
-} as const;
+
+// Grid lines and tooltip surface differ per theme; the vivid series colors below
+// read fine on either background.
+function useChartTheme() {
+  const { theme } = useTheme();
+  const light = theme === "light";
+  return {
+    grid: light ? "#e2e8f0" : "#1e293b",
+    tooltip: {
+      backgroundColor: light ? "#ffffff" : "#0f172a",
+      border: `1px solid ${light ? "#cbd5e1" : "#334155"}`,
+      borderRadius: 8,
+      color: light ? "#0f172a" : "#e2e8f0",
+      fontSize: 12,
+    } as const,
+  };
+}
 
 const CRIT_COLORS: Record<string, string> = {
   low: "#64748b",
@@ -84,6 +94,7 @@ function Donut({
   data: ChartSlice[];
   colors: Record<string, string>;
 }) {
+  const { tooltip } = useChartTheme();
   return (
     <ResponsiveContainer width="100%" height={220}>
       <PieChart>
@@ -100,7 +111,7 @@ function Donut({
             <Cell key={s.name} fill={colors[s.name] ?? "#475569"} />
           ))}
         </Pie>
-        <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v, n) => [v, prettify(String(n))]} />
+        <Tooltip contentStyle={tooltip} formatter={(v, n) => [v, prettify(String(n))]} />
         <Legend
           formatter={(value) => <span className="text-xs text-slate-400">{prettify(String(value))}</span>}
         />
@@ -110,15 +121,16 @@ function Donut({
 }
 
 function CountBars({ data }: { data: ChartSlice[] }) {
+  const { grid, tooltip } = useChartTheme();
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
         <XAxis
           dataKey="name"
           tickFormatter={prettify}
           tick={{ fill: AXIS, fontSize: 11 }}
-          axisLine={{ stroke: GRID }}
+          axisLine={{ stroke: grid }}
           tickLine={false}
         />
         <YAxis
@@ -128,8 +140,8 @@ function CountBars({ data }: { data: ChartSlice[] }) {
           tickLine={false}
         />
         <Tooltip
-          contentStyle={TOOLTIP_STYLE}
-          cursor={{ fill: "#1e293b55" }}
+          contentStyle={tooltip}
+          cursor={{ fill: `${grid}55` }}
           labelFormatter={(l) => prettify(String(l))}
         />
         <Bar dataKey="value" fill={ACCENT} radius={[4, 4, 0, 0]} maxBarSize={48} />
@@ -139,6 +151,7 @@ function CountBars({ data }: { data: ChartSlice[] }) {
 }
 
 export default function DashboardCharts({ data }: { data: Charts }) {
+  const { grid, tooltip } = useChartTheme();
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold text-slate-200">Trends</h2>
@@ -156,13 +169,13 @@ export default function DashboardCharts({ data }: { data: Charts }) {
                 <stop offset="100%" stopColor={ACCENT} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
             <XAxis
               dataKey="date"
               tickFormatter={dayLabel}
               minTickGap={24}
               tick={{ fill: AXIS, fontSize: 11 }}
-              axisLine={{ stroke: GRID }}
+              axisLine={{ stroke: grid }}
               tickLine={false}
             />
             <YAxis
@@ -171,7 +184,7 @@ export default function DashboardCharts({ data }: { data: Charts }) {
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ stroke: AXIS }} />
+            <Tooltip contentStyle={tooltip} cursor={{ stroke: AXIS }} />
             <Area
               type="monotone"
               dataKey="count"

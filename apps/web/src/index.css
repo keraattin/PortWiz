@@ -1,1 +1,70 @@
 @import "tailwindcss";
+
+/*
+ * Theme.
+ *
+ * The app is authored dark-first with Tailwind's stock slate/accent palette, so
+ * the default (no class) is the dark theme. Light mode is a single ".light"
+ * class on <html> that overrides the Tailwind v4 color variables the utilities
+ * already reference (e.g. bg-slate-900 -> var(--color-slate-900)). Each shade's
+ * light value is hand-picked for contrast: surfaces lighten, body/heading text
+ * darkens, accent text darkens enough to read on a light background, and solid
+ * action colors (emerald-600 buttons, status dots) stay put so they work in
+ * both themes.
+ */
+
+:root {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+
+  /* Neutral ramp: high shades are dark surfaces, low shades are light text. */
+  --color-slate-950: #f1f5f9; /* app background  */
+  --color-slate-900: #ffffff; /* cards / surfaces */
+  --color-slate-800: #f1f5f9; /* inputs, raised surfaces, dividers */
+  --color-slate-700: #cbd5e1; /* borders, secondary buttons */
+  --color-slate-600: #94a3b8; /* faint text / icons */
+  --color-slate-500: #64748b; /* muted text (reads on both) */
+  --color-slate-400: #475569; /* secondary text */
+  --color-slate-300: #334155; /* body text */
+  --color-slate-200: #1e293b; /* strong text / headings */
+  --color-slate-100: #0f172a; /* primary text */
+  --color-slate-50: #0f172a;
+
+  /* Emerald: keep 500/600 for buttons & dots; darken text shades; lighten chips. */
+  --color-emerald-200: #065f46;
+  --color-emerald-300: #047857;
+  --color-emerald-400: #059669;
+  --color-emerald-700: #6ee7b7; /* success-toast border */
+  --color-emerald-900: #d1fae5;
+  --color-emerald-950: #ecfdf5;
+
+  /* Amber */
+  --color-amber-300: #b45309;
+  --color-amber-400: #b45309;
+  --color-amber-800: #fde68a;
+  --color-amber-900: #fef3c7;
+  --color-amber-950: #fffbeb;
+
+  /* Sky */
+  --color-sky-300: #075985;
+  --color-sky-400: #0369a1;
+  --color-sky-900: #e0f2fe;
+
+  /* Red: keep 500 for dots; darken text shades; lighten chips/banners. */
+  --color-red-200: #991b1b;
+  --color-red-300: #b91c1c;
+  --color-red-400: #dc2626;
+  --color-red-700: #fca5a5;
+  --color-red-900: #fee2e2;
+  --color-red-950: #fef2f2;
+
+  /* Chart helpers consumed by DashboardCharts via getComputedStyle fallback. */
+  --chart-grid: #e2e8f0;
+  --chart-axis: #64748b;
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: #cbd5e1;
+  --chart-tooltip-text: #0f172a;
+}
