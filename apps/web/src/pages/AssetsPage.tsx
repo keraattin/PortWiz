@@ -17,6 +17,8 @@ import {
   syncAssets,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import FormField from "../components/FormField";
+import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
 
 function errorMessage(e: unknown): string {
@@ -45,6 +47,7 @@ export default function AssetsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [addOpen, setAddOpen] = useState(false);
   const [ip, setIp] = useState("");
   const [hostname, setHostname] = useState("");
   const [vlanId, setVlanId] = useState("");
@@ -87,6 +90,17 @@ export default function AssetsPage() {
   const ownerEmail = (id: string | null) =>
     id ? (users.find((u) => u.id === id)?.email ?? "-") : "-";
 
+  function openAdd() {
+    setError(null);
+    setIp("");
+    setHostname("");
+    setVlanId("");
+    setOwnerId("");
+    setCriticality("medium");
+    setSensitivity("none");
+    setAddOpen(true);
+  }
+
   async function onCreate(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -99,12 +113,7 @@ export default function AssetsPage() {
         criticality,
         data_sensitivity: sensitivity,
       });
-      setIp("");
-      setHostname("");
-      setVlanId("");
-      setOwnerId("");
-      setCriticality("medium");
-      setSensitivity("none");
+      setAddOpen(false);
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -156,78 +165,23 @@ export default function AssetsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-200">Assets</h2>
-        <p className="text-sm text-slate-500">
-          The hosts PortWiz scans. Add them one at a time or import a CSV/Excel file;
-          each carries an owner, criticality, and data-sensitivity for compliance.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-200">Assets</h2>
+          <p className="text-sm text-slate-500">
+            The hosts PortWiz scans. Each carries an owner, criticality, and
+            data-sensitivity so scans and changes can be scoped for compliance.
+          </p>
+        </div>
+        {canWrite && (
+          <button
+            onClick={openAdd}
+            className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+          >
+            Add asset
+          </button>
+        )}
       </div>
-
-      {canWrite && (
-      <form
-        onSubmit={onCreate}
-        className="grid grid-cols-1 gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:grid-cols-3 lg:grid-cols-4"
-      >
-        <input
-          className={inputClass}
-          placeholder="IP address"
-          value={ip}
-          onChange={(e) => setIp(e.target.value)}
-          required
-        />
-        <input
-          className={inputClass}
-          placeholder="Hostname"
-          value={hostname}
-          onChange={(e) => setHostname(e.target.value)}
-        />
-        <select className={inputClass} value={vlanId} onChange={(e) => setVlanId(e.target.value)}>
-          <option value="">No VLAN</option>
-          {vlans.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.name}
-            </option>
-          ))}
-        </select>
-        <select className={inputClass} value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
-          <option value="">No owner</option>
-          {users.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.email}
-            </option>
-          ))}
-        </select>
-        <select
-          className={inputClass}
-          value={criticality}
-          onChange={(e) => setCriticality(e.target.value as Criticality)}
-        >
-          {CRITICALITIES.map((c) => (
-            <option key={c} value={c}>
-              criticality: {c}
-            </option>
-          ))}
-        </select>
-        <select
-          className={inputClass}
-          value={sensitivity}
-          onChange={(e) => setSensitivity(e.target.value as DataSensitivity)}
-        >
-          {SENSITIVITIES.map((s) => (
-            <option key={s} value={s}>
-              sensitivity: {s}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-        >
-          Add asset
-        </button>
-      </form>
-      )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
@@ -338,8 +292,20 @@ export default function AssetsPage() {
               </tr>
             ) : assets.length === 0 ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={7}>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
                   No assets yet.
+                  {canWrite && (
+                    <>
+                      {" "}
+                      <button
+                        onClick={openAdd}
+                        className="font-medium text-emerald-400 hover:text-emerald-300"
+                      >
+                        Add your first asset
+                      </button>{" "}
+                      or import a CSV/Excel file below.
+                    </>
+                  )}
                 </td>
               </tr>
             ) : (
@@ -377,6 +343,86 @@ export default function AssetsPage() {
         total={assetsPage.total}
         onPage={assetsPage.setPage}
       />
+
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add asset">
+        <form onSubmit={onCreate} className="space-y-3">
+          <FormField label="IP address" hint="The host to scan. IPv4 or IPv6, e.g. 10.0.0.5">
+            <input
+              className={inputClass}
+              placeholder="10.0.0.5"
+              value={ip}
+              onChange={(e) => setIp(e.target.value)}
+              required
+            />
+          </FormField>
+          <FormField label="Hostname" hint="Optional, for your own reference, e.g. web-01">
+            <input
+              className={inputClass}
+              placeholder="web-01"
+              value={hostname}
+              onChange={(e) => setHostname(e.target.value)}
+            />
+          </FormField>
+          <FormField label="VLAN" hint="Which network segment this host lives on. Create VLANs under Inventory.">
+            <select className={inputClass} value={vlanId} onChange={(e) => setVlanId(e.target.value)}>
+              <option value="">No VLAN</option>
+              {vlans.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label="Owner" hint="The person accountable for this host.">
+            <select className={inputClass} value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
+              <option value="">No owner</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.email}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label="Criticality" hint="How important this host is, for prioritizing changes.">
+            <select
+              className={inputClass}
+              value={criticality}
+              onChange={(e) => setCriticality(e.target.value as Criticality)}
+            >
+              {CRITICALITIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField
+            label="Data sensitivity"
+            hint="cde = PCI cardholder data, ephi = HIPAA health data, pii = personal data."
+          >
+            <select
+              className={inputClass}
+              value={sensitivity}
+              onChange={(e) => setSensitivity(e.target.value as DataSensitivity)}
+            >
+              {SENSITIVITIES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              Add asset
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

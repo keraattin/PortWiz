@@ -15,6 +15,7 @@ import {
   runScanProfile,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
 
@@ -52,6 +53,7 @@ export default function ScansPage() {
   const [observations, setObservations] = useState<Observation[]>([]);
   const obsPage = usePagination(observations, 12);
 
+  const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState("");
   const [targets, setTargets] = useState("");
   const [ports, setPorts] = useState("top-1000");
@@ -78,6 +80,19 @@ export default function ScansPage() {
   const profileName = (id: string | null) =>
     id ? (profiles.find((p) => p.id === id)?.name ?? "(deleted)") : "(ad-hoc)";
 
+  function openAdd() {
+    setError(null);
+    setName("");
+    setTargets("");
+    setPorts("top-1000");
+    setSegment("");
+    setFramework("");
+    setCron("");
+    setScanType("connect");
+    setServiceDetection(true);
+    setAddOpen(true);
+  }
+
   async function onCreate(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -92,12 +107,7 @@ export default function ScansPage() {
         compliance_framework: framework || null,
         cron: cron || null,
       });
-      setName("");
-      setTargets("");
-      setPorts("top-1000");
-      setSegment("");
-      setFramework("");
-      setCron("");
+      setAddOpen(false);
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -140,88 +150,24 @@ export default function ScansPage() {
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-200">Scan profiles</h2>
-        <p className="text-sm text-slate-500">
-          A profile defines what to scan (targets, ports) and, optionally, a cron
-          schedule. Runs are picked up by an online agent; without one they stay
-          pending.
-        </p>
-        {canWrite && (
-        <form
-          onSubmit={onCreate}
-          className="grid grid-cols-1 gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:grid-cols-3 lg:grid-cols-5"
-        >
-          <input
-            className={inputClass}
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <input
-            className={`${inputClass} sm:col-span-2`}
-            placeholder="Targets (IPs/CIDRs, comma or space separated)"
-            value={targets}
-            onChange={(e) => setTargets(e.target.value)}
-            required
-          />
-          <input
-            className={inputClass}
-            placeholder="Ports (e.g. top-1000, 1-1000, 22,80)"
-            value={ports}
-            onChange={(e) => setPorts(e.target.value)}
-          />
-          <input
-            className={inputClass}
-            placeholder="Segment (optional, e.g. vlan10)"
-            value={segment}
-            onChange={(e) => setSegment(e.target.value)}
-          />
-          <select
-            className={inputClass}
-            value={framework}
-            onChange={(e) => setFramework(e.target.value as ComplianceFramework | "")}
-          >
-            <option value="">No framework</option>
-            <option value="pci">PCI-DSS</option>
-            <option value="hipaa">HIPAA</option>
-            <option value="soc2">SOC 2</option>
-            <option value="iso27001">ISO 27001</option>
-            <option value="nist">NIST</option>
-          </select>
-          <input
-            className={inputClass}
-            placeholder="Cron (optional, e.g. 0 2 * * *)"
-            value={cron}
-            onChange={(e) => setCron(e.target.value)}
-          />
-          <select
-            className={inputClass}
-            value={scanType}
-            onChange={(e) => setScanType(e.target.value as ScanType)}
-          >
-            {SCAN_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={serviceDetection}
-              onChange={(e) => setServiceDetection(e.target.checked)}
-            />
-            Service detection
-          </label>
-          <button
-            type="submit"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-          >
-            Add profile
-          </button>
-        </form>
-        )}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-200">Scan profiles</h2>
+            <p className="text-sm text-slate-500">
+              A profile defines what to scan (targets, ports) and, optionally, a cron
+              schedule. Runs are picked up by an online agent; without one they stay
+              pending.
+            </p>
+          </div>
+          {canWrite && (
+            <button
+              onClick={openAdd}
+              className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              Add scan
+            </button>
+          )}
+        </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
@@ -240,8 +186,19 @@ export default function ScansPage() {
             <tbody className="divide-y divide-slate-800">
               {profiles.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-3 text-slate-500" colSpan={6}>
+                  <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
                     No scan profiles yet.
+                    {canWrite && (
+                      <>
+                        {" "}
+                        <button
+                          onClick={openAdd}
+                          className="font-medium text-emerald-400 hover:text-emerald-300"
+                        >
+                          Create your first scan
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -342,6 +299,112 @@ export default function ScansPage() {
           </table>
         </div>
       </section>
+
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add scan profile" wide>
+        <form onSubmit={onCreate} className="space-y-3">
+          <FormField label="Name" hint="A label for this scan, e.g. DMZ weekly">
+            <input
+              className={inputClass}
+              placeholder="DMZ weekly"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </FormField>
+          <FormField
+            label="Targets"
+            hint="IPs or CIDR blocks, separated by commas or spaces. e.g. 10.0.0.0/24, 192.168.1.5"
+          >
+            <input
+              className={inputClass}
+              placeholder="10.0.0.0/24, 192.168.1.5"
+              value={targets}
+              onChange={(e) => setTargets(e.target.value)}
+              required
+            />
+          </FormField>
+          <FormField
+            label="Ports"
+            hint="'top-1000' for common ports, a range like 1-1000, or a list like 22,80,443"
+          >
+            <input
+              className={inputClass}
+              placeholder="top-1000"
+              value={ports}
+              onChange={(e) => setPorts(e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label="Segment"
+            hint="Optional. Routes this scan to the agent responsible for that VLAN (must match the agent's segment)."
+          >
+            <input
+              className={inputClass}
+              placeholder="vlan10"
+              value={segment}
+              onChange={(e) => setSegment(e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label="Compliance framework"
+            hint="Optional. Tracks this scan's cadence on the Compliance page."
+          >
+            <select
+              className={inputClass}
+              value={framework}
+              onChange={(e) => setFramework(e.target.value as ComplianceFramework | "")}
+            >
+              <option value="">No framework</option>
+              <option value="pci">PCI-DSS</option>
+              <option value="hipaa">HIPAA</option>
+              <option value="soc2">SOC 2</option>
+              <option value="iso27001">ISO 27001</option>
+              <option value="nist">NIST</option>
+            </select>
+          </FormField>
+          <FormField
+            label="Schedule (cron)"
+            hint="Optional. Cron expression to run automatically, e.g. 0 2 * * * = every day at 02:00."
+          >
+            <input
+              className={inputClass}
+              placeholder="0 2 * * *"
+              value={cron}
+              onChange={(e) => setCron(e.target.value)}
+            />
+          </FormField>
+          <FormField label="Scan type" hint="connect is the safe default; syn is faster but needs raw-socket privileges.">
+            <select
+              className={inputClass}
+              value={scanType}
+              onChange={(e) => setScanType(e.target.value as ScanType)}
+            >
+              {SCAN_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={serviceDetection}
+              onChange={(e) => setServiceDetection(e.target.checked)}
+            />
+            Service detection (identify the software behind each open port)
+          </label>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              Add scan profile
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       <Modal
         open={selectedRun !== null}

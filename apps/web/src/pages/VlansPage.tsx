@@ -11,6 +11,8 @@ import {
   listVlans,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import FormField from "../components/FormField";
+import Modal from "../components/Modal";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -27,10 +29,12 @@ export default function VlansPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [vlanOpen, setVlanOpen] = useState(false);
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
   const [description, setDescription] = useState("");
 
+  const [rangeOpen, setRangeOpen] = useState(false);
   const [cidr, setCidr] = useState("");
   const [rangeVlanId, setRangeVlanId] = useState("");
   const [rangeDesc, setRangeDesc] = useState("");
@@ -55,6 +59,14 @@ export default function VlansPage() {
   const vlanName = (id: string | null) =>
     id ? (vlans.find((v) => v.id === id)?.name ?? "-") : "-";
 
+  function openAddVlan() {
+    setError(null);
+    setName("");
+    setTag("");
+    setDescription("");
+    setVlanOpen(true);
+  }
+
   async function onCreate(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -64,9 +76,7 @@ export default function VlansPage() {
         vlan_tag: tag ? Number(tag) : null,
         description: description || null,
       });
-      setName("");
-      setTag("");
-      setDescription("");
+      setVlanOpen(false);
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -84,6 +94,14 @@ export default function VlansPage() {
     }
   }
 
+  function openAddRange() {
+    setError(null);
+    setCidr("");
+    setRangeVlanId("");
+    setRangeDesc("");
+    setRangeOpen(true);
+  }
+
   async function onCreateRange(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -93,9 +111,7 @@ export default function VlansPage() {
         vlan_id: rangeVlanId || null,
         description: rangeDesc || null,
       });
-      setCidr("");
-      setRangeVlanId("");
-      setRangeDesc("");
+      setRangeOpen(false);
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -115,48 +131,22 @@ export default function VlansPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-200">VLANs</h2>
-        <p className="text-sm text-slate-500">
-          Group assets by network segment. Add a VLAN, then assign assets to it.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-200">VLANs</h2>
+          <p className="text-sm text-slate-500">
+            Group assets by network segment. Add a VLAN, then assign assets to it.
+          </p>
+        </div>
+        {canWrite && (
+          <button
+            onClick={openAddVlan}
+            className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+          >
+            Add VLAN
+          </button>
+        )}
       </div>
-
-      {canWrite && (
-      <form
-        onSubmit={onCreate}
-        className="grid grid-cols-1 gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:grid-cols-4"
-      >
-        <input
-          className={inputClass}
-          placeholder="Name (e.g. DMZ)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <input
-          className={inputClass}
-          placeholder="VLAN tag (1-4094)"
-          type="number"
-          min={1}
-          max={4094}
-          value={tag}
-          onChange={(e) => setTag(e.target.value)}
-        />
-        <input
-          className={inputClass}
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-        >
-          Add VLAN
-        </button>
-      </form>
-      )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
@@ -179,8 +169,19 @@ export default function VlansPage() {
               </tr>
             ) : vlans.length === 0 ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={4}>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
                   No VLANs yet.
+                  {canWrite && (
+                    <>
+                      {" "}
+                      <button
+                        onClick={openAddVlan}
+                        className="font-medium text-emerald-400 hover:text-emerald-300"
+                      >
+                        Add your first VLAN
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ) : (
@@ -206,52 +207,23 @@ export default function VlansPage() {
         </table>
       </div>
 
-      <div className="pt-2">
-        <h2 className="text-lg font-semibold text-slate-200">IP ranges</h2>
-        <p className="text-sm text-slate-500">
-          CIDR blocks, optionally tied to a VLAN. They document the address space
-          you expect to scan.
-        </p>
-      </div>
-
-      {canWrite && (
-        <form
-          onSubmit={onCreateRange}
-          className="grid grid-cols-1 gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:grid-cols-4"
-        >
-          <input
-            className={inputClass}
-            placeholder="CIDR (e.g. 10.0.0.0/24)"
-            value={cidr}
-            onChange={(e) => setCidr(e.target.value)}
-            required
-          />
-          <select
-            className={inputClass}
-            value={rangeVlanId}
-            onChange={(e) => setRangeVlanId(e.target.value)}
-          >
-            <option value="">No VLAN</option>
-            {vlans.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-          <input
-            className={inputClass}
-            placeholder="Description"
-            value={rangeDesc}
-            onChange={(e) => setRangeDesc(e.target.value)}
-          />
+      <div className="flex items-start justify-between gap-3 pt-2">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-200">IP ranges</h2>
+          <p className="text-sm text-slate-500">
+            CIDR blocks, optionally tied to a VLAN. They document the address space
+            you expect to scan.
+          </p>
+        </div>
+        {canWrite && (
           <button
-            type="submit"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            onClick={openAddRange}
+            className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
           >
             Add IP range
           </button>
-        </form>
-      )}
+        )}
+      </div>
 
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
@@ -272,8 +244,19 @@ export default function VlansPage() {
               </tr>
             ) : ipRanges.length === 0 ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={4}>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
                   No IP ranges yet.
+                  {canWrite && (
+                    <>
+                      {" "}
+                      <button
+                        onClick={openAddRange}
+                        className="font-medium text-emerald-400 hover:text-emerald-300"
+                      >
+                        Add your first IP range
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ) : (
@@ -298,6 +281,93 @@ export default function VlansPage() {
           </tbody>
         </table>
       </div>
+
+      <Modal open={vlanOpen} onClose={() => setVlanOpen(false)} title="Add VLAN">
+        <form onSubmit={onCreate} className="space-y-3">
+          <FormField label="Name" hint="A label for the segment, e.g. DMZ, Servers, Office-Wifi">
+            <input
+              className={inputClass}
+              placeholder="DMZ"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </FormField>
+          <FormField label="VLAN tag" hint="Optional 802.1Q tag, 1-4094. Leave blank if not applicable.">
+            <input
+              className={inputClass}
+              type="number"
+              min={1}
+              max={4094}
+              placeholder="10"
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+            />
+          </FormField>
+          <FormField label="Description" hint="Optional note about what lives on this segment.">
+            <input
+              className={inputClass}
+              placeholder="Internet-facing servers"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </FormField>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              Add VLAN
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={rangeOpen} onClose={() => setRangeOpen(false)} title="Add IP range">
+        <form onSubmit={onCreateRange} className="space-y-3">
+          <FormField label="CIDR" hint="An address block in CIDR notation, e.g. 10.0.0.0/24 or 192.168.1.0/27">
+            <input
+              className={inputClass}
+              placeholder="10.0.0.0/24"
+              value={cidr}
+              onChange={(e) => setCidr(e.target.value)}
+              required
+            />
+          </FormField>
+          <FormField label="VLAN" hint="Optionally tie this range to a VLAN.">
+            <select
+              className={inputClass}
+              value={rangeVlanId}
+              onChange={(e) => setRangeVlanId(e.target.value)}
+            >
+              <option value="">No VLAN</option>
+              {vlans.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label="Description" hint="Optional note.">
+            <input
+              className={inputClass}
+              placeholder="Server subnet"
+              value={rangeDesc}
+              onChange={(e) => setRangeDesc(e.target.value)}
+            />
+          </FormField>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              Add IP range
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
