@@ -23,6 +23,8 @@ def test_actions_for_role() -> None:
     operator = {a.name for a in actions_for_role("operator")}
     assert "vlan.create" in operator
     assert "scan.run" in operator
+    assert "change.acknowledge" in operator
+    assert "task.update_status" in operator
     assert "agent.enroll" not in operator  # admin-only
 
     admin = {a.name for a in actions_for_role("admin")}
@@ -112,6 +114,75 @@ async def test_run_chat_plain_prose_fallback(db) -> None:
             [{"role": "user", "content": "what is port 22?"}],
         )
     assert action is None and "SSH" in reply
+
+
+async def test_run_chat_change_acknowledge(db) -> None:
+    import uuid
+
+    from portwiz_api.core.assistant import run_chat
+    from portwiz_api.models.change import ChangeEvent
+
+    async with db() as session:
+        session.add(
+            ChangeEvent(
+                scan_profile_id=uuid.uuid4(),
+                ip="10.0.0.9",
+                port=443,
+                protocol="tcp",
+                change_type="opened",
+                severity="high",
+            )
+        )
+        await session.commit()
+
+    text = (
+        '{"reply": "Acknowledging.", "action": {"name": "change.acknowledge", '
+        '"args": {"ip": "10.0.0.9", "port": 443}}}'
+    )
+    msgs = [{"role": "user", "content": "ack the change on 10.0.0.9:443"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["name"] == "change.acknowledge"
+    assert action["request"]["method"] == "PATCH"
+    assert action["request"]["path"].startswith("/changes/")
+    assert action["request"]["body"] == {"status": "acknowledged"}
+    assert action["summary"]["target"] == "10.0.0.9:443/tcp"
+
+
+async def test_run_chat_change_not_found(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+
+    text = (
+        '{"reply": "OK.", "action": {"name": "change.resolve", '
+        '"args": {"ip": "1.2.3.4", "port": 80}}}'
+    )
+    msgs = [{"role": "user", "content": "resolve change on 1.2.3.4:80"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is None
+    assert "no change found" in reply.lower()
+
+
+async def test_run_chat_task_update_status(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+    from portwiz_api.models.task import Task, TaskStatus
+
+    async with db() as session:
+        session.add(Task(title="Review 10.0.0.9:443", status=TaskStatus.open))
+        await session.commit()
+
+    text = (
+        '{"reply": "Updating.", "action": {"name": "task.update_status", '
+        '"args": {"title": "Review 10.0.0.9:443", "status": "done"}}}'
+    )
+    msgs = [{"role": "user", "content": "mark that task done"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["name"] == "task.update_status"
+    assert action["request"]["path"].startswith("/tasks/")
+    assert action["request"]["body"] == {"status": "done"}
 
 
 async def test_chat_endpoint_proposes_action(client, admin_headers) -> None:

@@ -526,4 +526,8 @@ export const es: Partial<Record<TKey, string>> = {
   "assistant.act.scanprofile_create": "Crear perfil de escaneo",
   "assistant.act.scan_run": "Ejecutar escaneo",
   "assistant.act.agent_enroll": "Registrar agente",
+  "assistant.act.change_acknowledge": "Reconocer cambio",
+  "assistant.act.change_resolve": "Resolver cambio",
+  "assistant.act.task_update_status": "Actualizar estado de tarea",
+  "assistant.act.task_link_jira": "Vincular tarea a Jira",
 };

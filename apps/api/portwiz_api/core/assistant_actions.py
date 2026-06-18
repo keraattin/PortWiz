@@ -25,7 +25,7 @@ from ..models.agent import Agent
 from ..models.asset import VLAN, Asset, Criticality, DataSensitivity
 from ..models.change import ChangeEvent
 from ..models.scan import ComplianceFramework, ScanProfile, ScanRun, ScanType
-from ..models.task import Task
+from ..models.task import Task, TaskStatus
 from ..models.user import User
 
 WRITE_ROLES: tuple[str, ...] = ("admin", "operator")
@@ -35,6 +35,7 @@ _CRITICALITIES = [c.value for c in Criticality]
 _SENSITIVITIES = [d.value for d in DataSensitivity]
 _SCAN_TYPES = [s.value for s in ScanType]
 _FRAMEWORKS = [f.value for f in ComplianceFramework]
+_TASK_STATUSES = [s.value for s in TaskStatus]
 
 _ONLINE_WINDOW = dt.timedelta(minutes=2)
 
@@ -224,6 +225,91 @@ async def _agent_enroll(session: AsyncSession, args: dict[str, Any]) -> BuiltAct
     return summary, {"method": "POST", "path": "/agents", "body": body}
 
 
+async def _find_change(
+    session: AsyncSession, args: dict[str, Any]
+) -> tuple[ChangeEvent, str]:
+    """Resolve a change by its host:port/proto (a natural key the model can read
+    from the snapshot), returning the most recent match."""
+    ip = _req_str(args, "ip")
+    port = _opt_int(args, "port")
+    if port is None:
+        raise ActionError("'port' is required.")
+    protocol = (_opt_str(args, "protocol") or "tcp").lower()
+    row = (
+        await session.execute(
+            select(ChangeEvent)
+            .where(
+                ChangeEvent.ip == ip,
+                ChangeEvent.port == port,
+                func.lower(ChangeEvent.protocol) == protocol,
+            )
+            .order_by(ChangeEvent.detected_at.desc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        raise ActionError(f"No change found for {ip}:{port}/{protocol}.")
+    return row, f"{ip}:{port}/{protocol}"
+
+
+async def _change_acknowledge(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    row, target = await _find_change(session, args)
+    summary = {"target": target, "status": "acknowledged"}
+    return summary, {
+        "method": "PATCH",
+        "path": f"/changes/{row.id}",
+        "body": {"status": "acknowledged"},
+    }
+
+
+async def _change_resolve(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    row, target = await _find_change(session, args)
+    summary = {"target": target, "status": "resolved"}
+    return summary, {
+        "method": "PATCH",
+        "path": f"/changes/{row.id}",
+        "body": {"status": "resolved"},
+    }
+
+
+async def _find_task(session: AsyncSession, title: str) -> Task:
+    row = (
+        await session.execute(
+            select(Task)
+            .where(func.lower(Task.title) == title.lower())
+            .order_by(Task.created_at.desc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        raise ActionError(f"Task '{title}' not found.")
+    return row
+
+
+async def _task_update_status(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    title = _req_str(args, "title")
+    status = _enum(args, "status", _TASK_STATUSES, None)
+    if status is None:
+        raise ActionError("'status' is required.")
+    row = await _find_task(session, title)
+    summary = {"title": row.title, "status": status}
+    return summary, {
+        "method": "PATCH",
+        "path": f"/tasks/{row.id}",
+        "body": {"status": status},
+    }
+
+
+async def _task_link_jira(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    title = _req_str(args, "title")
+    row = await _find_task(session, title)
+    return {"title": row.title}, {
+        "method": "POST",
+        "path": f"/tasks/{row.id}/jira",
+        "body": None,
+    }
+
+
 @dataclass(frozen=True)
 class ActionSpec:
     name: str
@@ -281,6 +367,34 @@ CATALOG: list[ActionSpec] = [
         "name (required), segment (optional)",
         _agent_enroll,
     ),
+    ActionSpec(
+        "change.acknowledge",
+        WRITE_ROLES,
+        "Acknowledge a confirmed change (identified by host:port).",
+        "ip (required), port (required), protocol (optional, default tcp)",
+        _change_acknowledge,
+    ),
+    ActionSpec(
+        "change.resolve",
+        WRITE_ROLES,
+        "Resolve a confirmed change (identified by host:port).",
+        "ip (required), port (required), protocol (optional, default tcp)",
+        _change_resolve,
+    ),
+    ActionSpec(
+        "task.update_status",
+        WRITE_ROLES,
+        "Change a task's status.",
+        "title (required), status (open|in_progress|done|cancelled, required)",
+        _task_update_status,
+    ),
+    ActionSpec(
+        "task.link_jira",
+        WRITE_ROLES,
+        "Create and link a Jira issue for a task.",
+        "title (required)",
+        _task_link_jira,
+    ),
 ]
 
 CATALOG_BY_NAME: dict[str, ActionSpec] = {a.name: a for a in CATALOG}
@@ -320,8 +434,35 @@ async def build_snapshot(session: AsyncSession) -> str:
         await session.execute(select(Agent.name, Agent.enabled, Agent.last_seen_at))
     ).all()
     open_changes = await count(ChangeEvent, ChangeEvent.status == "open")
-    open_tasks = await count(Task, Task.status.in_(["open", "in_progress"]))
+    open_tasks_total = await count(Task, Task.status.in_(["open", "in_progress"]))
     pending_runs = await count(ScanRun, ScanRun.status == "pending")
+
+    change_rows = (
+        await session.execute(
+            select(
+                ChangeEvent.ip,
+                ChangeEvent.port,
+                ChangeEvent.protocol,
+                ChangeEvent.change_type,
+                ChangeEvent.severity,
+            )
+            .where(ChangeEvent.status == "open")
+            .order_by(ChangeEvent.detected_at.desc())
+            .limit(10)
+        )
+    ).all()
+    change_labels = [
+        f"{ip}:{port}/{proto} {ctype} ({sev})"
+        for ip, port, proto, ctype, sev in change_rows
+    ]
+    task_titles = (
+        await session.execute(
+            select(Task.title)
+            .where(Task.status.in_(["open", "in_progress"]))
+            .order_by(Task.created_at.desc())
+            .limit(10)
+        )
+    ).scalars().all()
 
     now = dt.datetime.now(tz=dt.timezone.utc)
     agent_labels = [
@@ -334,8 +475,8 @@ async def build_snapshot(session: AsyncSession) -> str:
             f"VLANs ({len(vlan_names)}): {', '.join(vlan_names) or 'none'}",
             f"Scan profiles ({len(profile_names)}): {', '.join(profile_names) or 'none'}",
             f"Agents ({len(agent_labels)}): {', '.join(agent_labels) or 'none'}",
-            f"Open changes: {open_changes}",
-            f"Open tasks: {open_tasks}",
+            f"Open changes ({open_changes}): {'; '.join(change_labels) or 'none'}",
+            f"Open tasks ({open_tasks_total}): {'; '.join(task_titles) or 'none'}",
             f"Pending scan runs: {pending_runs}",
         ]
     )

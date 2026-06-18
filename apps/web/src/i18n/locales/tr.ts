@@ -523,4 +523,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "assistant.act.scanprofile_create": "Tarama profili oluştur",
   "assistant.act.scan_run": "Taramayı çalıştır",
   "assistant.act.agent_enroll": "Ajan kaydet",
+  "assistant.act.change_acknowledge": "Değişikliği onayla",
+  "assistant.act.change_resolve": "Değişikliği çöz",
+  "assistant.act.task_update_status": "Görev durumunu güncelle",
+  "assistant.act.task_link_jira": "Görevi Jira'ya bağla",
 };

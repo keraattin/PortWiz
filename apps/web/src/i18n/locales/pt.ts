@@ -526,4 +526,8 @@ export const pt: Partial<Record<TKey, string>> = {
   "assistant.act.scanprofile_create": "Criar perfil de varredura",
   "assistant.act.scan_run": "Executar varredura",
   "assistant.act.agent_enroll": "Registrar agente",
+  "assistant.act.change_acknowledge": "Reconhecer alteração",
+  "assistant.act.change_resolve": "Resolver alteração",
+  "assistant.act.task_update_status": "Atualizar status da tarefa",
+  "assistant.act.task_link_jira": "Vincular tarefa ao Jira",
 };

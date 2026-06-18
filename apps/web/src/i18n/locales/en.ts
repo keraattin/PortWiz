@@ -521,6 +521,10 @@ export const en = {
   "assistant.act.scanprofile_create": "Create scan profile",
   "assistant.act.scan_run": "Run scan",
   "assistant.act.agent_enroll": "Enroll agent",
+  "assistant.act.change_acknowledge": "Acknowledge change",
+  "assistant.act.change_resolve": "Resolve change",
+  "assistant.act.task_update_status": "Update task status",
+  "assistant.act.task_link_jira": "Link task to Jira",
 };
 
 export type TKey = keyof typeof en;
