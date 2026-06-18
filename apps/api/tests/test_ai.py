@@ -145,6 +145,23 @@ def test_build_ai_provider_openai_compat() -> None:
     assert o._base == "https://proxy.internal/v1" and o._model == "gpt-4o"
 
 
+def test_parse_fingerprint_summary() -> None:
+    from portwiz_api.core.ai import parse_fingerprint_summary
+
+    service, version = parse_fingerprint_summary(
+        "Service: ssh\nVersion: OpenSSH 9.6\nSummary: secure shell"
+    )
+    assert service == "ssh"
+    assert version == "OpenSSH 9.6"
+
+    # 'unknown' / missing values yield None.
+    service, version = parse_fingerprint_summary("Service: http\nVersion: unknown")
+    assert service == "http" and version is None
+
+    # No structured lines -> nothing extracted.
+    assert parse_fingerprint_summary("I am not sure.") == (None, None)
+
+
 def test_provider_registry_endpoint_shape() -> None:
     from portwiz_api.core.ai import PROVIDER_REGISTRY, PROVIDERS_BY_ID
 

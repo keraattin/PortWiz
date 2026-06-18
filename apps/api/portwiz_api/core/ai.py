@@ -372,6 +372,29 @@ async def enrich_fingerprint(
     return await provider.complete(FINGERPRINT_SYSTEM, prompt)
 
 
+_UNKNOWN_VALUES = {"", "unknown", "none", "n/a", "null"}
+
+
+def parse_fingerprint_summary(text: str) -> tuple[str | None, str | None]:
+    """Extract (service, version) from the model's 'Service:/Version:/Summary:'
+    reply. Returns None for missing or 'unknown' values; values are capped."""
+    service: str | None = None
+    version: str | None = None
+    for line in (text or "").splitlines():
+        key, sep, value = line.partition(":")
+        if not sep:
+            continue
+        key = key.strip().lower()
+        value = value.strip()
+        if value.lower() in _UNKNOWN_VALUES:
+            continue
+        if key == "service" and service is None:
+            service = value[:128]
+        elif key == "version" and version is None:
+            version = value[:128]
+    return service, version
+
+
 async def ask_assistant(provider: AIProvider, question: str) -> str:
     """Answer a question about a port/service via the configured provider."""
     return await provider.complete(ASSISTANT_SYSTEM, build_assistant_prompt(question))
