@@ -10,6 +10,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
+import RoleMatrix from "../components/RoleMatrix";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -251,6 +252,7 @@ export default function UsersPage() {
             </select>
             <p className="mt-1 text-xs text-slate-500">{t(`roleHint.${role}` as TKey)}</p>
           </div>
+          <RoleMatrix />
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
             <button type="submit" className={primaryBtn}>
@@ -300,6 +302,7 @@ export default function UsersPage() {
             {t("users.f.active")}
           </label>
           {editingSelf && <p className="text-xs text-amber-400">{t("users.cannotEditSelf")}</p>}
+          <RoleMatrix />
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
             <button type="submit" className={primaryBtn}>

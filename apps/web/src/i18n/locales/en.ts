@@ -278,6 +278,14 @@ export const en = {
   "roleHint.admin": "Full access, including users, agents, and settings.",
   "roleHint.operator": "Manage inventory, scans, changes, and tasks.",
   "roleHint.auditor": "Read-only: review changes, audit log, and evidence.",
+  "roleMatrix.title": "What each role can do",
+  "roleMatrix.area": "Area",
+  "roleMatrix.manage": "Manage",
+  "roleMatrix.view": "View",
+  "roleMatrix.row.operate": "Inventory, scans, changes, tasks",
+  "roleMatrix.row.compliance": "Compliance & evidence",
+  "roleMatrix.row.agents": "Scan agents",
+  "roleMatrix.row.adminArea": "Users & settings",
 
   // Users
   "users.title": "Users",

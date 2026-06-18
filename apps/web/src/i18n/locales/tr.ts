@@ -280,6 +280,14 @@ export const tr: Partial<Record<TKey, string>> = {
   "roleHint.admin": "Tam erişim; kullanıcılar, ajanlar ve ayarlar dâhil.",
   "roleHint.operator": "Envanter, taramalar, değişiklikler ve görevleri yönetir.",
   "roleHint.auditor": "Salt okunur: değişiklikleri, denetim günlüğünü ve kanıtları inceler.",
+  "roleMatrix.title": "Her rol ne yapabilir",
+  "roleMatrix.area": "Alan",
+  "roleMatrix.manage": "Yönet",
+  "roleMatrix.view": "Görüntüle",
+  "roleMatrix.row.operate": "Envanter, taramalar, değişiklikler, görevler",
+  "roleMatrix.row.compliance": "Uyumluluk & kanıt",
+  "roleMatrix.row.agents": "Tarama ajanları",
+  "roleMatrix.row.adminArea": "Kullanıcılar & ayarlar",
 
   // Users
   "users.title": "Kullanıcılar",

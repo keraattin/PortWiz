@@ -281,6 +281,14 @@ export const de: Partial<Record<TKey, string>> = {
   "roleHint.admin": "Voller Zugriff, einschließlich Benutzer, Agenten und Einstellungen.",
   "roleHint.operator": "Inventar, Scans, Änderungen und Aufgaben verwalten.",
   "roleHint.auditor": "Schreibgeschützt: Änderungen, Audit-Log und Nachweise einsehen.",
+  "roleMatrix.title": "Was jede Rolle darf",
+  "roleMatrix.area": "Bereich",
+  "roleMatrix.manage": "Verwalten",
+  "roleMatrix.view": "Ansehen",
+  "roleMatrix.row.operate": "Inventar, Scans, Änderungen, Aufgaben",
+  "roleMatrix.row.compliance": "Compliance & Nachweise",
+  "roleMatrix.row.agents": "Scan-Agenten",
+  "roleMatrix.row.adminArea": "Benutzer & Einstellungen",
 
   // Users
   "users.title": "Benutzer",
