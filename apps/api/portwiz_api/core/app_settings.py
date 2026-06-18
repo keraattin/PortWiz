@@ -27,6 +27,9 @@ EDITABLE_KEYS: list[str] = [
     "ollama_model",
     "anthropic_api_key",
     "anthropic_model",
+    "compat_base_url",
+    "compat_model",
+    "compat_api_key",
     # Email (SMTP)
     "notifications_enabled",
     "smtp_host",
@@ -51,7 +54,7 @@ EDITABLE_KEYS: list[str] = [
 # Keys whose values must never be returned to clients and are only updated when a
 # non-empty replacement is supplied.
 SECRET_KEYS: frozenset[str] = frozenset(
-    {"anthropic_api_key", "smtp_password", "jira_api_token", "netbox_token"}
+    {"anthropic_api_key", "compat_api_key", "smtp_password", "jira_api_token", "netbox_token"}
 )
 
 

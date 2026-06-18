@@ -101,3 +101,56 @@ def test_build_ai_provider_selection() -> None:
     )
     # Claude selected without a key falls back to the no-op provider.
     assert build_ai_provider(Settings(ai_provider="claude")).name == "none"
+
+
+def test_build_ai_provider_openai_compat() -> None:
+    from portwiz_api.core.ai import OpenAICompatProvider, build_ai_provider
+    from portwiz_api.core.config import Settings
+
+    # A named provider with a key uses its registry default base URL + model.
+    p = build_ai_provider(Settings(ai_provider="openai", compat_api_key="sk-x"))
+    assert isinstance(p, OpenAICompatProvider)
+    assert p.name == "openai"
+    assert p._base == "https://api.openai.com/v1"
+    assert p._model == "gpt-4o-mini"
+
+    # Gemini likewise picks up its own defaults.
+    g = build_ai_provider(Settings(ai_provider="gemini", compat_api_key="k"))
+    assert g.name == "gemini" and "generativelanguage" in g._base
+
+    # No key -> no-op provider.
+    assert build_ai_provider(Settings(ai_provider="openai")).name == "none"
+
+    # Custom has no default base URL, so it needs one supplied.
+    assert build_ai_provider(Settings(ai_provider="custom", compat_api_key="k")).name == "none"
+    c = build_ai_provider(
+        Settings(
+            ai_provider="custom",
+            compat_api_key="k",
+            compat_base_url="http://lmstudio:1234/v1",
+            compat_model="local-model",
+        )
+    )
+    assert c.name == "custom" and c._base == "http://lmstudio:1234/v1"
+
+    # An overridden base URL / model wins over the registry default.
+    o = build_ai_provider(
+        Settings(
+            ai_provider="openai",
+            compat_api_key="k",
+            compat_base_url="https://proxy.internal/v1",
+            compat_model="gpt-4o",
+        )
+    )
+    assert o._base == "https://proxy.internal/v1" and o._model == "gpt-4o"
+
+
+def test_provider_registry_endpoint_shape() -> None:
+    from portwiz_api.core.ai import PROVIDER_REGISTRY, PROVIDERS_BY_ID
+
+    ids = {p.id for p in PROVIDER_REGISTRY}
+    assert {"none", "ollama", "claude", "openai", "gemini", "custom"} <= ids
+    # Claude and Ollama remain their own dedicated kinds.
+    assert PROVIDERS_BY_ID["claude"].kind == "anthropic"
+    assert PROVIDERS_BY_ID["ollama"].kind == "ollama"
+    assert PROVIDERS_BY_ID["openai"].kind == "openai_compat"

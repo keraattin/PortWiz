@@ -38,6 +38,18 @@ class SettingsStatus(BaseModel):
     netbox_configured: bool
 
 
+class AiProviderInfo(BaseModel):
+    """Metadata for one selectable AI provider, used to render the settings UI."""
+
+    id: str
+    label: str
+    kind: str
+    default_base_url: str
+    default_model: str
+    needs_api_key: bool
+    needs_base_url: bool
+
+
 class TestResult(BaseModel):
     ok: bool
     detail: str
@@ -56,6 +68,9 @@ class SettingsConfig(BaseModel):
     ollama_model: str
     anthropic_model: str
     anthropic_api_key_set: bool
+    compat_base_url: str
+    compat_model: str
+    compat_api_key_set: bool
 
     notifications_enabled: bool
     smtp_host: str
@@ -85,6 +100,9 @@ class SettingsConfigUpdate(BaseModel):
     ollama_model: str | None = None
     anthropic_api_key: str | None = None
     anthropic_model: str | None = None
+    compat_base_url: str | None = None
+    compat_model: str | None = None
+    compat_api_key: str | None = None
 
     notifications_enabled: bool | None = None
     smtp_host: str | None = None

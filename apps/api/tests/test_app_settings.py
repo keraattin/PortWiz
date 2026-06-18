@@ -90,6 +90,57 @@ async def test_update_config_keeps_existing_secret_on_blank(client, admin_header
     assert cfg["jira_enabled"] is True
 
 
+async def test_compat_secret_masked(client, admin_headers) -> None:
+    resp = await client.patch(
+        "/api/v1/settings/config",
+        json={
+            "ai_provider": "openai",
+            "compat_api_key": "sk-compat-secret",
+            "compat_model": "gpt-4o",
+        },
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["ai_provider"] == "openai"
+    assert body["compat_model"] == "gpt-4o"
+    assert body["compat_api_key_set"] is True
+    assert "compat_api_key" not in body
+    assert "sk-compat-secret" not in resp.text
+
+    # The status endpoint reports the provider as configured (key present).
+    status = (await client.get("/api/v1/settings", headers=admin_headers)).json()
+    assert status["ai_provider"] == "openai"
+    assert status["ai_configured"] is True
+
+
+async def test_ai_providers_listed(client, admin_headers, db) -> None:
+    resp = await client.get("/api/v1/settings/ai-providers", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    ids = {p["id"] for p in resp.json()}
+    assert {"ollama", "claude", "openai", "custom"} <= ids
+
+    from portwiz_api.core.security import hash_password
+    from portwiz_api.models.user import User, UserRole
+
+    async with db() as session:
+        session.add(
+            User(
+                email="aud-prov@test.local",
+                hashed_password=hash_password("Secret123!"),
+                full_name="Aud",
+                role=UserRole.auditor,
+            )
+        )
+        await session.commit()
+    login = await client.post(
+        "/api/v1/auth/login",
+        data={"username": "aud-prov@test.local", "password": "Secret123!"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    assert (await client.get("/api/v1/settings/ai-providers", headers=headers)).status_code == 403
+
+
 async def test_config_update_requires_admin(client, db) -> None:
     from portwiz_api.core.security import hash_password
     from portwiz_api.models.user import User, UserRole

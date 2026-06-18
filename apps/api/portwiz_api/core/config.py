@@ -52,12 +52,18 @@ class Settings(BaseSettings):
     scan_max_attempts: int = 3
 
     # --- AI layer (provider-agnostic) ---
-    # Provider for fingerprint enrichment and the assistant: "ollama" | "claude" | "none".
+    # Selected provider id (see PROVIDER_REGISTRY): "none" | "ollama" | "claude" |
+    # "openai" | "gemini" | "mistral" | "groq" | "openrouter" | "deepseek" | "custom".
     ai_provider: str = "ollama"
     ollama_base_url: str = "http://ollama:11434"
     ollama_model: str = "llama3.3"
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-sonnet-4-6"
+    # Shared config for every OpenAI-compatible provider (one is active at a time).
+    # Blank base_url/model fall back to the selected provider's registry default.
+    compat_base_url: str = ""
+    compat_model: str = ""
+    compat_api_key: str | None = None
 
     # Notifications (email). No emails are sent unless recipients are configured.
     notifications_enabled: bool = True

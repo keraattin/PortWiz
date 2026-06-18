@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass
 from typing import Protocol
 
 from fastapi import Depends
@@ -184,12 +185,164 @@ class ClaudeProvider:
             ).strip()
 
 
+class OpenAICompatProvider:
+    """Any OpenAI-compatible /chat/completions endpoint.
+
+    One client covers a large ecosystem: OpenAI, Google Gemini, Mistral, Groq,
+    OpenRouter, DeepSeek, and local runtimes (LM Studio, vLLM, llama.cpp, ...).
+    Raw HTTP, so no vendor SDK is pulled in; the base URL and model are
+    configurable, so users plug in any provider with their own endpoint/token.
+    """
+
+    def __init__(self, base_url: str, api_key: str, model: str, name: str = "openai") -> None:
+        self.name = name
+        self._base = base_url.rstrip("/")
+        self._api_key = api_key
+        self._model = model
+
+    async def complete(self, system: str, user: str) -> str:
+        import httpx
+
+        headers = {"content-type": "application/json"}
+        if self._api_key:
+            headers["authorization"] = f"Bearer {self._api_key}"
+        body = {
+            "model": self._model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "temperature": 0,
+        }
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(
+                f"{self._base}/chat/completions", headers=headers, json=body
+            )
+            resp.raise_for_status()
+            choices = resp.json().get("choices") or []
+            if not choices:
+                return ""
+            return (choices[0].get("message", {}).get("content") or "").strip()
+
+
+@dataclass(frozen=True)
+class ProviderInfo:
+    """A selectable AI provider. ``kind`` picks the implementation; the
+    OpenAI-compatible ones all share :class:`OpenAICompatProvider`, so adding a
+    new provider is a single registry entry, not new code."""
+
+    id: str
+    label: str
+    kind: str  # "none" | "ollama" | "anthropic" | "openai_compat"
+    default_base_url: str = ""
+    default_model: str = ""
+    needs_api_key: bool = False
+    needs_base_url: bool = False  # whether the base URL is user-editable in the UI
+
+
+# Claude and Ollama stay first-class, dedicated options; everything else is a
+# named OpenAI-compatible provider with sensible defaults. Extend this list to
+# add a provider.
+PROVIDER_REGISTRY: list[ProviderInfo] = [
+    ProviderInfo("none", "None", "none"),
+    ProviderInfo(
+        "ollama",
+        "Ollama (local)",
+        "ollama",
+        default_base_url="http://ollama:11434",
+        default_model="llama3.3",
+        needs_base_url=True,
+    ),
+    ProviderInfo(
+        "claude",
+        "Claude (Anthropic)",
+        "anthropic",
+        default_model="claude-sonnet-4-6",
+        needs_api_key=True,
+    ),
+    ProviderInfo(
+        "openai",
+        "OpenAI",
+        "openai_compat",
+        "https://api.openai.com/v1",
+        "gpt-4o-mini",
+        needs_api_key=True,
+    ),
+    ProviderInfo(
+        "gemini",
+        "Google Gemini",
+        "openai_compat",
+        "https://generativelanguage.googleapis.com/v1beta/openai",
+        "gemini-2.0-flash",
+        needs_api_key=True,
+    ),
+    ProviderInfo(
+        "mistral",
+        "Mistral",
+        "openai_compat",
+        "https://api.mistral.ai/v1",
+        "mistral-small-latest",
+        needs_api_key=True,
+    ),
+    ProviderInfo(
+        "groq",
+        "Groq",
+        "openai_compat",
+        "https://api.groq.com/openai/v1",
+        "llama-3.3-70b-versatile",
+        needs_api_key=True,
+    ),
+    ProviderInfo(
+        "openrouter",
+        "OpenRouter",
+        "openai_compat",
+        "https://openrouter.ai/api/v1",
+        "openai/gpt-4o-mini",
+        needs_api_key=True,
+    ),
+    ProviderInfo(
+        "deepseek",
+        "DeepSeek",
+        "openai_compat",
+        "https://api.deepseek.com/v1",
+        "deepseek-chat",
+        needs_api_key=True,
+    ),
+    ProviderInfo(
+        "custom",
+        "Custom (OpenAI-compatible)",
+        "openai_compat",
+        needs_api_key=True,
+        needs_base_url=True,
+    ),
+]
+
+PROVIDERS_BY_ID: dict[str, ProviderInfo] = {p.id: p for p in PROVIDER_REGISTRY}
+
+
 def build_ai_provider(settings) -> AIProvider:
-    provider = (settings.ai_provider or "none").lower()
-    if provider == "claude" and settings.anthropic_api_key:
-        return ClaudeProvider(settings.anthropic_api_key, settings.anthropic_model)
-    if provider == "ollama" and settings.ollama_base_url:
-        return OllamaProvider(settings.ollama_base_url, settings.ollama_model)
+    """Construct the configured provider, or :class:`NullProvider` if it is not
+    usable (unknown id, or a required API key / base URL / model is missing)."""
+    info = PROVIDERS_BY_ID.get((settings.ai_provider or "none").lower())
+    if info is None or info.kind == "none":
+        return NullProvider()
+    if info.kind == "anthropic":
+        if settings.anthropic_api_key:
+            return ClaudeProvider(settings.anthropic_api_key, settings.anthropic_model)
+        return NullProvider()
+    if info.kind == "ollama":
+        if settings.ollama_base_url:
+            return OllamaProvider(settings.ollama_base_url, settings.ollama_model)
+        return NullProvider()
+    if info.kind == "openai_compat":
+        base_url = (settings.compat_base_url or info.default_base_url).strip()
+        model = (settings.compat_model or info.default_model).strip()
+        api_key = settings.compat_api_key or ""
+        if not base_url or not model:
+            return NullProvider()
+        if info.needs_api_key and not api_key:
+            return NullProvider()
+        return OpenAICompatProvider(base_url, api_key, model, name=info.id)
     return NullProvider()
 
 

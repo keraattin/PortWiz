@@ -12,7 +12,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ... import __version__
-from ...core.ai import AIProvider, get_ai_provider
+from ...core.ai import (
+    PROVIDER_REGISTRY,
+    PROVIDERS_BY_ID,
+    AIProvider,
+    build_ai_provider,
+    get_ai_provider,
+)
 from ...core.app_settings import effective_settings, set_overrides
 from ...core.config import Settings
 from ...core.db import get_session
@@ -21,6 +27,7 @@ from ...core.issue_tracker import IssueTracker, get_issue_tracker
 from ...core.notifications import Notifier, NullNotifier, get_notifier
 from ...models.user import User, UserRole
 from ...schemas.settings import (
+    AiProviderInfo,
     EmailTestRequest,
     SettingsConfig,
     SettingsConfigUpdate,
@@ -41,6 +48,9 @@ def _config_from(s: Settings) -> SettingsConfig:
         ollama_model=s.ollama_model,
         anthropic_model=s.anthropic_model,
         anthropic_api_key_set=bool(s.anthropic_api_key),
+        compat_base_url=s.compat_base_url,
+        compat_model=s.compat_model,
+        compat_api_key_set=bool(s.compat_api_key),
         notifications_enabled=s.notifications_enabled,
         smtp_host=s.smtp_host,
         smtp_port=s.smtp_port,
@@ -66,10 +76,17 @@ async def get_settings_status(
     session: AsyncSession = Depends(get_session),
 ) -> SettingsStatus:
     s = await effective_settings(session)
-    ai_model = s.anthropic_model if s.ai_provider == "claude" else s.ollama_model
-    ai_configured = s.ai_provider != "none" and (
-        s.ai_provider != "claude" or bool(s.anthropic_api_key)
-    )
+    info = PROVIDERS_BY_ID.get(s.ai_provider)
+    if s.ai_provider == "claude":
+        ai_model = s.anthropic_model
+    elif s.ai_provider == "ollama":
+        ai_model = s.ollama_model
+    elif info is not None and info.kind == "openai_compat":
+        ai_model = s.compat_model or info.default_model
+    else:
+        ai_model = ""
+    # "configured" means a real provider would be built (keys/URLs present).
+    ai_configured = build_ai_provider(s).name != "none"
     jira_configured = bool(
         s.jira_enabled and s.jira_url and s.jira_email and s.jira_api_token
     )
@@ -94,6 +111,23 @@ async def get_settings_status(
         netbox_url=s.netbox_url,
         netbox_configured=netbox_configured,
     )
+
+
+@router.get("/ai-providers", response_model=list[AiProviderInfo])
+async def get_ai_providers(_: User = Depends(AdminDep)) -> list[AiProviderInfo]:
+    """The selectable AI providers and their field defaults (no secrets)."""
+    return [
+        AiProviderInfo(
+            id=p.id,
+            label=p.label,
+            kind=p.kind,
+            default_base_url=p.default_base_url,
+            default_model=p.default_model,
+            needs_api_key=p.needs_api_key,
+            needs_base_url=p.needs_base_url,
+        )
+        for p in PROVIDER_REGISTRY
+    ]
 
 
 @router.get("/config", response_model=SettingsConfig)
