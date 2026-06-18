@@ -111,6 +111,7 @@ export const de: Partial<Record<TKey, string>> = {
   "assets.bulkImport": "Massenimport",
   "assets.bulkImportHint":
     'CSV oder .xlsx mit einer Spalte "ip". Optional: hostname, vlan, owner, criticality, sensitivity, description.',
+  "assets.downloadTemplate": "Vorlage herunterladen",
   "assets.updateExisting": "Vorhandene aktualisieren",
   "assets.skipExisting": "Vorhandene überspringen",
   "assets.import": "Importieren",

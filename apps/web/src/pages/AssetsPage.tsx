@@ -10,6 +10,7 @@ import {
   type Vlan,
   createAsset,
   deleteAsset,
+  downloadAssetImportTemplate,
   importAssets,
   listAssets,
   listUsers,
@@ -192,7 +193,18 @@ export default function AssetsPage() {
       <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-medium text-slate-200">{t("assets.bulkImport")}</h3>
-          <span className="text-xs text-slate-500">{t("assets.bulkImportHint")}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500">{t("assets.bulkImportHint")}</span>
+            <button
+              type="button"
+              onClick={() =>
+                downloadAssetImportTemplate().catch((e) => toast.error(errorMessage(e)))
+              }
+              className="whitespace-nowrap text-xs font-medium text-emerald-400 hover:text-emerald-300"
+            >
+              {t("assets.downloadTemplate")}
+            </button>
+          </div>
         </div>
         <form onSubmit={onImport} className="flex flex-wrap items-center gap-3">
           <input

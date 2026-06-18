@@ -10,7 +10,7 @@ import datetime as dt
 import ipaddress
 import uuid
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -276,6 +276,27 @@ async def list_assets(
         query = query.where(Asset.owner_id == owner_id)
     result = await session.execute(query)
     return list(result.scalars().all())
+
+
+_IMPORT_TEMPLATE_CSV = (
+    "ip,hostname,vlan,owner,criticality,data_sensitivity,description\r\n"
+    "10.0.0.10,web-01,DMZ,owner@example.com,high,cde,Internet-facing web server\r\n"
+    "10.0.0.11,db-01,Servers,owner@example.com,critical,pii,Primary database\r\n"
+)
+
+
+# Declared before /{asset_id} so the literal path is not captured as an id.
+@assets_router.get("/import-template")
+async def asset_import_template(_: User = Depends(get_current_user)) -> Response:
+    """A ready-to-fill CSV with the import columns and example rows. Opens in
+    Excel; the import accepts the same columns as .csv or .xlsx."""
+    return Response(
+        content=_IMPORT_TEMPLATE_CSV,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": 'attachment; filename="portwiz-assets-template.csv"'
+        },
+    )
 
 
 @assets_router.get("/{asset_id}", response_model=AssetRead)

@@ -5,6 +5,22 @@ from __future__ import annotations
 CSV = b"ip,hostname,criticality\n10.0.0.5,web01,high\n10.0.0.6,db01,critical\n"
 
 
+async def test_import_template_download(client, admin_headers) -> None:
+    resp = await client.get("/api/v1/assets/import-template", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    assert "text/csv" in resp.headers["content-type"]
+    assert "attachment" in resp.headers["content-disposition"]
+    body = resp.text
+    # The template's header row matches the columns the parser accepts.
+    header = body.splitlines()[0]
+    for col in ("ip", "hostname", "vlan", "owner", "criticality", "data_sensitivity"):
+        assert col in header
+
+
+async def test_import_template_requires_auth(client) -> None:
+    assert (await client.get("/api/v1/assets/import-template")).status_code == 401
+
+
 def _file(content: bytes, name: str = "assets.csv", mime: str = "text/csv"):
     return {"file": (name, content, mime)}
 

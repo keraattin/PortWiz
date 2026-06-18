@@ -111,6 +111,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "assets.bulkImport": "Toplu içe aktarma",
   "assets.bulkImportHint":
     '"ip" sütunu olan CSV veya .xlsx. İsteğe bağlı: hostname, vlan, owner, criticality, sensitivity, description.',
+  "assets.downloadTemplate": "Şablon indir",
   "assets.updateExisting": "Mevcudu güncelle",
   "assets.skipExisting": "Mevcudu atla",
   "assets.import": "İçe aktar",

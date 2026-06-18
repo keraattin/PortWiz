@@ -111,6 +111,7 @@ export const en = {
   "assets.bulkImport": "Bulk import",
   "assets.bulkImportHint":
     'CSV or .xlsx with an "ip" column. Optional: hostname, vlan, owner, criticality, sensitivity, description.',
+  "assets.downloadTemplate": "Download template",
   "assets.updateExisting": "Update existing",
   "assets.skipExisting": "Skip existing",
   "assets.import": "Import",

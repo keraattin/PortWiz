@@ -581,6 +581,11 @@ export async function downloadEvidencePdf(profileId: string, profileName: string
   triggerDownload(await res.blob(), `portwiz-evidence-${profileName}.pdf`);
 }
 
+export async function downloadAssetImportTemplate(): Promise<void> {
+  const res = await authedFetch("/assets/import-template");
+  triggerDownload(await res.blob(), "portwiz-assets-template.csv");
+}
+
 // Compliance cadence
 export interface ComplianceStatusItem {
   profile_id: string;

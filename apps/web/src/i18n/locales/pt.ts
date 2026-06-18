@@ -111,6 +111,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "assets.bulkImport": "Importação em massa",
   "assets.bulkImportHint":
     'CSV ou .xlsx com uma coluna "ip". Opcional: hostname, vlan, owner, criticality, sensitivity, description.',
+  "assets.downloadTemplate": "Baixar modelo",
   "assets.updateExisting": "Atualizar existentes",
   "assets.skipExisting": "Ignorar existentes",
   "assets.import": "Importar",
