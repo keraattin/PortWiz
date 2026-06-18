@@ -796,3 +796,43 @@ export function askAssistant(question: string): Promise<AssistantResult> {
     body: JSON.stringify({ question }),
   });
 }
+
+// Agentic assistant: chat + proposed actions the user confirms.
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ActionRequest {
+  method: string;
+  path: string;
+  body: Record<string, unknown> | null;
+}
+
+export interface ProposedAction {
+  name: string;
+  summary: Record<string, unknown>;
+  request: ActionRequest;
+}
+
+export interface ChatResult {
+  provider: string;
+  reply: string;
+  action: ProposedAction | null;
+}
+
+export function chatAssistant(messages: ChatMessage[]): Promise<ChatResult> {
+  return request<ChatResult>("/ai/chat", {
+    method: "POST",
+    body: JSON.stringify({ messages }),
+  });
+}
+
+// Execute a server-built action request (the path/body are constructed
+// server-side from the catalog, then run here with the user's own token).
+export function executeAction(req: ActionRequest): Promise<unknown> {
+  return request(req.path, {
+    method: req.method,
+    body: req.body != null ? JSON.stringify(req.body) : undefined,
+  });
+}

@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
+import AssistantWidget from "./AssistantWidget";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 
@@ -139,6 +140,7 @@ export default function Layout() {
       <main className="px-8 py-8">
         <Outlet />
       </main>
+      <AssistantWidget />
     </div>
   );
 }

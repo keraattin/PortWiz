@@ -498,6 +498,28 @@ export const en = {
     "Ask about a port, service, or protocol (e.g. What runs on port 3389?)",
   "assistant.thinking": "Thinking…",
   "assistant.ask": "Ask",
+
+  // Assistant widget (global, chat + proposed actions)
+  "assistant.widget.title": "Assistant",
+  "assistant.widget.openAria": "Open assistant",
+  "assistant.widget.closeAria": "Close assistant",
+  "assistant.widget.greeting":
+    "Hi! Ask about your deployment, or tell me to add a VLAN, create a scan, and more — I'll propose it for you to confirm.",
+  "assistant.widget.placeholder": "Ask, or tell me what to do…",
+  "assistant.widget.send": "Send",
+  "assistant.widget.thinking": "Thinking…",
+  "assistant.widget.confirmTitle": "Confirm this action",
+  "assistant.widget.confirm": "Confirm",
+  "assistant.widget.dismiss": "Dismiss",
+  "assistant.widget.running": "Running…",
+  "assistant.widget.done": "Done.",
+  "assistant.widget.failed": "Action failed",
+  "assistant.act.vlan_create": "Create VLAN",
+  "assistant.act.iprange_create": "Create IP range",
+  "assistant.act.asset_create": "Add asset",
+  "assistant.act.scanprofile_create": "Create scan profile",
+  "assistant.act.scan_run": "Run scan",
+  "assistant.act.agent_enroll": "Enroll agent",
 };
 
 export type TKey = keyof typeof en;

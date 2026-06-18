@@ -500,4 +500,26 @@ export const tr: Partial<Record<TKey, string>> = {
     "Bir port, servis veya protokol hakkında sorun (ör. 3389 portunda ne çalışır?)",
   "assistant.thinking": "Düşünüyor…",
   "assistant.ask": "Sor",
+
+  // Asistan widget'ı (global, sohbet + önerilen aksiyonlar)
+  "assistant.widget.title": "Asistan",
+  "assistant.widget.openAria": "Asistanı aç",
+  "assistant.widget.closeAria": "Asistanı kapat",
+  "assistant.widget.greeting":
+    "Merhaba! Kurulumun hakkında soru sor ya da bana VLAN ekle, tarama oluştur gibi şeyler söyle — onaylaman için sana önereyim.",
+  "assistant.widget.placeholder": "Sor ya da ne yapmamı istediğini söyle…",
+  "assistant.widget.send": "Gönder",
+  "assistant.widget.thinking": "Düşünüyor…",
+  "assistant.widget.confirmTitle": "Bu aksiyonu onayla",
+  "assistant.widget.confirm": "Onayla",
+  "assistant.widget.dismiss": "Vazgeç",
+  "assistant.widget.running": "Çalışıyor…",
+  "assistant.widget.done": "Tamam.",
+  "assistant.widget.failed": "Aksiyon başarısız",
+  "assistant.act.vlan_create": "VLAN oluştur",
+  "assistant.act.iprange_create": "IP aralığı oluştur",
+  "assistant.act.asset_create": "Varlık ekle",
+  "assistant.act.scanprofile_create": "Tarama profili oluştur",
+  "assistant.act.scan_run": "Taramayı çalıştır",
+  "assistant.act.agent_enroll": "Ajan kaydet",
 };

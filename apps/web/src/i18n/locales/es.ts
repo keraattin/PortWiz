@@ -503,4 +503,26 @@ export const es: Partial<Record<TKey, string>> = {
     "Pregunta sobre un puerto, servicio o protocolo (p. ej. ¿Qué se ejecuta en el puerto 3389?)",
   "assistant.thinking": "Pensando…",
   "assistant.ask": "Preguntar",
+
+  // Widget del asistente (global, chat + acciones propuestas)
+  "assistant.widget.title": "Asistente",
+  "assistant.widget.openAria": "Abrir asistente",
+  "assistant.widget.closeAria": "Cerrar asistente",
+  "assistant.widget.greeting":
+    "¡Hola! Pregunta sobre tu instalación, o dime que añada una VLAN, cree un escaneo y más — te lo propondré para que lo confirmes.",
+  "assistant.widget.placeholder": "Pregunta, o dime qué hacer…",
+  "assistant.widget.send": "Enviar",
+  "assistant.widget.thinking": "Pensando…",
+  "assistant.widget.confirmTitle": "Confirmar esta acción",
+  "assistant.widget.confirm": "Confirmar",
+  "assistant.widget.dismiss": "Descartar",
+  "assistant.widget.running": "Ejecutando…",
+  "assistant.widget.done": "Hecho.",
+  "assistant.widget.failed": "La acción falló",
+  "assistant.act.vlan_create": "Crear VLAN",
+  "assistant.act.iprange_create": "Crear rango de IP",
+  "assistant.act.asset_create": "Añadir activo",
+  "assistant.act.scanprofile_create": "Crear perfil de escaneo",
+  "assistant.act.scan_run": "Ejecutar escaneo",
+  "assistant.act.agent_enroll": "Registrar agente",
 };

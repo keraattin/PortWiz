@@ -503,4 +503,26 @@ export const fr: Partial<Record<TKey, string>> = {
     "Posez une question sur un port, un service ou un protocole (p. ex. Qu'est-ce qui tourne sur le port 3389 ?)",
   "assistant.thinking": "Réflexion…",
   "assistant.ask": "Demander",
+
+  // Widget de l'assistant (global, chat + actions proposées)
+  "assistant.widget.title": "Assistant",
+  "assistant.widget.openAria": "Ouvrir l'assistant",
+  "assistant.widget.closeAria": "Fermer l'assistant",
+  "assistant.widget.greeting":
+    "Bonjour ! Posez une question sur votre installation, ou demandez-moi d'ajouter un VLAN, de créer une analyse, etc. — je vous le proposerai pour confirmation.",
+  "assistant.widget.placeholder": "Demandez, ou dites-moi quoi faire…",
+  "assistant.widget.send": "Envoyer",
+  "assistant.widget.thinking": "Réflexion…",
+  "assistant.widget.confirmTitle": "Confirmer cette action",
+  "assistant.widget.confirm": "Confirmer",
+  "assistant.widget.dismiss": "Ignorer",
+  "assistant.widget.running": "Exécution…",
+  "assistant.widget.done": "Terminé.",
+  "assistant.widget.failed": "Échec de l'action",
+  "assistant.act.vlan_create": "Créer un VLAN",
+  "assistant.act.iprange_create": "Créer une plage d'IP",
+  "assistant.act.asset_create": "Ajouter un actif",
+  "assistant.act.scanprofile_create": "Créer un profil d'analyse",
+  "assistant.act.scan_run": "Exécuter l'analyse",
+  "assistant.act.agent_enroll": "Enregistrer un agent",
 };
