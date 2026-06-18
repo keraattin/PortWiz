@@ -444,7 +444,12 @@ export const es: Partial<Record<TKey, string>> = {
   "settings.ai.title": "Asistente de IA",
   "settings.ai.provider": "Proveedor",
   "settings.ai.providerHint":
-    "ollama mantiene los datos en local; claude llama a la API de Anthropic; none desactiva la IA.",
+    "Dónde se ejecuta la IA. Ollama es local (los datos quedan en tu red); Claude y los demás proveedores usan su API con tu propia clave; None desactiva la IA.",
+  "settings.compat.baseUrl": "URL base de la API",
+  "settings.compat.baseUrlHint":
+    "p. ej. http://localhost:1234/v1 para un runtime local (LM Studio, vLLM, llama.cpp), o un proxy de proveedor.",
+  "settings.compat.model": "Modelo",
+  "settings.compat.apiKey": "Clave de API",
   "settings.ai.ollamaLocal": "Ollama (local)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Ninguno",

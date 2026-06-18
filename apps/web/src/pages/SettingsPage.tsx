@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import {
+  type AiProviderInfo,
   ApiError,
   type SettingsConfig,
   type SettingsConfigUpdate,
   type SettingsStatus,
   type TestResult,
+  fetchAiProviders,
   fetchSettings,
   fetchSettingsConfig,
   testAi,
@@ -39,6 +41,9 @@ interface FormState {
   ollama_model: string;
   anthropic_model: string;
   anthropic_api_key: string;
+  compat_base_url: string;
+  compat_model: string;
+  compat_api_key: string;
   notifications_enabled: boolean;
   smtp_host: string;
   smtp_port: string;
@@ -64,6 +69,9 @@ function fromConfig(c: SettingsConfig): FormState {
     ollama_model: c.ollama_model,
     anthropic_model: c.anthropic_model,
     anthropic_api_key: "",
+    compat_base_url: c.compat_base_url,
+    compat_model: c.compat_model,
+    compat_api_key: "",
     notifications_enabled: c.notifications_enabled,
     smtp_host: c.smtp_host,
     smtp_port: String(c.smtp_port),
@@ -122,6 +130,7 @@ export default function SettingsPage() {
   const [config, setConfig] = useState<SettingsConfig | null>(null);
   const [status, setStatus] = useState<SettingsStatus | null>(null);
   const [form, setForm] = useState<FormState | null>(null);
+  const [providers, setProviders] = useState<AiProviderInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
@@ -136,9 +145,10 @@ export default function SettingsPage() {
     async function load() {
       try {
         if (isAdmin) {
-          const c = await fetchSettingsConfig();
+          const [c, p] = await Promise.all([fetchSettingsConfig(), fetchAiProviders()]);
           setConfig(c);
           setForm(fromConfig(c));
+          setProviders(p);
         } else {
           setStatus(await fetchSettings());
         }
@@ -151,6 +161,27 @@ export default function SettingsPage() {
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => (f ? { ...f, [key]: value } : f));
+  }
+
+  // Switching provider resets the OpenAI-compatible fields to the chosen
+  // provider's defaults (each has its own base URL and model).
+  function onProviderChange(id: string) {
+    const info = providers.find((p) => p.id === id);
+    setForm((f) =>
+      f
+        ? {
+            ...f,
+            ai_provider: id,
+            ...(info?.kind === "openai_compat"
+              ? {
+                  compat_base_url: info.default_base_url,
+                  compat_model: info.default_model,
+                  compat_api_key: "",
+                }
+              : {}),
+          }
+        : f,
+    );
   }
 
   async function save(group: string, payload: SettingsConfigUpdate) {
@@ -225,6 +256,8 @@ export default function SettingsPage() {
 
   if (!config || !form) return <p className="text-sm text-slate-400">{t("common.loading")}</p>;
 
+  const currentProvider = providers.find((p) => p.id === form.ai_provider);
+
   return (
     <div className="space-y-6">
       <div>
@@ -240,43 +273,91 @@ export default function SettingsPage() {
             <select
               className={inputClass}
               value={form.ai_provider}
-              onChange={(e) => set("ai_provider", e.target.value)}
+              onChange={(e) => onProviderChange(e.target.value)}
             >
-              <option value="ollama">{t("settings.ai.ollamaLocal")}</option>
-              <option value="claude">{t("settings.ai.claude")}</option>
-              <option value="none">{t("settings.ai.none")}</option>
+              {providers.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
             </select>
           </FormField>
-          <FormField label={t("settings.ai.ollamaUrl")}>
-            <input
-              className={inputClass}
-              value={form.ollama_base_url}
-              onChange={(e) => set("ollama_base_url", e.target.value)}
-            />
-          </FormField>
-          <FormField label={t("settings.ai.ollamaModel")}>
-            <input
-              className={inputClass}
-              value={form.ollama_model}
-              onChange={(e) => set("ollama_model", e.target.value)}
-            />
-          </FormField>
-          <FormField label={t("settings.ai.claudeModel")}>
-            <input
-              className={inputClass}
-              value={form.anthropic_model}
-              onChange={(e) => set("anthropic_model", e.target.value)}
-            />
-          </FormField>
-          <FormField label={t("settings.ai.anthropicKey")} hint={secretHint(config.anthropic_api_key_set, t)}>
-            <input
-              className={inputClass}
-              type="password"
-              placeholder={config.anthropic_api_key_set ? "••••••••" : t("settings.notSetPlaceholder")}
-              value={form.anthropic_api_key}
-              onChange={(e) => set("anthropic_api_key", e.target.value)}
-            />
-          </FormField>
+
+          {/* Only the fields relevant to the selected provider are shown. */}
+          {currentProvider?.kind === "ollama" && (
+            <>
+              <FormField label={t("settings.ai.ollamaUrl")}>
+                <input
+                  className={inputClass}
+                  value={form.ollama_base_url}
+                  onChange={(e) => set("ollama_base_url", e.target.value)}
+                />
+              </FormField>
+              <FormField label={t("settings.ai.ollamaModel")}>
+                <input
+                  className={inputClass}
+                  value={form.ollama_model}
+                  onChange={(e) => set("ollama_model", e.target.value)}
+                />
+              </FormField>
+            </>
+          )}
+
+          {currentProvider?.kind === "anthropic" && (
+            <>
+              <FormField label={t("settings.ai.claudeModel")}>
+                <input
+                  className={inputClass}
+                  value={form.anthropic_model}
+                  onChange={(e) => set("anthropic_model", e.target.value)}
+                />
+              </FormField>
+              <FormField label={t("settings.ai.anthropicKey")} hint={secretHint(config.anthropic_api_key_set, t)}>
+                <input
+                  className={inputClass}
+                  type="password"
+                  placeholder={config.anthropic_api_key_set ? "••••••••" : t("settings.notSetPlaceholder")}
+                  value={form.anthropic_api_key}
+                  onChange={(e) => set("anthropic_api_key", e.target.value)}
+                />
+              </FormField>
+            </>
+          )}
+
+          {currentProvider?.kind === "openai_compat" && (
+            <>
+              {currentProvider.needs_base_url && (
+                <FormField label={t("settings.compat.baseUrl")} hint={t("settings.compat.baseUrlHint")}>
+                  <input
+                    className={inputClass}
+                    placeholder="http://localhost:1234/v1"
+                    value={form.compat_base_url}
+                    onChange={(e) => set("compat_base_url", e.target.value)}
+                  />
+                </FormField>
+              )}
+              <FormField label={t("settings.compat.model")}>
+                <input
+                  className={inputClass}
+                  placeholder={currentProvider.default_model}
+                  value={form.compat_model}
+                  onChange={(e) => set("compat_model", e.target.value)}
+                />
+              </FormField>
+              {currentProvider.needs_api_key && (
+                <FormField label={t("settings.compat.apiKey")} hint={secretHint(config.compat_api_key_set, t)}>
+                  <input
+                    className={inputClass}
+                    type="password"
+                    placeholder={config.compat_api_key_set ? "••••••••" : t("settings.notSetPlaceholder")}
+                    value={form.compat_api_key}
+                    onChange={(e) => set("compat_api_key", e.target.value)}
+                  />
+                </FormField>
+              )}
+            </>
+          )}
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
@@ -288,6 +369,9 @@ export default function SettingsPage() {
                   ollama_model: form.ollama_model,
                   anthropic_model: form.anthropic_model,
                   anthropic_api_key: form.anthropic_api_key,
+                  compat_base_url: form.compat_base_url,
+                  compat_model: form.compat_model,
+                  compat_api_key: form.compat_api_key,
                 })
               }
             >

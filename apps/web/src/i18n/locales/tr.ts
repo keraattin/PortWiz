@@ -442,7 +442,12 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.ai.title": "Yapay zekâ asistanı",
   "settings.ai.provider": "Sağlayıcı",
   "settings.ai.providerHint":
-    "ollama veriyi yerelde tutar; claude Anthropic API'sini çağırır; none yapay zekâyı kapatır.",
+    "Yapay zekânın nerede çalışacağı. Ollama yereldir (veri ağınızda kalır); Claude ve diğer sağlayıcılar kendi API'lerini sizin anahtarınızla kullanır; None yapay zekâyı kapatır.",
+  "settings.compat.baseUrl": "API temel URL",
+  "settings.compat.baseUrlHint":
+    "ör. yerel bir runtime için http://localhost:1234/v1 (LM Studio, vLLM, llama.cpp) veya bir sağlayıcı proxy'si.",
+  "settings.compat.model": "Model",
+  "settings.compat.apiKey": "API anahtarı",
   "settings.ai.ollamaLocal": "Ollama (yerel)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Yok",

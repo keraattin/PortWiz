@@ -440,7 +440,12 @@ export const en = {
   "settings.ai.title": "AI assistant",
   "settings.ai.provider": "Provider",
   "settings.ai.providerHint":
-    "ollama keeps data local; claude calls the Anthropic API; none disables AI.",
+    "Where AI runs. Ollama is local (data stays on your network); Claude and the other providers use their API with your own key; None disables AI.",
+  "settings.compat.baseUrl": "API base URL",
+  "settings.compat.baseUrlHint":
+    "e.g. http://localhost:1234/v1 for a local runtime (LM Studio, vLLM, llama.cpp), or a provider proxy.",
+  "settings.compat.model": "Model",
+  "settings.compat.apiKey": "API key",
   "settings.ai.ollamaLocal": "Ollama (local)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "None",

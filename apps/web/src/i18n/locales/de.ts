@@ -444,7 +444,12 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.ai.title": "KI-Assistent",
   "settings.ai.provider": "Anbieter",
   "settings.ai.providerHint":
-    "ollama hält Daten lokal; claude ruft die Anthropic-API auf; none deaktiviert die KI.",
+    "Wo die KI läuft. Ollama ist lokal (Daten bleiben in Ihrem Netzwerk); Claude und die anderen Anbieter nutzen ihre API mit Ihrem eigenen Schlüssel; None deaktiviert die KI.",
+  "settings.compat.baseUrl": "API-Basis-URL",
+  "settings.compat.baseUrlHint":
+    "z. B. http://localhost:1234/v1 für eine lokale Runtime (LM Studio, vLLM, llama.cpp) oder ein Anbieter-Proxy.",
+  "settings.compat.model": "Modell",
+  "settings.compat.apiKey": "API-Schlüssel",
   "settings.ai.ollamaLocal": "Ollama (lokal)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Keiner",

@@ -692,6 +692,9 @@ export interface SettingsConfig {
   ollama_model: string;
   anthropic_model: string;
   anthropic_api_key_set: boolean;
+  compat_base_url: string;
+  compat_model: string;
+  compat_api_key_set: boolean;
   notifications_enabled: boolean;
   smtp_host: string;
   smtp_port: number;
@@ -716,6 +719,9 @@ export type SettingsConfigUpdate = Partial<{
   ollama_model: string;
   anthropic_api_key: string;
   anthropic_model: string;
+  compat_base_url: string;
+  compat_model: string;
+  compat_api_key: string;
   notifications_enabled: boolean;
   smtp_host: string;
   smtp_port: number;
@@ -743,6 +749,20 @@ export function updateSettingsConfig(payload: SettingsConfigUpdate): Promise<Set
     method: "PATCH",
     body: JSON.stringify(payload),
   });
+}
+
+export interface AiProviderInfo {
+  id: string;
+  label: string;
+  kind: string; // "none" | "ollama" | "anthropic" | "openai_compat"
+  default_base_url: string;
+  default_model: string;
+  needs_api_key: boolean;
+  needs_base_url: boolean;
+}
+
+export function fetchAiProviders(): Promise<AiProviderInfo[]> {
+  return request<AiProviderInfo[]>("/settings/ai-providers");
 }
 
 // AI (provider-agnostic: local Ollama by default, Claude optional)
