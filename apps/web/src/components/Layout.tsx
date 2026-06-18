@@ -44,7 +44,6 @@ const SECTIONS: Section[] = [
     ],
   },
   { labelKey: "nav.compliance", tabs: [{ to: "/compliance", labelKey: "nav.compliance" }] },
-  { labelKey: "nav.assistant", tabs: [{ to: "/assistant", labelKey: "nav.assistant" }] },
   {
     labelKey: "nav.admin",
     roles: ["admin", "auditor"],

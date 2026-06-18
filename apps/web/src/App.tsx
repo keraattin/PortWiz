@@ -9,7 +9,6 @@ import ScansPage from "./pages/ScansPage";
 import ChangesPage from "./pages/ChangesPage";
 import CompliancePage from "./pages/CompliancePage";
 import TasksPage from "./pages/TasksPage";
-import AssistantPage from "./pages/AssistantPage";
 import SettingsPage from "./pages/SettingsPage";
 import AgentsPage from "./pages/AgentsPage";
 import UsersPage from "./pages/UsersPage";
@@ -42,7 +41,6 @@ export default function App() {
         <Route path="/changes" element={<ChangesPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/compliance" element={<CompliancePage />} />
-        <Route path="/assistant" element={<AssistantPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
