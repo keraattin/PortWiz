@@ -5,6 +5,7 @@ import {
   type ProposedAction,
   chatAssistant,
   executeAction,
+  fetchSettings,
 } from "../api/client";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -29,7 +30,15 @@ export default function AssistantWidget() {
   const [loading, setLoading] = useState(false);
   const [action, setAction] = useState<ProposedAction | null>(null);
   const [running, setRunning] = useState(false);
+  const [available, setAvailable] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+
+  // Only offer the assistant when an AI provider is actually configured.
+  useEffect(() => {
+    fetchSettings()
+      .then((s) => setAvailable(s.ai_configured))
+      .catch(() => setAvailable(false));
+  }, []);
 
   useEffect(() => {
     if (open) endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -76,6 +85,8 @@ export default function AssistantWidget() {
       setRunning(false);
     }
   }
+
+  if (!available) return null;
 
   if (!open) {
     return (

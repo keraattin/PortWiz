@@ -759,6 +759,7 @@ export interface AiProviderInfo {
   default_model: string;
   needs_api_key: boolean;
   needs_base_url: boolean;
+  console_url: string;
 }
 
 export function fetchAiProviders(): Promise<AiProviderInfo[]> {

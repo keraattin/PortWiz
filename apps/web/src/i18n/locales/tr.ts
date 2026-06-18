@@ -448,6 +448,7 @@ export const tr: Partial<Record<TKey, string>> = {
     "ör. yerel bir runtime için http://localhost:1234/v1 (LM Studio, vLLM, llama.cpp) veya bir sağlayıcı proxy'si.",
   "settings.compat.model": "Model",
   "settings.compat.apiKey": "API anahtarı",
+  "settings.getApiKey": "API anahtarını al →",
   "settings.ai.ollamaLocal": "Ollama (yerel)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Yok",

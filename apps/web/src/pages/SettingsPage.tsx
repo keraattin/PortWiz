@@ -321,6 +321,16 @@ export default function SettingsPage() {
                   onChange={(e) => set("anthropic_api_key", e.target.value)}
                 />
               </FormField>
+              {currentProvider.console_url && (
+                <a
+                  href={currentProvider.console_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                >
+                  {t("settings.getApiKey")}
+                </a>
+              )}
             </>
           )}
 
@@ -354,6 +364,16 @@ export default function SettingsPage() {
                     onChange={(e) => set("compat_api_key", e.target.value)}
                   />
                 </FormField>
+              )}
+              {currentProvider.needs_api_key && currentProvider.console_url && (
+                <a
+                  href={currentProvider.console_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                >
+                  {t("settings.getApiKey")}
+                </a>
               )}
             </>
           )}

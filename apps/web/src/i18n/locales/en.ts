@@ -446,6 +446,7 @@ export const en = {
     "e.g. http://localhost:1234/v1 for a local runtime (LM Studio, vLLM, llama.cpp), or a provider proxy.",
   "settings.compat.model": "Model",
   "settings.compat.apiKey": "API key",
+  "settings.getApiKey": "Get your API key →",
   "settings.ai.ollamaLocal": "Ollama (local)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "None",

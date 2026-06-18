@@ -450,6 +450,7 @@ export const pt: Partial<Record<TKey, string>> = {
     "ex.: http://localhost:1234/v1 para um runtime local (LM Studio, vLLM, llama.cpp), ou um proxy de provedor.",
   "settings.compat.model": "Modelo",
   "settings.compat.apiKey": "Chave de API",
+  "settings.getApiKey": "Obter sua chave de API →",
   "settings.ai.ollamaLocal": "Ollama (local)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Nenhum",
