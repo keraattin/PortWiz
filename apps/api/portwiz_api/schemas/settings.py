@@ -48,6 +48,7 @@ class AiProviderInfo(BaseModel):
     default_model: str
     needs_api_key: bool
     needs_base_url: bool
+    console_url: str
 
 
 class TestResult(BaseModel):

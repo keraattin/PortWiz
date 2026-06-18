@@ -238,6 +238,7 @@ class ProviderInfo:
     default_model: str = ""
     needs_api_key: bool = False
     needs_base_url: bool = False  # whether the base URL is user-editable in the UI
+    console_url: str = ""  # provider's API-keys page, for a "get your key" link
 
 
 # Claude and Ollama stay first-class, dedicated options; everything else is a
@@ -259,6 +260,7 @@ PROVIDER_REGISTRY: list[ProviderInfo] = [
         "anthropic",
         default_model="claude-sonnet-4-6",
         needs_api_key=True,
+        console_url="https://console.anthropic.com/settings/keys",
     ),
     ProviderInfo(
         "openai",
@@ -267,6 +269,7 @@ PROVIDER_REGISTRY: list[ProviderInfo] = [
         "https://api.openai.com/v1",
         "gpt-4o-mini",
         needs_api_key=True,
+        console_url="https://platform.openai.com/api-keys",
     ),
     ProviderInfo(
         "gemini",
@@ -275,6 +278,7 @@ PROVIDER_REGISTRY: list[ProviderInfo] = [
         "https://generativelanguage.googleapis.com/v1beta/openai",
         "gemini-2.0-flash",
         needs_api_key=True,
+        console_url="https://aistudio.google.com/apikey",
     ),
     ProviderInfo(
         "mistral",
@@ -283,6 +287,7 @@ PROVIDER_REGISTRY: list[ProviderInfo] = [
         "https://api.mistral.ai/v1",
         "mistral-small-latest",
         needs_api_key=True,
+        console_url="https://console.mistral.ai/api-keys",
     ),
     ProviderInfo(
         "groq",
@@ -291,6 +296,7 @@ PROVIDER_REGISTRY: list[ProviderInfo] = [
         "https://api.groq.com/openai/v1",
         "llama-3.3-70b-versatile",
         needs_api_key=True,
+        console_url="https://console.groq.com/keys",
     ),
     ProviderInfo(
         "openrouter",
@@ -299,6 +305,7 @@ PROVIDER_REGISTRY: list[ProviderInfo] = [
         "https://openrouter.ai/api/v1",
         "openai/gpt-4o-mini",
         needs_api_key=True,
+        console_url="https://openrouter.ai/keys",
     ),
     ProviderInfo(
         "deepseek",
@@ -307,6 +314,7 @@ PROVIDER_REGISTRY: list[ProviderInfo] = [
         "https://api.deepseek.com/v1",
         "deepseek-chat",
         needs_api_key=True,
+        console_url="https://platform.deepseek.com/api_keys",
     ),
     ProviderInfo(
         "custom",

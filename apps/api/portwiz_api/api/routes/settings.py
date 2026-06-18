@@ -125,6 +125,7 @@ async def get_ai_providers(_: User = Depends(AdminDep)) -> list[AiProviderInfo]:
             default_model=p.default_model,
             needs_api_key=p.needs_api_key,
             needs_base_url=p.needs_base_url,
+            console_url=p.console_url,
         )
         for p in PROVIDER_REGISTRY
     ]
