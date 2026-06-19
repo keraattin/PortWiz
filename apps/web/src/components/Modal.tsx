@@ -24,12 +24,12 @@ export default function Modal({ open, onClose, title, children, wide }: ModalPro
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 sm:p-8"
+      className="pw-fade-in fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 sm:p-8"
       onClick={onClose}
       role="presentation"
     >
       <div
-        className={`w-full ${wide ? "max-w-4xl" : "max-w-lg"} rounded-2xl border border-slate-800 bg-slate-900 shadow-xl`}
+        className={`pw-scale-in w-full ${wide ? "max-w-4xl" : "max-w-lg"} rounded-2xl border border-slate-800 bg-slate-900 shadow-xl`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
