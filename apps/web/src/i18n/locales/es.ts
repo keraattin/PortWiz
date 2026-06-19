@@ -22,6 +22,7 @@ export const es: Partial<Record<TKey, string>> = {
   "chrome.switchToLight": "Cambiar al modo claro",
   "chrome.switchToDark": "Cambiar al modo oscuro",
   "chrome.language": "Idioma",
+  "chrome.toggleMenu": "Alternar menú",
 
   // Common actions / labels
   "common.add": "Añadir",

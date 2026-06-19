@@ -22,6 +22,7 @@ export const en = {
   "chrome.switchToLight": "Switch to light mode",
   "chrome.switchToDark": "Switch to dark mode",
   "chrome.language": "Language",
+  "chrome.toggleMenu": "Toggle menu",
 
   // Common actions / labels
   "common.add": "Add",
