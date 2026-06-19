@@ -37,6 +37,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "common.loading": "Carregando…",
   "common.noData": "Ainda sem dados",
   "common.error": "Algo deu errado",
+  "common.search": "Pesquisar…",
 
   // Dashboard
   "dashboard.apiStatus": "Status da API:",

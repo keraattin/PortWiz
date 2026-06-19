@@ -37,6 +37,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "common.loading": "Yükleniyor…",
   "common.noData": "Henüz veri yok",
   "common.error": "Bir şeyler ters gitti",
+  "common.search": "Ara…",
 
   // Dashboard
   "dashboard.apiStatus": "API durumu:",

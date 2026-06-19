@@ -11,6 +11,7 @@ import { useAuth } from "../auth/AuthContext";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
 import RoleMatrix from "../components/RoleMatrix";
+import SearchInput from "../components/SearchInput";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -42,7 +43,14 @@ export default function UsersPage() {
   const [users, setUsers] = useState<CurrentUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const usersPage = usePagination(users, 15);
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filteredUsers = q
+    ? users.filter((u) =>
+        [u.email, u.full_name ?? "", u.role].some((v) => v.toLowerCase().includes(q)),
+      )
+    : users;
+  const usersPage = usePagination(filteredUsers, 15);
 
   const [addOpen, setAddOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -142,6 +150,18 @@ export default function UsersPage() {
         <p className="text-sm text-red-400">{error}</p>
       )}
 
+      {users.length > 0 && (
+        <div className="flex justify-end">
+          <SearchInput
+            value={query}
+            onChange={(v) => {
+              setQuery(v);
+              usersPage.setPage(0);
+            }}
+          />
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
@@ -164,6 +184,12 @@ export default function UsersPage() {
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={5}>
                   {t("users.empty")}
+                </td>
+              </tr>
+            ) : filteredUsers.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={5}>
+                  {t("common.noData")}
                 </td>
               </tr>
             ) : (

@@ -21,6 +21,7 @@ import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -70,8 +71,7 @@ export default function AssetsPage() {
   const [syncReport, setSyncReport] = useState<AssetSyncReport | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
-
-  const assetsPage = usePagination(assets, 15);
+  const [query, setQuery] = useState("");
 
   async function reload() {
     setLoading(true);
@@ -95,6 +95,15 @@ export default function AssetsPage() {
     id ? (vlans.find((v) => v.id === id)?.name ?? "-") : "-";
   const ownerEmail = (id: string | null) =>
     id ? (users.find((u) => u.id === id)?.email ?? "-") : "-";
+
+  const q = query.trim().toLowerCase();
+  const filteredAssets = q
+    ? assets.filter((a) =>
+        [a.ip, a.hostname ?? "", vlanName(a.vlan_id), ownerEmail(a.owner_id), a.criticality, a.data_sensitivity]
+          .some((v) => v.toLowerCase().includes(q)),
+      )
+    : assets;
+  const assetsPage = usePagination(filteredAssets, 15);
 
   function openAdd() {
     setError(null);
@@ -303,6 +312,18 @@ export default function AssetsPage() {
       </section>
       )}
 
+      {assets.length > 0 && (
+        <div className="flex justify-end">
+          <SearchInput
+            value={query}
+            onChange={(v) => {
+              setQuery(v);
+              assetsPage.setPage(0);
+            }}
+          />
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
@@ -339,6 +360,12 @@ export default function AssetsPage() {
                       {t("assets.orImport")}
                     </>
                   )}
+                </td>
+              </tr>
+            ) : filteredAssets.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
+                  {t("common.noData")}
                 </td>
               </tr>
             ) : (

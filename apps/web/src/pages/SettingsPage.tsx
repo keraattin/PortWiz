@@ -134,6 +134,7 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"ai" | "email" | "jira" | "netbox">("ai");
 
   const [aiResult, setAiResult] = useState<TestResult | null>(null);
   const [emailResult, setEmailResult] = useState<TestResult | null>(null);
@@ -265,8 +266,24 @@ export default function SettingsPage() {
         <p className="text-sm text-slate-500">{t("settings.adminSubtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* AI */}
+      <div className="flex flex-wrap gap-1 border-b border-slate-800">
+        {(["ai", "email", "jira", "netbox"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`-mb-px rounded-t-lg border-b-2 px-4 py-2 text-sm ${
+              activeTab === tab
+                ? "border-emerald-500 text-emerald-400"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            {t(`settings.section.${tab}` as TKey)}
+          </button>
+        ))}
+      </div>
+
+      <div className="max-w-2xl">
+        {activeTab === "ai" && (
         <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.ai.title")}</h3>
           <FormField label={t("settings.ai.provider")} hint={t("settings.ai.providerHint")}>
@@ -407,8 +424,9 @@ export default function SettingsPage() {
           </div>
           <TestRow result={aiResult} />
         </section>
+        )}
 
-        {/* Email */}
+        {activeTab === "email" && (
         <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.email.title")}</h3>
           <Toggle
@@ -505,8 +523,9 @@ export default function SettingsPage() {
           </div>
           <TestRow result={emailResult} />
         </section>
+        )}
 
-        {/* Jira */}
+        {activeTab === "jira" && (
         <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.jira.title")}</h3>
           <Toggle
@@ -570,8 +589,9 @@ export default function SettingsPage() {
           </div>
           <TestRow result={jiraResult} />
         </section>
+        )}
 
-        {/* NetBox */}
+        {activeTab === "netbox" && (
         <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.netbox.title")}</h3>
           <Toggle
@@ -619,6 +639,7 @@ export default function SettingsPage() {
           </div>
           <TestRow result={netboxResult} />
         </section>
+        )}
       </div>
     </div>
   );

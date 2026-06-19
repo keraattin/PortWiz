@@ -37,6 +37,7 @@ export const en = {
   "common.loading": "Loading…",
   "common.noData": "No data yet",
   "common.error": "Something went wrong",
+  "common.search": "Search…",
 
   // Dashboard
   "dashboard.apiStatus": "API status:",
