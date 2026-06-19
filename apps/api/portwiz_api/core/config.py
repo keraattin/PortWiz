@@ -77,10 +77,14 @@ class Settings(BaseSettings):
 
     # Jira integration (issue tracker). Disabled unless fully configured.
     jira_enabled: bool = False
+    jira_deployment: str = "cloud"  # cloud | server (Server/Data Center, on-prem)
     jira_url: str | None = None  # e.g. https://yourorg.atlassian.net
-    jira_email: str | None = None
-    jira_api_token: str | None = None
+    jira_email: str | None = None  # cloud only; basic auth identity
+    jira_api_token: str | None = None  # cloud API token, or server Personal Access Token
     jira_project_key: str = "PORT"
+    jira_issue_type: str = "Task"
+    jira_default_assignee: str | None = None  # accountId (cloud) or username (server)
+    jira_labels: str = ""  # comma-separated labels added to every created issue
 
     # NetBox (IPAM) inventory source. Disabled unless fully configured.
     netbox_enabled: bool = False

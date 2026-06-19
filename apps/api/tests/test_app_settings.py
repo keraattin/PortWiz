@@ -90,6 +90,57 @@ async def test_update_config_keeps_existing_secret_on_blank(client, admin_header
     assert cfg["jira_enabled"] is True
 
 
+async def test_jira_deepening_fields_round_trip(client, admin_headers) -> None:
+    resp = await client.patch(
+        "/api/v1/settings/config",
+        json={
+            "jira_enabled": True,
+            "jira_deployment": "server",
+            "jira_url": "https://jira.onprem.local",
+            "jira_api_token": "pat-token",
+            "jira_issue_type": "Incident",
+            "jira_default_assignee": "jsmith",
+            "jira_labels": "portwiz,security",
+        },
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["jira_deployment"] == "server"
+    assert body["jira_issue_type"] == "Incident"
+    assert body["jira_default_assignee"] == "jsmith"
+    assert body["jira_labels"] == "portwiz,security"
+
+    # Server/DC needs no email, so the integration counts as configured.
+    status = (await client.get("/api/v1/settings", headers=admin_headers)).json()
+    assert status["jira_deployment"] == "server"
+    assert status["jira_configured"] is True
+
+
+async def test_jira_cloud_needs_email_to_configure(client, admin_headers) -> None:
+    # Cloud without an email is not "configured" even with url + token.
+    await client.patch(
+        "/api/v1/settings/config",
+        json={
+            "jira_enabled": True,
+            "jira_deployment": "cloud",
+            "jira_url": "https://acme.atlassian.net",
+            "jira_api_token": "cloud-token",
+        },
+        headers=admin_headers,
+    )
+    status = (await client.get("/api/v1/settings", headers=admin_headers)).json()
+    assert status["jira_configured"] is False
+
+    await client.patch(
+        "/api/v1/settings/config",
+        json={"jira_email": "ops@acme.io"},
+        headers=admin_headers,
+    )
+    status = (await client.get("/api/v1/settings", headers=admin_headers)).json()
+    assert status["jira_configured"] is True
+
+
 async def test_compat_secret_masked(client, admin_headers) -> None:
     resp = await client.patch(
         "/api/v1/settings/config",

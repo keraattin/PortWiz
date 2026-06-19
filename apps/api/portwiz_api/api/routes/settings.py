@@ -60,9 +60,13 @@ def _config_from(s: Settings) -> SettingsConfig:
         smtp_password_set=bool(s.smtp_password),
         notification_recipients=list(s.notification_recipients),
         jira_enabled=s.jira_enabled,
+        jira_deployment=s.jira_deployment,
         jira_url=s.jira_url,
         jira_email=s.jira_email,
         jira_project_key=s.jira_project_key,
+        jira_issue_type=s.jira_issue_type,
+        jira_default_assignee=s.jira_default_assignee,
+        jira_labels=s.jira_labels,
         jira_api_token_set=bool(s.jira_api_token),
         netbox_enabled=s.netbox_enabled,
         netbox_url=s.netbox_url,
@@ -87,8 +91,12 @@ async def get_settings_status(
         ai_model = ""
     # "configured" means a real provider would be built (keys/URLs present).
     ai_configured = build_ai_provider(s).name != "none"
+    # Cloud needs an email (basic auth); Server/DC uses a bearer token only.
     jira_configured = bool(
-        s.jira_enabled and s.jira_url and s.jira_email and s.jira_api_token
+        s.jira_enabled
+        and s.jira_url
+        and s.jira_api_token
+        and (s.jira_deployment != "cloud" or s.jira_email)
     )
     netbox_configured = bool(s.netbox_enabled and s.netbox_url and s.netbox_token)
     return SettingsStatus(
@@ -104,6 +112,7 @@ async def get_settings_status(
         smtp_from=s.smtp_from,
         email_recipients=list(s.notification_recipients),
         jira_enabled=s.jira_enabled,
+        jira_deployment=s.jira_deployment,
         jira_url=s.jira_url,
         jira_project_key=s.jira_project_key,
         jira_configured=jira_configured,

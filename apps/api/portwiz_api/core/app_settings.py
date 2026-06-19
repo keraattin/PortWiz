@@ -41,10 +41,14 @@ EDITABLE_KEYS: list[str] = [
     "notification_recipients",
     # Jira
     "jira_enabled",
+    "jira_deployment",
     "jira_url",
     "jira_email",
     "jira_api_token",
     "jira_project_key",
+    "jira_issue_type",
+    "jira_default_assignee",
+    "jira_labels",
     # NetBox
     "netbox_enabled",
     "netbox_url",

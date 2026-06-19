@@ -28,6 +28,7 @@ class SettingsStatus(BaseModel):
 
     # Jira
     jira_enabled: bool
+    jira_deployment: str
     jira_url: str | None
     jira_project_key: str
     jira_configured: bool
@@ -83,9 +84,13 @@ class SettingsConfig(BaseModel):
     notification_recipients: list[str]
 
     jira_enabled: bool
+    jira_deployment: str
     jira_url: str | None
     jira_email: str | None
     jira_project_key: str
+    jira_issue_type: str
+    jira_default_assignee: str | None
+    jira_labels: str
     jira_api_token_set: bool
 
     netbox_enabled: bool
@@ -115,10 +120,14 @@ class SettingsConfigUpdate(BaseModel):
     notification_recipients: list[str] | None = None
 
     jira_enabled: bool | None = None
+    jira_deployment: str | None = None
     jira_url: str | None = None
     jira_email: str | None = None
     jira_api_token: str | None = None
     jira_project_key: str | None = None
+    jira_issue_type: str | None = None
+    jira_default_assignee: str | None = None
+    jira_labels: str | None = None
 
     netbox_enabled: bool | None = None
     netbox_url: str | None = None
