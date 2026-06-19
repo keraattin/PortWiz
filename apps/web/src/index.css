@@ -93,3 +93,71 @@
 .light select {
   background-color: #ffffff;
 }
+
+/*
+ * Interaction & depth polish (Group D visual pass).
+ *
+ * App-wide, restrained refinements rather than per-page styling: smooth hover
+ * transitions, a single keyboard-focus ring everywhere, a table-row hover
+ * affordance, and a quieter theme-aware scrollbar. All theme-aware so dark and
+ * light stay coherent. Tuned to feel calm, not animated, for a compliance tool.
+ */
+
+/* Uniform, subtle transitions on interactive surfaces so state changes (hover,
+ * focus, and the dark/light switch itself) feel intentional rather than abrupt. */
+button,
+a,
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Keyboard focus: one emerald ring on clickable controls that otherwise show
+ * none. Mouse clicks stay clean (:focus-visible, not :focus). */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--color-emerald-500, #10b981);
+  outline-offset: 2px;
+}
+
+/* Form fields already shift their border on focus; add a soft ring to match. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(16 185 129 / 0.25);
+}
+
+/* Data table rows lift on hover for easier line tracking. Scoped to the row
+ * surface class every table uses, so non-data tables are untouched. */
+tbody tr.bg-slate-950:hover {
+  background-color: var(--color-slate-900);
+}
+.light tbody tr.bg-slate-950:hover {
+  background-color: #f8fafc;
+}
+
+/* Quieter, theme-aware scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-slate-700) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-slate-700);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-slate-600);
+}
