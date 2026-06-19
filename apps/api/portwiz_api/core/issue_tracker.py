@@ -51,33 +51,84 @@ def _adf(text: str) -> dict[str, Any]:
 
 
 class JiraTracker:
-    def __init__(self, base_url: str, email: str, token: str, project_key: str) -> None:
+    """Talks to either Jira Cloud or Jira Server/Data Center (on-prem).
+
+    The two products diverge in ways that matter to every call, so the
+    deployment is resolved once and drives auth, REST version, the description
+    format, and the assignee field shape:
+
+    * Cloud   -> REST v3, HTTP basic auth (email + API token), ADF description,
+                 assignee by ``accountId``.
+    * Server  -> REST v2, bearer Personal Access Token, plain-text description,
+                 assignee by ``name`` (username).
+    """
+
+    def __init__(
+        self,
+        base_url: str,
+        token: str,
+        *,
+        deployment: str = "cloud",
+        email: str | None = None,
+        project_key: str = "PORT",
+        issue_type: str = "Task",
+        default_assignee: str | None = None,
+        labels: str = "",
+    ) -> None:
         self._base = base_url.rstrip("/")
-        self._auth = (email, token)
+        self._cloud = deployment != "server"
+        self._token = token
+        self._email = email
         self._project = project_key
+        self._issue_type = issue_type or "Task"
+        self._assignee = default_assignee or None
+        self._labels = [x.strip() for x in (labels or "").split(",") if x.strip()]
+
+    @property
+    def _api(self) -> str:
+        return "3" if self._cloud else "2"
+
+    def _client(self) -> httpx.AsyncClient:
+        if self._cloud:
+            return httpx.AsyncClient(timeout=15, auth=(self._email or "", self._token))
+        # Server/Data Center authenticates a Personal Access Token as a bearer.
+        return httpx.AsyncClient(
+            timeout=15, headers={"Authorization": f"Bearer {self._token}"}
+        )
+
+    def _describe(self, text: str) -> Any:
+        # Cloud v3 expects Atlassian Document Format; Server v2 takes plain text.
+        return _adf(text) if self._cloud else (text or "")
+
+    def _assignee_field(self) -> dict[str, str] | None:
+        if not self._assignee:
+            return None
+        return {"accountId": self._assignee} if self._cloud else {"name": self._assignee}
 
     async def create_issue(self, summary: str, description: str) -> str | None:
-        payload = {
-            "fields": {
-                "project": {"key": self._project},
-                "summary": summary[:255],
-                "issuetype": {"name": "Task"},
-                "description": _adf(description),
-            }
+        fields: dict[str, Any] = {
+            "project": {"key": self._project},
+            "summary": summary[:255],
+            "issuetype": {"name": self._issue_type},
+            "description": self._describe(description),
         }
-        async with httpx.AsyncClient(timeout=15) as client:
+        assignee = self._assignee_field()
+        if assignee is not None:
+            fields["assignee"] = assignee
+        if self._labels:
+            fields["labels"] = self._labels
+        async with self._client() as client:
             resp = await client.post(
-                f"{self._base}/rest/api/3/issue", auth=self._auth, json=payload
+                f"{self._base}/rest/api/{self._api}/issue", json={"fields": fields}
             )
             resp.raise_for_status()
             return resp.json().get("key")
 
     async def get_status(self, key: str) -> str | None:
-        async with httpx.AsyncClient(timeout=15) as client:
+        async with self._client() as client:
             resp = await client.get(
-                f"{self._base}/rest/api/3/issue/{key}",
+                f"{self._base}/rest/api/{self._api}/issue/{key}",
                 params={"fields": "status"},
-                auth=self._auth,
             )
             resp.raise_for_status()
             return resp.json().get("fields", {}).get("status", {}).get("name")
@@ -85,8 +136,8 @@ class JiraTracker:
     async def verify(self) -> tuple[bool, str]:
         """Check connectivity and credentials without creating an issue."""
         try:
-            async with httpx.AsyncClient(timeout=15) as client:
-                resp = await client.get(f"{self._base}/rest/api/3/myself", auth=self._auth)
+            async with self._client() as client:
+                resp = await client.get(f"{self._base}/rest/api/{self._api}/myself")
                 resp.raise_for_status()
                 name = resp.json().get("displayName", "unknown")
                 return True, f"Connected to Jira as {name}"
@@ -95,15 +146,24 @@ class JiraTracker:
 
 
 def build_issue_tracker(settings) -> IssueTracker:
+    # Cloud needs an email for basic auth; Server/DC only needs the bearer token.
+    cloud = settings.jira_deployment != "server"
     if not (
         settings.jira_enabled
         and settings.jira_url
-        and settings.jira_email
         and settings.jira_api_token
+        and (not cloud or settings.jira_email)
     ):
         return NullTracker()
     return JiraTracker(
-        settings.jira_url, settings.jira_email, settings.jira_api_token, settings.jira_project_key
+        settings.jira_url,
+        settings.jira_api_token,
+        deployment=settings.jira_deployment,
+        email=settings.jira_email,
+        project_key=settings.jira_project_key,
+        issue_type=settings.jira_issue_type,
+        default_assignee=settings.jira_default_assignee,
+        labels=settings.jira_labels,
     )
 
 
