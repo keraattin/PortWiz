@@ -45,6 +45,15 @@ const SCHEDULE_CRON: Record<Exclude<Schedule, "advanced">, string> = {
   monthly: "0 2 1 * *",
 };
 
+// Common port selections so users rarely need the raw "ports" syntax.
+const PORT_PRESETS = ["top1000", "full", "web", "custom"] as const;
+type PortPreset = (typeof PORT_PRESETS)[number];
+const PRESET_PORTS: Record<Exclude<PortPreset, "custom">, string> = {
+  top1000: "top-1000",
+  full: "1-65535",
+  web: "80,443,8080,8443",
+};
+
 const STATUS_BADGE: Record<ScanRunStatus, string> = {
   pending: "bg-slate-700 text-slate-300",
   running: "bg-sky-900 text-sky-300",
@@ -85,7 +94,8 @@ export default function ScansPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState("");
   const [targets, setTargets] = useState("");
-  const [ports, setPorts] = useState("top-1000");
+  const [portsPreset, setPortsPreset] = useState<PortPreset>("top1000");
+  const [ports, setPorts] = useState("");
   const [segment, setSegment] = useState("");
   const [framework, setFramework] = useState<ComplianceFramework | "">("");
   const [schedule, setSchedule] = useState<Schedule>("off");
@@ -95,6 +105,8 @@ export default function ScansPage() {
 
   // The cron actually submitted: a preset, the raw field (advanced), or none.
   const effectiveCron = schedule === "advanced" ? cron.trim() : SCHEDULE_CRON[schedule];
+  const effectivePorts =
+    portsPreset === "custom" ? ports.trim() || "top-1000" : PRESET_PORTS[portsPreset];
 
   async function reload() {
     try {
@@ -117,7 +129,8 @@ export default function ScansPage() {
     setError(null);
     setName("");
     setTargets("");
-    setPorts("top-1000");
+    setPortsPreset("top1000");
+    setPorts("");
     setSegment("");
     setFramework("");
     setSchedule("off");
@@ -134,7 +147,7 @@ export default function ScansPage() {
       await createScanProfile({
         name,
         targets: parseTargets(targets),
-        ports,
+        ports: effectivePorts,
         scan_type: scanType,
         service_detection: serviceDetection,
         segment: segment || null,
@@ -363,13 +376,31 @@ export default function ScansPage() {
               required
             />
           </FormField>
-          <FormField label={t("scans.f.ports")} hint={t("scans.f.portsHint")}>
-            <input
-              className={inputClass}
-              placeholder="top-1000"
-              value={ports}
-              onChange={(e) => setPorts(e.target.value)}
-            />
+          <FormField
+            label={t("scans.f.ports")}
+            hint={portsPreset === "custom" ? t("scans.f.portsHint") : undefined}
+          >
+            <div className="space-y-2">
+              <select
+                className={inputClass}
+                value={portsPreset}
+                onChange={(e) => setPortsPreset(e.target.value as PortPreset)}
+              >
+                {PORT_PRESETS.map((p) => (
+                  <option key={p} value={p}>
+                    {t(`scans.ports.${p}` as TKey)}
+                  </option>
+                ))}
+              </select>
+              {portsPreset === "custom" && (
+                <input
+                  className={inputClass}
+                  placeholder="top-1000"
+                  value={ports}
+                  onChange={(e) => setPorts(e.target.value)}
+                />
+              )}
+            </div>
           </FormField>
           <FormField label={t("scans.f.segment")} hint={t("scans.f.segmentHint")}>
             <input

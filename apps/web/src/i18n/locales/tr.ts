@@ -373,6 +373,10 @@ export const tr: Partial<Record<TKey, string>> = {
   "scans.f.cron": "Zamanlama (cron)",
   "scans.f.cronHint":
     "İsteğe bağlı. Otomatik çalıştırmak için cron ifadesi, ör. 0 2 * * * = her gün 02:00.",
+  "scans.ports.top1000": "İlk 1000 port (önerilen)",
+  "scans.ports.full": "Tüm portlar (1-65535)",
+  "scans.ports.web": "Yaygın web (80, 443, 8080, 8443)",
+  "scans.ports.custom": "Özel…",
   "scans.f.schedule": "Zamanlama",
   "scans.f.scheduleHint": "Otomatik çalışma sıklığı. Saatler sunucunun yerel saatidir.",
   "scans.schedule.off": "Kapalı (elle çalıştır)",

@@ -374,6 +374,10 @@ export const pt: Partial<Record<TKey, string>> = {
   "scans.f.cron": "Agendamento (cron)",
   "scans.f.cronHint":
     "Opcional. Expressão cron para executar automaticamente, ex.: 0 2 * * * = todo dia às 02:00.",
+  "scans.ports.top1000": "Top 1000 portas (recomendado)",
+  "scans.ports.full": "Todas as portas (1-65535)",
+  "scans.ports.web": "Web comum (80, 443, 8080, 8443)",
+  "scans.ports.custom": "Personalizado…",
   "scans.f.schedule": "Agendamento",
   "scans.f.scheduleHint": "Com que frequência executar automaticamente. Os horários são o horário local do servidor.",
   "scans.schedule.off": "Desligado (manual)",

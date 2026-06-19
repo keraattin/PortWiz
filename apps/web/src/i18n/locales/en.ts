@@ -371,6 +371,10 @@ export const en = {
   "scans.f.cron": "Schedule (cron)",
   "scans.f.cronHint":
     "Optional. Cron expression to run automatically, e.g. 0 2 * * * = every day at 02:00.",
+  "scans.ports.top1000": "Top 1000 ports (recommended)",
+  "scans.ports.full": "All ports (1-65535)",
+  "scans.ports.web": "Common web (80, 443, 8080, 8443)",
+  "scans.ports.custom": "Custom…",
   "scans.f.schedule": "Schedule",
   "scans.f.scheduleHint": "How often to run automatically. Times are the server's local time.",
   "scans.schedule.off": "Off (run manually)",
