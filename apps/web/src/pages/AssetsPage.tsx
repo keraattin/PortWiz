@@ -20,6 +20,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
+import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
 import { useToast } from "../components/Toast";
@@ -181,20 +182,20 @@ export default function AssetsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-200">{t("assets.title")}</h2>
-          <p className="text-sm text-slate-500">{t("assets.subtitle")}</p>
-        </div>
-        {canWrite && (
-          <button
-            onClick={openAdd}
-            className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-          >
-            {t("assets.add")}
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title={t("assets.title")}
+        subtitle={t("assets.subtitle")}
+        actions={
+          canWrite && (
+            <button
+              onClick={openAdd}
+              className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              {t("assets.add")}
+            </button>
+          )
+        }
+      />
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 

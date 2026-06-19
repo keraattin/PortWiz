@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
+import PageHeader from "../components/PageHeader";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -163,20 +164,20 @@ export default function VlansPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-200">{t("vlans.title")}</h2>
-          <p className="text-sm text-slate-500">{t("vlans.subtitle")}</p>
-        </div>
-        {canWrite && (
-          <button
-            onClick={openAddVlan}
-            className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-          >
-            {t("vlans.add")}
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title={t("vlans.title")}
+        subtitle={t("vlans.subtitle")}
+        actions={
+          canWrite && (
+            <button
+              onClick={openAddVlan}
+              className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              {t("vlans.add")}
+            </button>
+          )
+        }
+      />
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 

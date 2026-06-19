@@ -17,6 +17,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
+import PageHeader from "../components/PageHeader";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -221,8 +222,7 @@ export default function SettingsPage() {
     if (!status) return <p className="text-sm text-slate-400">{t("common.loading")}</p>;
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-200">{t("settings.title")}</h2>
-        <p className="text-sm text-slate-500">{t("settings.readonlySubtitle")}</p>
+        <PageHeader title={t("settings.title")} subtitle={t("settings.readonlySubtitle")} />
         <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div className={cardClass}>
             <h3 className="font-medium text-slate-100">{t("settings.section.ai")}</h3>
@@ -261,10 +261,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-200">{t("settings.title")}</h2>
-        <p className="text-sm text-slate-500">{t("settings.adminSubtitle")}</p>
-      </div>
+      <PageHeader title={t("settings.title")} subtitle={t("settings.adminSubtitle")} />
 
       <div className="flex flex-wrap gap-1 border-b border-slate-800">
         {(["ai", "email", "jira", "netbox"] as const).map((tab) => (

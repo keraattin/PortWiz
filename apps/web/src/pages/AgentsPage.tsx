@@ -10,6 +10,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Modal from "../components/Modal";
+import PageHeader from "../components/PageHeader";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -120,10 +121,7 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-200">{t("agents.title")}</h2>
-        <p className="text-sm text-slate-500">{t("agents.subtitle")}</p>
-      </div>
+      <PageHeader title={t("agents.title")} subtitle={t("agents.subtitle")} />
 
       {enrolled && (
         <div className="space-y-2 rounded-xl border border-emerald-800 bg-emerald-950/40 p-4">

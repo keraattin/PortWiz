@@ -11,6 +11,7 @@ import {
   updateChangeStatus,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
 import { useToast } from "../components/Toast";
@@ -183,24 +184,22 @@ export default function ChangesPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-200">{t("changes.title")}</h2>
-        <div className="flex items-center gap-2">
-          {STATUS_FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => onFilter(f)}
-              className={`rounded-lg px-3 py-1.5 text-sm capitalize ${
-                statusFilter === f
-                  ? "bg-slate-800 text-emerald-400"
-                  : "text-slate-400 hover:bg-slate-900"
-              }`}
-            >
-              {f === "all" ? t("filters.all") : t(`changeStatus.${f}` as TKey)}
-            </button>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        title={t("changes.title")}
+        actions={STATUS_FILTERS.map((f) => (
+          <button
+            key={f}
+            onClick={() => onFilter(f)}
+            className={`rounded-lg px-3 py-1.5 text-sm capitalize ${
+              statusFilter === f
+                ? "bg-slate-800 text-emerald-400"
+                : "text-slate-400 hover:bg-slate-900"
+            }`}
+          >
+            {f === "all" ? t("filters.all") : t(`changeStatus.${f}` as TKey)}
+          </button>
+        ))}
+      />
 
       <p className="text-sm text-slate-500">{t("changes.subtitle")}</p>
 

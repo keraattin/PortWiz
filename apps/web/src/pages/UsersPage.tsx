@@ -9,6 +9,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Modal from "../components/Modal";
+import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import RoleMatrix from "../components/RoleMatrix";
 import SearchInput from "../components/SearchInput";
@@ -131,20 +132,22 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-200">{t("users.title")}</h2>
-          <p className="text-sm text-slate-500">
+      <PageHeader
+        title={t("users.title")}
+        subtitle={
+          <>
             {t("users.subtitle")}
             {isAdmin && t("users.subtitleAdmin")}
-          </p>
-        </div>
-        {isAdmin && (
-          <button onClick={openAdd} className={`${primaryBtn} whitespace-nowrap`}>
-            {t("users.add")}
-          </button>
-        )}
-      </div>
+          </>
+        }
+        actions={
+          isAdmin && (
+            <button onClick={openAdd} className={`${primaryBtn} whitespace-nowrap`}>
+              {t("users.add")}
+            </button>
+          )
+        }
+      />
 
       {error && !addOpen && editUser === null && (
         <p className="text-sm text-red-400">{error}</p>
