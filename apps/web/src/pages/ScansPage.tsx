@@ -1,17 +1,23 @@
 import { type FormEvent, useEffect, useState } from "react";
 import {
   ApiError,
+  type Asset,
   type ComplianceFramework,
+  type IpRange,
   type Observation,
   type ScanProfile,
   type ScanRun,
   type ScanRunStatus,
   type ScanType,
+  type Vlan,
   createScanProfile,
   deleteScanProfile,
+  listAssets,
+  listIpRanges,
   listRunObservations,
   listScanProfiles,
   listScanRuns,
+  listVlans,
   runScanProfile,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
@@ -76,6 +82,9 @@ export default function ScansPage() {
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [runs, setRuns] = useState<ScanRun[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [vlans, setVlans] = useState<Vlan[]>([]);
+  const [ranges, setRanges] = useState<IpRange[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [selectedRun, setSelectedRun] = useState<ScanRun | null>(null);
@@ -120,7 +129,30 @@ export default function ScansPage() {
 
   useEffect(() => {
     void reload();
+    // Inventory powers the "add from inventory" target picker.
+    Promise.all([listAssets(), listVlans(), listIpRanges()])
+      .then(([a, v, r]) => {
+        setAssets(a);
+        setVlans(v);
+        setRanges(r);
+      })
+      .catch(() => {
+        /* picker just stays empty if inventory can't be loaded */
+      });
   }, []);
+
+  function addTarget(value: string) {
+    if (!value) return;
+    const sep = value.indexOf(":");
+    const kind = value.slice(0, sep);
+    const ref = value.slice(sep + 1);
+    let toAdd: string[] = [];
+    if (kind === "asset" || kind === "range") toAdd = [ref];
+    else if (kind === "vlan") toAdd = ranges.filter((r) => r.vlan_id === ref).map((r) => r.cidr);
+    const merged = parseTargets(targets);
+    for (const item of toAdd) if (!merged.includes(item)) merged.push(item);
+    setTargets(merged.join(", "));
+  }
 
   const profileName = (id: string | null) =>
     id ? (profiles.find((p) => p.id === id)?.name ?? t("scans.deletedProfile")) : t("scans.adhoc");
@@ -368,13 +400,52 @@ export default function ScansPage() {
             />
           </FormField>
           <FormField label={t("scans.f.targets")} hint={t("scans.f.targetsHint")}>
-            <input
-              className={inputClass}
-              placeholder="10.0.0.0/24, 192.168.1.5"
-              value={targets}
-              onChange={(e) => setTargets(e.target.value)}
-              required
-            />
+            <div className="space-y-2">
+              <input
+                className={inputClass}
+                placeholder="10.0.0.0/24, 192.168.1.5"
+                value={targets}
+                onChange={(e) => setTargets(e.target.value)}
+                required
+              />
+              {(assets.length > 0 || vlans.length > 0 || ranges.length > 0) && (
+                <select
+                  className={inputClass}
+                  value=""
+                  onChange={(e) => addTarget(e.target.value)}
+                >
+                  <option value="">{t("scans.f.addFromInventory")}</option>
+                  {assets.length > 0 && (
+                    <optgroup label={t("nav.assets")}>
+                      {assets.map((a) => (
+                        <option key={a.id} value={`asset:${a.ip}`}>
+                          {a.ip}
+                          {a.hostname ? ` (${a.hostname})` : ""}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {vlans.length > 0 && (
+                    <optgroup label={t("nav.vlans")}>
+                      {vlans.map((v) => (
+                        <option key={v.id} value={`vlan:${v.id}`}>
+                          {v.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {ranges.length > 0 && (
+                    <optgroup label={t("ranges.title")}>
+                      {ranges.map((r) => (
+                        <option key={r.id} value={`range:${r.cidr}`}>
+                          {r.cidr}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              )}
+            </div>
           </FormField>
           <FormField
             label={t("scans.f.ports")}

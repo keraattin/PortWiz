@@ -359,6 +359,7 @@ export const en = {
   "scans.f.targets": "Targets",
   "scans.f.targetsHint":
     "IPs or CIDR blocks, separated by commas or spaces. e.g. 10.0.0.0/24, 192.168.1.5",
+  "scans.f.addFromInventory": "Add from inventory…",
   "scans.f.ports": "Ports",
   "scans.f.portsHint":
     "'top-1000' for common ports, a range like 1-1000, or a list like 22,80,443",

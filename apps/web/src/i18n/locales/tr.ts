@@ -361,6 +361,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "scans.f.targets": "Hedefler",
   "scans.f.targetsHint":
     "Virgül veya boşlukla ayrılmış IP'ler ya da CIDR blokları. ör. 10.0.0.0/24, 192.168.1.5",
+  "scans.f.addFromInventory": "Envanterden ekle…",
   "scans.f.ports": "Portlar",
   "scans.f.portsHint":
     "Yaygın portlar için 'top-1000', 1-1000 gibi bir aralık veya 22,80,443 gibi bir liste",

@@ -362,6 +362,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "scans.f.targets": "Cibles",
   "scans.f.targetsHint":
     "IPs ou blocs CIDR, séparés par des virgules ou des espaces. p. ex. 10.0.0.0/24, 192.168.1.5",
+  "scans.f.addFromInventory": "Ajouter depuis l'inventaire…",
   "scans.f.ports": "Ports",
   "scans.f.portsHint":
     "'top-1000' pour les ports courants, une plage comme 1-1000, ou une liste comme 22,80,443",
