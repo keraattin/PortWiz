@@ -32,6 +32,19 @@ const inputClass =
 
 const SCAN_TYPES: ScanType[] = ["connect", "syn", "udp"];
 
+// Friendly scan frequency, compiled to a cron expression so non-technical users
+// never have to write cron. "advanced" reveals a raw cron field.
+const SCHEDULES = ["off", "hourly", "sixHours", "daily", "weekly", "monthly", "advanced"] as const;
+type Schedule = (typeof SCHEDULES)[number];
+const SCHEDULE_CRON: Record<Exclude<Schedule, "advanced">, string> = {
+  off: "",
+  hourly: "0 * * * *",
+  sixHours: "0 */6 * * *",
+  daily: "0 2 * * *",
+  weekly: "0 2 * * 1",
+  monthly: "0 2 1 * *",
+};
+
 const STATUS_BADGE: Record<ScanRunStatus, string> = {
   pending: "bg-slate-700 text-slate-300",
   running: "bg-sky-900 text-sky-300",
@@ -75,9 +88,13 @@ export default function ScansPage() {
   const [ports, setPorts] = useState("top-1000");
   const [segment, setSegment] = useState("");
   const [framework, setFramework] = useState<ComplianceFramework | "">("");
+  const [schedule, setSchedule] = useState<Schedule>("off");
   const [cron, setCron] = useState("");
   const [scanType, setScanType] = useState<ScanType>("connect");
   const [serviceDetection, setServiceDetection] = useState(true);
+
+  // The cron actually submitted: a preset, the raw field (advanced), or none.
+  const effectiveCron = schedule === "advanced" ? cron.trim() : SCHEDULE_CRON[schedule];
 
   async function reload() {
     try {
@@ -103,6 +120,7 @@ export default function ScansPage() {
     setPorts("top-1000");
     setSegment("");
     setFramework("");
+    setSchedule("off");
     setCron("");
     setScanType("connect");
     setServiceDetection(true);
@@ -121,7 +139,7 @@ export default function ScansPage() {
         service_detection: serviceDetection,
         segment: segment || null,
         compliance_framework: framework || null,
-        cron: cron || null,
+        cron: effectiveCron || null,
       });
       setAddOpen(false);
       toast.success(t("scans.added"));
@@ -375,14 +393,29 @@ export default function ScansPage() {
               <option value="nist">NIST</option>
             </select>
           </FormField>
-          <FormField label={t("scans.f.cron")} hint={t("scans.f.cronHint")}>
-            <input
+          <FormField label={t("scans.f.schedule")} hint={t("scans.f.scheduleHint")}>
+            <select
               className={inputClass}
-              placeholder="0 2 * * *"
-              value={cron}
-              onChange={(e) => setCron(e.target.value)}
-            />
+              value={schedule}
+              onChange={(e) => setSchedule(e.target.value as Schedule)}
+            >
+              {SCHEDULES.map((s) => (
+                <option key={s} value={s}>
+                  {t(`scans.schedule.${s}` as TKey)}
+                </option>
+              ))}
+            </select>
           </FormField>
+          {schedule === "advanced" && (
+            <FormField label={t("scans.f.cron")} hint={t("scans.f.cronHint")}>
+              <input
+                className={inputClass}
+                placeholder="0 2 * * *"
+                value={cron}
+                onChange={(e) => setCron(e.target.value)}
+              />
+            </FormField>
+          )}
           <FormField label={t("scans.f.scanType")} hint={t("scans.f.scanTypeHint")}>
             <select
               className={inputClass}

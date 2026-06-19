@@ -374,6 +374,15 @@ export const fr: Partial<Record<TKey, string>> = {
   "scans.f.cron": "Planification (cron)",
   "scans.f.cronHint":
     "Optionnel. Expression cron pour une exécution automatique, p. ex. 0 2 * * * = tous les jours à 02:00.",
+  "scans.f.schedule": "Planification",
+  "scans.f.scheduleHint": "Fréquence d'exécution automatique. Les heures sont à l'heure locale du serveur.",
+  "scans.schedule.off": "Désactivé (manuel)",
+  "scans.schedule.hourly": "Toutes les heures",
+  "scans.schedule.sixHours": "Toutes les 6 heures",
+  "scans.schedule.daily": "Quotidien (02:00)",
+  "scans.schedule.weekly": "Hebdomadaire (lun. 02:00)",
+  "scans.schedule.monthly": "Mensuel (le 1er, 02:00)",
+  "scans.schedule.advanced": "Avancé (cron)",
   "scans.f.scanType": "Type d'analyse",
   "scans.f.scanTypeHint":
     "connect est la valeur par défaut sûre ; syn est plus rapide mais nécessite des privilèges raw-socket.",

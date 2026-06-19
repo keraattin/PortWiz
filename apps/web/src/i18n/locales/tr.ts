@@ -373,6 +373,15 @@ export const tr: Partial<Record<TKey, string>> = {
   "scans.f.cron": "Zamanlama (cron)",
   "scans.f.cronHint":
     "İsteğe bağlı. Otomatik çalıştırmak için cron ifadesi, ör. 0 2 * * * = her gün 02:00.",
+  "scans.f.schedule": "Zamanlama",
+  "scans.f.scheduleHint": "Otomatik çalışma sıklığı. Saatler sunucunun yerel saatidir.",
+  "scans.schedule.off": "Kapalı (elle çalıştır)",
+  "scans.schedule.hourly": "Saatlik",
+  "scans.schedule.sixHours": "6 saatte bir",
+  "scans.schedule.daily": "Günlük (02:00)",
+  "scans.schedule.weekly": "Haftalık (Pzt 02:00)",
+  "scans.schedule.monthly": "Aylık (ayın 1'i, 02:00)",
+  "scans.schedule.advanced": "Gelişmiş (cron)",
   "scans.f.scanType": "Tarama türü",
   "scans.f.scanTypeHint":
     "connect güvenli varsayılandır; syn daha hızlıdır ama ham soket ayrıcalığı gerektirir.",

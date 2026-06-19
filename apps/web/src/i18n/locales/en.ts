@@ -371,6 +371,15 @@ export const en = {
   "scans.f.cron": "Schedule (cron)",
   "scans.f.cronHint":
     "Optional. Cron expression to run automatically, e.g. 0 2 * * * = every day at 02:00.",
+  "scans.f.schedule": "Schedule",
+  "scans.f.scheduleHint": "How often to run automatically. Times are the server's local time.",
+  "scans.schedule.off": "Off (run manually)",
+  "scans.schedule.hourly": "Hourly",
+  "scans.schedule.sixHours": "Every 6 hours",
+  "scans.schedule.daily": "Daily (02:00)",
+  "scans.schedule.weekly": "Weekly (Mon 02:00)",
+  "scans.schedule.monthly": "Monthly (1st, 02:00)",
+  "scans.schedule.advanced": "Advanced (cron)",
   "scans.f.scanType": "Scan type",
   "scans.f.scanTypeHint":
     "connect is the safe default; syn is faster but needs raw-socket privileges.",
