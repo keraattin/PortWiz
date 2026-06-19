@@ -12,6 +12,7 @@ import {
   listScanProfiles,
   verifyAudit,
 } from "../api/client";
+import Pagination from "../components/Pagination";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -43,7 +44,7 @@ export default function CompliancePage() {
   const [chain, setChain] = useState<ChainVerification | null>(null);
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(0);
   const [actionFilter, setActionFilter] = useState("");
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [cadence, setCadence] = useState<ComplianceStatusItem[]>([]);
@@ -58,18 +59,17 @@ export default function CompliancePage() {
     }
   }
 
-  async function loadAudit(reset: boolean) {
+  async function loadAudit(toPage: number) {
     setError(null);
     try {
-      const startOffset = reset ? 0 : offset;
-      const page = await listAudit({
+      const res = await listAudit({
         action: actionFilter || undefined,
         limit: PAGE_SIZE,
-        offset: startOffset,
+        offset: toPage * PAGE_SIZE,
       });
-      setTotal(page.total);
-      setEvents(reset ? page.events : [...events, ...page.events]);
-      setOffset(startOffset + page.events.length);
+      setTotal(res.total);
+      setEvents(res.events);
+      setPage(toPage);
     } catch (e) {
       setError(errorMessage(e));
     }
@@ -77,7 +77,7 @@ export default function CompliancePage() {
 
   useEffect(() => {
     void verify();
-    void loadAudit(true);
+    void loadAudit(0);
     listScanProfiles()
       .then(setProfiles)
       .catch((e) => setError(errorMessage(e)));
@@ -89,7 +89,7 @@ export default function CompliancePage() {
 
   function onFilter(e: FormEvent) {
     e.preventDefault();
-    void loadAudit(true);
+    void loadAudit(0);
   }
 
   async function onDownload(fn: () => Promise<void>) {
@@ -307,17 +307,12 @@ export default function CompliancePage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between text-sm text-slate-500">
-          <span>{t("compliance.showing", { shown: events.length, total })}</span>
-          {events.length < total && (
-            <button
-              onClick={() => loadAudit(false)}
-              className="rounded-lg border border-slate-700 px-3 py-1.5 text-slate-300 hover:bg-slate-800"
-            >
-              {t("compliance.loadMore")}
-            </button>
-          )}
-        </div>
+        <Pagination
+          page={page}
+          pageCount={Math.max(1, Math.ceil(total / PAGE_SIZE))}
+          total={total}
+          onPage={(p) => loadAudit(p)}
+        />
       </section>
     </div>
   );
