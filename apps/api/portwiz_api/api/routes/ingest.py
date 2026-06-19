@@ -30,7 +30,7 @@ from ...core.db import get_session
 from ...core.issue_tracker import IssueTracker, get_issue_tracker, link_changes_to_tracker
 from ...core.notifications import build_notifier, notify_changes
 from ...models.agent import Agent
-from ...models.asset import Asset
+from ...models.asset import Asset, Criticality
 from ...models.scan import Observation, ScanRun, ScanRunStatus
 from ...schemas.scan import ScanResultIn
 from ..deps import get_current_agent
@@ -101,6 +101,18 @@ async def ingest_scan_results(
         ).all()
         asset_map = {ip: asset_id for asset_id, ip in rows}
 
+    # Auto-discovery: a scanned host with open ports that isn't a known asset
+    # becomes a low-criticality asset (with its hostname if reported), so the
+    # inventory reflects what scans actually find.
+    discovered = 0
+    for host in payload.hosts:
+        if host.ip not in asset_map and host.ports:
+            asset = Asset(ip=host.ip, hostname=host.hostname, criticality=Criticality.low)
+            session.add(asset)
+            await session.flush()
+            asset_map[host.ip] = asset.id
+            discovered += 1
+
     count = 0
     # Observations whose deterministic fingerprint is weak but carry a banner;
     # candidates for AI enrichment before change detection runs.
@@ -168,6 +180,7 @@ async def ingest_scan_results(
             "observations": count,
             "status": payload.status,
             "changes": len(changes),
+            "discovered_assets": discovered,
         },
     )
     await session.commit()
@@ -194,4 +207,5 @@ async def ingest_scan_results(
         "observations": count,
         "status": payload.status,
         "changes": len(changes),
+        "discovered_assets": discovered,
     }

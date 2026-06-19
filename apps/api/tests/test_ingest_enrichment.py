@@ -98,6 +98,82 @@ async def test_ingest_enriches_low_confidence_banner(client, admin_headers, db) 
     assert obs.version == "OpenSSH 9.6"
 
 
+def _payload_host(run_id: str, ip: str, hostname: str | None) -> dict:
+    host: dict = {"ip": ip, "ports": [{"port": 80, "protocol": "tcp", "state": "open"}]}
+    if hostname is not None:
+        host["hostname"] = hostname
+    return {
+        "version": 1,
+        "job_id": str(uuid.uuid4()),
+        "scan_run_id": run_id,
+        "agent_id": "a",
+        "started_at": "2026-06-19T10:00:00Z",
+        "finished_at": "2026-06-19T10:05:00Z",
+        "status": "completed",
+        "hosts": [host],
+    }
+
+
+async def test_ingest_auto_creates_discovered_asset(client, admin_headers, db) -> None:
+    from sqlalchemy import select
+
+    from portwiz_api.models.asset import Asset
+
+    token = await _enroll(client, admin_headers)
+    ip = "10.0.0.77"
+    run_id = await _run(client, admin_headers, ip)
+    resp = await client.post(
+        "/api/v1/ingest/scan-results",
+        json=_payload_host(run_id, ip, "web-77"),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 202, resp.text
+    assert resp.json()["discovered_assets"] == 1
+
+    async with db() as session:
+        asset = (
+            await session.execute(select(Asset).where(Asset.ip == ip))
+        ).scalars().first()
+    assert asset is not None
+    assert asset.hostname == "web-77"
+    assert asset.criticality == "low"
+
+
+async def test_ingest_keeps_known_asset(client, admin_headers, db) -> None:
+    from sqlalchemy import func, select
+
+    from portwiz_api.models.asset import Asset
+
+    ip = "10.0.0.78"
+    created = await client.post(
+        "/api/v1/assets", json={"ip": ip, "criticality": "high"}, headers=admin_headers
+    )
+    assert created.status_code == 201, created.text
+
+    token = await _enroll(client, admin_headers)
+    run_id = await _run(client, admin_headers, ip)
+    resp = await client.post(
+        "/api/v1/ingest/scan-results",
+        json=_payload_host(run_id, ip, "should-not-overwrite"),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 202, resp.text
+    assert resp.json()["discovered_assets"] == 0  # already known
+
+    async with db() as session:
+        count = (
+            await session.execute(
+                select(func.count()).select_from(Asset).where(Asset.ip == ip)
+            )
+        ).scalar_one()
+        asset = (
+            await session.execute(select(Asset).where(Asset.ip == ip))
+        ).scalars().first()
+    assert count == 1  # not duplicated
+    assert asset.criticality == "high"  # scan did not change it
+    assert asset.hostname is None  # scan did not overwrite
+
+
 async def test_ingest_without_ai_keeps_raw(client, admin_headers, db) -> None:
     # With no AI provider configured, enrichment is skipped and the banner is
     # stored as-is (no network call attempted).
