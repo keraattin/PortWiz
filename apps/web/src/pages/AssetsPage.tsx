@@ -18,6 +18,7 @@ import {
   syncAssets,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import Button from "../components/Button";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
@@ -187,12 +188,9 @@ export default function AssetsPage() {
         subtitle={t("assets.subtitle")}
         actions={
           canWrite && (
-            <button
-              onClick={openAdd}
-              className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-            >
+            <Button onClick={openAdd} className="whitespace-nowrap">
               {t("assets.add")}
-            </button>
+            </Button>
           )
         }
       />
@@ -231,13 +229,9 @@ export default function AssetsPage() {
             <option value="update">{t("assets.updateExisting")}</option>
             <option value="skip">{t("assets.skipExisting")}</option>
           </select>
-          <button
-            type="submit"
-            disabled={!importFile || importing}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={!importFile || importing}>
             {importing ? t("assets.importing") : t("assets.import")}
-          </button>
+          </Button>
         </form>
         {importError && <p className="text-sm text-red-400">{importError}</p>}
         {importReport && (
@@ -280,13 +274,9 @@ export default function AssetsPage() {
             <span className="text-sm font-medium text-slate-200">{t("assets.syncTitle")}</span>
             <span className="text-xs text-slate-500">{t("assets.syncHint")}</span>
           </div>
-          <button
-            onClick={onSync}
-            disabled={syncing}
-            className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50"
-          >
+          <Button variant="outline" onClick={onSync} disabled={syncing}>
             {syncing ? t("assets.syncing") : t("assets.syncTitle")}
-          </button>
+          </Button>
           {syncError && <p className="text-sm text-red-400">{syncError}</p>}
           {syncReport && (
             <p className="text-sm text-slate-300">
@@ -472,12 +462,7 @@ export default function AssetsPage() {
           </FormField>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
-            <button
-              type="submit"
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-            >
-              {t("assets.add")}
-            </button>
+            <Button type="submit">{t("assets.add")}</Button>
           </div>
         </form>
       </Modal>

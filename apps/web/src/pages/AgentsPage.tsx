@@ -9,6 +9,7 @@ import {
   updateAgent,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import Button from "../components/Button";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import { useToast } from "../components/Toast";
@@ -166,12 +167,9 @@ export default function AgentsPage() {
             value={segment}
             onChange={(e) => setSegment(e.target.value)}
           />
-          <button
-            type="submit"
-            className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-          >
+          <Button type="submit" className="whitespace-nowrap">
             {t("agents.enroll")}
-          </button>
+          </Button>
         </form>
       )}
 
@@ -279,12 +277,7 @@ export default function AgentsPage() {
           <p className="text-xs text-slate-500">{t("agents.f.enabledHint")}</p>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
-            <button
-              type="submit"
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-            >
-              {t("agents.saveChanges")}
-            </button>
+            <Button type="submit">{t("agents.saveChanges")}</Button>
           </div>
         </form>
       </Modal>

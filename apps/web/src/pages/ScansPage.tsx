@@ -21,6 +21,7 @@ import {
   runScanProfile,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import Button from "../components/Button";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
@@ -236,12 +237,9 @@ export default function ScansPage() {
             <p className="text-sm text-slate-500">{t("scans.profilesSubtitle")}</p>
           </div>
           {canWrite && (
-            <button
-              onClick={openAdd}
-              className="whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-            >
+            <Button onClick={openAdd} className="whitespace-nowrap">
               {t("scans.add")}
-            </button>
+            </Button>
           )}
         </div>
 
@@ -541,12 +539,7 @@ export default function ScansPage() {
           </label>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
-            <button
-              type="submit"
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-            >
-              {t("scans.addTitle")}
-            </button>
+            <Button type="submit">{t("scans.addTitle")}</Button>
           </div>
         </form>
       </Modal>
