@@ -140,6 +140,22 @@ class AssetImportReport(BaseModel):
     results: list[AssetImportRowResult]
 
 
+class VLANImportRowResult(BaseModel):
+    row: int
+    name: str | None = None
+    status: str  # created | updated | skipped | error
+    error: str | None = None
+
+
+class VLANImportReport(BaseModel):
+    total: int
+    created: int
+    updated: int
+    skipped: int
+    errors: int
+    results: list[VLANImportRowResult]
+
+
 class AssetSyncReport(BaseModel):
     source: str
     total: int

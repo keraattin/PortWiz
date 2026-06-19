@@ -19,6 +19,7 @@ from ...core.asset_store import upsert_asset
 from ...core.audit import append_audit
 from ...core.db import get_session
 from ...core.inventory_source import InventorySource, get_inventory_source
+from ...core.vlan_import import parse_vlan_file
 from ...models.asset import VLAN, Asset, IPRange
 from ...models.user import User, UserRole
 from ...schemas.asset import (
@@ -32,6 +33,8 @@ from ...schemas.asset import (
     IPRangeRead,
     IPRangeUpdate,
     VLANCreate,
+    VLANImportReport,
+    VLANImportRowResult,
     VLANRead,
     VLANUpdate,
 )
@@ -88,6 +91,106 @@ async def create_vlan(
     await session.commit()
     await session.refresh(vlan)
     return vlan
+
+
+_VLAN_TEMPLATE_CSV = (
+    "name,tag,description\r\n"
+    "DMZ,10,Internet-facing servers\r\n"
+    "Servers,20,Internal application servers\r\n"
+)
+
+
+@vlans_router.get("/import-template")
+async def vlan_import_template(_: User = Depends(get_current_user)) -> Response:
+    """A ready-to-fill CSV with the VLAN import columns and example rows."""
+    return Response(
+        content=_VLAN_TEMPLATE_CSV,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": 'attachment; filename="portwiz-vlans-template.csv"'
+        },
+    )
+
+
+@vlans_router.post("/import", response_model=VLANImportReport)
+async def import_vlans(
+    file: UploadFile = File(...),
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> VLANImportReport:
+    """Bulk-create or update VLANs from a CSV or .xlsx upload, upserting by name.
+
+    A per-row report is returned and one summary event is appended to the audit
+    log. Tags are validated to the 802.1Q range (1-4094)."""
+    content = await file.read()
+    if len(content) > MAX_IMPORT_BYTES:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File too large (max 5 MB)"
+        )
+    try:
+        rows = parse_vlan_file(content, file.filename or "")
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    by_name = {
+        v.name.lower(): v for v in (await session.execute(select(VLAN))).scalars()
+    }
+
+    results: list[VLANImportRowResult] = []
+    created = updated = skipped = errors = 0
+    for parsed in rows:
+        name = parsed.values.get("name")
+        if parsed.error:
+            errors += 1
+            results.append(
+                VLANImportRowResult(row=parsed.row, name=name, status="error", error=parsed.error)
+            )
+            continue
+
+        values = parsed.values
+        fields: dict[str, object] = {"name": values["name"]}
+        if "tag" in values:
+            fields["vlan_tag"] = int(values["tag"])
+        if "description" in values:
+            fields["description"] = values["description"]
+
+        existing = by_name.get(values["name"].lower())
+        if existing is not None:
+            if on_conflict == "skip":
+                skipped += 1
+                results.append(VLANImportRowResult(row=parsed.row, name=name, status="skipped"))
+                continue
+            for key, value in fields.items():
+                setattr(existing, key, value)
+            updated += 1
+            results.append(VLANImportRowResult(row=parsed.row, name=name, status="updated"))
+        else:
+            vlan = VLAN(**fields)
+            session.add(vlan)
+            await session.flush()
+            by_name[values["name"].lower()] = vlan
+            created += 1
+            results.append(VLANImportRowResult(row=parsed.row, name=name, status="created"))
+
+    await append_audit(
+        session,
+        action="vlan.imported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="vlan",
+        target_id=None,
+        payload={"total": len(rows), "created": created, "updated": updated, "errors": errors},
+    )
+    await session.commit()
+    return VLANImportReport(
+        total=len(rows),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        results=results,
+    )
 
 
 @vlans_router.patch("/{vlan_id}", response_model=VLANRead)
