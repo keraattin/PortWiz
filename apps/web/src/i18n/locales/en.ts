@@ -153,6 +153,8 @@ export const en = {
   "vlans.confirmDelete": "Delete this VLAN?",
   "vlans.empty": "No VLANs yet.",
   "vlans.addFirst": "Add your first VLAN",
+  "vlans.bulkImport": "Bulk import",
+  "vlans.bulkImportHint": 'CSV or .xlsx with a "name" column. Optional: tag, description.',
   "vlans.col.name": "Name",
   "vlans.col.tag": "Tag",
   "vlans.col.description": "Description",

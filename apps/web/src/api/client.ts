@@ -301,6 +301,47 @@ export async function importAssets(
   return data as AssetImportReport;
 }
 
+export interface VlanImportRowResult {
+  row: number;
+  name: string | null;
+  status: string; // created | updated | skipped | error
+  error: string | null;
+}
+export interface VlanImportReport {
+  total: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  results: VlanImportRowResult[];
+}
+
+export async function importVlans(
+  file: File,
+  onConflict: "update" | "skip" = "update",
+): Promise<VlanImportReport> {
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_V1}/vlans/import?on_conflict=${onConflict}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    if (res.status === 401) handleUnauthorized();
+    const detail = data && typeof data.detail === "string" ? data.detail : res.statusText;
+    throw new ApiError(res.status, detail);
+  }
+  return data as VlanImportReport;
+}
+
+export async function downloadVlanImportTemplate(): Promise<void> {
+  const res = await authedFetch("/vlans/import-template");
+  triggerDownload(await res.blob(), "portwiz-vlans-template.csv");
+}
+
 // Sync from an external inventory source (NetBox)
 export interface AssetSyncReport {
   source: string;

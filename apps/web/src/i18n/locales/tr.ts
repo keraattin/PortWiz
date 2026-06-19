@@ -156,6 +156,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "vlans.confirmDelete": "Bu VLAN silinsin mi?",
   "vlans.empty": "Henüz VLAN yok.",
   "vlans.addFirst": "İlk VLAN'ını ekle",
+  "vlans.bulkImport": "Toplu içe aktarma",
+  "vlans.bulkImportHint": '"name" sütunu olan CSV veya .xlsx. İsteğe bağlı: tag, description.',
   "vlans.col.name": "Ad",
   "vlans.col.tag": "Etiket",
   "vlans.col.description": "Açıklama",

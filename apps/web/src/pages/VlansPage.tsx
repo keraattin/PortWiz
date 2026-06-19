@@ -3,10 +3,13 @@ import {
   ApiError,
   type IpRange,
   type Vlan,
+  type VlanImportReport,
   createIpRange,
   createVlan,
   deleteIpRange,
   deleteVlan,
+  downloadVlanImportTemplate,
+  importVlans,
   listIpRanges,
   listVlans,
 } from "../api/client";
@@ -42,6 +45,29 @@ export default function VlansPage() {
   const [cidr, setCidr] = useState("");
   const [rangeVlanId, setRangeVlanId] = useState("");
   const [rangeDesc, setRangeDesc] = useState("");
+
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [onConflict, setOnConflict] = useState<"update" | "skip">("update");
+  const [importReport, setImportReport] = useState<VlanImportReport | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+
+  async function onImport(e: FormEvent) {
+    e.preventDefault();
+    if (!importFile) return;
+    setImportError(null);
+    setImportReport(null);
+    setImporting(true);
+    try {
+      const report = await importVlans(importFile, onConflict);
+      setImportReport(report);
+      await reload();
+    } catch (err) {
+      setImportError(errorMessage(err));
+    } finally {
+      setImporting(false);
+    }
+  }
 
   async function reload() {
     setLoading(true);
@@ -153,6 +179,84 @@ export default function VlansPage() {
       </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
+
+      {canWrite && (
+        <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="font-medium text-slate-200">{t("vlans.bulkImport")}</h3>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-500">{t("vlans.bulkImportHint")}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadVlanImportTemplate().catch((e) => toast.error(errorMessage(e)))
+                }
+                className="whitespace-nowrap text-xs font-medium text-emerald-400 hover:text-emerald-300"
+              >
+                {t("assets.downloadTemplate")}
+              </button>
+            </div>
+          </div>
+          <form onSubmit={onImport} className="flex flex-wrap items-center gap-3">
+            <input
+              type="file"
+              accept=".csv,.xlsx"
+              onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+              className="text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-slate-200 hover:file:bg-slate-700"
+            />
+            <select
+              className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
+              value={onConflict}
+              onChange={(e) => setOnConflict(e.target.value as "update" | "skip")}
+            >
+              <option value="update">{t("assets.updateExisting")}</option>
+              <option value="skip">{t("assets.skipExisting")}</option>
+            </select>
+            <button
+              type="submit"
+              disabled={!importFile || importing}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+            >
+              {importing ? t("assets.importing") : t("assets.import")}
+            </button>
+          </form>
+          {importError && <p className="text-sm text-red-400">{importError}</p>}
+          {importReport && (
+            <div className="space-y-2 text-sm">
+              <p className="text-slate-300">
+                {importReport.total} {t("assets.rows")}:{" "}
+                <span className="text-emerald-400">
+                  {importReport.created} {t("assets.created")}
+                </span>
+                ,{" "}
+                <span className="text-sky-400">
+                  {importReport.updated} {t("assets.updated")}
+                </span>
+                ,{" "}
+                <span className="text-slate-400">
+                  {importReport.skipped} {t("assets.skipped")}
+                </span>
+                ,{" "}
+                <span className="text-red-400">
+                  {importReport.errors} {t("assets.errors")}
+                </span>
+              </p>
+              {importReport.errors > 0 && (
+                <ul className="space-y-1 text-xs text-red-400">
+                  {importReport.results
+                    .filter((r) => r.status === "error")
+                    .map((r) => (
+                      <li key={r.row}>
+                        {t("assets.row")} {r.row}
+                        {r.name ? ` (${r.name})` : ""}: {r.error}
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">

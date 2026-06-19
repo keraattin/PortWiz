@@ -156,6 +156,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "vlans.confirmDelete": "Supprimer ce VLAN ?",
   "vlans.empty": "Aucun VLAN pour le moment.",
   "vlans.addFirst": "Ajoutez votre premier VLAN",
+  "vlans.bulkImport": "Import en masse",
+  "vlans.bulkImportHint": 'CSV ou .xlsx avec une colonne "name". Optionnel : tag, description.',
   "vlans.col.name": "Nom",
   "vlans.col.tag": "Tag",
   "vlans.col.description": "Description",
