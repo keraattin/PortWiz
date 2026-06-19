@@ -12,6 +12,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -41,8 +42,8 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<CurrentUser[]>([]);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
+  const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const tasksPage = usePagination(tasks, 15);
 
   async function reload(f = filter) {
     setError(null);
@@ -65,6 +66,16 @@ export default function TasksPage() {
 
   const ownerEmail = (id: string | null) =>
     id ? (users.find((u) => u.id === id)?.email ?? "unknown") : "";
+
+  const q = query.trim().toLowerCase();
+  const filteredTasks = q
+    ? tasks.filter((task) =>
+        [task.title, ownerEmail(task.assignee_id), task.jira_key ?? ""].some((v) =>
+          v.toLowerCase().includes(q),
+        ),
+      )
+    : tasks;
+  const tasksPage = usePagination(filteredTasks, 15);
 
   async function act(fn: () => Promise<unknown>) {
     setError(null);
@@ -108,6 +119,18 @@ export default function TasksPage() {
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
+      {tasks.length > 0 && (
+        <div className="flex justify-end">
+          <SearchInput
+            value={query}
+            onChange={(v) => {
+              setQuery(v);
+              tasksPage.setPage(0);
+            }}
+          />
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
@@ -124,6 +147,12 @@ export default function TasksPage() {
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={5}>
                   {t("tasks.empty")}
+                </td>
+              </tr>
+            ) : filteredTasks.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={5}>
+                  {t("common.noData")}
                 </td>
               </tr>
             ) : (

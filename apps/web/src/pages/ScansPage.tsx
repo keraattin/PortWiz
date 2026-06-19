@@ -18,6 +18,7 @@ import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -54,9 +55,19 @@ export default function ScansPage() {
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [runs, setRuns] = useState<ScanRun[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   const [selectedRun, setSelectedRun] = useState<ScanRun | null>(null);
   const [observations, setObservations] = useState<Observation[]>([]);
   const obsPage = usePagination(observations, 12);
+
+  const q = query.trim().toLowerCase();
+  const filteredProfiles = q
+    ? profiles.filter((p) =>
+        [p.name, p.targets.join(" "), p.ports, p.segment ?? "", p.scan_type].some((v) =>
+          v.toLowerCase().includes(q),
+        ),
+      )
+    : profiles;
 
   const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState("");
@@ -173,6 +184,12 @@ export default function ScansPage() {
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
+        {profiles.length > 0 && (
+          <div className="flex justify-end">
+            <SearchInput value={query} onChange={setQuery} />
+          </div>
+        )}
+
         <div className="overflow-hidden rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-900 text-slate-400">
@@ -203,8 +220,14 @@ export default function ScansPage() {
                     )}
                   </td>
                 </tr>
+              ) : filteredProfiles.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+                    {t("common.noData")}
+                  </td>
+                </tr>
               ) : (
-                profiles.map((p) => (
+                filteredProfiles.map((p) => (
                   <tr key={p.id} className="bg-slate-950">
                     <td className="px-4 py-2 text-slate-100">{p.name}</td>
                     <td className="px-4 py-2 font-mono text-xs text-slate-300">

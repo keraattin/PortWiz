@@ -10,6 +10,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -56,8 +57,17 @@ export default function ChangesPage() {
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
+  const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const changesPage = usePagination(changes, 15);
+  const q = query.trim().toLowerCase();
+  const filteredChanges = q
+    ? changes.filter((c) =>
+        [c.ip, String(c.port), c.protocol, c.change_type, c.severity, c.status].some((v) =>
+          v.toLowerCase().includes(q),
+        ),
+      )
+    : changes;
+  const changesPage = usePagination(filteredChanges, 15);
 
   async function reload(filter = statusFilter) {
     try {
@@ -113,6 +123,18 @@ export default function ChangesPage() {
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
+      {changes.length > 0 && (
+        <div className="flex justify-end">
+          <SearchInput
+            value={query}
+            onChange={(v) => {
+              setQuery(v);
+              changesPage.setPage(0);
+            }}
+          />
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
@@ -131,6 +153,12 @@ export default function ChangesPage() {
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={7}>
                   {t("changes.empty")}
+                </td>
+              </tr>
+            ) : filteredChanges.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
+                  {t("common.noData")}
                 </td>
               </tr>
             ) : (
