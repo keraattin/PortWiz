@@ -5,7 +5,9 @@ import {
   type ChangeStatus,
   type ChangeType,
   type PortSnapshot,
+  type ScanProfile,
   listChanges,
+  listScanProfiles,
   updateChangeStatus,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
@@ -56,9 +58,14 @@ export default function ChangesPage() {
   const { t } = useI18n();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
+  const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
   const [query, setQuery] = useState("");
+  const [groupBy, setGroupBy] = useState<"none" | "host" | "scan">("none");
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const profileName = (id: string) =>
+    profiles.find((p) => p.id === id)?.name ?? t("scans.deletedProfile");
   const q = query.trim().toLowerCase();
   const filteredChanges = q
     ? changes.filter((c) =>
@@ -79,6 +86,11 @@ export default function ChangesPage() {
 
   useEffect(() => {
     void reload();
+    listScanProfiles()
+      .then(setProfiles)
+      .catch(() => {
+        /* grouping by scan falls back to profile ids */
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -96,6 +108,77 @@ export default function ChangesPage() {
     setStatusFilter(filter);
     changesPage.setPage(0);
     void reload(filter);
+  }
+
+  function toggleGroup(key: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const groups =
+    groupBy === "none"
+      ? []
+      : Object.entries(
+          filteredChanges.reduce<Record<string, ChangeEvent[]>>((acc, c) => {
+            const key = groupBy === "host" ? c.ip : profileName(c.scan_profile_id);
+            (acc[key] ??= []).push(c);
+            return acc;
+          }, {}),
+        ).sort((a, b) => a[0].localeCompare(b[0]));
+
+  function renderRow(c: ChangeEvent) {
+    return (
+      <tr key={c.id} className="bg-slate-950">
+        <td className="px-4 py-2 text-xs text-slate-400">
+          {new Date(c.detected_at).toLocaleString()}
+        </td>
+        <td className="px-4 py-2 font-mono text-slate-100">
+          {c.ip}:{c.port}/{c.protocol}
+        </td>
+        <td className="px-4 py-2">
+          <span className={`rounded-full px-2 py-0.5 text-xs ${CHANGE_BADGE[c.change_type]}`}>
+            {t(`changeType.${c.change_type}` as TKey)}
+          </span>
+        </td>
+        <td className="px-4 py-2 text-xs text-slate-300">
+          <span className="text-slate-500">{describe(c.before, t)}</span>
+          <span className="px-1 text-slate-500">{t("changes.to")}</span>
+          <span className="text-slate-100">{describe(c.after, t)}</span>
+        </td>
+        <td className="px-4 py-2">
+          <span className={`rounded-full px-2 py-0.5 text-xs ${SEVERITY_BADGE[c.severity] ?? SEVERITY_BADGE.low}`}>
+            {t(`severity.${c.severity}` as TKey)}
+          </span>
+        </td>
+        <td className="px-4 py-2">
+          <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_BADGE[c.status]}`}>
+            {t(`changeStatus.${c.status}` as TKey)}
+          </span>
+        </td>
+        <td className="px-4 py-2 text-right">
+          {canWrite && c.status !== "acknowledged" && (
+            <button
+              onClick={() => onStatusChange(c.id, "acknowledged")}
+              className="mr-3 text-xs text-amber-400 hover:text-amber-300"
+            >
+              {t("changes.acknowledge")}
+            </button>
+          )}
+          {canWrite && c.status !== "resolved" && (
+            <button
+              onClick={() => onStatusChange(c.id, "resolved")}
+              className="text-xs text-emerald-400 hover:text-emerald-300"
+            >
+              {t("changes.resolve")}
+            </button>
+          )}
+        </td>
+      </tr>
+    );
   }
 
   return (
@@ -124,7 +207,19 @@ export default function ChangesPage() {
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {changes.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <label className="flex items-center gap-2 text-sm text-slate-400">
+            {t("changes.groupBy")}
+            <select
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value as "none" | "host" | "scan")}
+              className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-100 outline-none focus:border-emerald-500"
+            >
+              <option value="none">{t("changes.group.none")}</option>
+              <option value="host">{t("changes.group.host")}</option>
+              <option value="scan">{t("changes.group.scan")}</option>
+            </select>
+          </label>
           <SearchInput
             value={query}
             onChange={(v) => {
@@ -135,91 +230,63 @@ export default function ChangesPage() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-800">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-900 text-slate-400">
-            <tr>
-              <th className="px-4 py-2 font-medium">{t("changes.col.detected")}</th>
-              <th className="px-4 py-2 font-medium">{t("changes.col.host")}</th>
-              <th className="px-4 py-2 font-medium">{t("changes.col.change")}</th>
-              <th className="px-4 py-2 font-medium">{t("changes.col.beforeAfter")}</th>
-              <th className="px-4 py-2 font-medium">{t("changes.col.severity")}</th>
-              <th className="px-4 py-2 font-medium">{t("changes.col.status")}</th>
-              <th className="px-4 py-2"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {changes.length === 0 ? (
-              <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={7}>
-                  {t("changes.empty")}
-                </td>
-              </tr>
-            ) : filteredChanges.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
-                  {t("common.noData")}
-                </td>
-              </tr>
-            ) : (
-              changesPage.slice.map((c) => (
-                <tr key={c.id} className="bg-slate-950">
-                  <td className="px-4 py-2 text-xs text-slate-400">
-                    {new Date(c.detected_at).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2 font-mono text-slate-100">
-                    {c.ip}:{c.port}/{c.protocol}
-                  </td>
-                  <td className="px-4 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${CHANGE_BADGE[c.change_type]}`}>
-                      {t(`changeType.${c.change_type}` as TKey)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-xs text-slate-300">
-                    <span className="text-slate-500">{describe(c.before, t)}</span>
-                    <span className="px-1 text-slate-500">{t("changes.to")}</span>
-                    <span className="text-slate-100">{describe(c.after, t)}</span>
-                  </td>
-                  <td className="px-4 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${SEVERITY_BADGE[c.severity] ?? SEVERITY_BADGE.low}`}>
-                      {t(`severity.${c.severity}` as TKey)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_BADGE[c.status]}`}>
-                      {t(`changeStatus.${c.status}` as TKey)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    {canWrite && c.status !== "acknowledged" && (
-                      <button
-                        onClick={() => onStatusChange(c.id, "acknowledged")}
-                        className="mr-3 text-xs text-amber-400 hover:text-amber-300"
-                      >
-                        {t("changes.acknowledge")}
-                      </button>
-                    )}
-                    {canWrite && c.status !== "resolved" && (
-                      <button
-                        onClick={() => onStatusChange(c.id, "resolved")}
-                        className="text-xs text-emerald-400 hover:text-emerald-300"
-                      >
-                        {t("changes.resolve")}
-                      </button>
-                    )}
-                  </td>
+      {changes.length === 0 ? (
+        <div className="rounded-xl border border-slate-800 p-4 text-sm text-slate-500">
+          {t("changes.empty")}
+        </div>
+      ) : filteredChanges.length === 0 ? (
+        <div className="rounded-xl border border-slate-800 p-4 text-center text-sm text-slate-500">
+          {t("common.noData")}
+        </div>
+      ) : groupBy !== "none" ? (
+        <div className="space-y-3">
+          {groups.map(([key, items]) => (
+            <div key={key} className="overflow-hidden rounded-xl border border-slate-800">
+              <button
+                onClick={() => toggleGroup(key)}
+                className="flex w-full items-center justify-between bg-slate-900 px-4 py-2 text-left text-sm font-medium text-slate-200"
+              >
+                <span>
+                  {key} <span className="text-slate-500">({items.length})</span>
+                </span>
+                <span className="text-slate-500">{collapsed.has(key) ? "▸" : "▾"}</span>
+              </button>
+              {!collapsed.has(key) && (
+                <table className="w-full text-left text-sm">
+                  <tbody className="divide-y divide-slate-800">{items.map(renderRow)}</tbody>
+                </table>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="overflow-hidden rounded-xl border border-slate-800">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-900 text-slate-400">
+                <tr>
+                  <th className="px-4 py-2 font-medium">{t("changes.col.detected")}</th>
+                  <th className="px-4 py-2 font-medium">{t("changes.col.host")}</th>
+                  <th className="px-4 py-2 font-medium">{t("changes.col.change")}</th>
+                  <th className="px-4 py-2 font-medium">{t("changes.col.beforeAfter")}</th>
+                  <th className="px-4 py-2 font-medium">{t("changes.col.severity")}</th>
+                  <th className="px-4 py-2 font-medium">{t("changes.col.status")}</th>
+                  <th className="px-4 py-2"></th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      <Pagination
-        page={changesPage.page}
-        pageCount={changesPage.pageCount}
-        total={changesPage.total}
-        onPage={changesPage.setPage}
-      />
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {changesPage.slice.map(renderRow)}
+              </tbody>
+            </table>
+          </div>
+          <Pagination
+            page={changesPage.page}
+            pageCount={changesPage.pageCount}
+            total={changesPage.total}
+            onPage={changesPage.setPage}
+          />
+        </>
+      )}
     </div>
   );
 }
