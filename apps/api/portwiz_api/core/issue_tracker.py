@@ -26,6 +26,11 @@ class IssueTracker(Protocol):
     async def create_issue(self, summary: str, description: str) -> str | None: ...
     async def get_status(self, key: str) -> str | None: ...
     async def verify(self) -> tuple[bool, str]: ...
+    async def list_projects(self) -> list[dict[str, str]]: ...
+    async def search_assignable_users(
+        self, query: str, project: str | None
+    ) -> list[dict[str, str]]: ...
+    async def list_issue_types(self) -> list[str]: ...
 
 
 class NullTracker:
@@ -40,6 +45,17 @@ class NullTracker:
     async def verify(self) -> tuple[bool, str]:
         return False, "Jira is not configured."
 
+    async def list_projects(self) -> list[dict[str, str]]:
+        return []
+
+    async def search_assignable_users(
+        self, query: str, project: str | None
+    ) -> list[dict[str, str]]:
+        return []
+
+    async def list_issue_types(self) -> list[str]:
+        return []
+
 
 def _adf(text: str) -> dict[str, Any]:
     """Minimal Atlassian Document Format wrapper for a plain-text description."""
@@ -48,6 +64,13 @@ def _adf(text: str) -> dict[str, Any]:
         "version": 1,
         "content": [{"type": "paragraph", "content": [{"type": "text", "text": text or ""}]}],
     }
+
+
+def _user_label(user: dict[str, Any]) -> str:
+    """A human label for an assignable user: display name plus email when known."""
+    name = user.get("displayName") or user.get("name") or "unknown"
+    email = user.get("emailAddress")
+    return f"{name} ({email})" if email else name
 
 
 class JiraTracker:
@@ -143,6 +166,72 @@ class JiraTracker:
                 return True, f"Connected to Jira as {name}"
         except Exception as exc:  # surface any connectivity/auth failure to the UI
             return False, str(exc)
+
+    async def list_projects(self) -> list[dict[str, str]]:
+        """Projects the credentials can see, for the project picker."""
+        async with self._client() as client:
+            if self._cloud:
+                resp = await client.get(
+                    f"{self._base}/rest/api/3/project/search", params={"maxResults": 100}
+                )
+                resp.raise_for_status()
+                values = resp.json().get("values", [])
+            else:
+                resp = await client.get(f"{self._base}/rest/api/2/project")
+                resp.raise_for_status()
+                values = resp.json()
+        return [
+            {"key": p.get("key", ""), "name": p.get("name", "")}
+            for p in values
+            if p.get("key")
+        ]
+
+    async def search_assignable_users(
+        self, query: str, project: str | None
+    ) -> list[dict[str, str]]:
+        """Users assignable on a project, for the default-assignee picker. The
+        identifier differs by deployment: accountId (Cloud) vs username (Server)."""
+        proj = project or self._project
+        async with self._client() as client:
+            if self._cloud:
+                resp = await client.get(
+                    f"{self._base}/rest/api/3/user/assignable/search",
+                    params={"project": proj, "query": query or "", "maxResults": 50},
+                )
+                resp.raise_for_status()
+                return [
+                    {"id": u.get("accountId", ""), "label": _user_label(u)}
+                    for u in resp.json()
+                    if u.get("accountId")
+                ]
+            resp = await client.get(
+                f"{self._base}/rest/api/2/user/assignable/search",
+                params={"project": proj, "username": query or "", "maxResults": 50},
+            )
+            resp.raise_for_status()
+            return [
+                {"id": u.get("name", ""), "label": _user_label(u)}
+                for u in resp.json()
+                if u.get("name")
+            ]
+
+    async def list_issue_types(self) -> list[str]:
+        """Instance-wide issue type names (sub-tasks excluded), for the picker.
+        Not project-scoped; an out-of-scheme pick simply errors at create time."""
+        async with self._client() as client:
+            resp = await client.get(f"{self._base}/rest/api/{self._api}/issuetype")
+            resp.raise_for_status()
+            types = resp.json()
+        names: list[str] = []
+        seen: set[str] = set()
+        for it in types:
+            if it.get("subtask"):
+                continue
+            name = it.get("name")
+            if name and name not in seen:
+                seen.add(name)
+                names.append(name)
+        return names
 
 
 def build_issue_tracker(settings) -> IssueTracker:

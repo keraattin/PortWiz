@@ -90,6 +90,69 @@ async def test_test_jira_uses_tracker_verify(client, admin_headers) -> None:
     assert "Tester" in body["detail"]
 
 
+async def test_jira_discovery_400_when_unconfigured(client, admin_headers) -> None:
+    # The hermetic env has no Jira, so get_issue_tracker yields a NullTracker.
+    resp = await client.get("/api/v1/settings/jira/projects", headers=admin_headers)
+    assert resp.status_code == 400
+
+
+async def test_jira_discovery_endpoints(client, admin_headers) -> None:
+    from portwiz_api.core.issue_tracker import get_issue_tracker
+    from portwiz_api.main import app
+
+    class FakeDiscoveryTracker:
+        async def list_projects(self) -> list[dict[str, str]]:
+            return [{"key": "SEC", "name": "Security"}, {"key": "OPS", "name": "Operations"}]
+
+        async def search_assignable_users(
+            self, query: str, project: str | None
+        ) -> list[dict[str, str]]:
+            assert project == "SEC"
+            return [{"id": "acc-1", "label": "Jane (jane@acme.io)"}]
+
+        async def list_issue_types(self) -> list[str]:
+            return ["Task", "Bug", "Incident"]
+
+    app.dependency_overrides[get_issue_tracker] = lambda: FakeDiscoveryTracker()
+
+    projects = await client.get("/api/v1/settings/jira/projects", headers=admin_headers)
+    assert projects.status_code == 200, projects.text
+    assert {p["key"] for p in projects.json()} == {"SEC", "OPS"}
+
+    users = await client.get(
+        "/api/v1/settings/jira/users?q=ja&project=SEC", headers=admin_headers
+    )
+    assert users.status_code == 200, users.text
+    assert users.json()[0]["id"] == "acc-1"
+
+    types = await client.get("/api/v1/settings/jira/issue-types", headers=admin_headers)
+    assert types.status_code == 200, types.text
+    assert types.json() == ["Task", "Bug", "Incident"]
+
+
+async def test_jira_discovery_admin_only(client, db) -> None:
+    from portwiz_api.core.security import hash_password
+    from portwiz_api.models.user import User, UserRole
+
+    async with db() as session:
+        session.add(
+            User(
+                email="aud-jira@test.local",
+                hashed_password=hash_password("Secret123!"),
+                full_name="Aud",
+                role=UserRole.auditor,
+            )
+        )
+        await session.commit()
+    login = await client.post(
+        "/api/v1/auth/login",
+        data={"username": "aud-jira@test.local", "password": "Secret123!"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    resp = await client.get("/api/v1/settings/jira/projects", headers=headers)
+    assert resp.status_code == 403
+
+
 async def test_test_netbox_uses_source_verify(client, admin_headers) -> None:
     from portwiz_api.core.inventory_source import get_inventory_source
     from portwiz_api.main import app

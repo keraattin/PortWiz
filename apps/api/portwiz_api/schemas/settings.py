@@ -57,6 +57,16 @@ class TestResult(BaseModel):
     detail: str
 
 
+class JiraProject(BaseModel):
+    key: str
+    name: str
+
+
+class JiraUser(BaseModel):
+    id: str  # accountId (Cloud) or username (Server/DC)
+    label: str
+
+
 class EmailTestRequest(BaseModel):
     recipient: str | None = None
 

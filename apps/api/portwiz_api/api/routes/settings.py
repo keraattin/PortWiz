@@ -8,7 +8,7 @@ secret fields so an existing value is kept.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ... import __version__
@@ -23,12 +23,14 @@ from ...core.app_settings import effective_settings, set_overrides
 from ...core.config import Settings
 from ...core.db import get_session
 from ...core.inventory_source import InventorySource, get_inventory_source
-from ...core.issue_tracker import IssueTracker, get_issue_tracker
+from ...core.issue_tracker import IssueTracker, NullTracker, get_issue_tracker
 from ...core.notifications import Notifier, NullNotifier, get_notifier
 from ...models.user import User, UserRole
 from ...schemas.settings import (
     AiProviderInfo,
     EmailTestRequest,
+    JiraProject,
+    JiraUser,
     SettingsConfig,
     SettingsConfigUpdate,
     SettingsStatus,
@@ -214,6 +216,54 @@ async def test_jira(
 ) -> TestResult:
     ok, detail = await tracker.verify()
     return TestResult(ok=ok, detail=detail)
+
+
+def _require_jira(tracker: IssueTracker) -> None:
+    if isinstance(tracker, NullTracker):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Jira is not configured")
+
+
+@router.get("/jira/projects", response_model=list[JiraProject])
+async def list_jira_projects(
+    _: User = Depends(AdminDep),
+    tracker: IssueTracker = Depends(get_issue_tracker),
+) -> list[JiraProject]:
+    """Projects visible to the saved credentials, for the project picker."""
+    _require_jira(tracker)
+    try:
+        rows = await tracker.list_projects()
+    except Exception as exc:  # connectivity/auth surfaced to the UI
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Jira error: {exc}") from exc
+    return [JiraProject(**r) for r in rows]
+
+
+@router.get("/jira/users", response_model=list[JiraUser])
+async def search_jira_users(
+    q: str = "",
+    project: str | None = None,
+    _: User = Depends(AdminDep),
+    tracker: IssueTracker = Depends(get_issue_tracker),
+) -> list[JiraUser]:
+    """Assignable users for the default-assignee picker."""
+    _require_jira(tracker)
+    try:
+        rows = await tracker.search_assignable_users(q, project)
+    except Exception as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Jira error: {exc}") from exc
+    return [JiraUser(**r) for r in rows]
+
+
+@router.get("/jira/issue-types", response_model=list[str])
+async def list_jira_issue_types(
+    _: User = Depends(AdminDep),
+    tracker: IssueTracker = Depends(get_issue_tracker),
+) -> list[str]:
+    """Instance-wide issue type names, for the issue-type picker."""
+    _require_jira(tracker)
+    try:
+        return await tracker.list_issue_types()
+    except Exception as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Jira error: {exc}") from exc
 
 
 @router.post("/test/netbox", response_model=TestResult)
