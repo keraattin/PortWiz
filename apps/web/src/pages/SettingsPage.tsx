@@ -2,13 +2,18 @@ import { useEffect, useState } from "react";
 import {
   type AiProviderInfo,
   ApiError,
+  type JiraProject,
+  type JiraUser,
   type SettingsConfig,
   type SettingsConfigUpdate,
   type SettingsStatus,
   type TestResult,
   fetchAiProviders,
+  fetchJiraIssueTypes,
+  fetchJiraProjects,
   fetchSettings,
   fetchSettingsConfig,
+  searchJiraUsers,
   testAi,
   testEmail,
   testJira,
@@ -54,10 +59,14 @@ interface FormState {
   smtp_use_tls: boolean;
   notification_recipients: string;
   jira_enabled: boolean;
+  jira_deployment: string;
   jira_url: string;
   jira_email: string;
   jira_api_token: string;
   jira_project_key: string;
+  jira_issue_type: string;
+  jira_default_assignee: string;
+  jira_labels: string;
   netbox_enabled: boolean;
   netbox_url: string;
   netbox_token: string;
@@ -82,10 +91,14 @@ function fromConfig(c: SettingsConfig): FormState {
     smtp_use_tls: c.smtp_use_tls,
     notification_recipients: c.notification_recipients.join(", "),
     jira_enabled: c.jira_enabled,
+    jira_deployment: c.jira_deployment || "cloud",
     jira_url: c.jira_url ?? "",
     jira_email: c.jira_email ?? "",
     jira_api_token: "",
     jira_project_key: c.jira_project_key,
+    jira_issue_type: c.jira_issue_type || "Task",
+    jira_default_assignee: c.jira_default_assignee ?? "",
+    jira_labels: c.jira_labels ?? "",
     netbox_enabled: c.netbox_enabled,
     netbox_url: c.netbox_url ?? "",
     netbox_token: "",
@@ -143,6 +156,13 @@ export default function SettingsPage() {
   const [netboxResult, setNetboxResult] = useState<TestResult | null>(null);
   const [emailTo, setEmailTo] = useState("");
 
+  // Jira discovery: loaded on demand from the saved connection.
+  const [jiraProjects, setJiraProjects] = useState<JiraProject[]>([]);
+  const [jiraTypes, setJiraTypes] = useState<string[]>([]);
+  const [userQuery, setUserQuery] = useState("");
+  const [userResults, setUserResults] = useState<JiraUser[]>([]);
+  const [jiraLoading, setJiraLoading] = useState<string | null>(null);
+
   useEffect(() => {
     async function load() {
       try {
@@ -163,6 +183,42 @@ export default function SettingsPage() {
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => (f ? { ...f, [key]: value } : f));
+  }
+
+  // Jira pickers fetch from the live instance; they need the connection saved
+  // first, so a 400 here surfaces as a toast telling the admin to save + test.
+  async function loadJiraProjects() {
+    setJiraLoading("projects");
+    try {
+      setJiraProjects(await fetchJiraProjects());
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setJiraLoading(null);
+    }
+  }
+
+  async function loadJiraTypes() {
+    setJiraLoading("types");
+    try {
+      setJiraTypes(await fetchJiraIssueTypes());
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setJiraLoading(null);
+    }
+  }
+
+  async function searchUsers() {
+    if (!form) return;
+    setJiraLoading("users");
+    try {
+      setUserResults(await searchJiraUsers(userQuery, form.jira_project_key));
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setJiraLoading(null);
+    }
   }
 
   // Switching provider resets the OpenAI-compatible fields to the chosen
@@ -530,21 +586,45 @@ export default function SettingsPage() {
             checked={form.jira_enabled}
             onChange={(v) => set("jira_enabled", v)}
           />
+          <FormField label={t("settings.jira.deployment")} hint={t("settings.jira.deploymentHint")}>
+            <select
+              className={inputClass}
+              value={form.jira_deployment}
+              onChange={(e) => set("jira_deployment", e.target.value)}
+            >
+              <option value="cloud">{t("settings.jira.deploymentCloud")}</option>
+              <option value="server">{t("settings.jira.deploymentServer")}</option>
+            </select>
+          </FormField>
           <FormField label={t("settings.jira.url")} hint={t("settings.jira.urlHint")}>
             <input
               className={inputClass}
+              placeholder={
+                form.jira_deployment === "cloud"
+                  ? "https://yourorg.atlassian.net"
+                  : "https://jira.example.com"
+              }
               value={form.jira_url}
               onChange={(e) => set("jira_url", e.target.value)}
             />
           </FormField>
-          <FormField label={t("settings.jira.email")}>
-            <input
-              className={inputClass}
-              value={form.jira_email}
-              onChange={(e) => set("jira_email", e.target.value)}
-            />
-          </FormField>
-          <FormField label={t("settings.jira.token")} hint={secretHint(config.jira_api_token_set, t)}>
+          {form.jira_deployment === "cloud" && (
+            <FormField label={t("settings.jira.email")} hint={t("settings.jira.emailHint")}>
+              <input
+                className={inputClass}
+                value={form.jira_email}
+                onChange={(e) => set("jira_email", e.target.value)}
+              />
+            </FormField>
+          )}
+          <FormField
+            label={
+              form.jira_deployment === "cloud"
+                ? t("settings.jira.token")
+                : t("settings.jira.pat")
+            }
+            hint={secretHint(config.jira_api_token_set, t)}
+          >
             <input
               className={inputClass}
               type="password"
@@ -554,10 +634,136 @@ export default function SettingsPage() {
             />
           </FormField>
           <FormField label={t("settings.jira.projectKey")} hint={t("settings.jira.projectKeyHint")}>
+            <div className="space-y-2">
+              {jiraProjects.length > 0 ? (
+                <select
+                  className={inputClass}
+                  value={form.jira_project_key}
+                  onChange={(e) => set("jira_project_key", e.target.value)}
+                >
+                  {form.jira_project_key &&
+                    !jiraProjects.some((p) => p.key === form.jira_project_key) && (
+                      <option value={form.jira_project_key}>{form.jira_project_key}</option>
+                    )}
+                  {jiraProjects.map((p) => (
+                    <option key={p.key} value={p.key}>
+                      {p.name} ({p.key})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className={inputClass}
+                  value={form.jira_project_key}
+                  onChange={(e) => set("jira_project_key", e.target.value)}
+                />
+              )}
+              <button
+                type="button"
+                className={testBtn}
+                disabled={jiraLoading === "projects"}
+                onClick={loadJiraProjects}
+              >
+                {jiraLoading === "projects" ? t("common.loading") : t("settings.jira.loadProjects")}
+              </button>
+            </div>
+          </FormField>
+          <FormField label={t("settings.jira.issueType")} hint={t("settings.jira.issueTypeHint")}>
+            <div className="space-y-2">
+              {jiraTypes.length > 0 ? (
+                <select
+                  className={inputClass}
+                  value={form.jira_issue_type}
+                  onChange={(e) => set("jira_issue_type", e.target.value)}
+                >
+                  {form.jira_issue_type && !jiraTypes.includes(form.jira_issue_type) && (
+                    <option value={form.jira_issue_type}>{form.jira_issue_type}</option>
+                  )}
+                  {jiraTypes.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className={inputClass}
+                  value={form.jira_issue_type}
+                  onChange={(e) => set("jira_issue_type", e.target.value)}
+                />
+              )}
+              <button
+                type="button"
+                className={testBtn}
+                disabled={jiraLoading === "types"}
+                onClick={loadJiraTypes}
+              >
+                {jiraLoading === "types" ? t("common.loading") : t("settings.jira.loadTypes")}
+              </button>
+            </div>
+          </FormField>
+          <FormField label={t("settings.jira.assignee")} hint={t("settings.jira.assigneeHint")}>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  className={inputClass}
+                  placeholder={t("settings.jira.assigneeNone")}
+                  value={form.jira_default_assignee}
+                  onChange={(e) => set("jira_default_assignee", e.target.value)}
+                />
+                {form.jira_default_assignee && (
+                  <button
+                    type="button"
+                    className={testBtn}
+                    onClick={() => set("jira_default_assignee", "")}
+                  >
+                    {t("common.delete")}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  className={inputClass}
+                  placeholder={t("settings.jira.userSearchPlaceholder")}
+                  value={userQuery}
+                  onChange={(e) => setUserQuery(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className={testBtn}
+                  disabled={jiraLoading === "users"}
+                  onClick={searchUsers}
+                >
+                  {jiraLoading === "users" ? t("common.loading") : t("settings.jira.searchUsers")}
+                </button>
+              </div>
+              {userResults.length > 0 && (
+                <ul className="divide-y divide-slate-800 rounded-lg border border-slate-800">
+                  {userResults.map((u) => (
+                    <li key={u.id}>
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-slate-800"
+                        onClick={() => {
+                          set("jira_default_assignee", u.id);
+                          setUserResults([]);
+                          setUserQuery("");
+                        }}
+                      >
+                        {u.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </FormField>
+          <FormField label={t("settings.jira.labels")} hint={t("settings.jira.labelsHint")}>
             <input
               className={inputClass}
-              value={form.jira_project_key}
-              onChange={(e) => set("jira_project_key", e.target.value)}
+              placeholder="portwiz, security"
+              value={form.jira_labels}
+              onChange={(e) => set("jira_labels", e.target.value)}
             />
           </FormField>
           <div className="flex flex-wrap items-center gap-3">
@@ -567,10 +773,14 @@ export default function SettingsPage() {
               onClick={() =>
                 save("jira", {
                   jira_enabled: form.jira_enabled,
+                  jira_deployment: form.jira_deployment,
                   jira_url: form.jira_url,
                   jira_email: form.jira_email,
                   jira_api_token: form.jira_api_token,
                   jira_project_key: form.jira_project_key,
+                  jira_issue_type: form.jira_issue_type,
+                  jira_default_assignee: form.jira_default_assignee,
+                  jira_labels: form.jira_labels,
                 })
               }
             >

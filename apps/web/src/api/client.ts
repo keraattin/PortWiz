@@ -694,6 +694,7 @@ export interface SettingsStatus {
   smtp_from: string;
   email_recipients: string[];
   jira_enabled: boolean;
+  jira_deployment: string;
   jira_url: string | null;
   jira_project_key: string;
   jira_configured: boolean;
@@ -726,6 +727,33 @@ export function testJira(): Promise<TestResult> {
   return request<TestResult>("/settings/test/jira", { method: "POST" });
 }
 
+// Jira discovery (admin) — populate the settings pickers from the live instance.
+export interface JiraProject {
+  key: string;
+  name: string;
+}
+
+export interface JiraUser {
+  id: string; // accountId (Cloud) or username (Server/DC)
+  label: string;
+}
+
+export function fetchJiraProjects(): Promise<JiraProject[]> {
+  return request<JiraProject[]>("/settings/jira/projects");
+}
+
+export function searchJiraUsers(q: string, project?: string): Promise<JiraUser[]> {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (project) params.set("project", project);
+  const qs = params.toString();
+  return request<JiraUser[]>(`/settings/jira/users${qs ? `?${qs}` : ""}`);
+}
+
+export function fetchJiraIssueTypes(): Promise<string[]> {
+  return request<string[]>("/settings/jira/issue-types");
+}
+
 export function testNetbox(): Promise<TestResult> {
   return request<TestResult>("/settings/test/netbox", { method: "POST" });
 }
@@ -750,9 +778,13 @@ export interface SettingsConfig {
   smtp_password_set: boolean;
   notification_recipients: string[];
   jira_enabled: boolean;
+  jira_deployment: string;
   jira_url: string | null;
   jira_email: string | null;
   jira_project_key: string;
+  jira_issue_type: string;
+  jira_default_assignee: string | null;
+  jira_labels: string;
   jira_api_token_set: boolean;
   netbox_enabled: boolean;
   netbox_url: string | null;
@@ -777,10 +809,14 @@ export type SettingsConfigUpdate = Partial<{
   smtp_use_tls: boolean;
   notification_recipients: string[];
   jira_enabled: boolean;
+  jira_deployment: string;
   jira_url: string;
   jira_email: string;
   jira_api_token: string;
   jira_project_key: string;
+  jira_issue_type: string;
+  jira_default_assignee: string;
+  jira_labels: string;
   netbox_enabled: boolean;
   netbox_url: string;
   netbox_token: string;
