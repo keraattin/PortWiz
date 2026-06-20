@@ -36,6 +36,7 @@ from ...schemas.asset import (
     VLANImportReport,
     VLANImportRowResult,
     VLANRead,
+    VlanSyncReport,
     VLANUpdate,
 )
 from ..deps import get_current_user, require_roles
@@ -190,6 +191,83 @@ async def import_vlans(
         skipped=skipped,
         errors=errors,
         results=results,
+    )
+
+
+@vlans_router.post("/sync", response_model=VlanSyncReport)
+async def sync_vlans(
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    source: InventorySource = Depends(get_inventory_source),
+) -> VlanSyncReport:
+    """Pull VLANs from the configured external inventory source (NetBox) and
+    upsert them by name. Returns a summary; one vlan.synced event is audited."""
+    if source.name == "none":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No inventory source is configured.")
+    try:
+        items = await source.fetch_vlans()
+    except Exception as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Inventory source unavailable: {exc}"
+        ) from exc
+
+    by_name = {v.name.lower(): v for v in (await session.execute(select(VLAN))).scalars()}
+
+    created = updated = skipped = errors = 0
+    errors_detail: list[str] = []
+    for item in items:
+        tag = item.tag
+        if tag is not None and not (1 <= tag <= 4094):
+            errors += 1
+            errors_detail.append(f"VLAN '{item.name}' has out-of-range tag {tag}")
+            continue
+        fields: dict[str, object] = {"name": item.name}
+        if tag is not None:
+            fields["vlan_tag"] = tag
+        if item.description:
+            fields["description"] = item.description
+
+        existing = by_name.get(item.name.lower())
+        if existing is not None:
+            if on_conflict == "skip":
+                skipped += 1
+                continue
+            for key, value in fields.items():
+                setattr(existing, key, value)
+            updated += 1
+        else:
+            vlan = VLAN(**fields)
+            session.add(vlan)
+            await session.flush()
+            by_name[item.name.lower()] = vlan
+            created += 1
+
+    await append_audit(
+        session,
+        action="vlan.synced",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="vlan",
+        target_id=None,
+        payload={
+            "source": source.name,
+            "total": len(items),
+            "created": created,
+            "updated": updated,
+            "skipped": skipped,
+            "errors": errors,
+        },
+    )
+    await session.commit()
+    return VlanSyncReport(
+        source=source.name,
+        total=len(items),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        errors_detail=errors_detail[:50],
     )
 
 

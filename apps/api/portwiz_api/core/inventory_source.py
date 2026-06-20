@@ -31,10 +31,20 @@ class SourceAsset:
     vlan_name: str | None = None
 
 
+@dataclass
+class SourceVlan:
+    """A network segment pulled from an external source, normalized."""
+
+    name: str
+    tag: int | None = None
+    description: str | None = None
+
+
 class InventorySource(Protocol):
     name: str
 
     async def fetch_assets(self) -> list[SourceAsset]: ...
+    async def fetch_vlans(self) -> list[SourceVlan]: ...
     async def verify(self) -> tuple[bool, str]: ...
 
 
@@ -44,6 +54,9 @@ class NullSource:
     name = "none"
 
     async def fetch_assets(self) -> list[SourceAsset]:
+        return []
+
+    async def fetch_vlans(self) -> list[SourceVlan]:
         return []
 
     async def verify(self) -> tuple[bool, str]:
@@ -83,6 +96,30 @@ class NetBoxSource:
                     )
                 url = data.get("next")
         return assets
+
+    async def fetch_vlans(self) -> list[SourceVlan]:
+        import httpx
+
+        vlans: list[SourceVlan] = []
+        url: str | None = f"{self._base}/api/ipam/vlans/?limit=500"
+        async with httpx.AsyncClient(timeout=30) as client:
+            while url:
+                resp = await client.get(url, headers=self._headers)
+                resp.raise_for_status()
+                data = resp.json()
+                for record in data.get("results", []):
+                    name = (record.get("name") or "").strip()
+                    if not name:
+                        continue
+                    vlans.append(
+                        SourceVlan(
+                            name=name,
+                            tag=record.get("vid"),  # NetBox VLAN id is the 802.1Q tag
+                            description=(record.get("description") or None),
+                        )
+                    )
+                url = data.get("next")
+        return vlans
 
     async def verify(self) -> tuple[bool, str]:
         import httpx

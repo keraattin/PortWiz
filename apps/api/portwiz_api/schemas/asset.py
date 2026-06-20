@@ -164,3 +164,13 @@ class AssetSyncReport(BaseModel):
     skipped: int
     errors: int
     errors_detail: list[str]
+
+
+class VlanSyncReport(BaseModel):
+    source: str
+    total: int
+    created: int
+    updated: int
+    skipped: int
+    errors: int
+    errors_detail: list[str]
