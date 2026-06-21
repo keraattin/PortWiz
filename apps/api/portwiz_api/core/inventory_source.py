@@ -10,7 +10,7 @@ lazily so importing this module stays cheap.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
 from fastapi import Depends
@@ -40,11 +40,22 @@ class SourceVlan:
     description: str | None = None
 
 
+@dataclass
+class PushResult:
+    """Outcome of writing hosts back to an external source."""
+
+    created: int = 0
+    skipped: int = 0
+    errors: int = 0
+    errors_detail: list[str] = field(default_factory=list)
+
+
 class InventorySource(Protocol):
     name: str
 
     async def fetch_assets(self) -> list[SourceAsset]: ...
     async def fetch_vlans(self) -> list[SourceVlan]: ...
+    async def push_assets(self, assets: list[SourceAsset]) -> PushResult: ...
     async def verify(self) -> tuple[bool, str]: ...
 
 
@@ -58,6 +69,9 @@ class NullSource:
 
     async def fetch_vlans(self) -> list[SourceVlan]:
         return []
+
+    async def push_assets(self, assets: list[SourceAsset]) -> PushResult:
+        return PushResult()
 
     async def verify(self) -> tuple[bool, str]:
         return False, "No inventory source is configured."
@@ -120,6 +134,38 @@ class NetBoxSource:
                     )
                 url = data.get("next")
         return vlans
+
+    async def push_assets(self, assets: list[SourceAsset]) -> PushResult:
+        """Create the given hosts in NetBox as IP addresses, skipping any whose
+        IP already exists there. A /32 (or /128 for IPv6) host mask is used."""
+        import httpx
+
+        result = PushResult()
+        existing = {a.ip for a in await self.fetch_assets()}
+        async with httpx.AsyncClient(timeout=30) as client:
+            for asset in assets:
+                if asset.ip in existing:
+                    result.skipped += 1
+                    continue
+                mask = "128" if ":" in asset.ip else "32"
+                payload: dict[str, str] = {"address": f"{asset.ip}/{mask}"}
+                if asset.hostname:
+                    payload["dns_name"] = asset.hostname
+                if asset.description:
+                    payload["description"] = asset.description
+                try:
+                    resp = await client.post(
+                        f"{self._base}/api/ipam/ip-addresses/",
+                        headers=self._headers,
+                        json=payload,
+                    )
+                    resp.raise_for_status()
+                    result.created += 1
+                    existing.add(asset.ip)
+                except Exception as exc:  # one host's failure must not abort the rest
+                    result.errors += 1
+                    result.errors_detail.append(f"{asset.ip}: {exc}")
+        return result
 
     async def verify(self) -> tuple[bool, str]:
         import httpx

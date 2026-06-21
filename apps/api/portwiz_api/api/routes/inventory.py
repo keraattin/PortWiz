@@ -18,7 +18,11 @@ from ...core.asset_import import parse_asset_file
 from ...core.asset_store import upsert_asset
 from ...core.audit import append_audit
 from ...core.db import get_session
-from ...core.inventory_source import InventorySource, get_inventory_source
+from ...core.inventory_source import (
+    InventorySource,
+    SourceAsset,
+    get_inventory_source,
+)
 from ...core.vlan_import import parse_vlan_file
 from ...models.asset import VLAN, Asset, IPRange
 from ...models.user import User, UserRole
@@ -26,6 +30,7 @@ from ...schemas.asset import (
     AssetCreate,
     AssetImportReport,
     AssetImportRowResult,
+    AssetPushReport,
     AssetRead,
     AssetSyncReport,
     AssetUpdate,
@@ -707,6 +712,55 @@ async def sync_assets(
         skipped=skipped,
         errors=errors,
         errors_detail=errors_detail[:50],
+    )
+
+
+@assets_router.post("/push-netbox", response_model=AssetPushReport)
+async def push_assets_to_netbox(
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    source: InventorySource = Depends(get_inventory_source),
+) -> AssetPushReport:
+    """Write PortWiz's scan-discovered hosts back to NetBox as IP addresses,
+    skipping any whose IP already exists there. Audited as asset.pushed."""
+    if source.name == "none":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No inventory source is configured.")
+    discovered = (
+        (await session.execute(select(Asset).where(Asset.discovered.is_(True)))).scalars().all()
+    )
+    payload = [
+        SourceAsset(ip=a.ip, hostname=a.hostname, description=a.description) for a in discovered
+    ]
+    try:
+        result = await source.push_assets(payload)
+    except Exception as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Inventory source unavailable: {exc}"
+        ) from exc
+
+    await append_audit(
+        session,
+        action="asset.pushed",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=None,
+        payload={
+            "source": source.name,
+            "total": len(payload),
+            "created": result.created,
+            "skipped": result.skipped,
+            "errors": result.errors,
+        },
+    )
+    await session.commit()
+    return AssetPushReport(
+        source=source.name,
+        total=len(payload),
+        created=result.created,
+        skipped=result.skipped,
+        errors=result.errors,
+        errors_detail=result.errors_detail[:50],
     )
 
 

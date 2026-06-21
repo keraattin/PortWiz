@@ -175,3 +175,12 @@ class VlanSyncReport(BaseModel):
     skipped: int
     errors: int
     errors_detail: list[str]
+
+
+class AssetPushReport(BaseModel):
+    source: str
+    total: int  # discovered assets considered for writeback
+    created: int
+    skipped: int
+    errors: int
+    errors_detail: list[str]
