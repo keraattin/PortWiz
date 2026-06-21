@@ -137,6 +137,7 @@ async def test_ingest_auto_creates_discovered_asset(client, admin_headers, db) -
     assert asset is not None
     assert asset.hostname == "web-77"
     assert asset.criticality == "low"
+    assert asset.discovered is True
 
 
 async def test_ingest_keeps_known_asset(client, admin_headers, db) -> None:
@@ -172,6 +173,7 @@ async def test_ingest_keeps_known_asset(client, admin_headers, db) -> None:
     assert count == 1  # not duplicated
     assert asset.criticality == "high"  # scan did not change it
     assert asset.hostname is None  # scan did not overwrite
+    assert asset.discovered is False  # manually created, not discovered
 
 
 async def test_ingest_without_ai_keeps_raw(client, admin_headers, db) -> None:

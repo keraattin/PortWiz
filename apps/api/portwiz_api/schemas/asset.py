@@ -119,6 +119,7 @@ class AssetRead(BaseModel):
     criticality: Criticality
     data_sensitivity: DataSensitivity
     description: str | None
+    discovered: bool
     created_at: dt.datetime
     updated_at: dt.datetime
 

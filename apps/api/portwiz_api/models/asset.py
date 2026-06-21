@@ -11,7 +11,7 @@ import datetime as dt
 import enum
 import uuid
 
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlmodel import Field, SQLModel
 
 
@@ -76,6 +76,12 @@ class Asset(SQLModel, table=True):
     data_sensitivity: DataSensitivity = Field(
         default=DataSensitivity.none,
         sa_column=Column(String(16), nullable=False, server_default=DataSensitivity.none.value),
+    )
+    # True for hosts auto-created from a scan (not manually entered or imported);
+    # used to scope a NetBox writeback to only what PortWiz discovered.
+    discovered: bool = Field(
+        default=False,
+        sa_column=Column(Boolean, nullable=False, server_default="false"),
     )
     description: str | None = None
     created_at: dt.datetime = Field(

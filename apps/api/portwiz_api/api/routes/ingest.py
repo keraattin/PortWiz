@@ -107,7 +107,12 @@ async def ingest_scan_results(
     discovered = 0
     for host in payload.hosts:
         if host.ip not in asset_map and host.ports:
-            asset = Asset(ip=host.ip, hostname=host.hostname, criticality=Criticality.low)
+            asset = Asset(
+                ip=host.ip,
+                hostname=host.hostname,
+                criticality=Criticality.low,
+                discovered=True,
+            )
             session.add(asset)
             await session.flush()
             asset_map[host.ip] = asset.id
