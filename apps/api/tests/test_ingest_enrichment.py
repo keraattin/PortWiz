@@ -199,3 +199,60 @@ async def test_ingest_without_ai_keeps_raw(client, admin_headers, db) -> None:
     obs = await _observation(db, run_id)
     assert obs is not None
     assert obs.service is None  # not enriched
+
+
+class _FakeSource:
+    name = "netbox"
+
+    def __init__(self) -> None:
+        self.pushed: list[str] = []
+
+    async def push_assets(self, assets):
+        from portwiz_api.core.inventory_source import PushResult
+
+        self.pushed = [a.ip for a in assets]
+        return PushResult(created=len(assets))
+
+
+async def test_ingest_auto_writeback_when_enabled(client, admin_headers, db) -> None:
+    from portwiz_api.core.app_settings import set_overrides
+    from portwiz_api.core.inventory_source import get_inventory_source
+    from portwiz_api.main import app
+
+    fake = _FakeSource()
+    app.dependency_overrides[get_inventory_source] = lambda: fake
+    async with db() as session:
+        await set_overrides(
+            session, {"netbox_writeback_enabled": True}, actor_id=None, actor_email="t"
+        )
+
+    token = await _enroll(client, admin_headers)
+    ip = "10.0.0.88"
+    run_id = await _run(client, admin_headers, ip)
+    resp = await client.post(
+        "/api/v1/ingest/scan-results",
+        json=_payload(run_id, ip),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 202, resp.text
+    # The just-discovered host is written back to NetBox.
+    assert fake.pushed == [ip]
+
+
+async def test_ingest_no_writeback_when_disabled(client, admin_headers) -> None:
+    from portwiz_api.core.inventory_source import get_inventory_source
+    from portwiz_api.main import app
+
+    fake = _FakeSource()
+    app.dependency_overrides[get_inventory_source] = lambda: fake  # writeback off by default
+
+    token = await _enroll(client, admin_headers)
+    ip = "10.0.0.89"
+    run_id = await _run(client, admin_headers, ip)
+    resp = await client.post(
+        "/api/v1/ingest/scan-results",
+        json=_payload(run_id, ip),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 202, resp.text
+    assert fake.pushed == []

@@ -27,6 +27,11 @@ from ...core.app_settings import effective_settings
 from ...core.audit import append_audit
 from ...core.change_detection import detect_changes
 from ...core.db import get_session
+from ...core.inventory_source import (
+    InventorySource,
+    SourceAsset,
+    get_inventory_source,
+)
 from ...core.issue_tracker import IssueTracker, get_issue_tracker, link_changes_to_tracker
 from ...core.notifications import build_notifier, notify_changes
 from ...models.agent import Agent
@@ -81,6 +86,7 @@ async def ingest_scan_results(
     session: AsyncSession = Depends(get_session),
     tracker: IssueTracker = Depends(get_issue_tracker),
     ai_provider: AIProvider = Depends(get_ai_provider),
+    source: InventorySource = Depends(get_inventory_source),
 ) -> dict[str, object]:
     run = await session.get(ScanRun, payload.scan_run_id)
     if run is None:
@@ -105,6 +111,7 @@ async def ingest_scan_results(
     # becomes a low-criticality asset (with its hostname if reported), so the
     # inventory reflects what scans actually find.
     discovered = 0
+    discovered_hosts: list[SourceAsset] = []
     for host in payload.hosts:
         if host.ip not in asset_map and host.ports:
             asset = Asset(
@@ -117,6 +124,7 @@ async def ingest_scan_results(
             await session.flush()
             asset_map[host.ip] = asset.id
             discovered += 1
+            discovered_hosts.append(SourceAsset(ip=host.ip, hostname=host.hostname))
 
     count = 0
     # Observations whose deterministic fingerprint is weak but carry a banner;
@@ -190,15 +198,24 @@ async def ingest_scan_results(
     )
     await session.commit()
 
+    eff = await effective_settings(session)
+
     # Best-effort notification: never fail ingest if email delivery fails.
     if change_summaries:
-        eff = await effective_settings(session)
         try:
             await notify_changes(
                 change_summaries, eff.notification_recipients, build_notifier(eff)
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning("change notification failed: %s", exc)
+
+    # Best-effort NetBox writeback of just-discovered hosts, when enabled. The
+    # manual push button stays the primary path; this is the opt-in automatic one.
+    if discovered_hosts and source.name != "none" and eff.netbox_writeback_enabled:
+        try:
+            await source.push_assets(discovered_hosts)
+        except Exception as exc:  # noqa: BLE001 - never fail ingest on writeback
+            logger.warning("NetBox writeback failed: %s", exc)
 
     # Best-effort issue-tracker sync (creates Jira issues for the new tasks).
     if changes:

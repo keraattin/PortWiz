@@ -72,6 +72,7 @@ def _config_from(s: Settings) -> SettingsConfig:
         jira_api_token_set=bool(s.jira_api_token),
         netbox_enabled=s.netbox_enabled,
         netbox_url=s.netbox_url,
+        netbox_writeback_enabled=s.netbox_writeback_enabled,
         netbox_token_set=bool(s.netbox_token),
     )
 

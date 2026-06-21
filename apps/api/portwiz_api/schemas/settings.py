@@ -105,6 +105,7 @@ class SettingsConfig(BaseModel):
 
     netbox_enabled: bool
     netbox_url: str | None
+    netbox_writeback_enabled: bool
     netbox_token_set: bool
 
 
@@ -142,3 +143,4 @@ class SettingsConfigUpdate(BaseModel):
     netbox_enabled: bool | None = None
     netbox_url: str | None = None
     netbox_token: str | None = None
+    netbox_writeback_enabled: bool | None = None

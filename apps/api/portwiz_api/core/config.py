@@ -90,6 +90,9 @@ class Settings(BaseSettings):
     netbox_enabled: bool = False
     netbox_url: str | None = None  # e.g. https://netbox.example.com
     netbox_token: str | None = None
+    # When set, each scan automatically writes its discovered hosts back to
+    # NetBox. Off by default; the manual push button is the primary path.
+    netbox_writeback_enabled: bool = False
 
 
 @lru_cache

@@ -141,6 +141,16 @@ async def test_jira_cloud_needs_email_to_configure(client, admin_headers) -> Non
     assert status["jira_configured"] is True
 
 
+async def test_netbox_writeback_flag_round_trips(client, admin_headers) -> None:
+    resp = await client.patch(
+        "/api/v1/settings/config",
+        json={"netbox_writeback_enabled": True},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["netbox_writeback_enabled"] is True
+
+
 async def test_compat_secret_masked(client, admin_headers) -> None:
     resp = await client.patch(
         "/api/v1/settings/config",
