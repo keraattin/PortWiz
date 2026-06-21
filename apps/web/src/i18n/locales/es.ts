@@ -94,6 +94,11 @@ export const es: Partial<Record<TKey, string>> = {
   "crit.critical": "Crítica",
 
   // Assets
+  "inventory.assetExplain":
+    "Un activo es un único host que escaneas — una dirección IP, como un servidor o dispositivo. Agrupa activos en VLAN (segmentos de red) en la pestaña VLAN.",
+  "inventory.vlanExplain":
+    "Una VLAN es un segmento de red que agrupa activos — como DMZ o Servidores. Añade una aquí y luego asígnale activos en la pestaña Activos.",
+
   "assets.title": "Activos",
   "assets.subtitle":
     "Los hosts que escanea PortWiz. Cada uno lleva un propietario, una criticidad y una sensibilidad de datos para poder acotar escaneos y cambios con fines de cumplimiento.",

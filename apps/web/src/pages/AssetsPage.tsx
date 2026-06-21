@@ -20,6 +20,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import FormField from "../components/FormField";
+import InfoCallout from "../components/InfoCallout";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
@@ -194,6 +195,8 @@ export default function AssetsPage() {
           )
         }
       />
+
+      <InfoCallout>{t("inventory.assetExplain")}</InfoCallout>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 

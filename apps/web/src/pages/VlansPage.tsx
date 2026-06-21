@@ -18,6 +18,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import FormField from "../components/FormField";
+import InfoCallout from "../components/InfoCallout";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import { useToast } from "../components/Toast";
@@ -196,6 +197,8 @@ export default function VlansPage() {
           )
         }
       />
+
+      <InfoCallout>{t("inventory.vlanExplain")}</InfoCallout>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 

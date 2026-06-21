@@ -94,6 +94,11 @@ export const en = {
   "crit.critical": "Critical",
 
   // Assets
+  "inventory.assetExplain":
+    "An asset is a single host you scan — one IP address, like a server or device. Group assets into VLANs (network segments) on the VLANs tab.",
+  "inventory.vlanExplain":
+    "A VLAN is a network segment that groups assets — like DMZ or Servers. Add one here, then assign assets to it on the Assets tab.",
+
   "assets.title": "Assets",
   "assets.subtitle":
     "The hosts PortWiz scans. Each carries an owner, criticality, and data-sensitivity so scans and changes can be scoped for compliance.",

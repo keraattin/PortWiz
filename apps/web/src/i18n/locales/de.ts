@@ -94,6 +94,11 @@ export const de: Partial<Record<TKey, string>> = {
   "crit.critical": "Kritisch",
 
   // Assets
+  "inventory.assetExplain":
+    "Ein Asset ist ein einzelner Host, den Sie scannen — eine IP-Adresse, z. B. ein Server oder Gerät. Gruppieren Sie Assets in VLANs (Netzwerksegmenten) im Tab VLANs.",
+  "inventory.vlanExplain":
+    "Ein VLAN ist ein Netzwerksegment, das Assets gruppiert — z. B. DMZ oder Server. Fügen Sie hier eines hinzu und weisen Sie ihm im Tab Assets Assets zu.",
+
   "assets.title": "Assets",
   "assets.subtitle":
     "Die von PortWiz gescannten Hosts. Jeder trägt einen Eigentümer, eine Kritikalität und eine Datensensibilität, damit Scans und Änderungen für die Compliance eingegrenzt werden können.",

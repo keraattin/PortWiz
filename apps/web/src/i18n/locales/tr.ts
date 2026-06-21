@@ -94,6 +94,11 @@ export const tr: Partial<Record<TKey, string>> = {
   "crit.critical": "Kritik",
 
   // Assets
+  "inventory.assetExplain":
+    "Bir varlık, taradığınız tek bir host'tur — bir IP adresi, örneğin bir sunucu veya cihaz. Varlıkları VLAN'lar (ağ segmentleri) altında VLAN sekmesinde gruplayın.",
+  "inventory.vlanExplain":
+    "Bir VLAN, varlıkları gruplayan bir ağ segmentidir — örneğin DMZ veya Sunucular. Buradan ekleyin, sonra Varlıklar sekmesinden varlık atayın.",
+
   "assets.title": "Varlıklar",
   "assets.subtitle":
     "PortWiz'in taradığı ana makineler. Her biri; taramaların ve değişikliklerin uyumluluk için kapsamlanabilmesi adına bir sahip, kritiklik ve veri hassasiyeti taşır.",
