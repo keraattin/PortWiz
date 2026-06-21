@@ -4,6 +4,7 @@ import {
   type IpRange,
   type Vlan,
   type VlanImportReport,
+  type VlanSyncReport,
   createIpRange,
   createVlan,
   deleteIpRange,
@@ -12,6 +13,7 @@ import {
   importVlans,
   listIpRanges,
   listVlans,
+  syncVlans,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
@@ -53,6 +55,24 @@ export default function VlansPage() {
   const [importReport, setImportReport] = useState<VlanImportReport | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+
+  const [syncReport, setSyncReport] = useState<VlanSyncReport | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  async function onSync() {
+    setSyncError(null);
+    setSyncReport(null);
+    setSyncing(true);
+    try {
+      setSyncReport(await syncVlans(onConflict));
+      await reload();
+    } catch (err) {
+      setSyncError(errorMessage(err));
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function onImport(e: FormEvent) {
     e.preventDefault();
@@ -250,6 +270,38 @@ export default function VlansPage() {
               )}
             </div>
           )}
+
+          <div className="space-y-2 border-t border-slate-800 pt-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm font-medium text-slate-200">{t("vlans.syncTitle")}</span>
+              <span className="text-xs text-slate-500">{t("vlans.syncHint")}</span>
+            </div>
+            <Button variant="outline" onClick={onSync} disabled={syncing}>
+              {syncing ? t("vlans.syncing") : t("vlans.syncTitle")}
+            </Button>
+            {syncError && <p className="text-sm text-red-400">{syncError}</p>}
+            {syncReport && (
+              <p className="text-sm text-slate-300">
+                {syncReport.source}: {syncReport.total} {t("vlans.unit")}.{" "}
+                <span className="text-emerald-400">
+                  {syncReport.created} {t("assets.created")}
+                </span>
+                ,{" "}
+                <span className="text-sky-400">
+                  {syncReport.updated} {t("assets.updated")}
+                </span>
+                ,{" "}
+                <span className="text-slate-400">
+                  {syncReport.skipped} {t("assets.skipped")}
+                </span>
+                ,{" "}
+                <span className="text-red-400">
+                  {syncReport.errors} {t("assets.errors")}
+                </span>
+                .
+              </p>
+            )}
+          </div>
         </section>
       )}
 

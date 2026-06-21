@@ -359,6 +359,22 @@ export function syncAssets(onConflict: "update" | "skip" = "update"): Promise<As
   });
 }
 
+export interface VlanSyncReport {
+  source: string;
+  total: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  errors_detail: string[];
+}
+
+export function syncVlans(onConflict: "update" | "skip" = "update"): Promise<VlanSyncReport> {
+  return request<VlanSyncReport>(`/vlans/sync?on_conflict=${onConflict}`, {
+    method: "POST",
+  });
+}
+
 // Scans
 export type ScanType = "syn" | "connect" | "udp";
 export type ComplianceFramework = "pci" | "hipaa" | "soc2" | "iso27001" | "nist";
