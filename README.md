@@ -27,14 +27,20 @@ that requirement and takes it a step further:
 - 🛰️ **Distributed scan agents**: a lightweight Go agent placed in each
   VLAN/segment; `naabu` + `nmap-service-probes`. Runs are routed per segment, and
   a run an agent claims but never finishes is automatically requeued.
-- 🗂️ **Inventory at scale**: manage assets by hand, bulk-import from CSV/Excel,
-  or sync from NetBox (IPAM). Each asset carries owner, criticality, and
-  data-sensitivity for scoping.
-- 🤖 **Provider-agnostic AI**: fingerprints unknown services and a natural-language
-  assistant. Local model (Ollama) by default, Claude optional; data never leaves
-  the network.
-- 🔗 **Workflow integrations**: in-app tasks, email, Jira (bidirectional), with a
-  settings page that tests each connection. Phase 2: Slack/Teams, AD/SSO.
+- 🗂️ **Inventory at scale**: manage assets and VLANs by hand, bulk-import from
+  CSV/Excel, or sync bidirectionally with NetBox (IPAM) — pull hosts and VLANs in,
+  and write scan-discovered hosts back. Hosts found during a scan are auto-added as
+  assets; each carries owner, criticality, and data-sensitivity for scoping.
+- 🤖 **Provider-agnostic AI**: refines weak service fingerprints during scans, plus
+  an agentic assistant that proposes actions for you to confirm. Local model
+  (Ollama) by default, with Claude or any OpenAI-compatible provider optional; data
+  never leaves the network.
+- 🔗 **Workflow integrations**: in-app tasks, email, and Jira (Cloud or
+  Server/Data Center, bidirectional) with configurable project, issue type,
+  assignee and labels. A settings page tests each connection. Phase 2: Slack/Teams, AD/SSO.
+- 🌍 **Built for non-experts**: a collapsible left sidebar, light/dark themes, six
+  UI languages, searchable/filterable/paginated tables, and scan setup that picks
+  targets from your inventory and schedules by plain-language period (no cron).
 
 ## Architecture
 
@@ -89,10 +95,11 @@ The first admin user is seeded from the `PORTWIZ_FIRST_ADMIN_*` values in `.env`
 - **Phase 1 (MVP) — done:** asset/VLAN/IP management → scanning → flapping-aware
   diff → audit + evidence export → task/Jira/email + scheduling → AI v0, plus a
   live dashboard, role-based UI, and admin pages (users, agents, settings).
-- **Phase 2 — in progress:** ✅ bulk CSV/Excel import, ✅ NetBox/IPAM sync,
-  ✅ per-segment agent routing + stale-run requeue, ✅ integration connection
-  tests. Next: compliance cadence templates, Keycloak (AD/LDAP/SSO), Slack/Teams,
-  SIEM/WORM forwarding.
+- **Phase 2 — in progress:** ✅ bulk CSV/Excel import (assets + VLANs),
+  ✅ bidirectional NetBox/IPAM sync, ✅ Jira Cloud & Server/Data Center,
+  ✅ per-segment agent routing + stale-run requeue, ✅ integration connection tests,
+  ✅ localized (six-language) themeable UI. Next: compliance cadence templates,
+  Keycloak (AD/LDAP/SSO), Slack/Teams, SIEM/WORM forwarding.
 - **Phase 3:** MCP/RAG AI assistant, local-only mode, Kubernetes/Helm, passive
   discovery correlation.
 
