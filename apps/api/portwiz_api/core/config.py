@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
 
+    # At-rest encryption of stored secrets (API keys, tokens, SMTP password).
+    # A urlsafe-base64 Fernet key, separate from secret_key; generate with:
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    # When unset, secrets are stored as plaintext (a startup warning is logged).
+    encryption_key: str | None = None
+
     # First admin user seeded on startup when no users exist.
     first_admin_email: str | None = None
     first_admin_password: str | None = None
