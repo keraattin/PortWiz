@@ -134,6 +134,11 @@ export const tr: Partial<Record<TKey, string>> = {
     "Yapılandırılmış NetBox'tan ana makineleri çeker ve IP'ye göre ekler/günceller.",
   "assets.syncing": "Eşitleniyor…",
   "assets.hosts": "ana makine",
+  "assets.pushTitle": "Keşfedilenleri NetBox'a gönder",
+  "assets.pushHint":
+    "PortWiz'in taramalarda bulduğu host'ları NetBox'a geri yazar (zaten olanları atlar).",
+  "assets.pushing": "Gönderiliyor…",
+  "assets.discoveredUnit": "keşfedilen",
   "assets.f.ip": "IP adresi",
   "assets.f.ipHint": "Taranacak ana makine. IPv4 veya IPv6, ör. 10.0.0.5",
   "assets.f.hostname": "Ana makine adı",
@@ -541,6 +546,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.netbox.url": "URL",
   "settings.netbox.urlHint": "ör. https://netbox.example.com",
   "settings.netbox.token": "API token",
+  "settings.netbox.writeback": "Her taramadan sonra keşfedilen host'ları otomatik yaz",
+  "settings.netbox.writebackHint":
+    "Açıkken her tarama, yeni keşfettiği host'ları NetBox'a geri yazar. Varsayılan kapalı; aksi halde Varlıklar sayfasındaki manuel butonu kullanın.",
 
   // Assistant
   "assistant.intro":

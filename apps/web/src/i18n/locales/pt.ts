@@ -134,6 +134,11 @@ export const pt: Partial<Record<TKey, string>> = {
     "Obtém hosts do seu NetBox configurado e os insere/atualiza por IP.",
   "assets.syncing": "Sincronizando…",
   "assets.hosts": "hosts",
+  "assets.pushTitle": "Enviar descobertos para o NetBox",
+  "assets.pushHint":
+    "Escreve no NetBox os hosts que o PortWiz encontrou nas varreduras (ignora os já existentes).",
+  "assets.pushing": "Enviando…",
+  "assets.discoveredUnit": "descobertos",
   "assets.f.ip": "Endereço IP",
   "assets.f.ipHint": "O host a varrer. IPv4 ou IPv6, ex.: 10.0.0.5",
   "assets.f.hostname": "Nome do host",
@@ -544,6 +549,9 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.netbox.url": "URL",
   "settings.netbox.urlHint": "ex.: https://netbox.example.com",
   "settings.netbox.token": "Token de API",
+  "settings.netbox.writeback": "Escrever hosts descobertos automaticamente após cada varredura",
+  "settings.netbox.writebackHint":
+    "Quando ativado, cada varredura escreve seus hosts recém-descobertos de volta no NetBox. Desativado por padrão; caso contrário, use o botão manual na página Ativos.",
 
   // Assistant
   "assistant.intro":

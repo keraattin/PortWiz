@@ -133,6 +133,11 @@ export const en = {
   "assets.syncHint": "Pulls hosts from your configured NetBox and upserts them by IP.",
   "assets.syncing": "Syncing…",
   "assets.hosts": "hosts",
+  "assets.pushTitle": "Push discovered to NetBox",
+  "assets.pushHint":
+    "Write hosts PortWiz found during scans back to NetBox (skips ones already there).",
+  "assets.pushing": "Pushing…",
+  "assets.discoveredUnit": "discovered",
   "assets.f.ip": "IP address",
   "assets.f.ipHint": "The host to scan. IPv4 or IPv6, e.g. 10.0.0.5",
   "assets.f.hostname": "Hostname",
@@ -539,6 +544,9 @@ export const en = {
   "settings.netbox.url": "URL",
   "settings.netbox.urlHint": "e.g. https://netbox.example.com",
   "settings.netbox.token": "API token",
+  "settings.netbox.writeback": "Auto-write discovered hosts after each scan",
+  "settings.netbox.writebackHint":
+    "When on, each scan writes its newly discovered hosts back to NetBox. Off by default; otherwise use the manual button on the Assets page.",
 
   // Assistant
   "assistant.intro":

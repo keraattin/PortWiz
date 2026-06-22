@@ -375,6 +375,20 @@ export function syncVlans(onConflict: "update" | "skip" = "update"): Promise<Vla
   });
 }
 
+// Write PortWiz's scan-discovered hosts back to NetBox.
+export interface AssetPushReport {
+  source: string;
+  total: number;
+  created: number;
+  skipped: number;
+  errors: number;
+  errors_detail: string[];
+}
+
+export function pushAssetsToNetbox(): Promise<AssetPushReport> {
+  return request<AssetPushReport>("/assets/push-netbox", { method: "POST" });
+}
+
 // Scans
 export type ScanType = "syn" | "connect" | "udp";
 export type ComplianceFramework = "pci" | "hipaa" | "soc2" | "iso27001" | "nist";
@@ -804,6 +818,7 @@ export interface SettingsConfig {
   jira_api_token_set: boolean;
   netbox_enabled: boolean;
   netbox_url: string | null;
+  netbox_writeback_enabled: boolean;
   netbox_token_set: boolean;
 }
 
@@ -836,6 +851,7 @@ export type SettingsConfigUpdate = Partial<{
   netbox_enabled: boolean;
   netbox_url: string;
   netbox_token: string;
+  netbox_writeback_enabled: boolean;
 }>;
 
 export function fetchSettingsConfig(): Promise<SettingsConfig> {

@@ -3,6 +3,7 @@ import {
   ApiError,
   type Asset,
   type AssetImportReport,
+  type AssetPushReport,
   type AssetSyncReport,
   type Criticality,
   type CurrentUser,
@@ -15,6 +16,7 @@ import {
   listAssets,
   listUsers,
   listVlans,
+  pushAssetsToNetbox,
   syncAssets,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
@@ -74,6 +76,10 @@ export default function AssetsPage() {
   const [syncReport, setSyncReport] = useState<AssetSyncReport | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+
+  const [pushReport, setPushReport] = useState<AssetPushReport | null>(null);
+  const [pushError, setPushError] = useState<string | null>(null);
+  const [pushing, setPushing] = useState(false);
   const [query, setQuery] = useState("");
 
   async function reload() {
@@ -179,6 +185,19 @@ export default function AssetsPage() {
       setSyncError(errorMessage(err));
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function onPush() {
+    setPushError(null);
+    setPushReport(null);
+    setPushing(true);
+    try {
+      setPushReport(await pushAssetsToNetbox());
+    } catch (err) {
+      setPushError(errorMessage(err));
+    } finally {
+      setPushing(false);
     }
   }
 
@@ -302,6 +321,34 @@ export default function AssetsPage() {
               .
             </p>
           )}
+
+          <div className="space-y-2 border-t border-slate-800 pt-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm font-medium text-slate-200">{t("assets.pushTitle")}</span>
+              <span className="text-xs text-slate-500">{t("assets.pushHint")}</span>
+            </div>
+            <Button variant="outline" onClick={onPush} disabled={pushing}>
+              {pushing ? t("assets.pushing") : t("assets.pushTitle")}
+            </Button>
+            {pushError && <p className="text-sm text-red-400">{pushError}</p>}
+            {pushReport && (
+              <p className="text-sm text-slate-300">
+                {pushReport.source}: {pushReport.total} {t("assets.discoveredUnit")}.{" "}
+                <span className="text-emerald-400">
+                  {pushReport.created} {t("assets.created")}
+                </span>
+                ,{" "}
+                <span className="text-slate-400">
+                  {pushReport.skipped} {t("assets.skipped")}
+                </span>
+                ,{" "}
+                <span className="text-red-400">
+                  {pushReport.errors} {t("assets.errors")}
+                </span>
+                .
+              </p>
+            )}
+          </div>
         </div>
       </section>
       )}

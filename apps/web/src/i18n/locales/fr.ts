@@ -134,6 +134,11 @@ export const fr: Partial<Record<TKey, string>> = {
     "Récupère les hôtes de votre NetBox configuré et les insère/met à jour par IP.",
   "assets.syncing": "Synchronisation…",
   "assets.hosts": "hôtes",
+  "assets.pushTitle": "Envoyer les hôtes détectés vers NetBox",
+  "assets.pushHint":
+    "Écrit dans NetBox les hôtes que PortWiz a trouvés lors des analyses (ignore ceux déjà présents).",
+  "assets.pushing": "Envoi…",
+  "assets.discoveredUnit": "détectés",
   "assets.f.ip": "Adresse IP",
   "assets.f.ipHint": "L'hôte à analyser. IPv4 ou IPv6, p. ex. 10.0.0.5",
   "assets.f.hostname": "Nom d'hôte",
@@ -544,6 +549,9 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.netbox.url": "URL",
   "settings.netbox.urlHint": "p. ex. https://netbox.example.com",
   "settings.netbox.token": "Jeton API",
+  "settings.netbox.writeback": "Écrire automatiquement les hôtes détectés après chaque analyse",
+  "settings.netbox.writebackHint":
+    "Si activé, chaque analyse réécrit ses hôtes nouvellement détectés dans NetBox. Désactivé par défaut ; sinon utilisez le bouton manuel sur la page Actifs.",
 
   // Assistant
   "assistant.intro":

@@ -134,6 +134,11 @@ export const es: Partial<Record<TKey, string>> = {
     "Obtiene hosts de tu NetBox configurado y los inserta/actualiza por IP.",
   "assets.syncing": "Sincronizando…",
   "assets.hosts": "hosts",
+  "assets.pushTitle": "Enviar descubiertos a NetBox",
+  "assets.pushHint":
+    "Escribe en NetBox los hosts que PortWiz encontró durante los escaneos (omite los que ya existen).",
+  "assets.pushing": "Enviando…",
+  "assets.discoveredUnit": "descubiertos",
   "assets.f.ip": "Dirección IP",
   "assets.f.ipHint": "El host a escanear. IPv4 o IPv6, p. ej. 10.0.0.5",
   "assets.f.hostname": "Nombre de host",
@@ -544,6 +549,9 @@ export const es: Partial<Record<TKey, string>> = {
   "settings.netbox.url": "URL",
   "settings.netbox.urlHint": "p. ej. https://netbox.example.com",
   "settings.netbox.token": "Token de API",
+  "settings.netbox.writeback": "Escribir hosts descubiertos automáticamente tras cada escaneo",
+  "settings.netbox.writebackHint":
+    "Cuando está activado, cada escaneo escribe sus hosts recién descubiertos de vuelta en NetBox. Desactivado por defecto; de lo contrario usa el botón manual en la página Activos.",
 
   // Assistant
   "assistant.intro":

@@ -70,6 +70,7 @@ interface FormState {
   netbox_enabled: boolean;
   netbox_url: string;
   netbox_token: string;
+  netbox_writeback_enabled: boolean;
 }
 
 function fromConfig(c: SettingsConfig): FormState {
@@ -102,6 +103,7 @@ function fromConfig(c: SettingsConfig): FormState {
     netbox_enabled: c.netbox_enabled,
     netbox_url: c.netbox_url ?? "",
     netbox_token: "",
+    netbox_writeback_enabled: c.netbox_writeback_enabled,
   };
 }
 
@@ -822,6 +824,14 @@ export default function SettingsPage() {
               onChange={(e) => set("netbox_token", e.target.value)}
             />
           </FormField>
+          <div className="space-y-1">
+            <Toggle
+              label={t("settings.netbox.writeback")}
+              checked={form.netbox_writeback_enabled}
+              onChange={(v) => set("netbox_writeback_enabled", v)}
+            />
+            <p className="text-xs text-slate-500">{t("settings.netbox.writebackHint")}</p>
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
@@ -831,6 +841,7 @@ export default function SettingsPage() {
                   netbox_enabled: form.netbox_enabled,
                   netbox_url: form.netbox_url,
                   netbox_token: form.netbox_token,
+                  netbox_writeback_enabled: form.netbox_writeback_enabled,
                 })
               }
             >
