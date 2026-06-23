@@ -8,11 +8,14 @@ import {
   updateUser,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import FilterSelect from "../components/FilterSelect";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import RoleMatrix from "../components/RoleMatrix";
 import SearchInput from "../components/SearchInput";
+import SortHeader from "../components/SortHeader";
+import { sortRows, useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -45,13 +48,31 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const { sort, toggleSort } = useSort();
   const q = query.trim().toLowerCase();
-  const filteredUsers = q
-    ? users.filter((u) =>
-        [u.email, u.full_name ?? "", u.role].some((v) => v.toLowerCase().includes(q)),
-      )
-    : users;
-  const usersPage = usePagination(filteredUsers, 15);
+  const filteredUsers = users.filter((u) => {
+    const matchesQuery =
+      !q || [u.email, u.full_name ?? "", u.role].some((v) => v.toLowerCase().includes(q));
+    return matchesQuery && (!roleFilter || u.role === roleFilter);
+  });
+  const sortedUsers = sortRows(filteredUsers, sort, (u, key) => {
+    switch (key) {
+      case "email":
+        return u.email;
+      case "name":
+        return u.full_name;
+      case "role":
+        return u.role;
+      case "active":
+        return u.is_active ? 1 : 0;
+      case "created":
+        return u.created_at;
+      default:
+        return null;
+    }
+  });
+  const usersPage = usePagination(sortedUsers, 15);
 
   const [addOpen, setAddOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -154,7 +175,16 @@ export default function UsersPage() {
       )}
 
       {users.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <FilterSelect
+            value={roleFilter}
+            onChange={(v) => {
+              setRoleFilter(v);
+              usersPage.setPage(0);
+            }}
+            options={ROLES.map((r) => ({ value: r, label: t(`role.${r}` as TKey) }))}
+            allLabel={t("users.col.role")}
+          />
           <SearchInput
             value={query}
             onChange={(v) => {
@@ -169,11 +199,21 @@ export default function UsersPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">{t("users.col.email")}</th>
-              <th className="px-4 py-2 font-medium">{t("users.col.name")}</th>
-              <th className="px-4 py-2 font-medium">{t("users.col.role")}</th>
-              <th className="px-4 py-2 font-medium">{t("users.col.active")}</th>
-              <th className="px-4 py-2 font-medium">{t("users.col.created")}</th>
+              <SortHeader label={t("users.col.email")} sortKey="email" sort={sort} onSort={toggleSort} />
+              <SortHeader label={t("users.col.name")} sortKey="name" sort={sort} onSort={toggleSort} />
+              <SortHeader label={t("users.col.role")} sortKey="role" sort={sort} onSort={toggleSort} />
+              <SortHeader
+                label={t("users.col.active")}
+                sortKey="active"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label={t("users.col.created")}
+                sortKey="created"
+                sort={sort}
+                onSort={toggleSort}
+              />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
