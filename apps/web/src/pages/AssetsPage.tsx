@@ -21,12 +21,15 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
+import FilterSelect from "../components/FilterSelect";
 import FormField from "../components/FormField";
 import InfoCallout from "../components/InfoCallout";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
+import SortHeader from "../components/SortHeader";
+import { sortRows, useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -47,6 +50,9 @@ const CRIT_BADGE: Record<Criticality, string> = {
   high: "bg-amber-900 text-amber-300",
   critical: "bg-red-900 text-red-300",
 };
+
+// Rank so criticality sorts by severity, not alphabetically.
+const CRIT_RANK: Record<Criticality, number> = { low: 0, medium: 1, high: 2, critical: 3 };
 
 export default function AssetsPage() {
   const { user } = useAuth();
@@ -81,6 +87,9 @@ export default function AssetsPage() {
   const [pushError, setPushError] = useState<string | null>(null);
   const [pushing, setPushing] = useState(false);
   const [query, setQuery] = useState("");
+  const [critFilter, setCritFilter] = useState("");
+  const [sensFilter, setSensFilter] = useState("");
+  const { sort, toggleSort } = useSort();
 
   async function reload() {
     setLoading(true);
@@ -106,13 +115,36 @@ export default function AssetsPage() {
     id ? (users.find((u) => u.id === id)?.email ?? "-") : "-";
 
   const q = query.trim().toLowerCase();
-  const filteredAssets = q
-    ? assets.filter((a) =>
-        [a.ip, a.hostname ?? "", vlanName(a.vlan_id), ownerEmail(a.owner_id), a.criticality, a.data_sensitivity]
-          .some((v) => v.toLowerCase().includes(q)),
-      )
-    : assets;
-  const assetsPage = usePagination(filteredAssets, 15);
+  const filteredAssets = assets.filter((a) => {
+    const matchesQuery =
+      !q ||
+      [a.ip, a.hostname ?? "", vlanName(a.vlan_id), ownerEmail(a.owner_id), a.criticality, a.data_sensitivity]
+        .some((v) => v.toLowerCase().includes(q));
+    return (
+      matchesQuery &&
+      (!critFilter || a.criticality === critFilter) &&
+      (!sensFilter || a.data_sensitivity === sensFilter)
+    );
+  });
+  const sortedAssets = sortRows(filteredAssets, sort, (a, key) => {
+    switch (key) {
+      case "ip":
+        return a.ip;
+      case "hostname":
+        return a.hostname;
+      case "vlan":
+        return vlanName(a.vlan_id);
+      case "owner":
+        return ownerEmail(a.owner_id);
+      case "criticality":
+        return CRIT_RANK[a.criticality];
+      case "sensitivity":
+        return a.data_sensitivity;
+      default:
+        return null;
+    }
+  });
+  const assetsPage = usePagination(sortedAssets, 15);
 
   function openAdd() {
     setError(null);
@@ -354,7 +386,25 @@ export default function AssetsPage() {
       )}
 
       {assets.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <FilterSelect
+            value={critFilter}
+            onChange={(v) => {
+              setCritFilter(v);
+              assetsPage.setPage(0);
+            }}
+            options={CRITICALITIES.map((c) => ({ value: c, label: t(`crit.${c}` as TKey) }))}
+            allLabel={t("assets.col.criticality")}
+          />
+          <FilterSelect
+            value={sensFilter}
+            onChange={(v) => {
+              setSensFilter(v);
+              assetsPage.setPage(0);
+            }}
+            options={SENSITIVITIES.map((s) => ({ value: s, label: s.toUpperCase() }))}
+            allLabel={t("assets.col.sensitivity")}
+          />
           <SearchInput
             value={query}
             onChange={(v) => {
@@ -369,12 +419,32 @@ export default function AssetsPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">{t("assets.col.ip")}</th>
-              <th className="px-4 py-2 font-medium">{t("assets.col.hostname")}</th>
-              <th className="px-4 py-2 font-medium">{t("assets.col.vlan")}</th>
-              <th className="px-4 py-2 font-medium">{t("assets.col.owner")}</th>
-              <th className="px-4 py-2 font-medium">{t("assets.col.criticality")}</th>
-              <th className="px-4 py-2 font-medium">{t("assets.col.sensitivity")}</th>
+              <SortHeader label={t("assets.col.ip")} sortKey="ip" sort={sort} onSort={toggleSort} />
+              <SortHeader
+                label={t("assets.col.hostname")}
+                sortKey="hostname"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader label={t("assets.col.vlan")} sortKey="vlan" sort={sort} onSort={toggleSort} />
+              <SortHeader
+                label={t("assets.col.owner")}
+                sortKey="owner"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label={t("assets.col.criticality")}
+                sortKey="criticality"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label={t("assets.col.sensitivity")}
+                sortKey="sensitivity"
+                sort={sort}
+                onSort={toggleSort}
+              />
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
