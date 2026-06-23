@@ -79,6 +79,11 @@ docker compose up --build
 
 The first admin user is seeded from the `PORTWIZ_FIRST_ADMIN_*` values in `.env`.
 
+For production, set `PORTWIZ_ENCRYPTION_KEY` (see `.env.example` for the one-line
+generator) to encrypt stored integration secrets — API keys, tokens, and the SMTP
+password — at rest. Keep the key stable: rotating or losing it makes existing
+secrets unreadable.
+
 ## Repository layout
 
 | Path | Contents |
