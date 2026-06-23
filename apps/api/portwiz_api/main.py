@@ -15,6 +15,7 @@ from .core.config import get_settings
 from .seed import seed_first_admin
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("portwiz")
 settings = get_settings()
 
 
@@ -22,6 +23,11 @@ settings = get_settings()
 async def lifespan(_: FastAPI):
     # Migrations are applied by the container entrypoint (alembic upgrade head)
     # before the app boots; here we only seed idempotent data.
+    if not settings.encryption_key:
+        logger.warning(
+            "PORTWIZ_ENCRYPTION_KEY is not set; stored secrets are kept in "
+            "plaintext. Set a key to encrypt them at rest."
+        )
     await seed_first_admin()
     yield
 

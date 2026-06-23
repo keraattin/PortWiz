@@ -141,6 +141,55 @@ async def test_jira_cloud_needs_email_to_configure(client, admin_headers) -> Non
     assert status["jira_configured"] is True
 
 
+async def test_secret_encrypted_at_rest(db, monkeypatch) -> None:
+    from cryptography.fernet import Fernet
+
+    from portwiz_api.core import app_settings as app_settings_mod
+    from portwiz_api.core.app_settings import effective_settings, set_overrides
+    from portwiz_api.models.app_setting import AppSetting
+
+    key = Fernet.generate_key().decode()
+    keyed = app_settings_mod.get_settings().model_copy(update={"encryption_key": key})
+    monkeypatch.setattr(app_settings_mod, "get_settings", lambda: keyed)
+
+    async with db() as session:
+        await set_overrides(
+            session, {"jira_api_token": "tok-secret"}, actor_id=None, actor_email="t"
+        )
+
+    # The stored value is ciphertext, never the plaintext secret.
+    async with db() as session:
+        row = await session.get(AppSetting, "jira_api_token")
+        assert row.value.startswith("enc:v1:")
+        assert "tok-secret" not in row.value
+
+    # effective_settings transparently decrypts it back.
+    async with db() as session:
+        s = await effective_settings(session)
+        assert s.jira_api_token == "tok-secret"
+
+
+async def test_legacy_plaintext_secret_reads_with_key(db, monkeypatch) -> None:
+    from cryptography.fernet import Fernet
+
+    from portwiz_api.core import app_settings as app_settings_mod
+    from portwiz_api.core.app_settings import effective_settings, set_overrides
+
+    # Written before encryption was enabled (no key) -> stored as plaintext.
+    async with db() as session:
+        await set_overrides(
+            session, {"netbox_token": "legacy-plain"}, actor_id=None, actor_email="t"
+        )
+
+    # A key is configured later; the legacy plaintext must still read back.
+    key = Fernet.generate_key().decode()
+    keyed = app_settings_mod.get_settings().model_copy(update={"encryption_key": key})
+    monkeypatch.setattr(app_settings_mod, "get_settings", lambda: keyed)
+    async with db() as session:
+        s = await effective_settings(session)
+        assert s.netbox_token == "legacy-plain"
+
+
 async def test_netbox_writeback_flag_round_trips(client, admin_headers) -> None:
     resp = await client.patch(
         "/api/v1/settings/config",

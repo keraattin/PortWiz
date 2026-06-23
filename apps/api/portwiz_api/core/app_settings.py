@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.app_setting import AppSetting
 from .audit import append_audit
 from .config import Settings, get_settings
+from .crypto import decrypt_secret, encrypt_secret
 
 # Settings fields an admin may override from the UI.
 EDITABLE_KEYS: list[str] = [
@@ -88,7 +89,8 @@ async def load_overrides(session: AsyncSession) -> dict[str, str]:
 
 
 async def effective_settings(session: AsyncSession) -> Settings:
-    """Environment defaults with DB overrides applied."""
+    """Environment defaults with DB overrides applied. Stored secrets are
+    decrypted on the way out (legacy plaintext passes through unchanged)."""
     base = get_settings()
     overrides = await load_overrides(session)
     if not overrides:
@@ -96,6 +98,8 @@ async def effective_settings(session: AsyncSession) -> Settings:
     data = base.model_dump()
     for key, raw in overrides.items():
         if key in data:
+            if key in SECRET_KEYS:
+                raw = decrypt_secret(raw, base.encryption_key)
             data[key] = _cast(data[key], raw)
     return Settings(**data)
 
@@ -110,6 +114,7 @@ async def set_overrides(
     """Upsert override rows. Blank secret values are ignored (keep current).
     The caller's audit records which keys changed, never their values."""
     now = dt.datetime.now(tz=dt.timezone.utc)
+    enc_key = get_settings().encryption_key
     changed: list[str] = []
     for key, value in updates.items():
         if key not in EDITABLE_KEYS:
@@ -118,6 +123,8 @@ async def set_overrides(
             continue
         row = await session.get(AppSetting, key)
         stored = _to_str(value)
+        if key in SECRET_KEYS:
+            stored = encrypt_secret(stored, enc_key)
         if row is None:
             session.add(
                 AppSetting(key=key, value=stored, updated_at=now, updated_by=actor_id)
