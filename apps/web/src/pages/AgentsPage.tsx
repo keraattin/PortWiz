@@ -10,8 +10,13 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
+import FilterSelect from "../components/FilterSelect";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
+import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
+import SortHeader from "../components/SortHeader";
+import { sortRows, useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -31,6 +36,15 @@ function agentStatus(lastSeen: string | null): { key: TKey; cls: string } {
     return { key: "agents.status.online", cls: "bg-emerald-900 text-emerald-300" };
   return { key: "agents.status.offline", cls: "bg-red-900 text-red-300" };
 }
+
+// A single status category per agent, for filtering and sorting.
+function agentCategory(a: Agent): string {
+  if (!a.enabled) return "disabled";
+  if (!a.last_seen_at) return "neverSeen";
+  return Date.now() - new Date(a.last_seen_at).getTime() < ONLINE_WINDOW_MS ? "online" : "offline";
+}
+
+const STATUS_OPTIONS = ["online", "offline", "neverSeen", "disabled"] as const;
 
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
@@ -52,6 +66,35 @@ export default function AgentsPage() {
   const [editAgent, setEditAgent] = useState<Agent | null>(null);
   const [editSegment, setEditSegment] = useState("");
   const [editEnabled, setEditEnabled] = useState(true);
+
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const { sort, toggleSort } = useSort();
+  const q = query.trim().toLowerCase();
+  const agentRows = sortRows(
+    agents.filter((a) => {
+      const matchesQuery = !q || [a.name, a.segment ?? ""].some((x) => x.toLowerCase().includes(q));
+      return matchesQuery && (!statusFilter || agentCategory(a) === statusFilter);
+    }),
+    sort,
+    (a, key) => {
+      switch (key) {
+        case "name":
+          return a.name;
+        case "segment":
+          return a.segment;
+        case "status":
+          return agentCategory(a);
+        case "lastSeen":
+          return a.last_seen_at;
+        case "enrolledAt":
+          return a.created_at;
+        default:
+          return null;
+      }
+    },
+  );
+  const agentsPage = usePagination(agentRows, 15);
 
   async function reload() {
     setLoading(true);
@@ -175,15 +218,59 @@ export default function AgentsPage() {
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
+      {agents.length > 0 && (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <FilterSelect
+            value={statusFilter}
+            onChange={(v) => {
+              setStatusFilter(v);
+              agentsPage.setPage(0);
+            }}
+            options={STATUS_OPTIONS.map((s) => ({
+              value: s,
+              label: t(`agents.status.${s}` as TKey),
+            }))}
+            allLabel={t("agents.col.status")}
+          />
+          <SearchInput
+            value={query}
+            onChange={(v) => {
+              setQuery(v);
+              agentsPage.setPage(0);
+            }}
+          />
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">{t("agents.col.name")}</th>
-              <th className="px-4 py-2 font-medium">{t("agents.col.segment")}</th>
-              <th className="px-4 py-2 font-medium">{t("agents.col.status")}</th>
-              <th className="px-4 py-2 font-medium">{t("agents.col.lastSeen")}</th>
-              <th className="px-4 py-2 font-medium">{t("agents.col.enrolledAt")}</th>
+              <SortHeader label={t("agents.col.name")} sortKey="name" sort={sort} onSort={toggleSort} />
+              <SortHeader
+                label={t("agents.col.segment")}
+                sortKey="segment"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label={t("agents.col.status")}
+                sortKey="status"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label={t("agents.col.lastSeen")}
+                sortKey="lastSeen"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label={t("agents.col.enrolledAt")}
+                sortKey="enrolledAt"
+                sort={sort}
+                onSort={toggleSort}
+              />
               {isAdmin && <th className="px-4 py-2"></th>}
             </tr>
           </thead>
@@ -200,8 +287,14 @@ export default function AgentsPage() {
                   {t("agents.empty")}
                 </td>
               </tr>
+            ) : agentRows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+                  {t("common.noData")}
+                </td>
+              </tr>
             ) : (
-              agents.map((a) => {
+              agentsPage.slice.map((a) => {
                 const status = agentStatus(a.last_seen_at);
                 return (
                   <tr
@@ -250,6 +343,12 @@ export default function AgentsPage() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={agentsPage.page}
+        pageCount={agentsPage.pageCount}
+        total={agentsPage.total}
+        onPage={agentsPage.setPage}
+      />
 
       <Modal
         open={editAgent !== null}

@@ -21,6 +21,10 @@ import FormField from "../components/FormField";
 import InfoCallout from "../components/InfoCallout";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
+import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
+import SortHeader from "../components/SortHeader";
+import { sortRows, useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -60,6 +64,11 @@ export default function VlansPage() {
   const [syncReport, setSyncReport] = useState<VlanSyncReport | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+
+  const [vlanQuery, setVlanQuery] = useState("");
+  const [rangeQuery, setRangeQuery] = useState("");
+  const { sort: vlanSort, toggleSort: vlanToggle } = useSort();
+  const { sort: rangeSort, toggleSort: rangeToggle } = useSort();
 
   async function onSync() {
     setSyncError(null);
@@ -111,6 +120,34 @@ export default function VlansPage() {
 
   const vlanName = (id: string | null) =>
     id ? (vlans.find((v) => v.id === id)?.name ?? "-") : "-";
+
+  const vq = vlanQuery.trim().toLowerCase();
+  const vlanRows = sortRows(
+    vlans.filter(
+      (v) =>
+        !vq ||
+        [v.name, String(v.vlan_tag ?? ""), v.description ?? ""].some((x) =>
+          x.toLowerCase().includes(vq),
+        ),
+    ),
+    vlanSort,
+    (v, key) => (key === "name" ? v.name : key === "tag" ? v.vlan_tag : v.description),
+  );
+  const vlansPage = usePagination(vlanRows, 15);
+
+  const rq = rangeQuery.trim().toLowerCase();
+  const rangeRows = sortRows(
+    ipRanges.filter(
+      (r) =>
+        !rq ||
+        [r.cidr, vlanName(r.vlan_id), r.description ?? ""].some((x) =>
+          x.toLowerCase().includes(rq),
+        ),
+    ),
+    rangeSort,
+    (r, key) => (key === "cidr" ? r.cidr : key === "vlan" ? vlanName(r.vlan_id) : r.description),
+  );
+  const rangesPage = usePagination(rangeRows, 15);
 
   function openAddVlan() {
     setError(null);
@@ -308,13 +345,30 @@ export default function VlansPage() {
         </section>
       )}
 
+      {vlans.length > 0 && (
+        <div className="flex justify-end">
+          <SearchInput
+            value={vlanQuery}
+            onChange={(v) => {
+              setVlanQuery(v);
+              vlansPage.setPage(0);
+            }}
+          />
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">{t("vlans.col.name")}</th>
-              <th className="px-4 py-2 font-medium">{t("vlans.col.tag")}</th>
-              <th className="px-4 py-2 font-medium">{t("vlans.col.description")}</th>
+              <SortHeader label={t("vlans.col.name")} sortKey="name" sort={vlanSort} onSort={vlanToggle} />
+              <SortHeader label={t("vlans.col.tag")} sortKey="tag" sort={vlanSort} onSort={vlanToggle} />
+              <SortHeader
+                label={t("vlans.col.description")}
+                sortKey="description"
+                sort={vlanSort}
+                onSort={vlanToggle}
+              />
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -342,8 +396,14 @@ export default function VlansPage() {
                   )}
                 </td>
               </tr>
+            ) : vlanRows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
+                  {t("common.noData")}
+                </td>
+              </tr>
             ) : (
-              vlans.map((v) => (
+              vlansPage.slice.map((v) => (
                 <tr key={v.id} className="bg-slate-950">
                   <td className="px-4 py-2 text-slate-100">{v.name}</td>
                   <td className="px-4 py-2 text-slate-300">{v.vlan_tag ?? "-"}</td>
@@ -364,6 +424,12 @@ export default function VlansPage() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={vlansPage.page}
+        pageCount={vlansPage.pageCount}
+        total={vlansPage.total}
+        onPage={vlansPage.setPage}
+      />
 
       <div className="flex items-start justify-between gap-3 pt-2">
         <div>
@@ -377,13 +443,30 @@ export default function VlansPage() {
         )}
       </div>
 
+      {ipRanges.length > 0 && (
+        <div className="flex justify-end">
+          <SearchInput
+            value={rangeQuery}
+            onChange={(v) => {
+              setRangeQuery(v);
+              rangesPage.setPage(0);
+            }}
+          />
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">{t("ranges.col.cidr")}</th>
-              <th className="px-4 py-2 font-medium">{t("ranges.col.vlan")}</th>
-              <th className="px-4 py-2 font-medium">{t("ranges.col.description")}</th>
+              <SortHeader label={t("ranges.col.cidr")} sortKey="cidr" sort={rangeSort} onSort={rangeToggle} />
+              <SortHeader label={t("ranges.col.vlan")} sortKey="vlan" sort={rangeSort} onSort={rangeToggle} />
+              <SortHeader
+                label={t("ranges.col.description")}
+                sortKey="description"
+                sort={rangeSort}
+                onSort={rangeToggle}
+              />
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -411,8 +494,14 @@ export default function VlansPage() {
                   )}
                 </td>
               </tr>
+            ) : rangeRows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
+                  {t("common.noData")}
+                </td>
+              </tr>
             ) : (
-              ipRanges.map((r) => (
+              rangesPage.slice.map((r) => (
                 <tr key={r.id} className="bg-slate-950">
                   <td className="px-4 py-2 font-mono text-slate-100">{r.cidr}</td>
                   <td className="px-4 py-2 text-slate-300">{vlanName(r.vlan_id)}</td>
@@ -433,6 +522,12 @@ export default function VlansPage() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={rangesPage.page}
+        pageCount={rangesPage.pageCount}
+        total={rangesPage.total}
+        onPage={rangesPage.setPage}
+      />
 
       <Modal open={vlanOpen} onClose={() => setVlanOpen(false)} title={t("vlans.add")}>
         <form onSubmit={onCreate} className="space-y-3">
