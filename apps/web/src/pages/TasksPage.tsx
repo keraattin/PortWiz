@@ -11,9 +11,12 @@ import {
   updateTask,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import FilterSelect from "../components/FilterSelect";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
+import SortHeader from "../components/SortHeader";
+import { sortRows, useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -24,6 +27,13 @@ function errorMessage(e: unknown): string {
 
 const STATUSES: TaskStatus[] = ["open", "in_progress", "done", "cancelled"];
 const FILTERS = ["all", "open", "in_progress", "done", "cancelled"] as const;
+// Rank so status sorts by lifecycle order, not alphabetically.
+const STATUS_RANK: Record<TaskStatus, number> = {
+  open: 0,
+  in_progress: 1,
+  done: 2,
+  cancelled: 3,
+};
 
 const STATUS_BADGE: Record<TaskStatus, string> = {
   open: "bg-sky-900 text-sky-300",
@@ -44,6 +54,8 @@ export default function TasksPage() {
   const [users, setUsers] = useState<CurrentUser[]>([]);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [query, setQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const { sort, toggleSort } = useSort();
   const [error, setError] = useState<string | null>(null);
 
   async function reload(f = filter) {
@@ -69,13 +81,36 @@ export default function TasksPage() {
     id ? (users.find((u) => u.id === id)?.email ?? "unknown") : "";
 
   const q = query.trim().toLowerCase();
-  const filteredTasks = q
-    ? tasks.filter((task) =>
+  const filteredTasks = sortRows(
+    tasks.filter((task) => {
+      const matchesQuery =
+        !q ||
         [task.title, ownerEmail(task.assignee_id), task.jira_key ?? ""].some((v) =>
           v.toLowerCase().includes(q),
-        ),
-      )
-    : tasks;
+        );
+      const isChange = !!task.change_event_id;
+      const matchesSource =
+        !sourceFilter || (sourceFilter === "change" ? isChange : !isChange);
+      return matchesQuery && matchesSource;
+    }),
+    sort,
+    (task, key) => {
+      switch (key) {
+        case "title":
+          return task.title;
+        case "status":
+          return STATUS_RANK[task.status];
+        case "assignee":
+          return ownerEmail(task.assignee_id);
+        case "source":
+          return task.change_event_id ? "change" : "manual";
+        case "jira":
+          return task.jira_key;
+        default:
+          return null;
+      }
+    },
+  );
   const tasksPage = usePagination(filteredTasks, 15);
 
   async function act(fn: () => Promise<unknown>) {
@@ -119,7 +154,19 @@ export default function TasksPage() {
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {tasks.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <FilterSelect
+            value={sourceFilter}
+            onChange={(v) => {
+              setSourceFilter(v);
+              tasksPage.setPage(0);
+            }}
+            options={[
+              { value: "change", label: t("tasks.source.change") },
+              { value: "manual", label: t("tasks.source.manual") },
+            ]}
+            allLabel={t("tasks.col.source")}
+          />
           <SearchInput
             value={query}
             onChange={(v) => {
@@ -134,11 +181,26 @@ export default function TasksPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
-              <th className="px-4 py-2 font-medium">{t("tasks.col.title")}</th>
-              <th className="px-4 py-2 font-medium">{t("tasks.col.status")}</th>
-              <th className="px-4 py-2 font-medium">{t("tasks.col.assignee")}</th>
-              <th className="px-4 py-2 font-medium">{t("tasks.col.source")}</th>
-              <th className="px-4 py-2 font-medium">{t("tasks.col.jira")}</th>
+              <SortHeader label={t("tasks.col.title")} sortKey="title" sort={sort} onSort={toggleSort} />
+              <SortHeader
+                label={t("tasks.col.status")}
+                sortKey="status"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label={t("tasks.col.assignee")}
+                sortKey="assignee"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                label={t("tasks.col.source")}
+                sortKey="source"
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader label={t("tasks.col.jira")} sortKey="jira" sort={sort} onSort={toggleSort} />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">

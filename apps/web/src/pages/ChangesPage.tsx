@@ -11,9 +11,12 @@ import {
   updateChangeStatus,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import FilterSelect from "../components/FilterSelect";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
+import SortHeader from "../components/SortHeader";
+import { sortRows, useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -42,6 +45,10 @@ const STATUS_BADGE: Record<ChangeStatus, string> = {
 };
 
 const STATUS_FILTERS = ["all", "open", "acknowledged", "resolved"] as const;
+const CHANGE_TYPES: ChangeType[] = ["opened", "closed", "service_changed", "version_changed"];
+const SEVERITIES = ["low", "medium", "high"] as const;
+// Rank so severity sorts by impact, not alphabetically.
+const SEV_RANK: Record<string, number> = { low: 0, medium: 1, high: 2 };
 
 type Translate = (key: TKey, vars?: Record<string, string | number>) => string;
 
@@ -62,19 +69,46 @@ export default function ChangesPage() {
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
   const [query, setQuery] = useState("");
+  const [sevFilter, setSevFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [groupBy, setGroupBy] = useState<"none" | "host" | "scan">("none");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const { sort, toggleSort } = useSort();
   const profileName = (id: string) =>
     profiles.find((p) => p.id === id)?.name ?? t("scans.deletedProfile");
   const q = query.trim().toLowerCase();
-  const filteredChanges = q
-    ? changes.filter((c) =>
+  const filteredChanges = sortRows(
+    changes.filter((c) => {
+      const matchesQuery =
+        !q ||
         [c.ip, String(c.port), c.protocol, c.change_type, c.severity, c.status].some((v) =>
           v.toLowerCase().includes(q),
-        ),
-      )
-    : changes;
+        );
+      return (
+        matchesQuery &&
+        (!sevFilter || c.severity === sevFilter) &&
+        (!typeFilter || c.change_type === typeFilter)
+      );
+    }),
+    sort,
+    (c, key) => {
+      switch (key) {
+        case "detected":
+          return c.detected_at;
+        case "host":
+          return c.ip;
+        case "change":
+          return c.change_type;
+        case "severity":
+          return SEV_RANK[c.severity] ?? 0;
+        case "status":
+          return c.status;
+        default:
+          return null;
+      }
+    },
+  );
   const changesPage = usePagination(filteredChanges, 15);
 
   async function reload(filter = statusFilter) {
@@ -219,13 +253,33 @@ export default function ChangesPage() {
               <option value="scan">{t("changes.group.scan")}</option>
             </select>
           </label>
-          <SearchInput
-            value={query}
-            onChange={(v) => {
-              setQuery(v);
-              changesPage.setPage(0);
-            }}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterSelect
+              value={sevFilter}
+              onChange={(v) => {
+                setSevFilter(v);
+                changesPage.setPage(0);
+              }}
+              options={SEVERITIES.map((s) => ({ value: s, label: t(`severity.${s}` as TKey) }))}
+              allLabel={t("changes.col.severity")}
+            />
+            <FilterSelect
+              value={typeFilter}
+              onChange={(v) => {
+                setTypeFilter(v);
+                changesPage.setPage(0);
+              }}
+              options={CHANGE_TYPES.map((c) => ({ value: c, label: t(`changeType.${c}` as TKey) }))}
+              allLabel={t("changes.col.change")}
+            />
+            <SearchInput
+              value={query}
+              onChange={(v) => {
+                setQuery(v);
+                changesPage.setPage(0);
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -264,12 +318,37 @@ export default function ChangesPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-900 text-slate-400">
                 <tr>
-                  <th className="px-4 py-2 font-medium">{t("changes.col.detected")}</th>
-                  <th className="px-4 py-2 font-medium">{t("changes.col.host")}</th>
-                  <th className="px-4 py-2 font-medium">{t("changes.col.change")}</th>
+                  <SortHeader
+                    label={t("changes.col.detected")}
+                    sortKey="detected"
+                    sort={sort}
+                    onSort={toggleSort}
+                  />
+                  <SortHeader
+                    label={t("changes.col.host")}
+                    sortKey="host"
+                    sort={sort}
+                    onSort={toggleSort}
+                  />
+                  <SortHeader
+                    label={t("changes.col.change")}
+                    sortKey="change"
+                    sort={sort}
+                    onSort={toggleSort}
+                  />
                   <th className="px-4 py-2 font-medium">{t("changes.col.beforeAfter")}</th>
-                  <th className="px-4 py-2 font-medium">{t("changes.col.severity")}</th>
-                  <th className="px-4 py-2 font-medium">{t("changes.col.status")}</th>
+                  <SortHeader
+                    label={t("changes.col.severity")}
+                    sortKey="severity"
+                    sort={sort}
+                    onSort={toggleSort}
+                  />
+                  <SortHeader
+                    label={t("changes.col.status")}
+                    sortKey="status"
+                    sort={sort}
+                    onSort={toggleSort}
+                  />
                   <th className="px-4 py-2"></th>
                 </tr>
               </thead>
