@@ -39,6 +39,7 @@ export const de: Partial<Record<TKey, string>> = {
   "common.noData": "Noch keine Daten",
   "common.error": "Etwas ist schiefgelaufen",
   "common.search": "Suchen…",
+  "common.filter": "Filtern…",
 
   // Dashboard
   "dashboard.apiStatus": "API-Status:",
