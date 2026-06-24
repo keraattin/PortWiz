@@ -11,12 +11,10 @@ import {
   updateChangeStatus,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
-import FilterSelect from "../components/FilterSelect";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
-import SearchInput from "../components/SearchInput";
-import SortHeader from "../components/SortHeader";
-import { sortRows, useSort } from "../components/useSort";
+import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
+import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -68,48 +66,38 @@ export default function ChangesPage() {
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
-  const [query, setQuery] = useState("");
-  const [sevFilter, setSevFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
   const [groupBy, setGroupBy] = useState<"none" | "host" | "scan">("none");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const { sort, toggleSort } = useSort();
+  const { filters, setFilter } = useColumnFilters();
   const profileName = (id: string) =>
     profiles.find((p) => p.id === id)?.name ?? t("scans.deletedProfile");
-  const q = query.trim().toLowerCase();
-  const filteredChanges = sortRows(
-    changes.filter((c) => {
-      const matchesQuery =
-        !q ||
-        [c.ip, String(c.port), c.protocol, c.change_type, c.severity, c.status].some((v) =>
-          v.toLowerCase().includes(q),
-        );
-      return (
-        matchesQuery &&
-        (!sevFilter || c.severity === sevFilter) &&
-        (!typeFilter || c.change_type === typeFilter)
-      );
-    }),
-    sort,
-    (c, key) => {
-      switch (key) {
-        case "detected":
-          return c.detected_at;
-        case "host":
-          return c.ip;
-        case "change":
-          return c.change_type;
-        case "severity":
-          return SEV_RANK[c.severity] ?? 0;
-        case "status":
-          return c.status;
-        default:
-          return null;
-      }
+  const columns: Column<ChangeEvent>[] = [
+    { key: "detected", label: t("changes.col.detected"), get: (c) => c.detected_at },
+    { key: "host", label: t("changes.col.host"), filter: "text", get: (c) => c.ip },
+    {
+      key: "change",
+      label: t("changes.col.change"),
+      filter: CHANGE_TYPES.map((c) => ({ value: c, label: t(`changeType.${c}` as TKey) })),
+      get: (c) => c.change_type,
     },
-  );
-  const changesPage = usePagination(filteredChanges, 15);
+    { key: "beforeAfter", label: t("changes.col.beforeAfter"), sortable: false, get: () => null },
+    {
+      key: "severity",
+      label: t("changes.col.severity"),
+      filter: SEVERITIES.map((s) => ({ value: s, label: t(`severity.${s}` as TKey) })),
+      get: (c) => c.severity,
+      rank: SEV_RANK,
+    },
+    { key: "status", label: t("changes.col.status"), get: (c) => c.status },
+  ];
+  const processed = processRows(changes, columns, sort, filters);
+  const changesPage = usePagination(processed, 15);
+  const onColFilter = (key: string, v: string) => {
+    setFilter(key, v);
+    changesPage.setPage(0);
+  };
 
   async function reload(filter = statusFilter) {
     try {
@@ -158,7 +146,7 @@ export default function ChangesPage() {
     groupBy === "none"
       ? []
       : Object.entries(
-          filteredChanges.reduce<Record<string, ChangeEvent[]>>((acc, c) => {
+          processed.reduce<Record<string, ChangeEvent[]>>((acc, c) => {
             const key = groupBy === "host" ? c.ip : profileName(c.scan_profile_id);
             (acc[key] ??= []).push(c);
             return acc;
@@ -240,7 +228,7 @@ export default function ChangesPage() {
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {changes.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm text-slate-400">
             {t("changes.groupBy")}
             <select
@@ -253,33 +241,6 @@ export default function ChangesPage() {
               <option value="scan">{t("changes.group.scan")}</option>
             </select>
           </label>
-          <div className="flex flex-wrap items-center gap-2">
-            <FilterSelect
-              value={sevFilter}
-              onChange={(v) => {
-                setSevFilter(v);
-                changesPage.setPage(0);
-              }}
-              options={SEVERITIES.map((s) => ({ value: s, label: t(`severity.${s}` as TKey) }))}
-              allLabel={t("changes.col.severity")}
-            />
-            <FilterSelect
-              value={typeFilter}
-              onChange={(v) => {
-                setTypeFilter(v);
-                changesPage.setPage(0);
-              }}
-              options={CHANGE_TYPES.map((c) => ({ value: c, label: t(`changeType.${c}` as TKey) }))}
-              allLabel={t("changes.col.change")}
-            />
-            <SearchInput
-              value={query}
-              onChange={(v) => {
-                setQuery(v);
-                changesPage.setPage(0);
-              }}
-            />
-          </div>
         </div>
       )}
 
@@ -287,7 +248,7 @@ export default function ChangesPage() {
         <div className="rounded-xl border border-slate-800 p-4 text-sm text-slate-500">
           {t("changes.empty")}
         </div>
-      ) : filteredChanges.length === 0 ? (
+      ) : processed.length === 0 ? (
         <div className="rounded-xl border border-slate-800 p-4 text-center text-sm text-slate-500">
           {t("common.noData")}
         </div>
@@ -316,42 +277,14 @@ export default function ChangesPage() {
         <>
           <div className="overflow-hidden rounded-xl border border-slate-800">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-900 text-slate-400">
-                <tr>
-                  <SortHeader
-                    label={t("changes.col.detected")}
-                    sortKey="detected"
-                    sort={sort}
-                    onSort={toggleSort}
-                  />
-                  <SortHeader
-                    label={t("changes.col.host")}
-                    sortKey="host"
-                    sort={sort}
-                    onSort={toggleSort}
-                  />
-                  <SortHeader
-                    label={t("changes.col.change")}
-                    sortKey="change"
-                    sort={sort}
-                    onSort={toggleSort}
-                  />
-                  <th className="px-4 py-2 font-medium">{t("changes.col.beforeAfter")}</th>
-                  <SortHeader
-                    label={t("changes.col.severity")}
-                    sortKey="severity"
-                    sort={sort}
-                    onSort={toggleSort}
-                  />
-                  <SortHeader
-                    label={t("changes.col.status")}
-                    sortKey="status"
-                    sort={sort}
-                    onSort={toggleSort}
-                  />
-                  <th className="px-4 py-2"></th>
-                </tr>
-              </thead>
+              <TableHead
+                columns={columns}
+                sort={sort}
+                toggleSort={toggleSort}
+                filters={filters}
+                setFilter={onColFilter}
+                trailing
+              />
               <tbody className="divide-y divide-slate-800">
                 {changesPage.slice.map(renderRow)}
               </tbody>
