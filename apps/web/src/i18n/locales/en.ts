@@ -40,6 +40,8 @@ export const en = {
   "common.error": "Something went wrong",
   "common.search": "Search…",
   "common.filter": "Filter…",
+  "common.active": "Active",
+  "common.inactive": "Inactive",
 
   // Dashboard
   "dashboard.apiStatus": "API status:",

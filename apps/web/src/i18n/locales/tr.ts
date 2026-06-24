@@ -40,6 +40,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "common.error": "Bir şeyler ters gitti",
   "common.search": "Ara…",
   "common.filter": "Filtrele…",
+  "common.active": "Aktif",
+  "common.inactive": "Pasif",
 
   // Dashboard
   "dashboard.apiStatus": "API durumu:",

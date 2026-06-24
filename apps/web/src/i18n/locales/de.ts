@@ -40,6 +40,8 @@ export const de: Partial<Record<TKey, string>> = {
   "common.error": "Etwas ist schiefgelaufen",
   "common.search": "Suchen…",
   "common.filter": "Filtern…",
+  "common.active": "Aktiv",
+  "common.inactive": "Inaktiv",
 
   // Dashboard
   "dashboard.apiStatus": "API-Status:",
