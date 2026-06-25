@@ -22,13 +22,11 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
-import FilterSelect from "../components/FilterSelect";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
-import SearchInput from "../components/SearchInput";
-import SortHeader from "../components/SortHeader";
-import { sortRows, useSort } from "../components/useSort";
+import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
+import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -92,40 +90,30 @@ export default function ScansPage() {
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [ranges, setRanges] = useState<IpRange[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
   const [selectedRun, setSelectedRun] = useState<ScanRun | null>(null);
   const [observations, setObservations] = useState<Observation[]>([]);
   const obsPage = usePagination(observations, 12);
 
   const { sort: profileSort, toggleSort: profileToggle } = useSort();
-  const q = query.trim().toLowerCase();
-  const filteredProfiles = sortRows(
-    q
-      ? profiles.filter((p) =>
-          [p.name, p.targets.join(" "), p.ports, p.segment ?? "", p.scan_type].some((v) =>
-            v.toLowerCase().includes(q),
-          ),
-        )
-      : profiles,
-    profileSort,
-    (p, key) => {
-      switch (key) {
-        case "name":
-          return p.name;
-        case "targets":
-          return p.targets.join(", ");
-        case "ports":
-          return p.ports;
-        case "segment":
-          return p.segment;
-        case "type":
-          return p.scan_type;
-        default:
-          return null;
-      }
+  const { filters: profileFilters, setFilter: setProfileFilter } = useColumnFilters();
+  const profileColumns: Column<ScanProfile>[] = [
+    { key: "name", label: t("scans.col.name"), filter: "text", get: (p) => p.name },
+    {
+      key: "targets",
+      label: t("scans.col.targets"),
+      filter: "text",
+      get: (p) => p.targets.join(", "),
     },
-  );
-  const profilesPage = usePagination(filteredProfiles, 15);
+    { key: "ports", label: t("scans.col.ports"), filter: "text", get: (p) => p.ports },
+    { key: "segment", label: t("scans.col.segment"), filter: "text", get: (p) => p.segment ?? "" },
+    { key: "type", label: t("scans.col.type"), filter: "text", get: (p) => p.scan_type },
+  ];
+  const processedProfiles = processRows(profiles, profileColumns, profileSort, profileFilters);
+  const profilesPage = usePagination(processedProfiles, 15);
+  const onProfileFilter = (key: string, v: string) => {
+    setProfileFilter(key, v);
+    profilesPage.setPage(0);
+  };
 
   const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState("");
@@ -184,32 +172,30 @@ export default function ScansPage() {
   const profileName = (id: string | null) =>
     id ? (profiles.find((p) => p.id === id)?.name ?? t("scans.deletedProfile")) : t("scans.adhoc");
 
-  const [runsQuery, setRunsQuery] = useState("");
-  const [runsStatus, setRunsStatus] = useState("");
   const { sort: runsSort, toggleSort: runsToggle } = useSort();
-  const rq = runsQuery.trim().toLowerCase();
-  const runsRows = sortRows(
-    runs.filter((r) => {
-      const matchesQuery = !rq || profileName(r.scan_profile_id).toLowerCase().includes(rq);
-      return matchesQuery && (!runsStatus || r.status === runsStatus);
-    }),
-    runsSort,
-    (r, key) => {
-      switch (key) {
-        case "profile":
-          return profileName(r.scan_profile_id);
-        case "status":
-          return r.status;
-        case "started":
-          return r.started_at;
-        case "finished":
-          return r.finished_at;
-        default:
-          return null;
-      }
+  const { filters: runsFilters, setFilter: setRunsFilter } = useColumnFilters();
+  const runsColumns: Column<ScanRun>[] = [
+    {
+      key: "profile",
+      label: t("scans.col.profile"),
+      filter: "text",
+      get: (r) => profileName(r.scan_profile_id),
     },
-  );
-  const runsPage = usePagination(runsRows, 15);
+    {
+      key: "status",
+      label: t("scans.col.status"),
+      filter: RUN_STATUSES.map((s) => ({ value: s, label: t(`runStatus.${s}` as TKey) })),
+      get: (r) => r.status,
+    },
+    { key: "started", label: t("scans.col.started"), get: (r) => r.started_at },
+    { key: "finished", label: t("scans.col.finished"), get: (r) => r.finished_at },
+  ];
+  const processedRuns = processRows(runs, runsColumns, runsSort, runsFilters);
+  const runsPage = usePagination(processedRuns, 15);
+  const onRunsFilter = (key: string, v: string) => {
+    setRunsFilter(key, v);
+    runsPage.setPage(0);
+  };
 
   function openAdd() {
     setError(null);
@@ -298,45 +284,16 @@ export default function ScansPage() {
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
-        {profiles.length > 0 && (
-          <div className="flex justify-end">
-            <SearchInput
-              value={query}
-              onChange={(v) => {
-                setQuery(v);
-                profilesPage.setPage(0);
-              }}
-            />
-          </div>
-        )}
-
         <div className="overflow-hidden rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-900 text-slate-400">
-              <tr>
-                <SortHeader label={t("scans.col.name")} sortKey="name" sort={profileSort} onSort={profileToggle} />
-                <SortHeader
-                  label={t("scans.col.targets")}
-                  sortKey="targets"
-                  sort={profileSort}
-                  onSort={profileToggle}
-                />
-                <SortHeader
-                  label={t("scans.col.ports")}
-                  sortKey="ports"
-                  sort={profileSort}
-                  onSort={profileToggle}
-                />
-                <SortHeader
-                  label={t("scans.col.segment")}
-                  sortKey="segment"
-                  sort={profileSort}
-                  onSort={profileToggle}
-                />
-                <SortHeader label={t("scans.col.type")} sortKey="type" sort={profileSort} onSort={profileToggle} />
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
+            <TableHead
+              columns={profileColumns}
+              sort={profileSort}
+              toggleSort={profileToggle}
+              filters={profileFilters}
+              setFilter={onProfileFilter}
+              trailing
+            />
             <tbody className="divide-y divide-slate-800">
               {profiles.length === 0 ? (
                 <tr>
@@ -355,7 +312,7 @@ export default function ScansPage() {
                     )}
                   </td>
                 </tr>
-              ) : filteredProfiles.length === 0 ? (
+              ) : processedProfiles.length === 0 ? (
                 <tr>
                   <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
                     {t("common.noData")}
@@ -418,58 +375,16 @@ export default function ScansPage() {
           </button>
         </div>
 
-        {runs.length > 0 && (
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <FilterSelect
-              value={runsStatus}
-              onChange={(v) => {
-                setRunsStatus(v);
-                runsPage.setPage(0);
-              }}
-              options={RUN_STATUSES.map((s) => ({ value: s, label: t(`runStatus.${s}` as TKey) }))}
-              allLabel={t("scans.col.status")}
-            />
-            <SearchInput
-              value={runsQuery}
-              onChange={(v) => {
-                setRunsQuery(v);
-                runsPage.setPage(0);
-              }}
-            />
-          </div>
-        )}
-
         <div className="overflow-hidden rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-900 text-slate-400">
-              <tr>
-                <SortHeader
-                  label={t("scans.col.profile")}
-                  sortKey="profile"
-                  sort={runsSort}
-                  onSort={runsToggle}
-                />
-                <SortHeader
-                  label={t("scans.col.status")}
-                  sortKey="status"
-                  sort={runsSort}
-                  onSort={runsToggle}
-                />
-                <SortHeader
-                  label={t("scans.col.started")}
-                  sortKey="started"
-                  sort={runsSort}
-                  onSort={runsToggle}
-                />
-                <SortHeader
-                  label={t("scans.col.finished")}
-                  sortKey="finished"
-                  sort={runsSort}
-                  onSort={runsToggle}
-                />
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
+            <TableHead
+              columns={runsColumns}
+              sort={runsSort}
+              toggleSort={runsToggle}
+              filters={runsFilters}
+              setFilter={onRunsFilter}
+              trailing
+            />
             <tbody className="divide-y divide-slate-800">
               {runs.length === 0 ? (
                 <tr>
@@ -477,7 +392,7 @@ export default function ScansPage() {
                     {t("scans.runsEmpty")}
                   </td>
                 </tr>
-              ) : runsRows.length === 0 ? (
+              ) : processedRuns.length === 0 ? (
                 <tr>
                   <td className="px-4 py-6 text-center text-slate-500" colSpan={5}>
                     {t("common.noData")}
