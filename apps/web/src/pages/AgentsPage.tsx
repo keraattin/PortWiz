@@ -10,13 +10,11 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
-import FilterSelect from "../components/FilterSelect";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
-import SearchInput from "../components/SearchInput";
-import SortHeader from "../components/SortHeader";
-import { sortRows, useSort } from "../components/useSort";
+import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
+import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -67,34 +65,26 @@ export default function AgentsPage() {
   const [editSegment, setEditSegment] = useState("");
   const [editEnabled, setEditEnabled] = useState(true);
 
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
   const { sort, toggleSort } = useSort();
-  const q = query.trim().toLowerCase();
-  const agentRows = sortRows(
-    agents.filter((a) => {
-      const matchesQuery = !q || [a.name, a.segment ?? ""].some((x) => x.toLowerCase().includes(q));
-      return matchesQuery && (!statusFilter || agentCategory(a) === statusFilter);
-    }),
-    sort,
-    (a, key) => {
-      switch (key) {
-        case "name":
-          return a.name;
-        case "segment":
-          return a.segment;
-        case "status":
-          return agentCategory(a);
-        case "lastSeen":
-          return a.last_seen_at;
-        case "enrolledAt":
-          return a.created_at;
-        default:
-          return null;
-      }
+  const { filters, setFilter } = useColumnFilters();
+  const columns: Column<Agent>[] = [
+    { key: "name", label: t("agents.col.name"), filter: "text", get: (a) => a.name },
+    { key: "segment", label: t("agents.col.segment"), filter: "text", get: (a) => a.segment ?? "" },
+    {
+      key: "status",
+      label: t("agents.col.status"),
+      filter: STATUS_OPTIONS.map((s) => ({ value: s, label: t(`agents.status.${s}` as TKey) })),
+      get: (a) => agentCategory(a),
     },
-  );
+    { key: "lastSeen", label: t("agents.col.lastSeen"), get: (a) => a.last_seen_at },
+    { key: "enrolledAt", label: t("agents.col.enrolledAt"), get: (a) => a.created_at },
+  ];
+  const agentRows = processRows(agents, columns, sort, filters);
   const agentsPage = usePagination(agentRows, 15);
+  const onFilter = (key: string, v: string) => {
+    setFilter(key, v);
+    agentsPage.setPage(0);
+  };
 
   async function reload() {
     setLoading(true);
@@ -218,62 +208,16 @@ export default function AgentsPage() {
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
-      {agents.length > 0 && (
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <FilterSelect
-            value={statusFilter}
-            onChange={(v) => {
-              setStatusFilter(v);
-              agentsPage.setPage(0);
-            }}
-            options={STATUS_OPTIONS.map((s) => ({
-              value: s,
-              label: t(`agents.status.${s}` as TKey),
-            }))}
-            allLabel={t("agents.col.status")}
-          />
-          <SearchInput
-            value={query}
-            onChange={(v) => {
-              setQuery(v);
-              agentsPage.setPage(0);
-            }}
-          />
-        </div>
-      )}
-
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-900 text-slate-400">
-            <tr>
-              <SortHeader label={t("agents.col.name")} sortKey="name" sort={sort} onSort={toggleSort} />
-              <SortHeader
-                label={t("agents.col.segment")}
-                sortKey="segment"
-                sort={sort}
-                onSort={toggleSort}
-              />
-              <SortHeader
-                label={t("agents.col.status")}
-                sortKey="status"
-                sort={sort}
-                onSort={toggleSort}
-              />
-              <SortHeader
-                label={t("agents.col.lastSeen")}
-                sortKey="lastSeen"
-                sort={sort}
-                onSort={toggleSort}
-              />
-              <SortHeader
-                label={t("agents.col.enrolledAt")}
-                sortKey="enrolledAt"
-                sort={sort}
-                onSort={toggleSort}
-              />
-              {isAdmin && <th className="px-4 py-2"></th>}
-            </tr>
-          </thead>
+          <TableHead
+            columns={columns}
+            sort={sort}
+            toggleSort={toggleSort}
+            filters={filters}
+            setFilter={onFilter}
+            trailing={isAdmin}
+          />
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>

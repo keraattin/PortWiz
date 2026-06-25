@@ -22,9 +22,8 @@ import InfoCallout from "../components/InfoCallout";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
-import SearchInput from "../components/SearchInput";
-import SortHeader from "../components/SortHeader";
-import { sortRows, useSort } from "../components/useSort";
+import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
+import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -65,10 +64,10 @@ export default function VlansPage() {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
 
-  const [vlanQuery, setVlanQuery] = useState("");
-  const [rangeQuery, setRangeQuery] = useState("");
   const { sort: vlanSort, toggleSort: vlanToggle } = useSort();
   const { sort: rangeSort, toggleSort: rangeToggle } = useSort();
+  const { filters: vlanFilters, setFilter: setVlanFilter } = useColumnFilters();
+  const { filters: rangeFilters, setFilter: setRangeFilter } = useColumnFilters();
 
   async function onSync() {
     setSyncError(null);
@@ -121,33 +120,39 @@ export default function VlansPage() {
   const vlanName = (id: string | null) =>
     id ? (vlans.find((v) => v.id === id)?.name ?? "-") : "-";
 
-  const vq = vlanQuery.trim().toLowerCase();
-  const vlanRows = sortRows(
-    vlans.filter(
-      (v) =>
-        !vq ||
-        [v.name, String(v.vlan_tag ?? ""), v.description ?? ""].some((x) =>
-          x.toLowerCase().includes(vq),
-        ),
-    ),
-    vlanSort,
-    (v, key) => (key === "name" ? v.name : key === "tag" ? v.vlan_tag : v.description),
-  );
+  const vlanColumns: Column<Vlan>[] = [
+    { key: "name", label: t("vlans.col.name"), filter: "text", get: (v) => v.name },
+    { key: "tag", label: t("vlans.col.tag"), filter: "text", get: (v) => v.vlan_tag },
+    {
+      key: "description",
+      label: t("vlans.col.description"),
+      filter: "text",
+      get: (v) => v.description ?? "",
+    },
+  ];
+  const vlanRows = processRows(vlans, vlanColumns, vlanSort, vlanFilters);
   const vlansPage = usePagination(vlanRows, 15);
+  const onVlanFilter = (key: string, val: string) => {
+    setVlanFilter(key, val);
+    vlansPage.setPage(0);
+  };
 
-  const rq = rangeQuery.trim().toLowerCase();
-  const rangeRows = sortRows(
-    ipRanges.filter(
-      (r) =>
-        !rq ||
-        [r.cidr, vlanName(r.vlan_id), r.description ?? ""].some((x) =>
-          x.toLowerCase().includes(rq),
-        ),
-    ),
-    rangeSort,
-    (r, key) => (key === "cidr" ? r.cidr : key === "vlan" ? vlanName(r.vlan_id) : r.description),
-  );
+  const rangeColumns: Column<IpRange>[] = [
+    { key: "cidr", label: t("ranges.col.cidr"), filter: "text", get: (r) => r.cidr },
+    { key: "vlan", label: t("ranges.col.vlan"), filter: "text", get: (r) => vlanName(r.vlan_id) },
+    {
+      key: "description",
+      label: t("ranges.col.description"),
+      filter: "text",
+      get: (r) => r.description ?? "",
+    },
+  ];
+  const rangeRows = processRows(ipRanges, rangeColumns, rangeSort, rangeFilters);
   const rangesPage = usePagination(rangeRows, 15);
+  const onRangeFilter = (key: string, val: string) => {
+    setRangeFilter(key, val);
+    rangesPage.setPage(0);
+  };
 
   function openAddVlan() {
     setError(null);
@@ -345,33 +350,16 @@ export default function VlansPage() {
         </section>
       )}
 
-      {vlans.length > 0 && (
-        <div className="flex justify-end">
-          <SearchInput
-            value={vlanQuery}
-            onChange={(v) => {
-              setVlanQuery(v);
-              vlansPage.setPage(0);
-            }}
-          />
-        </div>
-      )}
-
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-900 text-slate-400">
-            <tr>
-              <SortHeader label={t("vlans.col.name")} sortKey="name" sort={vlanSort} onSort={vlanToggle} />
-              <SortHeader label={t("vlans.col.tag")} sortKey="tag" sort={vlanSort} onSort={vlanToggle} />
-              <SortHeader
-                label={t("vlans.col.description")}
-                sortKey="description"
-                sort={vlanSort}
-                onSort={vlanToggle}
-              />
-              <th className="px-4 py-2"></th>
-            </tr>
-          </thead>
+          <TableHead
+            columns={vlanColumns}
+            sort={vlanSort}
+            toggleSort={vlanToggle}
+            filters={vlanFilters}
+            setFilter={onVlanFilter}
+            trailing
+          />
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>
@@ -443,33 +431,16 @@ export default function VlansPage() {
         )}
       </div>
 
-      {ipRanges.length > 0 && (
-        <div className="flex justify-end">
-          <SearchInput
-            value={rangeQuery}
-            onChange={(v) => {
-              setRangeQuery(v);
-              rangesPage.setPage(0);
-            }}
-          />
-        </div>
-      )}
-
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-900 text-slate-400">
-            <tr>
-              <SortHeader label={t("ranges.col.cidr")} sortKey="cidr" sort={rangeSort} onSort={rangeToggle} />
-              <SortHeader label={t("ranges.col.vlan")} sortKey="vlan" sort={rangeSort} onSort={rangeToggle} />
-              <SortHeader
-                label={t("ranges.col.description")}
-                sortKey="description"
-                sort={rangeSort}
-                onSort={rangeToggle}
-              />
-              <th className="px-4 py-2"></th>
-            </tr>
-          </thead>
+          <TableHead
+            columns={rangeColumns}
+            sort={rangeSort}
+            toggleSort={rangeToggle}
+            filters={rangeFilters}
+            setFilter={onRangeFilter}
+            trailing
+          />
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>
