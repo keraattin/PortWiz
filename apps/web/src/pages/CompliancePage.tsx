@@ -12,7 +12,9 @@ import {
   listScanProfiles,
   verifyAudit,
 } from "../api/client";
-import Pagination from "../components/Pagination";
+import Pagination, { usePagination } from "../components/Pagination";
+import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
+import { useSort } from "../components/useSort";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -49,6 +51,51 @@ export default function CompliancePage() {
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [cadence, setCadence] = useState<ComplianceStatusItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  const { sort: cadenceSort, toggleSort: cadenceToggle } = useSort();
+  const { filters: cadenceFilters, setFilter: setCadenceFilter } = useColumnFilters();
+  const cadenceColumns: Column<ComplianceStatusItem>[] = [
+    { key: "profile", label: t("compliance.col.profile"), filter: "text", get: (c) => c.profile_name },
+    {
+      key: "framework",
+      label: t("compliance.col.framework"),
+      filter: Object.keys(FRAMEWORK_LABEL).map((f) => ({ value: f, label: FRAMEWORK_LABEL[f] })),
+      get: (c) => c.framework,
+    },
+    { key: "required", label: t("compliance.col.required"), get: (c) => c.cadence_days },
+    { key: "lastScan", label: t("compliance.col.lastScan"), get: (c) => c.last_scan_at },
+    {
+      key: "status",
+      label: t("compliance.col.status"),
+      filter: Object.keys(CADENCE_BADGE).map((s) => ({ value: s, label: t(`cadence.${s}` as TKey) })),
+      get: (c) => c.status,
+    },
+    { key: "asv", label: t("compliance.col.asv"), sortable: false, get: () => null },
+  ];
+  const processedCadence = processRows(cadence, cadenceColumns, cadenceSort, cadenceFilters);
+  const cadencePage = usePagination(processedCadence, 15);
+  const onCadenceFilter = (key: string, v: string) => {
+    setCadenceFilter(key, v);
+    cadencePage.setPage(0);
+  };
+
+  const { sort: evidenceSort, toggleSort: evidenceToggle } = useSort();
+  const { filters: evidenceFilters, setFilter: setEvidenceFilter } = useColumnFilters();
+  const evidenceColumns: Column<ScanProfile>[] = [
+    { key: "profile", label: t("compliance.col.profile"), filter: "text", get: (p) => p.name },
+    {
+      key: "targets",
+      label: t("compliance.col.targets"),
+      filter: "text",
+      get: (p) => p.targets.join(", "),
+    },
+  ];
+  const processedEvidence = processRows(profiles, evidenceColumns, evidenceSort, evidenceFilters);
+  const evidencePage = usePagination(processedEvidence, 15);
+  const onEvidenceFilter = (key: string, v: string) => {
+    setEvidenceFilter(key, v);
+    evidencePage.setPage(0);
+  };
 
   async function verify() {
     setError(null);
@@ -112,18 +159,22 @@ export default function CompliancePage() {
         ) : (
           <div className="overflow-hidden rounded-xl border border-slate-800">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-900 text-slate-400">
-                <tr>
-                  <th className="px-4 py-2 font-medium">{t("compliance.col.profile")}</th>
-                  <th className="px-4 py-2 font-medium">{t("compliance.col.framework")}</th>
-                  <th className="px-4 py-2 font-medium">{t("compliance.col.required")}</th>
-                  <th className="px-4 py-2 font-medium">{t("compliance.col.lastScan")}</th>
-                  <th className="px-4 py-2 font-medium">{t("compliance.col.status")}</th>
-                  <th className="px-4 py-2 font-medium">{t("compliance.col.asv")}</th>
-                </tr>
-              </thead>
+              <TableHead
+                columns={cadenceColumns}
+                sort={cadenceSort}
+                toggleSort={cadenceToggle}
+                filters={cadenceFilters}
+                setFilter={onCadenceFilter}
+              />
               <tbody className="divide-y divide-slate-800">
-                {cadence.map((c) => (
+                {processedCadence.length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+                      {t("common.noData")}
+                    </td>
+                  </tr>
+                ) : (
+                  cadencePage.slice.map((c) => (
                   <tr key={c.profile_id} className="bg-slate-950">
                     <td className="px-4 py-2 text-slate-100">{c.profile_name}</td>
                     <td className="px-4 py-2 text-slate-300">
@@ -157,11 +208,18 @@ export default function CompliancePage() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         )}
+        <Pagination
+          page={cadencePage.page}
+          pageCount={cadencePage.pageCount}
+          total={cadencePage.total}
+          onPage={cadencePage.setPage}
+        />
       </section>
 
       {/* Chain integrity */}
@@ -203,13 +261,14 @@ export default function CompliancePage() {
         <p className="text-sm text-slate-500">{t("compliance.evidenceSubtitle")}</p>
         <div className="overflow-hidden rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-900 text-slate-400">
-              <tr>
-                <th className="px-4 py-2 font-medium">{t("compliance.col.profile")}</th>
-                <th className="px-4 py-2 font-medium">{t("compliance.col.targets")}</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
+            <TableHead
+              columns={evidenceColumns}
+              sort={evidenceSort}
+              toggleSort={evidenceToggle}
+              filters={evidenceFilters}
+              setFilter={onEvidenceFilter}
+              trailing
+            />
             <tbody className="divide-y divide-slate-800">
               {profiles.length === 0 ? (
                 <tr>
@@ -217,8 +276,14 @@ export default function CompliancePage() {
                     {t("compliance.noProfiles")}
                   </td>
                 </tr>
+              ) : processedEvidence.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-6 text-center text-slate-500" colSpan={3}>
+                    {t("common.noData")}
+                  </td>
+                </tr>
               ) : (
-                profiles.map((p) => (
+                evidencePage.slice.map((p) => (
                   <tr key={p.id} className="bg-slate-950">
                     <td className="px-4 py-2 text-slate-100">{p.name}</td>
                     <td className="px-4 py-2 font-mono text-xs text-slate-400">
@@ -244,6 +309,12 @@ export default function CompliancePage() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={evidencePage.page}
+          pageCount={evidencePage.pageCount}
+          total={evidencePage.total}
+          onPage={evidencePage.setPage}
+        />
       </section>
 
       {/* Audit log */}
