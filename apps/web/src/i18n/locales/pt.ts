@@ -507,6 +507,8 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.ai.claudeModel": "Modelo Claude",
   "settings.ai.anthropicKey": "Chave de API Anthropic",
   "settings.ai.test": "Testar provedor",
+  "settings.ai.connected": "Conectado · {provider} ({model})",
+  "settings.ai.notConnected": "Não conectado. Escolha um provedor abaixo e adicione uma chave.",
   "settings.email.title": "E-mail (SMTP)",
   "settings.email.notificationsEnabled": "Notificações ativadas",
   "settings.email.host": "Host SMTP",

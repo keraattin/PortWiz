@@ -505,6 +505,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.ai.claudeModel": "Claude modeli",
   "settings.ai.anthropicKey": "Anthropic API anahtarı",
   "settings.ai.test": "Sağlayıcıyı test et",
+  "settings.ai.connected": "Bağlı · {provider} ({model})",
+  "settings.ai.notConnected": "Bağlı değil. Aşağıdan bir sağlayıcı seçip anahtar ekleyin.",
   "settings.email.title": "E-posta (SMTP)",
   "settings.email.notificationsEnabled": "Bildirimler etkin",
   "settings.email.host": "SMTP sunucusu",

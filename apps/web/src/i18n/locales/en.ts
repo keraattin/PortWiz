@@ -503,6 +503,8 @@ export const en = {
   "settings.ai.claudeModel": "Claude model",
   "settings.ai.anthropicKey": "Anthropic API key",
   "settings.ai.test": "Test provider",
+  "settings.ai.connected": "Connected · {provider} ({model})",
+  "settings.ai.notConnected": "Not connected. Pick a provider and add a key below.",
   "settings.email.title": "Email (SMTP)",
   "settings.email.notificationsEnabled": "Notifications enabled",
   "settings.email.host": "SMTP host",

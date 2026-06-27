@@ -169,10 +169,15 @@ export default function SettingsPage() {
     async function load() {
       try {
         if (isAdmin) {
-          const [c, p] = await Promise.all([fetchSettingsConfig(), fetchAiProviders()]);
+          const [c, p, s] = await Promise.all([
+            fetchSettingsConfig(),
+            fetchAiProviders(),
+            fetchSettings(),
+          ]);
           setConfig(c);
           setForm(fromConfig(c));
           setProviders(p);
+          setStatus(s);
         } else {
           setStatus(await fetchSettings());
         }
@@ -250,6 +255,7 @@ export default function SettingsPage() {
       const c = await updateSettingsConfig(payload);
       setConfig(c);
       setForm(fromConfig(c)); // clears the secret inputs
+      setStatus(await fetchSettings()); // refresh the connection banners
       toast.success(t("settings.saved"));
     } catch (e) {
       toast.error(errorMessage(e));
@@ -341,6 +347,25 @@ export default function SettingsPage() {
         {activeTab === "ai" && (
         <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.ai.title")}</h3>
+          {status && (
+            <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm">
+              <span
+                className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
+                  status.ai_configured ? "bg-emerald-500" : "bg-slate-600"
+                }`}
+              />
+              {status.ai_configured ? (
+                <span className="text-slate-300">
+                  {t("settings.ai.connected", {
+                    provider: currentProvider?.label ?? status.ai_provider,
+                    model: status.ai_model,
+                  })}
+                </span>
+              ) : (
+                <span className="text-slate-400">{t("settings.ai.notConnected")}</span>
+              )}
+            </div>
+          )}
           <FormField label={t("settings.ai.provider")} hint={t("settings.ai.providerHint")}>
             <select
               className={inputClass}
