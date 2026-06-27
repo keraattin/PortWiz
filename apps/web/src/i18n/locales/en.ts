@@ -505,6 +505,8 @@ export const en = {
   "settings.ai.test": "Test provider",
   "settings.ai.connected": "Connected · {provider} ({model})",
   "settings.ai.notConnected": "Not connected. Pick a provider and add a key below.",
+  "settings.conn.connected": "Connected",
+  "settings.conn.notConfigured": "Not configured",
   "settings.email.title": "Email (SMTP)",
   "settings.email.notificationsEnabled": "Notifications enabled",
   "settings.email.host": "SMTP host",

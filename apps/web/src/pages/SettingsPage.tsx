@@ -137,6 +137,20 @@ function TestRow({ result }: { result: TestResult | null }) {
   );
 }
 
+// At-a-glance "connected / not configured" status for an integration tab.
+function ConnectionBanner({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm">
+      <span
+        className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
+          ok ? "bg-emerald-500" : "bg-slate-600"
+        }`}
+      />
+      <span className={ok ? "text-slate-300" : "text-slate-400"}>{label}</span>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const toast = useToast();
@@ -348,23 +362,17 @@ export default function SettingsPage() {
         <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.ai.title")}</h3>
           {status && (
-            <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm">
-              <span
-                className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
-                  status.ai_configured ? "bg-emerald-500" : "bg-slate-600"
-                }`}
-              />
-              {status.ai_configured ? (
-                <span className="text-slate-300">
-                  {t("settings.ai.connected", {
-                    provider: currentProvider?.label ?? status.ai_provider,
-                    model: status.ai_model,
-                  })}
-                </span>
-              ) : (
-                <span className="text-slate-400">{t("settings.ai.notConnected")}</span>
-              )}
-            </div>
+            <ConnectionBanner
+              ok={status.ai_configured}
+              label={
+                status.ai_configured
+                  ? t("settings.ai.connected", {
+                      provider: currentProvider?.label ?? status.ai_provider,
+                      model: status.ai_model,
+                    })
+                  : t("settings.ai.notConnected")
+              }
+            />
           )}
           <FormField label={t("settings.ai.provider")} hint={t("settings.ai.providerHint")}>
             <select
@@ -509,6 +517,12 @@ export default function SettingsPage() {
         {activeTab === "email" && (
         <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.email.title")}</h3>
+          {status && (
+            <ConnectionBanner
+              ok={status.email_enabled}
+              label={t(status.email_enabled ? "settings.conn.connected" : "settings.conn.notConfigured")}
+            />
+          )}
           <Toggle
             label={t("settings.email.notificationsEnabled")}
             checked={form.notifications_enabled}
@@ -608,6 +622,12 @@ export default function SettingsPage() {
         {activeTab === "jira" && (
         <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.jira.title")}</h3>
+          {status && (
+            <ConnectionBanner
+              ok={status.jira_configured}
+              label={t(status.jira_configured ? "settings.conn.connected" : "settings.conn.notConfigured")}
+            />
+          )}
           <Toggle
             label={t("settings.jira.enabled")}
             checked={form.jira_enabled}
@@ -828,6 +848,12 @@ export default function SettingsPage() {
         {activeTab === "netbox" && (
         <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.netbox.title")}</h3>
+          {status && (
+            <ConnectionBanner
+              ok={status.netbox_configured}
+              label={t(status.netbox_configured ? "settings.conn.connected" : "settings.conn.notConfigured")}
+            />
+          )}
           <Toggle
             label={t("settings.netbox.enabled")}
             checked={form.netbox_enabled}

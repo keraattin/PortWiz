@@ -509,6 +509,8 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.ai.test": "Anbieter testen",
   "settings.ai.connected": "Verbunden · {provider} ({model})",
   "settings.ai.notConnected": "Nicht verbunden. Wählen Sie unten einen Anbieter und fügen Sie einen Schlüssel hinzu.",
+  "settings.conn.connected": "Verbunden",
+  "settings.conn.notConfigured": "Nicht konfiguriert",
   "settings.email.title": "E-Mail (SMTP)",
   "settings.email.notificationsEnabled": "Benachrichtigungen aktiviert",
   "settings.email.host": "SMTP-Host",

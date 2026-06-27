@@ -507,6 +507,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.ai.test": "Sağlayıcıyı test et",
   "settings.ai.connected": "Bağlı · {provider} ({model})",
   "settings.ai.notConnected": "Bağlı değil. Aşağıdan bir sağlayıcı seçip anahtar ekleyin.",
+  "settings.conn.connected": "Bağlı",
+  "settings.conn.notConfigured": "Yapılandırılmadı",
   "settings.email.title": "E-posta (SMTP)",
   "settings.email.notificationsEnabled": "Bildirimler etkin",
   "settings.email.host": "SMTP sunucusu",
