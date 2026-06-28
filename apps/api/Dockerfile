@@ -21,6 +21,11 @@ RUN pip install --upgrade pip \
     && pip install -e . \
     && chmod +x entrypoint.sh
 
+# Run as an unprivileged user. The app needs no write access to the image and
+# binds a non-privileged port (8000), so root is never required at runtime.
+RUN useradd --create-home --uid 10001 appuser
+USER appuser
+
 EXPOSE 8000
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["api"]
