@@ -38,6 +38,9 @@ class SettingsStatus(BaseModel):
     netbox_url: str | None
     netbox_configured: bool
 
+    # Operational (read-only, for clients that need it, e.g. the agent online cut-off)
+    agent_online_seconds: int
+
 
 class AiProviderInfo(BaseModel):
     """Metadata for one selectable AI provider, used to render the settings UI."""
@@ -109,6 +112,10 @@ class SettingsConfig(BaseModel):
     netbox_token_set: bool
 
     change_confirmations: int
+    agent_online_seconds: int
+    agent_poll_seconds: int
+    scan_stale_minutes: int
+    scan_max_attempts: int
 
 
 class SettingsConfigUpdate(BaseModel):
@@ -148,3 +155,7 @@ class SettingsConfigUpdate(BaseModel):
     netbox_writeback_enabled: bool | None = None
 
     change_confirmations: int | None = None
+    agent_online_seconds: int | None = None
+    agent_poll_seconds: int | None = None
+    scan_stale_minutes: int | None = None
+    scan_max_attempts: int | None = None

@@ -489,6 +489,18 @@ export const en = {
   "settings.system.title": "System",
   "settings.system.subtitle": "Operational tuning for scanning and change detection.",
   "settings.system.confirmations": "Change confirmations",
+  "settings.system.onlineSeconds": "Agent online cut-off (seconds)",
+  "settings.system.onlineSecondsHint":
+    "An agent counts as online if it heartbeat within this many seconds.",
+  "settings.system.pollSeconds": "Agent poll interval (seconds)",
+  "settings.system.pollSecondsHint":
+    "Recommended seconds between agent polls; used in the deploy instructions.",
+  "settings.system.staleMinutes": "Stale-run timeout (minutes)",
+  "settings.system.staleMinutesHint":
+    "A run an agent claimed but did not finish within this many minutes is requeued.",
+  "settings.system.maxAttempts": "Max run attempts",
+  "settings.system.maxAttemptsHint":
+    "How many times a stale run is requeued before it is marked failed.",
   "settings.system.confirmationsHint":
     "Consecutive scans a new port/service state must persist before it counts as a change. Higher values filter more network noise.",
   "settings.ai.title": "AI assistant",

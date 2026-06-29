@@ -493,6 +493,18 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.system.title": "Système",
   "settings.system.subtitle": "Réglages opérationnels pour l'analyse et la détection des changements.",
   "settings.system.confirmations": "Confirmations de changement",
+  "settings.system.onlineSeconds": "Seuil en ligne de l'agent (secondes)",
+  "settings.system.onlineSecondsHint":
+    "Un agent est considéré en ligne s'il a émis un battement dans ce nombre de secondes.",
+  "settings.system.pollSeconds": "Intervalle d'interrogation de l'agent (secondes)",
+  "settings.system.pollSecondsHint":
+    "Secondes recommandées entre les interrogations de l'agent ; utilisé dans les instructions de déploiement.",
+  "settings.system.staleMinutes": "Délai d'analyse bloquée (minutes)",
+  "settings.system.staleMinutesHint":
+    "Une analyse réclamée par un agent mais non terminée dans ce délai est remise en file.",
+  "settings.system.maxAttempts": "Tentatives d'analyse max.",
+  "settings.system.maxAttemptsHint":
+    "Nombre de remises en file d'une analyse bloquée avant qu'elle soit marquée en échec.",
   "settings.system.confirmationsHint":
     "Nombre d'analyses consécutives pendant lesquelles un nouvel état de port/service doit persister avant d'être compté comme un changement. Des valeurs plus élevées filtrent davantage le bruit réseau.",
   "settings.ai.title": "Assistant IA",

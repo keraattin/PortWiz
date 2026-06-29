@@ -491,6 +491,18 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.system.title": "Sistem",
   "settings.system.subtitle": "Tarama ve değişiklik tespiti için operasyonel ayarlar.",
   "settings.system.confirmations": "Değişiklik teyitleri",
+  "settings.system.onlineSeconds": "Agent online eşiği (saniye)",
+  "settings.system.onlineSecondsHint":
+    "Bir agent bu kadar saniye içinde heartbeat attıysa online sayılır.",
+  "settings.system.pollSeconds": "Agent poll aralığı (saniye)",
+  "settings.system.pollSecondsHint":
+    "Agent yoklamaları arasında önerilen saniye; deploy talimatlarında kullanılır.",
+  "settings.system.staleMinutes": "Takılı çalışma zaman aşımı (dakika)",
+  "settings.system.staleMinutesHint":
+    "Bir agent'in alıp bu kadar dakikada bitirmediği çalışma yeniden kuyruğa alınır.",
+  "settings.system.maxAttempts": "Maks. çalışma denemesi",
+  "settings.system.maxAttemptsHint":
+    "Takılı bir çalışma başarısız sayılmadan önce kaç kez yeniden kuyruğa alınır.",
   "settings.system.confirmationsHint":
     "Yeni bir port/servis durumunun değişiklik sayılması için kaç ardışık taramada sürmesi gerektiği. Yüksek değer daha çok ağ gürültüsünü eler.",
   "settings.ai.title": "Yapay zekâ asistanı",

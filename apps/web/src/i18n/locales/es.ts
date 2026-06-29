@@ -493,6 +493,18 @@ export const es: Partial<Record<TKey, string>> = {
   "settings.system.title": "Sistema",
   "settings.system.subtitle": "Ajustes operativos para el escaneo y la detección de cambios.",
   "settings.system.confirmations": "Confirmaciones de cambio",
+  "settings.system.onlineSeconds": "Umbral de en línea del agente (segundos)",
+  "settings.system.onlineSecondsHint":
+    "Un agente se considera en línea si envió un latido dentro de estos segundos.",
+  "settings.system.pollSeconds": "Intervalo de sondeo del agente (segundos)",
+  "settings.system.pollSecondsHint":
+    "Segundos recomendados entre sondeos del agente; se usa en las instrucciones de despliegue.",
+  "settings.system.staleMinutes": "Tiempo de espera de escaneo atascado (minutos)",
+  "settings.system.staleMinutesHint":
+    "Un escaneo que un agente reclamó pero no terminó en estos minutos se vuelve a encolar.",
+  "settings.system.maxAttempts": "Máx. intentos de escaneo",
+  "settings.system.maxAttemptsHint":
+    "Cuántas veces se vuelve a encolar un escaneo atascado antes de marcarlo como fallido.",
   "settings.system.confirmationsHint":
     "Escaneos consecutivos que un nuevo estado de puerto/servicio debe persistir antes de contar como cambio. Valores más altos filtran más ruido de red.",
   "settings.ai.title": "Asistente de IA",

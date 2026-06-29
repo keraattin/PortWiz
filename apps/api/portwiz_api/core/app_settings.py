@@ -57,6 +57,10 @@ EDITABLE_KEYS: list[str] = [
     "netbox_writeback_enabled",
     # Operational (system)
     "change_confirmations",
+    "agent_online_seconds",
+    "agent_poll_seconds",
+    "scan_stale_minutes",
+    "scan_max_attempts",
 ]
 
 # Keys whose values must never be returned to clients and are only updated when a

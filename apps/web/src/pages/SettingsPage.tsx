@@ -72,6 +72,10 @@ interface FormState {
   netbox_token: string;
   netbox_writeback_enabled: boolean;
   change_confirmations: string;
+  agent_online_seconds: string;
+  agent_poll_seconds: string;
+  scan_stale_minutes: string;
+  scan_max_attempts: string;
 }
 
 function fromConfig(c: SettingsConfig): FormState {
@@ -106,6 +110,10 @@ function fromConfig(c: SettingsConfig): FormState {
     netbox_token: "",
     netbox_writeback_enabled: c.netbox_writeback_enabled,
     change_confirmations: String(c.change_confirmations),
+    agent_online_seconds: String(c.agent_online_seconds),
+    agent_poll_seconds: String(c.agent_poll_seconds),
+    scan_stale_minutes: String(c.scan_stale_minutes),
+    scan_max_attempts: String(c.scan_max_attempts),
   };
 }
 
@@ -930,16 +938,68 @@ export default function SettingsPage() {
               onChange={(e) => set("change_confirmations", e.target.value)}
             />
           </FormField>
+          <FormField
+            label={t("settings.system.onlineSeconds")}
+            hint={t("settings.system.onlineSecondsHint")}
+          >
+            <input
+              className={inputClass}
+              type="number"
+              min={10}
+              value={form.agent_online_seconds}
+              onChange={(e) => set("agent_online_seconds", e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label={t("settings.system.pollSeconds")}
+            hint={t("settings.system.pollSecondsHint")}
+          >
+            <input
+              className={inputClass}
+              type="number"
+              min={5}
+              value={form.agent_poll_seconds}
+              onChange={(e) => set("agent_poll_seconds", e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label={t("settings.system.staleMinutes")}
+            hint={t("settings.system.staleMinutesHint")}
+          >
+            <input
+              className={inputClass}
+              type="number"
+              min={1}
+              value={form.scan_stale_minutes}
+              onChange={(e) => set("scan_stale_minutes", e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label={t("settings.system.maxAttempts")}
+            hint={t("settings.system.maxAttemptsHint")}
+          >
+            <input
+              className={inputClass}
+              type="number"
+              min={1}
+              value={form.scan_max_attempts}
+              onChange={(e) => set("scan_max_attempts", e.target.value)}
+            />
+          </FormField>
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
               disabled={saving === "system"}
               onClick={() =>
                 save("system", {
-                  change_confirmations: Math.max(
-                    1,
-                    parseInt(form.change_confirmations, 10) || 2,
+                  change_confirmations: Math.max(1, parseInt(form.change_confirmations, 10) || 2),
+                  agent_online_seconds: Math.max(
+                    10,
+                    parseInt(form.agent_online_seconds, 10) || 120,
                   ),
+                  agent_poll_seconds: Math.max(5, parseInt(form.agent_poll_seconds, 10) || 15),
+                  scan_stale_minutes: Math.max(1, parseInt(form.scan_stale_minutes, 10) || 30),
+                  scan_max_attempts: Math.max(1, parseInt(form.scan_max_attempts, 10) || 3),
                 })
               }
             >

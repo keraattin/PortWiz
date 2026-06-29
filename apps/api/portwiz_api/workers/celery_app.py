@@ -42,6 +42,7 @@ def schedule_due_scans() -> dict[str, int]:
 
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+    from ..core.app_settings import effective_settings
     from ..core.scheduler import requeue_stale_runs, run_due_scans
 
     async def _run() -> dict[str, int]:
@@ -50,11 +51,13 @@ def schedule_due_scans() -> dict[str, int]:
         maker = async_sessionmaker(engine, expire_on_commit=False)
         try:
             async with maker() as session:
+                # Honour admin-edited values (DB overrides), not just env.
+                eff = await effective_settings(session)
                 created = await run_due_scans(session)
                 stale = await requeue_stale_runs(
                     session,
-                    timeout_minutes=settings.scan_stale_minutes,
-                    max_attempts=settings.scan_max_attempts,
+                    timeout_minutes=eff.scan_stale_minutes,
+                    max_attempts=eff.scan_max_attempts,
                 )
                 return {"scheduled": len(created), **stale}
         finally:

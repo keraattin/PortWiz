@@ -61,6 +61,12 @@ class Settings(BaseSettings):
     # consecutive completed runs before it is confirmed (flapping noise filter).
     change_confirmations: int = 2
 
+    # Agent health/protocol. An agent is "online" if it heartbeat within
+    # agent_online_seconds; agent_poll_seconds is the recommended poll interval
+    # surfaced in the deploy instructions.
+    agent_online_seconds: int = 120
+    agent_poll_seconds: int = 15
+
     # --- AI layer (provider-agnostic) ---
     # Selected provider id (see PROVIDER_REGISTRY): "none" | "ollama" | "claude" |
     # "openai" | "gemini" | "mistral" | "groq" | "openrouter" | "deepseek" | "custom".

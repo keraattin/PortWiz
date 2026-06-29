@@ -5,6 +5,7 @@ import {
   type EnrolledAgent,
   deleteAgent,
   enrollAgent,
+  fetchSettings,
   listAgents,
   updateAgent,
 } from "../api/client";
@@ -23,23 +24,23 @@ function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
 }
 
-// An agent heartbeats periodically; treat a recent heartbeat as "online".
-const ONLINE_WINDOW_MS = 2 * 60 * 1000;
+// Default online cut-off until the admin-configured value loads from /settings.
+const DEFAULT_ONLINE_MS = 2 * 60 * 1000;
 
 // Returns the i18n key for the status label plus its badge classes.
-function agentStatus(lastSeen: string | null): { key: TKey; cls: string } {
+function agentStatus(lastSeen: string | null, windowMs: number): { key: TKey; cls: string } {
   if (!lastSeen) return { key: "agents.status.neverSeen", cls: "bg-slate-700 text-slate-400" };
   const ageMs = Date.now() - new Date(lastSeen).getTime();
-  if (ageMs < ONLINE_WINDOW_MS)
+  if (ageMs < windowMs)
     return { key: "agents.status.online", cls: "bg-emerald-900 text-emerald-300" };
   return { key: "agents.status.offline", cls: "bg-red-900 text-red-300" };
 }
 
 // A single status category per agent, for filtering and sorting.
-function agentCategory(a: Agent): string {
+function agentCategory(a: Agent, windowMs: number): string {
   if (!a.enabled) return "disabled";
   if (!a.last_seen_at) return "neverSeen";
-  return Date.now() - new Date(a.last_seen_at).getTime() < ONLINE_WINDOW_MS ? "online" : "offline";
+  return Date.now() - new Date(a.last_seen_at).getTime() < windowMs ? "online" : "offline";
 }
 
 const STATUS_OPTIONS = ["online", "offline", "neverSeen", "disabled"] as const;
@@ -64,6 +65,7 @@ export default function AgentsPage() {
   const [editAgent, setEditAgent] = useState<Agent | null>(null);
   const [editSegment, setEditSegment] = useState("");
   const [editEnabled, setEditEnabled] = useState(true);
+  const [onlineMs, setOnlineMs] = useState(DEFAULT_ONLINE_MS);
 
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
@@ -74,7 +76,7 @@ export default function AgentsPage() {
       key: "status",
       label: t("agents.col.status"),
       filter: STATUS_OPTIONS.map((s) => ({ value: s, label: t(`agents.status.${s}` as TKey) })),
-      get: (a) => agentCategory(a),
+      get: (a) => agentCategory(a, onlineMs),
     },
     { key: "lastSeen", label: t("agents.col.lastSeen"), get: (a) => a.last_seen_at },
     { key: "enrolledAt", label: t("agents.col.enrolledAt"), get: (a) => a.created_at },
@@ -99,6 +101,12 @@ export default function AgentsPage() {
 
   useEffect(() => {
     void reload();
+    // The online cut-off is an admin-tunable system setting.
+    fetchSettings()
+      .then((s) => setOnlineMs(s.agent_online_seconds * 1000))
+      .catch(() => {
+        /* keep the default window if settings can't be read */
+      });
   }, []);
 
   async function onEnroll(e: FormEvent) {
@@ -239,7 +247,7 @@ export default function AgentsPage() {
               </tr>
             ) : (
               agentsPage.slice.map((a) => {
-                const status = agentStatus(a.last_seen_at);
+                const status = agentStatus(a.last_seen_at, onlineMs);
                 return (
                   <tr
                     key={a.id}

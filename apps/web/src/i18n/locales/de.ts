@@ -493,6 +493,18 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.system.title": "System",
   "settings.system.subtitle": "Betriebseinstellungen für Scans und Änderungserkennung.",
   "settings.system.confirmations": "Änderungsbestätigungen",
+  "settings.system.onlineSeconds": "Agent-Online-Schwelle (Sekunden)",
+  "settings.system.onlineSecondsHint":
+    "Ein Agent gilt als online, wenn er innerhalb dieser Sekunden ein Heartbeat gesendet hat.",
+  "settings.system.pollSeconds": "Agent-Abrufintervall (Sekunden)",
+  "settings.system.pollSecondsHint":
+    "Empfohlene Sekunden zwischen Agent-Abrufen; wird in den Deploy-Anweisungen verwendet.",
+  "settings.system.staleMinutes": "Timeout für hängende Läufe (Minuten)",
+  "settings.system.staleMinutesHint":
+    "Ein Lauf, den ein Agent beansprucht, aber nicht in dieser Zeit beendet hat, wird erneut eingereiht.",
+  "settings.system.maxAttempts": "Max. Laufversuche",
+  "settings.system.maxAttemptsHint":
+    "Wie oft ein hängender Lauf erneut eingereiht wird, bevor er als fehlgeschlagen gilt.",
   "settings.system.confirmationsHint":
     "Aufeinanderfolgende Scans, die ein neuer Port-/Dienststatus bestehen muss, bevor er als Änderung zählt. Höhere Werte filtern mehr Netzwerkrauschen.",
   "settings.ai.title": "KI-Assistent",

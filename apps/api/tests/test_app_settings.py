@@ -190,6 +190,30 @@ async def test_legacy_plaintext_secret_reads_with_key(db, monkeypatch) -> None:
         assert s.netbox_token == "legacy-plain"
 
 
+async def test_system_settings_round_trip(client, admin_headers) -> None:
+    resp = await client.patch(
+        "/api/v1/settings/config",
+        json={
+            "change_confirmations": 3,
+            "agent_online_seconds": 90,
+            "agent_poll_seconds": 20,
+            "scan_stale_minutes": 45,
+            "scan_max_attempts": 5,
+        },
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["change_confirmations"] == 3
+    assert body["agent_online_seconds"] == 90
+    assert body["scan_stale_minutes"] == 45
+    assert body["scan_max_attempts"] == 5
+
+    # The online cut-off is also exposed on the read-only status for clients.
+    status = (await client.get("/api/v1/settings", headers=admin_headers)).json()
+    assert status["agent_online_seconds"] == 90
+
+
 async def test_netbox_writeback_flag_round_trips(client, admin_headers) -> None:
     resp = await client.patch(
         "/api/v1/settings/config",

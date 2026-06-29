@@ -731,6 +731,7 @@ export interface SettingsStatus {
   netbox_enabled: boolean;
   netbox_url: string | null;
   netbox_configured: boolean;
+  agent_online_seconds: number;
 }
 
 export interface TestResult {
@@ -821,6 +822,10 @@ export interface SettingsConfig {
   netbox_writeback_enabled: boolean;
   netbox_token_set: boolean;
   change_confirmations: number;
+  agent_online_seconds: number;
+  agent_poll_seconds: number;
+  scan_stale_minutes: number;
+  scan_max_attempts: number;
 }
 
 export type SettingsConfigUpdate = Partial<{
@@ -854,6 +859,10 @@ export type SettingsConfigUpdate = Partial<{
   netbox_token: string;
   netbox_writeback_enabled: boolean;
   change_confirmations: number;
+  agent_online_seconds: number;
+  agent_poll_seconds: number;
+  scan_stale_minutes: number;
+  scan_max_attempts: number;
 }>;
 
 export function fetchSettingsConfig(): Promise<SettingsConfig> {

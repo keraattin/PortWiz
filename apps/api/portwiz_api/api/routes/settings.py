@@ -75,6 +75,10 @@ def _config_from(s: Settings) -> SettingsConfig:
         netbox_writeback_enabled=s.netbox_writeback_enabled,
         netbox_token_set=bool(s.netbox_token),
         change_confirmations=s.change_confirmations,
+        agent_online_seconds=s.agent_online_seconds,
+        agent_poll_seconds=s.agent_poll_seconds,
+        scan_stale_minutes=s.scan_stale_minutes,
+        scan_max_attempts=s.scan_max_attempts,
     )
 
 
@@ -123,6 +127,7 @@ async def get_settings_status(
         netbox_enabled=s.netbox_enabled,
         netbox_url=s.netbox_url,
         netbox_configured=netbox_configured,
+        agent_online_seconds=s.agent_online_seconds,
     )
 
 

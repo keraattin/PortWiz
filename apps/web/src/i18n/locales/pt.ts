@@ -493,6 +493,18 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.system.title": "Sistema",
   "settings.system.subtitle": "Ajustes operacionais para varredura e detecção de alterações.",
   "settings.system.confirmations": "Confirmações de alteração",
+  "settings.system.onlineSeconds": "Limite de online do agente (segundos)",
+  "settings.system.onlineSecondsHint":
+    "Um agente é considerado online se enviou um heartbeat dentro deste número de segundos.",
+  "settings.system.pollSeconds": "Intervalo de sondagem do agente (segundos)",
+  "settings.system.pollSecondsHint":
+    "Segundos recomendados entre as sondagens do agente; usado nas instruções de implantação.",
+  "settings.system.staleMinutes": "Tempo limite de varredura travada (minutos)",
+  "settings.system.staleMinutesHint":
+    "Uma varredura que um agente assumiu mas não concluiu dentro destes minutos é recolocada na fila.",
+  "settings.system.maxAttempts": "Máx. de tentativas de varredura",
+  "settings.system.maxAttemptsHint":
+    "Quantas vezes uma varredura travada é recolocada na fila antes de ser marcada como falha.",
   "settings.system.confirmationsHint":
     "Varreduras consecutivas em que um novo estado de porta/serviço deve persistir antes de contar como alteração. Valores maiores filtram mais ruído de rede.",
   "settings.ai.title": "Assistente de IA",
