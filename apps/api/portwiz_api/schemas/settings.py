@@ -108,6 +108,8 @@ class SettingsConfig(BaseModel):
     netbox_writeback_enabled: bool
     netbox_token_set: bool
 
+    change_confirmations: int
+
 
 class SettingsConfigUpdate(BaseModel):
     """PATCH payload. Only provided fields change; a blank secret is ignored."""
@@ -144,3 +146,5 @@ class SettingsConfigUpdate(BaseModel):
     netbox_url: str | None = None
     netbox_token: str | None = None
     netbox_writeback_enabled: bool | None = None
+
+    change_confirmations: int | None = None

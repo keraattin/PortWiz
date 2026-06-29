@@ -489,6 +489,12 @@ export const es: Partial<Record<TKey, string>> = {
   "settings.section.email": "Correo",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
+  "settings.section.system": "Sistema",
+  "settings.system.title": "Sistema",
+  "settings.system.subtitle": "Ajustes operativos para el escaneo y la detección de cambios.",
+  "settings.system.confirmations": "Confirmaciones de cambio",
+  "settings.system.confirmationsHint":
+    "Escaneos consecutivos que un nuevo estado de puerto/servicio debe persistir antes de contar como cambio. Valores más altos filtran más ruido de red.",
   "settings.ai.title": "Asistente de IA",
   "settings.ai.provider": "Proveedor",
   "settings.ai.providerHint":

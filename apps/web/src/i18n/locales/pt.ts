@@ -489,6 +489,12 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.section.email": "E-mail",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
+  "settings.section.system": "Sistema",
+  "settings.system.title": "Sistema",
+  "settings.system.subtitle": "Ajustes operacionais para varredura e detecção de alterações.",
+  "settings.system.confirmations": "Confirmações de alteração",
+  "settings.system.confirmationsHint":
+    "Varreduras consecutivas em que um novo estado de porta/serviço deve persistir antes de contar como alteração. Valores maiores filtram mais ruído de rede.",
   "settings.ai.title": "Assistente de IA",
   "settings.ai.provider": "Provedor",
   "settings.ai.providerHint":

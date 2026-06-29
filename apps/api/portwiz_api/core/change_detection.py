@@ -26,9 +26,6 @@ from ..models.change import ChangeEvent, PortState
 from ..models.scan import Observation, ScanRun, ScanRunStatus
 from ..models.task import Task, TaskStatus
 
-# Consecutive runs a new state must persist before it is confirmed.
-CONFIRMATIONS = 2
-
 _SEVERITY = {
     "opened": "high",
     "closed": "medium",
@@ -84,6 +81,10 @@ async def detect_changes(session: AsyncSession, run: ScanRun) -> list[ChangeEven
     if run.scan_profile_id is None or run.status != ScanRunStatus.completed:
         return []
 
+    from .app_settings import effective_settings
+
+    # Admin-tunable: how many consecutive runs a state must persist to confirm.
+    confirmations = max(1, (await effective_settings(session)).change_confirmations)
     now = _utcnow()
 
     observations = (
@@ -197,7 +198,7 @@ async def detect_changes(session: AsyncSession, run: ScanRun) -> list[ChangeEven
             state.candidate_count = 1
         state.updated_at = now
 
-        if state.candidate_count >= CONFIRMATIONS:
+        if state.candidate_count >= confirmations:
             event = ChangeEvent(
                 scan_profile_id=run.scan_profile_id,
                 scan_run_id=run.id,

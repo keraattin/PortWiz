@@ -55,6 +55,8 @@ EDITABLE_KEYS: list[str] = [
     "netbox_url",
     "netbox_token",
     "netbox_writeback_enabled",
+    # Operational (system)
+    "change_confirmations",
 ]
 
 # Keys whose values must never be returned to clients and are only updated when a

@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     scan_stale_minutes: int = 30
     scan_max_attempts: int = 3
 
+    # Change detection: a new per-port state must persist for this many
+    # consecutive completed runs before it is confirmed (flapping noise filter).
+    change_confirmations: int = 2
+
     # --- AI layer (provider-agnostic) ---
     # Selected provider id (see PROVIDER_REGISTRY): "none" | "ollama" | "claude" |
     # "openai" | "gemini" | "mistral" | "groq" | "openrouter" | "deepseek" | "custom".

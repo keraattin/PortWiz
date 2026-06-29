@@ -487,6 +487,12 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.section.email": "E-posta",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
+  "settings.section.system": "Sistem",
+  "settings.system.title": "Sistem",
+  "settings.system.subtitle": "Tarama ve değişiklik tespiti için operasyonel ayarlar.",
+  "settings.system.confirmations": "Değişiklik teyitleri",
+  "settings.system.confirmationsHint":
+    "Yeni bir port/servis durumunun değişiklik sayılması için kaç ardışık taramada sürmesi gerektiği. Yüksek değer daha çok ağ gürültüsünü eler.",
   "settings.ai.title": "Yapay zekâ asistanı",
   "settings.ai.provider": "Sağlayıcı",
   "settings.ai.providerHint":

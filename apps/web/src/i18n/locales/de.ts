@@ -489,6 +489,12 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.section.email": "E-Mail",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
+  "settings.section.system": "System",
+  "settings.system.title": "System",
+  "settings.system.subtitle": "Betriebseinstellungen für Scans und Änderungserkennung.",
+  "settings.system.confirmations": "Änderungsbestätigungen",
+  "settings.system.confirmationsHint":
+    "Aufeinanderfolgende Scans, die ein neuer Port-/Dienststatus bestehen muss, bevor er als Änderung zählt. Höhere Werte filtern mehr Netzwerkrauschen.",
   "settings.ai.title": "KI-Assistent",
   "settings.ai.provider": "Anbieter",
   "settings.ai.providerHint":

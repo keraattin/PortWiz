@@ -76,6 +76,20 @@ async def test_change_confirmed_after_threshold(client, admin_headers) -> None:
     assert by_type["closed"]["before"]["state"] == "open"
 
 
+async def test_change_confirmations_setting(client, admin_headers) -> None:
+    # With the admin-tunable confirmations lowered to 1, a candidate confirms on
+    # its first appearance instead of needing a second consecutive run.
+    await client.patch(
+        "/api/v1/settings/config", json={"change_confirmations": 1}, headers=admin_headers
+    )
+    token = await _enroll(client, admin_headers, "cd1-agent")
+    profile = await _profile(client, admin_headers, "cd1-profile", "10.0.0.6", "22,80,443")
+    pid, ip = profile["id"], "10.0.0.6"
+
+    assert (await _ingest(client, admin_headers, token, pid, ip, [22, 80]))["changes"] == 0  # baseline
+    assert (await _ingest(client, admin_headers, token, pid, ip, [22, 443]))["changes"] == 2  # confirmed now
+
+
 async def test_flapping_produces_no_change(client, admin_headers) -> None:
     token = await _enroll(client, admin_headers, "flap-agent")
     profile = await _profile(client, admin_headers, "flap-profile", "10.0.0.6", "22")

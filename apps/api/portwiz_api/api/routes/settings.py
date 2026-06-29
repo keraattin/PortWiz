@@ -74,6 +74,7 @@ def _config_from(s: Settings) -> SettingsConfig:
         netbox_url=s.netbox_url,
         netbox_writeback_enabled=s.netbox_writeback_enabled,
         netbox_token_set=bool(s.netbox_token),
+        change_confirmations=s.change_confirmations,
     )
 
 

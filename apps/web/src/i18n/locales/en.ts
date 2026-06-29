@@ -485,6 +485,12 @@ export const en = {
   "settings.section.email": "Email",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
+  "settings.section.system": "System",
+  "settings.system.title": "System",
+  "settings.system.subtitle": "Operational tuning for scanning and change detection.",
+  "settings.system.confirmations": "Change confirmations",
+  "settings.system.confirmationsHint":
+    "Consecutive scans a new port/service state must persist before it counts as a change. Higher values filter more network noise.",
   "settings.ai.title": "AI assistant",
   "settings.ai.provider": "Provider",
   "settings.ai.providerHint":

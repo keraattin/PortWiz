@@ -71,6 +71,7 @@ interface FormState {
   netbox_url: string;
   netbox_token: string;
   netbox_writeback_enabled: boolean;
+  change_confirmations: string;
 }
 
 function fromConfig(c: SettingsConfig): FormState {
@@ -104,6 +105,7 @@ function fromConfig(c: SettingsConfig): FormState {
     netbox_url: c.netbox_url ?? "",
     netbox_token: "",
     netbox_writeback_enabled: c.netbox_writeback_enabled,
+    change_confirmations: String(c.change_confirmations),
   };
 }
 
@@ -164,7 +166,9 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"ai" | "email" | "jira" | "netbox">("ai");
+  const [activeTab, setActiveTab] = useState<"ai" | "email" | "jira" | "netbox" | "system">(
+    "ai",
+  );
 
   const [aiResult, setAiResult] = useState<TestResult | null>(null);
   const [emailResult, setEmailResult] = useState<TestResult | null>(null);
@@ -342,7 +346,7 @@ export default function SettingsPage() {
       <PageHeader title={t("settings.title")} subtitle={t("settings.adminSubtitle")} />
 
       <div className="flex flex-wrap gap-1 border-b border-slate-800">
-        {(["ai", "email", "jira", "netbox"] as const).map((tab) => (
+        {(["ai", "email", "jira", "netbox", "system"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -907,6 +911,41 @@ export default function SettingsPage() {
             </button>
           </div>
           <TestRow result={netboxResult} />
+        </section>
+        )}
+
+        {activeTab === "system" && (
+        <section className={cardClass}>
+          <h3 className="font-medium text-slate-100">{t("settings.system.title")}</h3>
+          <p className="text-sm text-slate-500">{t("settings.system.subtitle")}</p>
+          <FormField
+            label={t("settings.system.confirmations")}
+            hint={t("settings.system.confirmationsHint")}
+          >
+            <input
+              className={inputClass}
+              type="number"
+              min={1}
+              value={form.change_confirmations}
+              onChange={(e) => set("change_confirmations", e.target.value)}
+            />
+          </FormField>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              className={primaryBtn}
+              disabled={saving === "system"}
+              onClick={() =>
+                save("system", {
+                  change_confirmations: Math.max(
+                    1,
+                    parseInt(form.change_confirmations, 10) || 2,
+                  ),
+                })
+              }
+            >
+              {saving === "system" ? t("common.saving") : t("common.save")}
+            </button>
+          </div>
         </section>
         )}
       </div>

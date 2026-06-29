@@ -820,6 +820,7 @@ export interface SettingsConfig {
   netbox_url: string | null;
   netbox_writeback_enabled: boolean;
   netbox_token_set: boolean;
+  change_confirmations: number;
 }
 
 export type SettingsConfigUpdate = Partial<{
@@ -852,6 +853,7 @@ export type SettingsConfigUpdate = Partial<{
   netbox_url: string;
   netbox_token: string;
   netbox_writeback_enabled: boolean;
+  change_confirmations: number;
 }>;
 
 export function fetchSettingsConfig(): Promise<SettingsConfig> {
