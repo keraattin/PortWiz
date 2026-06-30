@@ -35,6 +35,11 @@ class Agent(SQLModel, table=True):
     last_seen_at: dt.datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
+    # Set whenever the bearer token is regenerated, so the UI can surface how
+    # long the current credential has been in use.
+    token_rotated_at: dt.datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True))
+    )
     created_at: dt.datetime = Field(
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),

@@ -226,6 +226,17 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.deleted": "Ajan silindi",
   "agents.updated": "Ajan güncellendi",
   "agents.confirmDelete": "Bu ajan silinsin mi? Token'ı çalışmayı durduracak.",
+  "agents.rotatedNotice":
+    "{name} için token yenilendi. Şimdi kopyalayın ve ajanı bu yeni token ile yeniden dağıtın; eski token artık çalışmaz.",
+  "agents.confirmRotate":
+    "{name} için token yenilensin mi? Mevcut token anında çalışmayı durdurur ve ajan yeni token ile yeniden dağıtılmalıdır.",
+  "agents.rotated": "Token yenilendi",
+  "agents.rotateTitle": "Token yenile",
+  "agents.rotateHint":
+    "Mevcut token açığa çıkmış olabilirse ya da kimlik bilgilerini düzenli yenilemek için yeni bir token verin.",
+  "agents.rotate": "Token yenile",
+  "agents.lastRotated": "Son yenileme {when}.",
+  "agents.neverRotated": "Token hiç yenilenmedi.",
   "agents.col.name": "Ad",
   "agents.col.segment": "Segment",
   "agents.col.status": "Durum",

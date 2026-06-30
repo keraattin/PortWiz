@@ -19,7 +19,13 @@ from ...core.security import generate_agent_token, hash_agent_token
 from ...models.agent import Agent
 from ...models.scan import ScanProfile, ScanRun, ScanRunStatus, ScanSource, ScanType
 from ...models.user import User, UserRole
-from ...schemas.agent import AgentCreate, AgentCreated, AgentRead, AgentUpdate
+from ...schemas.agent import (
+    AgentCreate,
+    AgentCreated,
+    AgentRead,
+    AgentTokenRotated,
+    AgentUpdate,
+)
 from ...schemas.scan import ScanJobOut
 from ..deps import get_current_agent, require_roles
 
@@ -103,6 +109,45 @@ async def update_agent(
     await session.commit()
     await session.refresh(agent)
     return agent
+
+
+@router.post("/{agent_id}/rotate-token", response_model=AgentTokenRotated)
+async def rotate_agent_token(
+    agent_id: uuid.UUID,
+    current_user: User = Depends(require_roles(UserRole.admin)),
+    session: AsyncSession = Depends(get_session),
+) -> AgentTokenRotated:
+    """Issue a fresh bearer token, invalidating the old one immediately.
+
+    Use this if a token may be compromised, or to rotate credentials on a
+    schedule. The agent must be redeployed with the new token; the previous
+    token stops authenticating the moment this returns.
+    """
+    agent = await session.get(Agent, agent_id)
+    if agent is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Agent not found")
+
+    token = generate_agent_token()
+    agent.token_hash = hash_agent_token(token)
+    agent.token_rotated_at = _utcnow()
+    await append_audit(
+        session,
+        action="agent.token_rotated",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="agent",
+        target_id=str(agent.id),
+        payload={"name": agent.name},
+    )
+    await session.commit()
+    await session.refresh(agent)
+    # The new token is shown only here; only its hash is stored.
+    return AgentTokenRotated(
+        id=agent.id,
+        name=agent.name,
+        token=token,
+        token_rotated_at=agent.token_rotated_at,
+    )
 
 
 @router.delete("/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)

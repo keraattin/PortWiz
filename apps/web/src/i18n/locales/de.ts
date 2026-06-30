@@ -227,6 +227,17 @@ export const de: Partial<Record<TKey, string>> = {
   "agents.deleted": "Agent gelöscht",
   "agents.updated": "Agent aktualisiert",
   "agents.confirmDelete": "Diesen Agenten löschen? Sein Token funktioniert dann nicht mehr.",
+  "agents.rotatedNotice":
+    "Token für {name} erneuert. Jetzt kopieren und den Agenten mit diesem neuen Token erneut bereitstellen; der alte Token funktioniert nicht mehr.",
+  "agents.confirmRotate":
+    "Token für {name} erneuern? Der aktuelle Token funktioniert sofort nicht mehr und der Agent muss mit dem neuen erneut bereitgestellt werden.",
+  "agents.rotated": "Token erneuert",
+  "agents.rotateTitle": "Token erneuern",
+  "agents.rotateHint":
+    "Stelle einen neuen Token aus, falls der aktuelle kompromittiert sein könnte, oder zur regelmäßigen Rotation der Anmeldedaten.",
+  "agents.rotate": "Token erneuern",
+  "agents.lastRotated": "Zuletzt erneuert {when}.",
+  "agents.neverRotated": "Token wurde noch nie erneuert.",
   "agents.col.name": "Name",
   "agents.col.segment": "Segment",
   "agents.col.status": "Status",

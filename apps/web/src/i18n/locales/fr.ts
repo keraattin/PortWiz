@@ -227,6 +227,17 @@ export const fr: Partial<Record<TKey, string>> = {
   "agents.deleted": "Agent supprimé",
   "agents.updated": "Agent mis à jour",
   "agents.confirmDelete": "Supprimer cet agent ? Son jeton cessera de fonctionner.",
+  "agents.rotatedNotice":
+    "Jeton renouvelé pour {name}. Copiez-le maintenant et redéployez l'agent avec ce nouveau jeton ; l'ancien jeton ne fonctionne plus.",
+  "agents.confirmRotate":
+    "Renouveler le jeton de {name} ? Le jeton actuel cesse immédiatement de fonctionner et l'agent doit être redéployé avec le nouveau.",
+  "agents.rotated": "Jeton renouvelé",
+  "agents.rotateTitle": "Renouveler le jeton",
+  "agents.rotateHint":
+    "Émettez un nouveau jeton si l'actuel risque d'être exposé, ou pour renouveler les identifiants régulièrement.",
+  "agents.rotate": "Renouveler le jeton",
+  "agents.lastRotated": "Dernier renouvellement {when}.",
+  "agents.neverRotated": "Le jeton n'a jamais été renouvelé.",
   "agents.col.name": "Nom",
   "agents.col.segment": "Segment",
   "agents.col.status": "Statut",

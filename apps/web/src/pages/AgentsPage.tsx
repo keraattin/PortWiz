@@ -3,10 +3,12 @@ import {
   ApiError,
   type Agent,
   type EnrolledAgent,
+  type RotatedAgentToken,
   deleteAgent,
   enrollAgent,
   fetchSettings,
   listAgents,
+  rotateAgentToken,
   updateAgent,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
@@ -60,7 +62,21 @@ export default function AgentsPage() {
   const [name, setName] = useState("");
   const [segment, setSegment] = useState("");
   const [enrolled, setEnrolled] = useState<EnrolledAgent | null>(null);
+  const [rotated, setRotated] = useState<RotatedAgentToken | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // The enrollment and rotation banners both reveal a token exactly once.
+  const reveal = enrolled
+    ? { name: enrolled.name, token: enrolled.token, rotated: false }
+    : rotated
+      ? { name: rotated.name, token: rotated.token, rotated: true }
+      : null;
+
+  function dismissReveal() {
+    setEnrolled(null);
+    setRotated(null);
+    setCopied(false);
+  }
 
   const [editAgent, setEditAgent] = useState<Agent | null>(null);
   const [editSegment, setEditSegment] = useState("");
@@ -115,6 +131,7 @@ export default function AgentsPage() {
     setCopied(false);
     try {
       const result = await enrollAgent(name, segment || null);
+      setRotated(null);
       setEnrolled(result);
       setName("");
       setSegment("");
@@ -122,6 +139,21 @@ export default function AgentsPage() {
       await reload();
     } catch (e) {
       setError(errorMessage(e));
+    }
+  }
+
+  async function onRotate(a: Agent) {
+    if (!window.confirm(t("agents.confirmRotate", { name: a.name }))) return;
+    try {
+      const result = await rotateAgentToken(a.id);
+      setEnrolled(null);
+      setCopied(false);
+      setRotated(result);
+      setEditAgent(null);
+      toast.success(t("agents.rotated"));
+      await reload();
+    } catch (e) {
+      toast.error(errorMessage(e));
     }
   }
 
@@ -165,18 +197,20 @@ export default function AgentsPage() {
     <div className="space-y-6">
       <PageHeader title={t("agents.title")} subtitle={t("agents.subtitle")} />
 
-      {enrolled && (
+      {reveal && (
         <div className="space-y-2 rounded-xl border border-emerald-800 bg-emerald-950/40 p-4">
           <p className="text-sm text-emerald-300">
-            {t("agents.enrolledNotice", { name: enrolled.name })}
+            {reveal.rotated
+              ? t("agents.rotatedNotice", { name: reveal.name })
+              : t("agents.enrolledNotice", { name: reveal.name })}
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 overflow-x-auto rounded bg-slate-900 px-3 py-2 font-mono text-xs text-slate-200">
-              {enrolled.token}
+              {reveal.token}
             </code>
             <button
               onClick={() => {
-                void navigator.clipboard?.writeText(enrolled.token);
+                void navigator.clipboard?.writeText(reveal.token);
                 setCopied(true);
               }}
               className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500"
@@ -184,7 +218,7 @@ export default function AgentsPage() {
               {copied ? t("agents.copied") : t("agents.copy")}
             </button>
             <button
-              onClick={() => setEnrolled(null)}
+              onClick={dismissReveal}
               className="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
             >
               {t("agents.dismiss")}
@@ -331,6 +365,25 @@ export default function AgentsPage() {
             <Button type="submit">{t("agents.saveChanges")}</Button>
           </div>
         </form>
+
+        <div className="mt-4 space-y-2 border-t border-slate-800 pt-4">
+          <p className="text-sm font-medium text-slate-300">{t("agents.rotateTitle")}</p>
+          <p className="text-xs text-slate-500">{t("agents.rotateHint")}</p>
+          <p className="text-xs text-slate-500">
+            {editAgent?.token_rotated_at
+              ? t("agents.lastRotated", {
+                  when: new Date(editAgent.token_rotated_at).toLocaleString(),
+                })
+              : t("agents.neverRotated")}
+          </p>
+          <button
+            type="button"
+            onClick={() => editAgent && void onRotate(editAgent)}
+            className="rounded-lg border border-amber-700 px-3 py-2 text-sm font-medium text-amber-300 hover:bg-amber-950/40"
+          >
+            {t("agents.rotate")}
+          </button>
+        </div>
       </Modal>
     </div>
   );

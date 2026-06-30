@@ -26,6 +26,7 @@ class AgentRead(BaseModel):
     segment: str | None
     enabled: bool
     last_seen_at: dt.datetime | None
+    token_rotated_at: dt.datetime | None
     created_at: dt.datetime
 
 
@@ -37,3 +38,12 @@ class AgentCreated(BaseModel):
     segment: str | None
     token: str
     created_at: dt.datetime
+
+
+class AgentTokenRotated(BaseModel):
+    """Returned once after a rotation; carries the new plaintext token."""
+
+    id: uuid.UUID
+    name: str
+    token: str
+    token_rotated_at: dt.datetime

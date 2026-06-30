@@ -224,6 +224,17 @@ export const en = {
   "agents.deleted": "Agent deleted",
   "agents.updated": "Agent updated",
   "agents.confirmDelete": "Delete this agent? Its token will stop working.",
+  "agents.rotatedNotice":
+    "Token rotated for {name}. Copy it now and redeploy the agent with this new token; the old token no longer works.",
+  "agents.confirmRotate":
+    "Rotate the token for {name}? The current token stops working immediately and the agent must be redeployed with the new one.",
+  "agents.rotated": "Token rotated",
+  "agents.rotateTitle": "Rotate token",
+  "agents.rotateHint":
+    "Issue a fresh token if the current one may be exposed, or to rotate credentials periodically.",
+  "agents.rotate": "Rotate token",
+  "agents.lastRotated": "Last rotated {when}.",
+  "agents.neverRotated": "Token has never been rotated.",
   "agents.col.name": "Name",
   "agents.col.segment": "Segment",
   "agents.col.status": "Status",

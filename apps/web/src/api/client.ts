@@ -494,6 +494,7 @@ export interface Agent {
   segment: string | null;
   enabled: boolean;
   last_seen_at: string | null;
+  token_rotated_at: string | null;
   created_at: string;
 }
 
@@ -503,6 +504,13 @@ export interface EnrolledAgent {
   segment: string | null;
   token: string; // shown only once, at enrollment
   created_at: string;
+}
+
+export interface RotatedAgentToken {
+  id: string;
+  name: string;
+  token: string; // shown only once, right after rotation
+  token_rotated_at: string;
 }
 
 export function listAgents(): Promise<Agent[]> {
@@ -530,6 +538,10 @@ export function updateAgent(id: string, payload: AgentUpdateInput): Promise<Agen
 
 export function deleteAgent(id: string): Promise<void> {
   return request<void>(`/agents/${id}`, { method: "DELETE" });
+}
+
+export function rotateAgentToken(id: string): Promise<RotatedAgentToken> {
+  return request<RotatedAgentToken>(`/agents/${id}/rotate-token`, { method: "POST" });
 }
 
 // Changes

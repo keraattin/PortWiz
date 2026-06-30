@@ -227,6 +227,17 @@ export const es: Partial<Record<TKey, string>> = {
   "agents.deleted": "Agente eliminado",
   "agents.updated": "Agente actualizado",
   "agents.confirmDelete": "¿Eliminar este agente? Su token dejará de funcionar.",
+  "agents.rotatedNotice":
+    "Token renovado para {name}. Cópielo ahora y vuelva a desplegar el agente con este nuevo token; el token anterior ya no funciona.",
+  "agents.confirmRotate":
+    "¿Renovar el token de {name}? El token actual deja de funcionar de inmediato y el agente debe volver a desplegarse con el nuevo.",
+  "agents.rotated": "Token renovado",
+  "agents.rotateTitle": "Renovar token",
+  "agents.rotateHint":
+    "Emita un nuevo token si el actual podría estar expuesto, o para renovar credenciales periódicamente.",
+  "agents.rotate": "Renovar token",
+  "agents.lastRotated": "Última renovación {when}.",
+  "agents.neverRotated": "El token nunca se ha renovado.",
   "agents.col.name": "Nombre",
   "agents.col.segment": "Segmento",
   "agents.col.status": "Estado",
