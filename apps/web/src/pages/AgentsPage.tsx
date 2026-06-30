@@ -12,6 +12,7 @@ import {
   updateAgent,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import AgentDeployPanel from "../components/AgentDeployPanel";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
@@ -82,6 +83,7 @@ export default function AgentsPage() {
   const [editSegment, setEditSegment] = useState("");
   const [editEnabled, setEditEnabled] = useState(true);
   const [onlineMs, setOnlineMs] = useState(DEFAULT_ONLINE_MS);
+  const [pollSeconds, setPollSeconds] = useState(15);
 
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
@@ -119,7 +121,10 @@ export default function AgentsPage() {
     void reload();
     // The online cut-off is an admin-tunable system setting.
     fetchSettings()
-      .then((s) => setOnlineMs(s.agent_online_seconds * 1000))
+      .then((s) => {
+        setOnlineMs(s.agent_online_seconds * 1000);
+        setPollSeconds(s.agent_poll_seconds);
+      })
       .catch(() => {
         /* keep the default window if settings can't be read */
       });
@@ -224,6 +229,7 @@ export default function AgentsPage() {
               {t("agents.dismiss")}
             </button>
           </div>
+          <AgentDeployPanel name={reveal.name} token={reveal.token} pollSeconds={pollSeconds} />
         </div>
       )}
 

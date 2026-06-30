@@ -235,6 +235,20 @@ export const en = {
   "agents.rotate": "Rotate token",
   "agents.lastRotated": "Last rotated {when}.",
   "agents.neverRotated": "Token has never been rotated.",
+  "agents.deploy.title": "Deploy this agent",
+  "agents.deploy.intro":
+    "Run the agent on a host inside the target network segment. It needs only outbound access to the API; no inbound ports.",
+  "agents.deploy.apiUrl": "API URL the agent connects to",
+  "agents.deploy.apiUrlHint":
+    "The address this agent can reach the server at. Prefilled with this page's origin; change it if the agent runs elsewhere.",
+  "agents.deploy.command": "Run command",
+  "agents.deploy.step1":
+    "Build the agent image from apps/agent, or pull your published portwiz/agent image.",
+  "agents.deploy.step2":
+    "Run the command on a host in the target segment. The token is embedded, so keep it private.",
+  "agents.deploy.step3":
+    "Within a few seconds the agent shows as Online in the table above.",
+  "agents.deploy.poll": "The agent sends a heartbeat and polls for work every {seconds}s.",
   "agents.col.name": "Name",
   "agents.col.segment": "Segment",
   "agents.col.status": "Status",

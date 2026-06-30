@@ -238,6 +238,20 @@ export const pt: Partial<Record<TKey, string>> = {
   "agents.rotate": "Renovar token",
   "agents.lastRotated": "Última renovação {when}.",
   "agents.neverRotated": "O token nunca foi renovado.",
+  "agents.deploy.title": "Implantar este agente",
+  "agents.deploy.intro":
+    "Execute o agente em um host dentro do segmento de rede alvo. Ele precisa apenas de acesso de saída à API; nenhuma porta de entrada.",
+  "agents.deploy.apiUrl": "URL da API à qual o agente se conecta",
+  "agents.deploy.apiUrlHint":
+    "O endereço pelo qual este agente alcança o servidor. Preenchido com a origem desta página; altere se o agente rodar em outro lugar.",
+  "agents.deploy.command": "Comando de execução",
+  "agents.deploy.step1":
+    "Construa a imagem do agente a partir de apps/agent, ou baixe sua imagem portwiz/agent publicada.",
+  "agents.deploy.step2":
+    "Execute o comando em um host no segmento alvo. O token está embutido, mantenha-o privado.",
+  "agents.deploy.step3":
+    "Em poucos segundos o agente aparece como Online na tabela acima.",
+  "agents.deploy.poll": "O agente envia um heartbeat e busca trabalho a cada {seconds}s.",
   "agents.col.name": "Nome",
   "agents.col.segment": "Segmento",
   "agents.col.status": "Status",

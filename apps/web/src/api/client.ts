@@ -744,6 +744,7 @@ export interface SettingsStatus {
   netbox_url: string | null;
   netbox_configured: boolean;
   agent_online_seconds: number;
+  agent_poll_seconds: number;
   default_scan_ports: string;
   default_scan_type: string;
   default_service_detection: boolean;

@@ -237,6 +237,20 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.rotate": "Token yenile",
   "agents.lastRotated": "Son yenileme {when}.",
   "agents.neverRotated": "Token hiç yenilenmedi.",
+  "agents.deploy.title": "Bu ajanı dağıt",
+  "agents.deploy.intro":
+    "Ajanı hedef ağ segmentindeki bir makinede çalıştırın. Yalnızca API'ye giden (outbound) erişime ihtiyaç duyar; gelen port gerekmez.",
+  "agents.deploy.apiUrl": "Ajanın bağlanacağı API URL'si",
+  "agents.deploy.apiUrlHint":
+    "Bu ajanın sunucuya ulaşabileceği adres. Bu sayfanın origin'i ile dolduruldu; ajan başka yerde çalışıyorsa değiştirin.",
+  "agents.deploy.command": "Çalıştırma komutu",
+  "agents.deploy.step1":
+    "Ajan imajını apps/agent'tan derleyin ya da yayınladığınız portwiz/agent imajını çekin.",
+  "agents.deploy.step2":
+    "Komutu hedef segmentteki bir makinede çalıştırın. Token komuta gömülüdür, gizli tutun.",
+  "agents.deploy.step3":
+    "Birkaç saniye içinde ajan yukarıdaki tabloda Çevrimiçi görünür.",
+  "agents.deploy.poll": "Ajan her {seconds}sn'de bir heartbeat gönderir ve iş yoklar.",
   "agents.col.name": "Ad",
   "agents.col.segment": "Segment",
   "agents.col.status": "Durum",

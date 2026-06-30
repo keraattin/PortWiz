@@ -238,6 +238,20 @@ export const fr: Partial<Record<TKey, string>> = {
   "agents.rotate": "Renouveler le jeton",
   "agents.lastRotated": "Dernier renouvellement {when}.",
   "agents.neverRotated": "Le jeton n'a jamais été renouvelé.",
+  "agents.deploy.title": "Déployer cet agent",
+  "agents.deploy.intro":
+    "Exécutez l'agent sur un hôte du segment réseau cible. Il n'a besoin que d'un accès sortant à l'API ; aucun port entrant.",
+  "agents.deploy.apiUrl": "URL de l'API à laquelle l'agent se connecte",
+  "agents.deploy.apiUrlHint":
+    "L'adresse à laquelle cet agent peut joindre le serveur. Préremplie avec l'origine de cette page ; modifiez-la si l'agent s'exécute ailleurs.",
+  "agents.deploy.command": "Commande d'exécution",
+  "agents.deploy.step1":
+    "Construisez l'image de l'agent depuis apps/agent, ou récupérez votre image portwiz/agent publiée.",
+  "agents.deploy.step2":
+    "Exécutez la commande sur un hôte du segment cible. Le jeton y est intégré, gardez-le privé.",
+  "agents.deploy.step3":
+    "En quelques secondes, l'agent apparaît comme En ligne dans le tableau ci-dessus.",
+  "agents.deploy.poll": "L'agent envoie un battement de cœur et interroge le serveur toutes les {seconds}s.",
   "agents.col.name": "Nom",
   "agents.col.segment": "Segment",
   "agents.col.status": "Statut",

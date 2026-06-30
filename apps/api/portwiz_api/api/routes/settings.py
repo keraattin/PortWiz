@@ -133,6 +133,7 @@ async def get_settings_status(
         netbox_url=s.netbox_url,
         netbox_configured=netbox_configured,
         agent_online_seconds=s.agent_online_seconds,
+        agent_poll_seconds=s.agent_poll_seconds,
         default_scan_ports=s.default_scan_ports,
         default_scan_type=s.default_scan_type,
         default_service_detection=s.default_service_detection,

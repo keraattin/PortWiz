@@ -38,8 +38,9 @@ class SettingsStatus(BaseModel):
     netbox_url: str | None
     netbox_configured: bool
 
-    # Operational (read-only, for clients: agent online cut-off + scan defaults)
+    # Operational (read-only, for clients: agent health windows + scan defaults)
     agent_online_seconds: int
+    agent_poll_seconds: int
     default_scan_ports: str
     default_scan_type: str
     default_service_detection: bool
