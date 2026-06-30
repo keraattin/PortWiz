@@ -489,6 +489,14 @@ export const en = {
   "settings.system.title": "System",
   "settings.system.subtitle": "Operational tuning for scanning and change detection.",
   "settings.system.confirmations": "Change confirmations",
+  "settings.system.scanDefaults": "Scan defaults",
+  "settings.system.defaultPorts": "Default ports",
+  "settings.system.defaultPortsHint":
+    "Pre-filled port spec for new scans, e.g. top-1000, 1-65535, or 80,443.",
+  "settings.system.defaultScanType": "Default scan type",
+  "settings.system.defaultRateLimit": "Default rate limit (pps)",
+  "settings.system.defaultRateLimitHint": "Packets-per-second cap applied to new scans.",
+  "settings.system.defaultServiceDetection": "Service detection on by default",
   "settings.system.onlineSeconds": "Agent online cut-off (seconds)",
   "settings.system.onlineSecondsHint":
     "An agent counts as online if it heartbeat within this many seconds.",

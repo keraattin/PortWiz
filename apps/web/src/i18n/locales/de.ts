@@ -493,6 +493,14 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.system.title": "System",
   "settings.system.subtitle": "Betriebseinstellungen für Scans und Änderungserkennung.",
   "settings.system.confirmations": "Änderungsbestätigungen",
+  "settings.system.scanDefaults": "Scan-Standardwerte",
+  "settings.system.defaultPorts": "Standard-Ports",
+  "settings.system.defaultPortsHint":
+    "Vorausgefüllte Port-Angabe für neue Scans, z. B. top-1000, 1-65535 oder 80,443.",
+  "settings.system.defaultScanType": "Standard-Scan-Typ",
+  "settings.system.defaultRateLimit": "Standard-Ratenlimit (pps)",
+  "settings.system.defaultRateLimitHint": "Pakete-pro-Sekunde-Limit für neue Scans.",
+  "settings.system.defaultServiceDetection": "Diensterkennung standardmäßig an",
   "settings.system.onlineSeconds": "Agent-Online-Schwelle (Sekunden)",
   "settings.system.onlineSecondsHint":
     "Ein Agent gilt als online, wenn er innerhalb dieser Sekunden ein Heartbeat gesendet hat.",

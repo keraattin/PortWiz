@@ -493,6 +493,14 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.system.title": "Système",
   "settings.system.subtitle": "Réglages opérationnels pour l'analyse et la détection des changements.",
   "settings.system.confirmations": "Confirmations de changement",
+  "settings.system.scanDefaults": "Valeurs d'analyse par défaut",
+  "settings.system.defaultPorts": "Ports par défaut",
+  "settings.system.defaultPortsHint":
+    "Spécification de ports pré-remplie pour les nouvelles analyses, p. ex. top-1000, 1-65535 ou 80,443.",
+  "settings.system.defaultScanType": "Type d'analyse par défaut",
+  "settings.system.defaultRateLimit": "Limite de débit par défaut (pps)",
+  "settings.system.defaultRateLimitHint": "Plafond de paquets par seconde appliqué aux nouvelles analyses.",
+  "settings.system.defaultServiceDetection": "Détection de service activée par défaut",
   "settings.system.onlineSeconds": "Seuil en ligne de l'agent (secondes)",
   "settings.system.onlineSecondsHint":
     "Un agent est considéré en ligne s'il a émis un battement dans ce nombre de secondes.",

@@ -38,8 +38,11 @@ class SettingsStatus(BaseModel):
     netbox_url: str | None
     netbox_configured: bool
 
-    # Operational (read-only, for clients that need it, e.g. the agent online cut-off)
+    # Operational (read-only, for clients: agent online cut-off + scan defaults)
     agent_online_seconds: int
+    default_scan_ports: str
+    default_scan_type: str
+    default_service_detection: bool
 
 
 class AiProviderInfo(BaseModel):
@@ -116,6 +119,10 @@ class SettingsConfig(BaseModel):
     agent_poll_seconds: int
     scan_stale_minutes: int
     scan_max_attempts: int
+    default_scan_ports: str
+    default_scan_type: str
+    default_service_detection: bool
+    default_scan_rate_limit_pps: int
 
 
 class SettingsConfigUpdate(BaseModel):
@@ -159,3 +166,7 @@ class SettingsConfigUpdate(BaseModel):
     agent_poll_seconds: int | None = None
     scan_stale_minutes: int | None = None
     scan_max_attempts: int | None = None
+    default_scan_ports: str | None = None
+    default_scan_type: str | None = None
+    default_service_detection: bool | None = None
+    default_scan_rate_limit_pps: int | None = None

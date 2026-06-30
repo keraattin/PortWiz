@@ -76,6 +76,10 @@ interface FormState {
   agent_poll_seconds: string;
   scan_stale_minutes: string;
   scan_max_attempts: string;
+  default_scan_ports: string;
+  default_scan_type: string;
+  default_service_detection: boolean;
+  default_scan_rate_limit_pps: string;
 }
 
 function fromConfig(c: SettingsConfig): FormState {
@@ -114,6 +118,10 @@ function fromConfig(c: SettingsConfig): FormState {
     agent_poll_seconds: String(c.agent_poll_seconds),
     scan_stale_minutes: String(c.scan_stale_minutes),
     scan_max_attempts: String(c.scan_max_attempts),
+    default_scan_ports: c.default_scan_ports,
+    default_scan_type: c.default_scan_type,
+    default_service_detection: c.default_service_detection,
+    default_scan_rate_limit_pps: String(c.default_scan_rate_limit_pps),
   };
 }
 
@@ -986,6 +994,44 @@ export default function SettingsPage() {
               onChange={(e) => set("scan_max_attempts", e.target.value)}
             />
           </FormField>
+
+          <p className="pt-2 text-sm font-medium text-slate-300">
+            {t("settings.system.scanDefaults")}
+          </p>
+          <FormField label={t("settings.system.defaultPorts")} hint={t("settings.system.defaultPortsHint")}>
+            <input
+              className={inputClass}
+              placeholder="top-1000"
+              value={form.default_scan_ports}
+              onChange={(e) => set("default_scan_ports", e.target.value)}
+            />
+          </FormField>
+          <FormField label={t("settings.system.defaultScanType")}>
+            <select
+              className={inputClass}
+              value={form.default_scan_type}
+              onChange={(e) => set("default_scan_type", e.target.value)}
+            >
+              <option value="connect">connect</option>
+              <option value="syn">syn</option>
+              <option value="udp">udp</option>
+            </select>
+          </FormField>
+          <FormField label={t("settings.system.defaultRateLimit")} hint={t("settings.system.defaultRateLimitHint")}>
+            <input
+              className={inputClass}
+              type="number"
+              min={1}
+              value={form.default_scan_rate_limit_pps}
+              onChange={(e) => set("default_scan_rate_limit_pps", e.target.value)}
+            />
+          </FormField>
+          <Toggle
+            label={t("settings.system.defaultServiceDetection")}
+            checked={form.default_service_detection}
+            onChange={(v) => set("default_service_detection", v)}
+          />
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
@@ -1000,6 +1046,13 @@ export default function SettingsPage() {
                   agent_poll_seconds: Math.max(5, parseInt(form.agent_poll_seconds, 10) || 15),
                   scan_stale_minutes: Math.max(1, parseInt(form.scan_stale_minutes, 10) || 30),
                   scan_max_attempts: Math.max(1, parseInt(form.scan_max_attempts, 10) || 3),
+                  default_scan_ports: form.default_scan_ports.trim() || "top-1000",
+                  default_scan_type: form.default_scan_type,
+                  default_service_detection: form.default_service_detection,
+                  default_scan_rate_limit_pps: Math.max(
+                    1,
+                    parseInt(form.default_scan_rate_limit_pps, 10) || 1000,
+                  ),
                 })
               }
             >

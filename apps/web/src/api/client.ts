@@ -732,6 +732,9 @@ export interface SettingsStatus {
   netbox_url: string | null;
   netbox_configured: boolean;
   agent_online_seconds: number;
+  default_scan_ports: string;
+  default_scan_type: string;
+  default_service_detection: boolean;
 }
 
 export interface TestResult {
@@ -826,6 +829,10 @@ export interface SettingsConfig {
   agent_poll_seconds: number;
   scan_stale_minutes: number;
   scan_max_attempts: number;
+  default_scan_ports: string;
+  default_scan_type: string;
+  default_service_detection: boolean;
+  default_scan_rate_limit_pps: number;
 }
 
 export type SettingsConfigUpdate = Partial<{
@@ -863,6 +870,10 @@ export type SettingsConfigUpdate = Partial<{
   agent_poll_seconds: number;
   scan_stale_minutes: number;
   scan_max_attempts: number;
+  default_scan_ports: string;
+  default_scan_type: string;
+  default_service_detection: boolean;
+  default_scan_rate_limit_pps: number;
 }>;
 
 export function fetchSettingsConfig(): Promise<SettingsConfig> {

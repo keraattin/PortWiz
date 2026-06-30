@@ -12,6 +12,7 @@ import {
   type Vlan,
   createScanProfile,
   deleteScanProfile,
+  fetchSettings,
   listAssets,
   listIpRanges,
   listRunObservations,
@@ -61,6 +62,14 @@ const PRESET_PORTS: Record<Exclude<PortPreset, "custom">, string> = {
   full: "1-65535",
   web: "80,443,8080,8443",
 };
+
+// Map a raw default port spec back to a preset (or "custom" with the raw value).
+function presetFor(ports: string): { preset: PortPreset; custom: string } {
+  for (const p of ["top1000", "full", "web"] as const) {
+    if (PRESET_PORTS[p] === ports) return { preset: p, custom: "" };
+  }
+  return { preset: "custom", custom: ports };
+}
 
 const STATUS_BADGE: Record<ScanRunStatus, string> = {
   pending: "bg-slate-700 text-slate-300",
@@ -126,6 +135,12 @@ export default function ScansPage() {
   const [cron, setCron] = useState("");
   const [scanType, setScanType] = useState<ScanType>("connect");
   const [serviceDetection, setServiceDetection] = useState(true);
+  // Admin-configured defaults that pre-fill a new scan form.
+  const [scanDefaults, setScanDefaults] = useState({
+    ports: "top-1000",
+    scanType: "connect" as ScanType,
+    serviceDetection: true,
+  });
 
   // The cron actually submitted: a preset, the raw field (advanced), or none.
   const effectiveCron = schedule === "advanced" ? cron.trim() : SCHEDULE_CRON[schedule];
@@ -153,6 +168,17 @@ export default function ScansPage() {
       })
       .catch(() => {
         /* picker just stays empty if inventory can't be loaded */
+      });
+    fetchSettings()
+      .then((s) =>
+        setScanDefaults({
+          ports: s.default_scan_ports,
+          scanType: s.default_scan_type as ScanType,
+          serviceDetection: s.default_service_detection,
+        }),
+      )
+      .catch(() => {
+        /* fall back to the built-in defaults */
       });
   }, []);
 
@@ -201,14 +227,15 @@ export default function ScansPage() {
     setError(null);
     setName("");
     setTargets("");
-    setPortsPreset("top1000");
-    setPorts("");
+    const dp = presetFor(scanDefaults.ports);
+    setPortsPreset(dp.preset);
+    setPorts(dp.custom);
     setSegment("");
     setFramework("");
     setSchedule("off");
     setCron("");
-    setScanType("connect");
-    setServiceDetection(true);
+    setScanType(scanDefaults.scanType);
+    setServiceDetection(scanDefaults.serviceDetection);
     setAddOpen(true);
   }
 

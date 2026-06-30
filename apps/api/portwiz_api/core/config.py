@@ -67,6 +67,13 @@ class Settings(BaseSettings):
     agent_online_seconds: int = 120
     agent_poll_seconds: int = 15
 
+    # Defaults pre-filled when creating a new scan profile (a field the request
+    # omits falls back to these).
+    default_scan_ports: str = "top-1000"
+    default_scan_type: str = "connect"
+    default_service_detection: bool = True
+    default_scan_rate_limit_pps: int = 1000
+
     # --- AI layer (provider-agnostic) ---
     # Selected provider id (see PROVIDER_REGISTRY): "none" | "ollama" | "claude" |
     # "openai" | "gemini" | "mistral" | "groq" | "openrouter" | "deepseek" | "custom".

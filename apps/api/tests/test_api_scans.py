@@ -17,6 +17,39 @@ async def _create_profile(client, admin_headers, **overrides) -> dict:
     return resp.json()
 
 
+async def test_create_uses_configured_scan_defaults(client, admin_headers) -> None:
+    # Admin sets scan defaults; a create that omits those fields inherits them.
+    await client.patch(
+        "/api/v1/settings/config",
+        json={
+            "default_scan_ports": "1-1024",
+            "default_scan_type": "syn",
+            "default_service_detection": False,
+            "default_scan_rate_limit_pps": 250,
+        },
+        headers=admin_headers,
+    )
+    resp = await client.post(
+        "/api/v1/scan-profiles",
+        json={"name": "defaults-profile", "targets": ["10.0.0.0/30"]},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["ports"] == "1-1024"
+    assert body["scan_type"] == "syn"
+    assert body["service_detection"] is False
+    assert body["rate_limit_pps"] == 250
+
+    # An explicit value still wins over the default.
+    resp = await client.post(
+        "/api/v1/scan-profiles",
+        json={"name": "explicit-profile", "targets": ["10.0.0.1"], "ports": "443"},
+        headers=admin_headers,
+    )
+    assert resp.json()["ports"] == "443"
+
+
 async def test_profile_crud_and_trigger(client, admin_headers) -> None:
     profile = await _create_profile(client, admin_headers)
     assert profile["targets"] == ["10.0.0.0/30"]

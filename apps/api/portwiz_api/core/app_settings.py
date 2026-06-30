@@ -61,6 +61,10 @@ EDITABLE_KEYS: list[str] = [
     "agent_poll_seconds",
     "scan_stale_minutes",
     "scan_max_attempts",
+    "default_scan_ports",
+    "default_scan_type",
+    "default_service_detection",
+    "default_scan_rate_limit_pps",
 ]
 
 # Keys whose values must never be returned to clients and are only updated when a

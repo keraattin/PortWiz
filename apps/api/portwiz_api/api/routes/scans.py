@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.app_settings import effective_settings
 from ...core.audit import append_audit
 from ...core.db import get_session
 from ...models.scan import (
@@ -21,6 +22,7 @@ from ...models.scan import (
     ScanRun,
     ScanRunStatus,
     ScanSource,
+    ScanType,
 )
 from ...models.user import User, UserRole
 from ...schemas.scan import (
@@ -57,7 +59,20 @@ async def create_profile(
     current_user: User = Depends(WriteDep),
     session: AsyncSession = Depends(get_session),
 ) -> ScanProfile:
-    profile = ScanProfile(**payload.model_dump(), created_by=current_user.id)
+    # Fields the request omits fall back to the admin-configured scan defaults.
+    data = payload.model_dump()
+    explicit = payload.model_dump(exclude_unset=True)
+    eff = await effective_settings(session)
+    if "ports" not in explicit:
+        data["ports"] = eff.default_scan_ports
+    if "scan_type" not in explicit:
+        data["scan_type"] = ScanType(eff.default_scan_type)
+    if "service_detection" not in explicit:
+        data["service_detection"] = eff.default_service_detection
+    if "rate_limit_pps" not in explicit:
+        data["rate_limit_pps"] = eff.default_scan_rate_limit_pps
+
+    profile = ScanProfile(**data, created_by=current_user.id)
     session.add(profile)
     await session.flush()
     await append_audit(

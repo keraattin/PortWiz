@@ -491,6 +491,14 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.system.title": "Sistem",
   "settings.system.subtitle": "Tarama ve değişiklik tespiti için operasyonel ayarlar.",
   "settings.system.confirmations": "Değişiklik teyitleri",
+  "settings.system.scanDefaults": "Tarama varsayılanları",
+  "settings.system.defaultPorts": "Varsayılan portlar",
+  "settings.system.defaultPortsHint":
+    "Yeni taramalar için ön-doldurulan port listesi, ör. top-1000, 1-65535 veya 80,443.",
+  "settings.system.defaultScanType": "Varsayılan tarama tipi",
+  "settings.system.defaultRateLimit": "Varsayılan hız sınırı (pps)",
+  "settings.system.defaultRateLimitHint": "Yeni taramalara uygulanan saniye başına paket sınırı.",
+  "settings.system.defaultServiceDetection": "Servis tespiti varsayılan açık",
   "settings.system.onlineSeconds": "Agent online eşiği (saniye)",
   "settings.system.onlineSecondsHint":
     "Bir agent bu kadar saniye içinde heartbeat attıysa online sayılır.",

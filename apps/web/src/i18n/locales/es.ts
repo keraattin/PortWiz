@@ -493,6 +493,14 @@ export const es: Partial<Record<TKey, string>> = {
   "settings.system.title": "Sistema",
   "settings.system.subtitle": "Ajustes operativos para el escaneo y la detección de cambios.",
   "settings.system.confirmations": "Confirmaciones de cambio",
+  "settings.system.scanDefaults": "Valores de escaneo por defecto",
+  "settings.system.defaultPorts": "Puertos por defecto",
+  "settings.system.defaultPortsHint":
+    "Especificación de puertos prerrellenada para nuevos escaneos, p. ej. top-1000, 1-65535 o 80,443.",
+  "settings.system.defaultScanType": "Tipo de escaneo por defecto",
+  "settings.system.defaultRateLimit": "Límite de tasa por defecto (pps)",
+  "settings.system.defaultRateLimitHint": "Límite de paquetes por segundo aplicado a nuevos escaneos.",
+  "settings.system.defaultServiceDetection": "Detección de servicio activada por defecto",
   "settings.system.onlineSeconds": "Umbral de en línea del agente (segundos)",
   "settings.system.onlineSecondsHint":
     "Un agente se considera en línea si envió un latido dentro de estos segundos.",

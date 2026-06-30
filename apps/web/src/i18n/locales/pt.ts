@@ -493,6 +493,14 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.system.title": "Sistema",
   "settings.system.subtitle": "Ajustes operacionais para varredura e detecção de alterações.",
   "settings.system.confirmations": "Confirmações de alteração",
+  "settings.system.scanDefaults": "Padrões de varredura",
+  "settings.system.defaultPorts": "Portas padrão",
+  "settings.system.defaultPortsHint":
+    "Especificação de portas pré-preenchida para novas varreduras, ex.: top-1000, 1-65535 ou 80,443.",
+  "settings.system.defaultScanType": "Tipo de varredura padrão",
+  "settings.system.defaultRateLimit": "Limite de taxa padrão (pps)",
+  "settings.system.defaultRateLimitHint": "Limite de pacotes por segundo aplicado a novas varreduras.",
+  "settings.system.defaultServiceDetection": "Detecção de serviço ativada por padrão",
   "settings.system.onlineSeconds": "Limite de online do agente (segundos)",
   "settings.system.onlineSecondsHint":
     "Um agente é considerado online se enviou um heartbeat dentro deste número de segundos.",

@@ -79,6 +79,10 @@ def _config_from(s: Settings) -> SettingsConfig:
         agent_poll_seconds=s.agent_poll_seconds,
         scan_stale_minutes=s.scan_stale_minutes,
         scan_max_attempts=s.scan_max_attempts,
+        default_scan_ports=s.default_scan_ports,
+        default_scan_type=s.default_scan_type,
+        default_service_detection=s.default_service_detection,
+        default_scan_rate_limit_pps=s.default_scan_rate_limit_pps,
     )
 
 
@@ -128,6 +132,9 @@ async def get_settings_status(
         netbox_url=s.netbox_url,
         netbox_configured=netbox_configured,
         agent_online_seconds=s.agent_online_seconds,
+        default_scan_ports=s.default_scan_ports,
+        default_scan_type=s.default_scan_type,
+        default_service_detection=s.default_service_detection,
     )
 
 
