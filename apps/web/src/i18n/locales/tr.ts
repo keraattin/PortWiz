@@ -499,6 +499,10 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.system.defaultRateLimit": "Varsayılan hız sınırı (pps)",
   "settings.system.defaultRateLimitHint": "Yeni taramalara uygulanan saniye başına paket sınırı.",
   "settings.system.defaultServiceDetection": "Servis tespiti varsayılan açık",
+  "settings.system.retention": "Veri saklama",
+  "settings.system.retentionObservationDays": "Gözlem saklama (gün)",
+  "settings.system.retentionObservationDaysHint":
+    "Bu kadar günden eski ham tarama gözlemlerini siler. 0 her şeyi saklar. Tarama çalıştırmaları, değişiklik olayları ve audit log asla silinmez.",
   "settings.system.onlineSeconds": "Agent online eşiği (saniye)",
   "settings.system.onlineSecondsHint":
     "Bir agent bu kadar saniye içinde heartbeat attıysa online sayılır.",

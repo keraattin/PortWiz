@@ -497,6 +497,10 @@ export const en = {
   "settings.system.defaultRateLimit": "Default rate limit (pps)",
   "settings.system.defaultRateLimitHint": "Packets-per-second cap applied to new scans.",
   "settings.system.defaultServiceDetection": "Service detection on by default",
+  "settings.system.retention": "Data retention",
+  "settings.system.retentionObservationDays": "Observation retention (days)",
+  "settings.system.retentionObservationDaysHint":
+    "Delete raw scan observations older than this many days. 0 keeps everything. Scan runs, change events and the audit log are never deleted.",
   "settings.system.onlineSeconds": "Agent online cut-off (seconds)",
   "settings.system.onlineSecondsHint":
     "An agent counts as online if it heartbeat within this many seconds.",

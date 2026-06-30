@@ -43,7 +43,7 @@ def schedule_due_scans() -> dict[str, int]:
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
     from ..core.app_settings import effective_settings
-    from ..core.scheduler import requeue_stale_runs, run_due_scans
+    from ..core.scheduler import prune_observations, requeue_stale_runs, run_due_scans
 
     async def _run() -> dict[str, int]:
         # Use a fresh engine per tick to avoid cross-event-loop connection reuse.
@@ -59,7 +59,8 @@ def schedule_due_scans() -> dict[str, int]:
                     timeout_minutes=eff.scan_stale_minutes,
                     max_attempts=eff.scan_max_attempts,
                 )
-                return {"scheduled": len(created), **stale}
+                pruned = await prune_observations(session, eff.retention_observation_days)
+                return {"scheduled": len(created), **stale, "pruned": pruned}
         finally:
             await engine.dispose()
 

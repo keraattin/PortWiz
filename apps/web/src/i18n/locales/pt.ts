@@ -501,6 +501,10 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.system.defaultRateLimit": "Limite de taxa padrão (pps)",
   "settings.system.defaultRateLimitHint": "Limite de pacotes por segundo aplicado a novas varreduras.",
   "settings.system.defaultServiceDetection": "Detecção de serviço ativada por padrão",
+  "settings.system.retention": "Retenção de dados",
+  "settings.system.retentionObservationDays": "Retenção de observações (dias)",
+  "settings.system.retentionObservationDaysHint":
+    "Exclui observações brutas de varredura mais antigas que esse número de dias. 0 mantém tudo. Execuções de varredura, eventos de alteração e o log de auditoria nunca são excluídos.",
   "settings.system.onlineSeconds": "Limite de online do agente (segundos)",
   "settings.system.onlineSecondsHint":
     "Um agente é considerado online se enviou um heartbeat dentro deste número de segundos.",

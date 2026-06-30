@@ -80,6 +80,7 @@ interface FormState {
   default_scan_type: string;
   default_service_detection: boolean;
   default_scan_rate_limit_pps: string;
+  retention_observation_days: string;
 }
 
 function fromConfig(c: SettingsConfig): FormState {
@@ -122,6 +123,7 @@ function fromConfig(c: SettingsConfig): FormState {
     default_scan_type: c.default_scan_type,
     default_service_detection: c.default_service_detection,
     default_scan_rate_limit_pps: String(c.default_scan_rate_limit_pps),
+    retention_observation_days: String(c.retention_observation_days),
   };
 }
 
@@ -1032,6 +1034,22 @@ export default function SettingsPage() {
             onChange={(v) => set("default_service_detection", v)}
           />
 
+          <p className="pt-2 text-sm font-medium text-slate-300">
+            {t("settings.system.retention")}
+          </p>
+          <FormField
+            label={t("settings.system.retentionObservationDays")}
+            hint={t("settings.system.retentionObservationDaysHint")}
+          >
+            <input
+              className={inputClass}
+              type="number"
+              min={0}
+              value={form.retention_observation_days}
+              onChange={(e) => set("retention_observation_days", e.target.value)}
+            />
+          </FormField>
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
@@ -1052,6 +1070,10 @@ export default function SettingsPage() {
                   default_scan_rate_limit_pps: Math.max(
                     1,
                     parseInt(form.default_scan_rate_limit_pps, 10) || 1000,
+                  ),
+                  retention_observation_days: Math.max(
+                    0,
+                    parseInt(form.retention_observation_days, 10) || 0,
                   ),
                 })
               }

@@ -74,6 +74,11 @@ class Settings(BaseSettings):
     default_service_detection: bool = True
     default_scan_rate_limit_pps: int = 1000
 
+    # Data retention: prune raw observations older than this many days (0 = keep
+    # forever). Only the high-volume time-series is pruned; scan runs, change
+    # events and the immutable audit log are always retained.
+    retention_observation_days: int = 0
+
     # --- AI layer (provider-agnostic) ---
     # Selected provider id (see PROVIDER_REGISTRY): "none" | "ollama" | "claude" |
     # "openai" | "gemini" | "mistral" | "groq" | "openrouter" | "deepseek" | "custom".

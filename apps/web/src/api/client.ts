@@ -833,6 +833,7 @@ export interface SettingsConfig {
   default_scan_type: string;
   default_service_detection: boolean;
   default_scan_rate_limit_pps: number;
+  retention_observation_days: number;
 }
 
 export type SettingsConfigUpdate = Partial<{
@@ -874,6 +875,7 @@ export type SettingsConfigUpdate = Partial<{
   default_scan_type: string;
   default_service_detection: boolean;
   default_scan_rate_limit_pps: number;
+  retention_observation_days: number;
 }>;
 
 export function fetchSettingsConfig(): Promise<SettingsConfig> {

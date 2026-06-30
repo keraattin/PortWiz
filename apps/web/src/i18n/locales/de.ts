@@ -501,6 +501,10 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.system.defaultRateLimit": "Standard-Ratenlimit (pps)",
   "settings.system.defaultRateLimitHint": "Pakete-pro-Sekunde-Limit für neue Scans.",
   "settings.system.defaultServiceDetection": "Diensterkennung standardmäßig an",
+  "settings.system.retention": "Datenaufbewahrung",
+  "settings.system.retentionObservationDays": "Beobachtungs-Aufbewahrung (Tage)",
+  "settings.system.retentionObservationDaysHint":
+    "Löscht rohe Scan-Beobachtungen, die älter als so viele Tage sind. 0 behält alles. Scan-Läufe, Änderungsereignisse und das Audit-Log werden nie gelöscht.",
   "settings.system.onlineSeconds": "Agent-Online-Schwelle (Sekunden)",
   "settings.system.onlineSecondsHint":
     "Ein Agent gilt als online, wenn er innerhalb dieser Sekunden ein Heartbeat gesendet hat.",

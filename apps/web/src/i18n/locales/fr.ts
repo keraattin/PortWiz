@@ -501,6 +501,10 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.system.defaultRateLimit": "Limite de débit par défaut (pps)",
   "settings.system.defaultRateLimitHint": "Plafond de paquets par seconde appliqué aux nouvelles analyses.",
   "settings.system.defaultServiceDetection": "Détection de service activée par défaut",
+  "settings.system.retention": "Conservation des données",
+  "settings.system.retentionObservationDays": "Conservation des observations (jours)",
+  "settings.system.retentionObservationDaysHint":
+    "Supprime les observations brutes d'analyse plus anciennes que ce nombre de jours. 0 conserve tout. Les analyses, les événements de changement et le journal d'audit ne sont jamais supprimés.",
   "settings.system.onlineSeconds": "Seuil en ligne de l'agent (secondes)",
   "settings.system.onlineSecondsHint":
     "Un agent est considéré en ligne s'il a émis un battement dans ce nombre de secondes.",

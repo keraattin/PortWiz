@@ -65,6 +65,7 @@ EDITABLE_KEYS: list[str] = [
     "default_scan_type",
     "default_service_detection",
     "default_scan_rate_limit_pps",
+    "retention_observation_days",
 ]
 
 # Keys whose values must never be returned to clients and are only updated when a

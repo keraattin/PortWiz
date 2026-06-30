@@ -131,3 +131,80 @@ async def test_requeue_ignores_recent_run(db) -> None:
     async with db() as session:
         run = await session.get(ScanRun, rid)
         assert run.status == ScanRunStatus.running
+
+
+async def _add_observation(db, run_id, *, ts):
+    from portwiz_api.models.scan import Observation
+
+    async with db() as session:
+        session.add(
+            Observation(
+                ts=ts,
+                scan_run_id=run_id,
+                ip="10.0.0.1",
+                port=22,
+                protocol="tcp",
+                state="open",
+            )
+        )
+        await session.commit()
+
+
+async def test_prune_observations_drops_only_old_rows(db) -> None:
+    from sqlalchemy import func, select
+
+    from portwiz_api.core.scheduler import prune_observations
+    from portwiz_api.models.audit import AuditEvent
+    from portwiz_api.models.scan import Observation, ScanRunStatus
+
+    rid = await _add_run(
+        db,
+        status=ScanRunStatus.completed,
+        started_at=_NOW - dt.timedelta(days=200),
+        attempts=1,
+    )
+    await _add_observation(db, rid, ts=_NOW - dt.timedelta(days=100))  # stale
+    await _add_observation(db, rid, ts=_NOW - dt.timedelta(days=1))  # recent
+
+    async with db() as session:
+        deleted = await prune_observations(session, retention_days=30, now=_NOW)
+        assert deleted == 1
+
+    async with db() as session:
+        remaining = (
+            await session.execute(select(func.count()).select_from(Observation))
+        ).scalar_one()
+        assert remaining == 1  # the recent one survives
+        # A single audit event records the prune (count only, not which rows).
+        events = (
+            await session.execute(
+                select(AuditEvent).where(AuditEvent.action == "observations.pruned")
+            )
+        ).scalars().all()
+        assert len(events) == 1
+        assert events[0].payload["deleted"] == 1
+
+
+async def test_prune_observations_disabled_keeps_everything(db) -> None:
+    from sqlalchemy import func, select
+
+    from portwiz_api.core.scheduler import prune_observations
+    from portwiz_api.models.scan import Observation, ScanRunStatus
+
+    rid = await _add_run(
+        db,
+        status=ScanRunStatus.completed,
+        started_at=_NOW - dt.timedelta(days=200),
+        attempts=1,
+    )
+    await _add_observation(db, rid, ts=_NOW - dt.timedelta(days=999))
+
+    async with db() as session:
+        deleted = await prune_observations(session, retention_days=0, now=_NOW)
+        assert deleted == 0
+
+    async with db() as session:
+        remaining = (
+            await session.execute(select(func.count()).select_from(Observation))
+        ).scalar_one()
+        assert remaining == 1

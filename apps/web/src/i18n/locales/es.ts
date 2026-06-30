@@ -501,6 +501,10 @@ export const es: Partial<Record<TKey, string>> = {
   "settings.system.defaultRateLimit": "Límite de tasa por defecto (pps)",
   "settings.system.defaultRateLimitHint": "Límite de paquetes por segundo aplicado a nuevos escaneos.",
   "settings.system.defaultServiceDetection": "Detección de servicio activada por defecto",
+  "settings.system.retention": "Retención de datos",
+  "settings.system.retentionObservationDays": "Retención de observaciones (días)",
+  "settings.system.retentionObservationDaysHint":
+    "Elimina las observaciones brutas de escaneo más antiguas que esta cantidad de días. 0 conserva todo. Los escaneos, los eventos de cambio y el registro de auditoría nunca se eliminan.",
   "settings.system.onlineSeconds": "Umbral de en línea del agente (segundos)",
   "settings.system.onlineSecondsHint":
     "Un agente se considera en línea si envió un latido dentro de estos segundos.",

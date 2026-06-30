@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import datetime as dt
 
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models.scan import ScanProfile, ScanRun, ScanRunStatus, ScanSource
+from ..models.scan import Observation, ScanProfile, ScanRun, ScanRunStatus, ScanSource
 from .audit import append_audit
 
 
@@ -129,3 +129,41 @@ async def requeue_stale_runs(
     if requeued or failed:
         await session.commit()
     return {"requeued": requeued, "failed": failed}
+
+
+async def prune_observations(
+    session: AsyncSession,
+    retention_days: int,
+    now: dt.datetime | None = None,
+) -> int:
+    """Delete raw observations older than ``retention_days`` (0 = keep forever).
+
+    Only the high-volume time-series is pruned. Scan runs, change events and the
+    immutable hash-chained audit log are deliberately never deleted, so the
+    compliance record stays intact. A single audit event records how many rows
+    were removed (not which), preserving the chain without unbounded growth.
+    """
+    if retention_days <= 0:
+        return 0
+    now = _utcnow() if now is None else _aware(now)
+    cutoff = now - dt.timedelta(days=retention_days)
+
+    count = (
+        await session.execute(
+            select(func.count()).select_from(Observation).where(Observation.ts < cutoff)
+        )
+    ).scalar_one()
+    if not count:
+        return 0
+
+    await session.execute(delete(Observation).where(Observation.ts < cutoff))
+    await append_audit(
+        session,
+        action="observations.pruned",
+        actor_email="system:retention",
+        target_type="observation",
+        target_id="*",
+        payload={"deleted": int(count), "retention_days": retention_days},
+    )
+    await session.commit()
+    return int(count)
