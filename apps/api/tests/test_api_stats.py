@@ -17,6 +17,9 @@ async def test_stats_empty(client, admin_headers) -> None:
         "vlans": 0,
         "agents_total": 0,
         "agents_online": 0,
+        "agents_offline": 0,
+        "agents_never_seen": 0,
+        "agents_disabled": 0,
         "open_changes": 0,
         "open_tasks": 0,
         "pending_runs": 0,
@@ -36,7 +39,33 @@ async def test_stats_counts_reflect_data(client, admin_headers) -> None:
     assert body["assets"] == 2
     assert body["agents_total"] == 1
     assert body["agents_online"] == 0  # never heartbeat
+    assert body["agents_never_seen"] == 1
     assert body["open_tasks"] == 1
+
+
+async def test_stats_agent_health_breakdown(client, admin_headers) -> None:
+    # Online: enrolled and just heartbeat.
+    online = await client.post("/api/v1/agents", json={"name": "online-a"}, headers=admin_headers)
+    await client.post(
+        "/api/v1/agents/heartbeat",
+        headers={"Authorization": f"Bearer {online.json()['token']}"},
+    )
+    # Never seen: enrolled, no heartbeat.
+    await client.post("/api/v1/agents", json={"name": "never-a"}, headers=admin_headers)
+    # Disabled: enrolled then disabled.
+    disabled = await client.post("/api/v1/agents", json={"name": "off-a"}, headers=admin_headers)
+    await client.patch(
+        f"/api/v1/agents/{disabled.json()['id']}",
+        json={"enabled": False},
+        headers=admin_headers,
+    )
+
+    body = (await client.get("/api/v1/stats", headers=admin_headers)).json()
+    assert body["agents_total"] == 3
+    assert body["agents_online"] == 1
+    assert body["agents_never_seen"] == 1
+    assert body["agents_disabled"] == 1
+    assert body["agents_offline"] == 0
 
 
 async def test_charts_requires_auth(client) -> None:

@@ -54,6 +54,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "dashboard.metric.openChanges": "Açık değişiklikler",
   "dashboard.metric.openTasks": "Açık görevler",
   "dashboard.metric.pendingRuns": "Bekleyen taramalar",
+  "dashboard.agentHealth": "Ajan sağlığı",
+  "dashboard.agentTotal": "toplam {count}",
   "dashboard.scanWaiting": "{count} bekleyen tarama var ama çevrimiçi ajan yok.",
   "dashboard.checkAgents": "Ajanları kontrol et",
   "dashboard.gettingStarted": "Başlarken",
@@ -237,6 +239,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.rotate": "Token yenile",
   "agents.lastRotated": "Son yenileme {when}.",
   "agents.neverRotated": "Token hiç yenilenmedi.",
+  "agents.backToList": "Ajanlara dön",
+  "agents.notFound": "Ajan bulunamadı.",
+  "agents.deleteAgent": "Bu ajanı sil",
   "agents.deploy.title": "Bu ajanı dağıt",
   "agents.deploy.intro":
     "Ajanı hedef ağ segmentindeki bir makinede çalıştırın. Yalnızca API'ye giden (outbound) erişime ihtiyaç duyar; gelen port gerekmez.",
@@ -254,6 +259,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.deploy.tlsOk": "TLS açık: ajanın trafiği, token dahil, aktarımda şifrelenir.",
   "agents.deploy.tlsWarn":
     "Bu URL HTTPS değil. Ajan token'ı ve tarama verisi düz metin olarak iletilir. Gerçek bir ağa dağıtmadan önce API'yi TLS arkasına alın (nginx veya Caddy gibi bir ters proxy) ve https:// URL kullanın.",
+  "agents.deploy.tokenPlaceholderHint":
+    "Token yalnızca bir kez gösterilir, bu yüzden saklanmaz. Yeni bir token almak için token'ı yenileyin, sonra placeholder yerine yapıştırın.",
   "agents.col.name": "Ad",
   "agents.col.segment": "Segment",
   "agents.col.status": "Durum",

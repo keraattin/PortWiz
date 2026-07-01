@@ -54,6 +54,8 @@ export const en = {
   "dashboard.metric.openChanges": "Open changes",
   "dashboard.metric.openTasks": "Open tasks",
   "dashboard.metric.pendingRuns": "Pending runs",
+  "dashboard.agentHealth": "Agent health",
+  "dashboard.agentTotal": "{count} total",
   "dashboard.scanWaiting": "{count} pending scan run(s) with no agent online.",
   "dashboard.checkAgents": "Check your agents",
   "dashboard.gettingStarted": "Getting started",
@@ -235,6 +237,9 @@ export const en = {
   "agents.rotate": "Rotate token",
   "agents.lastRotated": "Last rotated {when}.",
   "agents.neverRotated": "Token has never been rotated.",
+  "agents.backToList": "Back to agents",
+  "agents.notFound": "Agent not found.",
+  "agents.deleteAgent": "Delete this agent",
   "agents.deploy.title": "Deploy this agent",
   "agents.deploy.intro":
     "Run the agent on a host inside the target network segment. It needs only outbound access to the API; no inbound ports.",
@@ -252,6 +257,8 @@ export const en = {
   "agents.deploy.tlsOk": "TLS is on: the agent's traffic, including its token, is encrypted in transit.",
   "agents.deploy.tlsWarn":
     "This URL is not HTTPS. The agent token and scan data would travel in cleartext. Put the API behind TLS (a reverse proxy such as nginx or Caddy) and use an https:// URL before deploying to a real network.",
+  "agents.deploy.tokenPlaceholderHint":
+    "The token is only shown once, so it is not stored. Rotate the token to get a fresh one, then paste it in place of the placeholder.",
   "agents.col.name": "Name",
   "agents.col.segment": "Segment",
   "agents.col.status": "Status",

@@ -54,6 +54,8 @@ export const es: Partial<Record<TKey, string>> = {
   "dashboard.metric.openChanges": "Cambios abiertos",
   "dashboard.metric.openTasks": "Tareas abiertas",
   "dashboard.metric.pendingRuns": "Escaneos pendientes",
+  "dashboard.agentHealth": "Estado de los agentes",
+  "dashboard.agentTotal": "{count} en total",
   "dashboard.scanWaiting": "{count} escaneo(s) pendiente(s), pero ningún agente en línea.",
   "dashboard.checkAgents": "Revisa tus agentes",
   "dashboard.gettingStarted": "Primeros pasos",
@@ -238,6 +240,9 @@ export const es: Partial<Record<TKey, string>> = {
   "agents.rotate": "Renovar token",
   "agents.lastRotated": "Última renovación {when}.",
   "agents.neverRotated": "El token nunca se ha renovado.",
+  "agents.backToList": "Volver a los agentes",
+  "agents.notFound": "Agente no encontrado.",
+  "agents.deleteAgent": "Eliminar este agente",
   "agents.deploy.title": "Desplegar este agente",
   "agents.deploy.intro":
     "Ejecute el agente en un host dentro del segmento de red objetivo. Solo necesita acceso saliente a la API; ningún puerto entrante.",
@@ -256,6 +261,8 @@ export const es: Partial<Record<TKey, string>> = {
     "TLS activado: el tráfico del agente, incluido su token, se cifra en tránsito.",
   "agents.deploy.tlsWarn":
     "Esta URL no es HTTPS. El token del agente y los datos de escaneo viajarían en texto plano. Coloque la API detrás de TLS (un proxy inverso como nginx o Caddy) y use una URL https:// antes de desplegar en una red real.",
+  "agents.deploy.tokenPlaceholderHint":
+    "El token solo se muestra una vez, por lo que no se almacena. Renueve el token para obtener uno nuevo y péguelo en lugar del marcador de posición.",
   "agents.col.name": "Nombre",
   "agents.col.segment": "Segmento",
   "agents.col.status": "Estado",

@@ -3,9 +3,13 @@ import { useI18n } from "../i18n/I18nContext";
 
 interface AgentDeployPanelProps {
   name: string;
-  token: string;
+  // Absent for an existing agent (only its hash is stored): the command shows a
+  // token placeholder and the caller is expected to offer a rotate action.
+  token?: string;
   pollSeconds: number;
 }
+
+const TOKEN_PLACEHOLDER = "<PORTWIZ_AGENT_TOKEN>";
 
 // Docker container names and the agent id must be shell-safe for a copy-paste
 // command, so derive a slug from the (free-form) agent name.
@@ -36,10 +40,11 @@ export default function AgentDeployPanel({ name, token, pollSeconds }: AgentDepl
 
   const id = slug(name);
   const isHttps = /^https:\/\//i.test(apiUrl.trim());
+  const hasToken = Boolean(token);
   const command =
     `docker run -d --restart unless-stopped --name portwiz-agent-${id} ` +
     `-e PORTWIZ_API_URL=${apiUrl} ` +
-    `-e PORTWIZ_AGENT_TOKEN=${token} ` +
+    `-e PORTWIZ_AGENT_TOKEN=${token || TOKEN_PLACEHOLDER} ` +
     `-e PORTWIZ_AGENT_ID=${id} ` +
     `-e PORTWIZ_POLL_SECONDS=${pollSeconds} ` +
     `portwiz/agent:latest`;
@@ -81,6 +86,9 @@ export default function AgentDeployPanel({ name, token, pollSeconds }: AgentDepl
             {copied ? t("agents.copied") : t("agents.copy")}
           </button>
         </div>
+        {!hasToken && (
+          <p className="mt-1 text-xs text-amber-400">{t("agents.deploy.tokenPlaceholderHint")}</p>
+        )}
       </div>
 
       <ol className="list-decimal space-y-1 pl-5 text-xs text-slate-400">

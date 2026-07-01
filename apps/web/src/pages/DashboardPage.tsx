@@ -157,6 +157,35 @@ export default function DashboardPage() {
         />
       </div>
 
+      {stats && (
+        <Link
+          to="/agents"
+          className="block rounded-xl border border-slate-800 bg-slate-900 p-5 transition hover:border-slate-700"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-medium text-slate-300">{t("dashboard.agentHealth")}</h2>
+            <span className="text-xs text-slate-500">
+              {t("dashboard.agentTotal", { count: stats.agents_total })}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {(
+              [
+                ["agents.status.online", stats.agents_online, "text-emerald-400"],
+                ["agents.status.offline", stats.agents_offline, "text-red-400"],
+                ["agents.status.neverSeen", stats.agents_never_seen, "text-slate-300"],
+                ["agents.status.disabled", stats.agents_disabled, "text-slate-400"],
+              ] as [TKey, number, string][]
+            ).map(([label, value, accent]) => (
+              <div key={label} className="rounded-lg border border-slate-800 bg-slate-950 p-3">
+                <div className={`text-2xl font-semibold ${accent}`}>{value}</div>
+                <div className="mt-0.5 text-xs text-slate-400">{t(label)}</div>
+              </div>
+            ))}
+          </div>
+        </Link>
+      )}
+
       {charts && <DashboardCharts data={charts} />}
 
       <section className="space-y-3">

@@ -54,6 +54,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "dashboard.metric.openChanges": "Changements ouverts",
   "dashboard.metric.openTasks": "Tâches ouvertes",
   "dashboard.metric.pendingRuns": "Analyses en attente",
+  "dashboard.agentHealth": "État des agents",
+  "dashboard.agentTotal": "{count} au total",
   "dashboard.scanWaiting": "{count} analyse(s) en attente, mais aucun agent en ligne.",
   "dashboard.checkAgents": "Vérifier vos agents",
   "dashboard.gettingStarted": "Premiers pas",
@@ -238,6 +240,9 @@ export const fr: Partial<Record<TKey, string>> = {
   "agents.rotate": "Renouveler le jeton",
   "agents.lastRotated": "Dernier renouvellement {when}.",
   "agents.neverRotated": "Le jeton n'a jamais été renouvelé.",
+  "agents.backToList": "Retour aux agents",
+  "agents.notFound": "Agent introuvable.",
+  "agents.deleteAgent": "Supprimer cet agent",
   "agents.deploy.title": "Déployer cet agent",
   "agents.deploy.intro":
     "Exécutez l'agent sur un hôte du segment réseau cible. Il n'a besoin que d'un accès sortant à l'API ; aucun port entrant.",
@@ -256,6 +261,8 @@ export const fr: Partial<Record<TKey, string>> = {
     "TLS est activé : le trafic de l'agent, y compris son jeton, est chiffré en transit.",
   "agents.deploy.tlsWarn":
     "Cette URL n'est pas en HTTPS. Le jeton de l'agent et les données d'analyse circuleraient en clair. Placez l'API derrière TLS (un reverse proxy tel que nginx ou Caddy) et utilisez une URL https:// avant tout déploiement sur un réseau réel.",
+  "agents.deploy.tokenPlaceholderHint":
+    "Le jeton n'est affiché qu'une seule fois, il n'est donc pas stocké. Renouvelez le jeton pour en obtenir un nouveau, puis collez-le à la place de l'espace réservé.",
   "agents.col.name": "Nom",
   "agents.col.segment": "Segment",
   "agents.col.status": "Statut",

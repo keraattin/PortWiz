@@ -54,6 +54,8 @@ export const de: Partial<Record<TKey, string>> = {
   "dashboard.metric.openChanges": "Offene Änderungen",
   "dashboard.metric.openTasks": "Offene Aufgaben",
   "dashboard.metric.pendingRuns": "Ausstehende Scans",
+  "dashboard.agentHealth": "Agent-Zustand",
+  "dashboard.agentTotal": "{count} gesamt",
   "dashboard.scanWaiting": "{count} ausstehende Scans, aber kein Agent online.",
   "dashboard.checkAgents": "Agenten prüfen",
   "dashboard.gettingStarted": "Erste Schritte",
@@ -238,6 +240,9 @@ export const de: Partial<Record<TKey, string>> = {
   "agents.rotate": "Token erneuern",
   "agents.lastRotated": "Zuletzt erneuert {when}.",
   "agents.neverRotated": "Token wurde noch nie erneuert.",
+  "agents.backToList": "Zurück zu den Agenten",
+  "agents.notFound": "Agent nicht gefunden.",
+  "agents.deleteAgent": "Diesen Agenten löschen",
   "agents.deploy.title": "Diesen Agenten bereitstellen",
   "agents.deploy.intro":
     "Führe den Agenten auf einem Host im Zielnetzsegment aus. Er benötigt nur ausgehenden Zugriff auf die API; keine eingehenden Ports.",
@@ -256,6 +261,8 @@ export const de: Partial<Record<TKey, string>> = {
     "TLS ist aktiv: der Verkehr des Agenten, einschließlich seines Tokens, wird bei der Übertragung verschlüsselt.",
   "agents.deploy.tlsWarn":
     "Diese URL ist nicht HTTPS. Der Agent-Token und die Scan-Daten würden im Klartext übertragen. Stelle die API hinter TLS (ein Reverse-Proxy wie nginx oder Caddy) und verwende eine https://-URL, bevor du in einem echten Netzwerk bereitstellst.",
+  "agents.deploy.tokenPlaceholderHint":
+    "Der Token wird nur einmal angezeigt und daher nicht gespeichert. Erneuere den Token, um einen neuen zu erhalten, und füge ihn anstelle des Platzhalters ein.",
   "agents.col.name": "Name",
   "agents.col.segment": "Segment",
   "agents.col.status": "Status",

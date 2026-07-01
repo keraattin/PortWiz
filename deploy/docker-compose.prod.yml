@@ -1,0 +1,107 @@
+# PortWiz production stack (self-hosted, single-origin).
+#
+#   cp .env.prod.example .env.prod
+#   # edit .env.prod: set strong secrets, DB password, admin, SMTP
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# The web service (nginx) is the only public entry point; it serves the built
+# SPA and reverse-proxies /api and /health to the API over the internal network,
+# so there is no CORS and the API/DB/broker are never exposed to the host.
+#
+# Put your own TLS terminator (a reverse proxy, load balancer, or nginx with
+# certificates) in front of the web service before exposing it to a real
+# network. Agents are deployed separately per segment (see the in-app deploy
+# panel), so no agent service is defined here.
+name: portwiz-prod
+
+services:
+  db:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env.prod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set a strong POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-portwiz}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-portwiz} -d ${POSTGRES_DB:-portwiz}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    command: ["valkey-server", "--save", "60", "1", "--appendonly", "no"]
+    volumes:
+      - valkey-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ../apps/api
+    image: portwiz-api:prod
+    env_file: .env.prod
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    command: ["api"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  worker:
+    image: portwiz-api:prod
+    env_file: .env.prod
+    restart: unless-stopped
+    depends_on:
+      # Wait for the API: it applies migrations on boot before it turns healthy.
+      api:
+        condition: service_healthy
+    command: ["worker"]
+
+  beat:
+    image: portwiz-api:prod
+    env_file: .env.prod
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["beat"]
+
+  web:
+    build:
+      context: ../apps/web
+      target: prod
+    image: portwiz-web:prod
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # Optional local LLM. Start with: --profile ai (and set PORTWIZ_AI_PROVIDER=ollama).
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai"]
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  postgres-data:
+  valkey-data:
+  ollama-data:
+

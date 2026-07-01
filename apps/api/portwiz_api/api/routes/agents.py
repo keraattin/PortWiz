@@ -273,3 +273,17 @@ async def poll_job(
     )
     await session.commit()
     return job
+
+
+# Declared last so the literal agent routes (/heartbeat, /jobs) win the match;
+# a bare "/{agent_id}" earlier would capture "jobs" and reject it as a non-UUID.
+@router.get("/{agent_id}", response_model=AgentRead)
+async def get_agent(
+    agent_id: uuid.UUID,
+    _: User = Depends(require_roles(UserRole.admin, UserRole.auditor)),
+    session: AsyncSession = Depends(get_session),
+) -> Agent:
+    agent = await session.get(Agent, agent_id)
+    if agent is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Agent not found")
+    return agent

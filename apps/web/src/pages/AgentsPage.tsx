@@ -1,20 +1,16 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ApiError,
   type Agent,
   type EnrolledAgent,
-  type RotatedAgentToken,
-  deleteAgent,
   enrollAgent,
   fetchSettings,
   listAgents,
-  rotateAgentToken,
-  updateAgent,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import AgentDeployPanel from "../components/AgentDeployPanel";
 import Button from "../components/Button";
-import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
@@ -55,6 +51,7 @@ export default function AgentsPage() {
   const { user } = useAuth();
   const toast = useToast();
   const { t } = useI18n();
+  const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
 
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -63,25 +60,7 @@ export default function AgentsPage() {
   const [name, setName] = useState("");
   const [segment, setSegment] = useState("");
   const [enrolled, setEnrolled] = useState<EnrolledAgent | null>(null);
-  const [rotated, setRotated] = useState<RotatedAgentToken | null>(null);
   const [copied, setCopied] = useState(false);
-
-  // The enrollment and rotation banners both reveal a token exactly once.
-  const reveal = enrolled
-    ? { name: enrolled.name, token: enrolled.token, rotated: false }
-    : rotated
-      ? { name: rotated.name, token: rotated.token, rotated: true }
-      : null;
-
-  function dismissReveal() {
-    setEnrolled(null);
-    setRotated(null);
-    setCopied(false);
-  }
-
-  const [editAgent, setEditAgent] = useState<Agent | null>(null);
-  const [editSegment, setEditSegment] = useState("");
-  const [editEnabled, setEditEnabled] = useState(true);
   const [onlineMs, setOnlineMs] = useState(DEFAULT_ONLINE_MS);
   const [pollSeconds, setPollSeconds] = useState(15);
 
@@ -120,14 +99,14 @@ export default function AgentsPage() {
 
   useEffect(() => {
     void reload();
-    // The online cut-off is an admin-tunable system setting.
+    // Online cut-off and poll cadence are admin-tunable system settings.
     fetchSettings()
       .then((s) => {
         setOnlineMs(s.agent_online_seconds * 1000);
         setPollSeconds(s.agent_poll_seconds);
       })
       .catch(() => {
-        /* keep the default window if settings can't be read */
+        /* keep the defaults if settings can't be read */
       });
   }, []);
 
@@ -137,7 +116,6 @@ export default function AgentsPage() {
     setCopied(false);
     try {
       const result = await enrollAgent(name, segment || null);
-      setRotated(null);
       setEnrolled(result);
       setName("");
       setSegment("");
@@ -148,75 +126,22 @@ export default function AgentsPage() {
     }
   }
 
-  async function onRotate(a: Agent) {
-    if (!window.confirm(t("agents.confirmRotate", { name: a.name }))) return;
-    try {
-      const result = await rotateAgentToken(a.id);
-      setEnrolled(null);
-      setCopied(false);
-      setRotated(result);
-      setEditAgent(null);
-      toast.success(t("agents.rotated"));
-      await reload();
-    } catch (e) {
-      toast.error(errorMessage(e));
-    }
-  }
-
-  async function onDelete(id: string) {
-    if (!window.confirm(t("agents.confirmDelete"))) return;
-    try {
-      await deleteAgent(id);
-      toast.success(t("agents.deleted"));
-      await reload();
-    } catch (e) {
-      toast.error(errorMessage(e));
-    }
-  }
-
-  function openEdit(a: Agent) {
-    if (!isAdmin) return;
-    setError(null);
-    setEditAgent(a);
-    setEditSegment(a.segment ?? "");
-    setEditEnabled(a.enabled);
-  }
-
-  async function onSaveEdit(e: FormEvent) {
-    e.preventDefault();
-    if (!editAgent) return;
-    setError(null);
-    try {
-      await updateAgent(editAgent.id, {
-        segment: editSegment || null,
-        enabled: editEnabled,
-      });
-      setEditAgent(null);
-      toast.success(t("agents.updated"));
-      await reload();
-    } catch (e) {
-      setError(errorMessage(e));
-    }
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader title={t("agents.title")} subtitle={t("agents.subtitle")} />
 
-      {reveal && (
+      {enrolled && (
         <div className="space-y-2 rounded-xl border border-emerald-800 bg-emerald-950/40 p-4">
           <p className="text-sm text-emerald-300">
-            {reveal.rotated
-              ? t("agents.rotatedNotice", { name: reveal.name })
-              : t("agents.enrolledNotice", { name: reveal.name })}
+            {t("agents.enrolledNotice", { name: enrolled.name })}
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 overflow-x-auto rounded bg-slate-900 px-3 py-2 font-mono text-xs text-slate-200">
-              {reveal.token}
+              {enrolled.token}
             </code>
             <button
               onClick={() => {
-                void navigator.clipboard?.writeText(reveal.token);
+                void navigator.clipboard?.writeText(enrolled.token);
                 setCopied(true);
               }}
               className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500"
@@ -224,13 +149,16 @@ export default function AgentsPage() {
               {copied ? t("agents.copied") : t("agents.copy")}
             </button>
             <button
-              onClick={dismissReveal}
+              onClick={() => {
+                setEnrolled(null);
+                setCopied(false);
+              }}
               className="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
             >
               {t("agents.dismiss")}
             </button>
           </div>
-          <AgentDeployPanel name={reveal.name} token={reveal.token} pollSeconds={pollSeconds} />
+          <AgentDeployPanel name={enrolled.name} token={enrolled.token} pollSeconds={pollSeconds} />
         </div>
       )}
 
@@ -265,24 +193,23 @@ export default function AgentsPage() {
             toggleSort={toggleSort}
             filters={filters}
             setFilter={onFilter}
-            trailing={isAdmin}
           />
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={7}>
+                <td className="px-4 py-3 text-slate-500" colSpan={6}>
                   {t("common.loading")}
                 </td>
               </tr>
             ) : agents.length === 0 ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={7}>
+                <td className="px-4 py-3 text-slate-500" colSpan={6}>
                   {t("agents.empty")}
                 </td>
               </tr>
             ) : agentRows.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
                   {t("common.noData")}
                 </td>
               </tr>
@@ -292,8 +219,8 @@ export default function AgentsPage() {
                 return (
                   <tr
                     key={a.id}
-                    onClick={() => openEdit(a)}
-                    className={`bg-slate-950 ${isAdmin ? "cursor-pointer hover:bg-slate-900" : ""}`}
+                    onClick={() => navigate(`/agents/${a.id}`)}
+                    className="cursor-pointer bg-slate-950 hover:bg-slate-900"
                   >
                     <td className="px-4 py-2 text-slate-100">{a.name}</td>
                     <td className="px-4 py-2 text-slate-300">
@@ -319,19 +246,6 @@ export default function AgentsPage() {
                     <td className="px-4 py-2 text-xs text-slate-400">
                       {new Date(a.created_at).toLocaleString()}
                     </td>
-                    {isAdmin && (
-                      <td className="px-4 py-2 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void onDelete(a.id);
-                          }}
-                          className="text-xs text-red-400 hover:text-red-300"
-                        >
-                          {t("common.delete")}
-                        </button>
-                      </td>
-                    )}
                   </tr>
                 );
               })
@@ -345,74 +259,6 @@ export default function AgentsPage() {
         total={agentsPage.total}
         onPage={agentsPage.setPage}
       />
-
-      <Modal
-        open={editAgent !== null}
-        onClose={() => setEditAgent(null)}
-        title={t("agents.editTitle", { name: editAgent?.name ?? "" })}
-      >
-        <form onSubmit={onSaveEdit} className="space-y-3">
-          <div>
-            <label className="block text-sm text-slate-300">{t("agents.f.segment")}</label>
-            <input
-              className={inputClass}
-              placeholder={t("agents.f.segmentPlaceholder")}
-              value={editSegment}
-              onChange={(e) => setEditSegment(e.target.value)}
-            />
-          </div>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={editEnabled}
-              onChange={(e) => setEditEnabled(e.target.checked)}
-            />
-            {t("agents.f.enabled")}
-          </label>
-          <p className="text-xs text-slate-500">{t("agents.f.enabledHint")}</p>
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          <div className="flex justify-end">
-            <Button type="submit">{t("agents.saveChanges")}</Button>
-          </div>
-        </form>
-
-        <div className="mt-4 space-y-1 border-t border-slate-800 pt-4">
-          <p className="text-sm font-medium text-slate-300">{t("agents.details")}</p>
-          <dl className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-1 text-xs">
-            <dt className="text-slate-500">{t("agents.col.version")}</dt>
-            <dd className="text-slate-300">
-              {editAgent?.version ?? <span className="text-slate-600">{t("agents.unknown")}</span>}
-            </dd>
-            <dt className="text-slate-500">{t("agents.platform")}</dt>
-            <dd className="text-slate-300">
-              {editAgent?.platform ?? <span className="text-slate-600">{t("agents.unknown")}</span>}
-            </dd>
-            <dt className="text-slate-500">{t("agents.lastIp")}</dt>
-            <dd className="text-slate-300">
-              {editAgent?.last_ip ?? <span className="text-slate-600">{t("agents.unknown")}</span>}
-            </dd>
-          </dl>
-        </div>
-
-        <div className="mt-4 space-y-2 border-t border-slate-800 pt-4">
-          <p className="text-sm font-medium text-slate-300">{t("agents.rotateTitle")}</p>
-          <p className="text-xs text-slate-500">{t("agents.rotateHint")}</p>
-          <p className="text-xs text-slate-500">
-            {editAgent?.token_rotated_at
-              ? t("agents.lastRotated", {
-                  when: new Date(editAgent.token_rotated_at).toLocaleString(),
-                })
-              : t("agents.neverRotated")}
-          </p>
-          <button
-            type="button"
-            onClick={() => editAgent && void onRotate(editAgent)}
-            className="rounded-lg border border-amber-700 px-3 py-2 text-sm font-medium text-amber-300 hover:bg-amber-950/40"
-          >
-            {t("agents.rotate")}
-          </button>
-        </div>
-      </Modal>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import CompliancePage from "./pages/CompliancePage";
 import TasksPage from "./pages/TasksPage";
 import SettingsPage from "./pages/SettingsPage";
 import AgentsPage from "./pages/AgentsPage";
+import AgentDetailPage from "./pages/AgentDetailPage";
 import UsersPage from "./pages/UsersPage";
 
 function ProtectedLayout() {
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/vlans" element={<VlansPage />} />
         <Route path="/scans" element={<ScansPage />} />
         <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/agents/:id" element={<AgentDetailPage />} />
         <Route path="/changes" element={<ChangesPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/compliance" element={<CompliancePage />} />

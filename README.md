@@ -84,6 +84,36 @@ generator) to encrypt stored integration secrets — API keys, tokens, and the S
 password — at rest. Keep the key stable: rotating or losing it makes existing
 secrets unreadable.
 
+## Production deployment
+
+A separate compose file runs the hardened, single-origin stack. Containers run
+as a non-root user, the API/DB/broker are never published to the host, and one
+nginx service serves the built SPA and reverse-proxies `/api` and `/health`
+(no CORS).
+
+```bash
+cd deploy
+cp .env.prod.example .env.prod   # set strong secrets, DB password, admin, SMTP
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+
+- Web UI: http://localhost:8080  (change `WEB_PORT` in `.env.prod`)
+
+The API applies database migrations on boot before it turns healthy; the worker
+and beat services wait for that. Notes:
+
+- **TLS:** the web service listens on plain HTTP. Put your own TLS terminator
+  (reverse proxy, load balancer, or nginx with certificates) in front of it
+  before exposing PortWiz to a real network — agents send their bearer token to
+  the API, so that traffic must be encrypted.
+- **Secrets:** set `PORTWIZ_SECRET_KEY` and `PORTWIZ_ENCRYPTION_KEY` to fresh
+  random values, and use a strong `POSTGRES_PASSWORD` (kept in sync with
+  `PORTWIZ_DATABASE_URL`).
+- **Agents** are deployed per network segment, not by this compose file. Enroll
+  an agent in the UI and use the guided deploy panel for a ready-to-run command.
+- **Local AI (optional):** add `--profile ai` to start Ollama and set
+  `PORTWIZ_AI_PROVIDER=ollama`.
+
 ## Repository layout
 
 | Path | Contents |

@@ -12,6 +12,9 @@ class DashboardStats(BaseModel):
     vlans: int
     agents_total: int
     agents_online: int
+    agents_offline: int
+    agents_never_seen: int
+    agents_disabled: int
     open_changes: int
     open_tasks: int
     pending_runs: int

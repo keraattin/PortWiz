@@ -39,6 +39,7 @@ apps/agent/portwiz-agent
 .env
 .env.*
 !.env.example
+!.env.prod.example
 *.pem
 *.key
 !**/testdata/*.pem

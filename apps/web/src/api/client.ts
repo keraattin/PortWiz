@@ -121,6 +121,9 @@ export interface DashboardStats {
   vlans: number;
   agents_total: number;
   agents_online: number;
+  agents_offline: number;
+  agents_never_seen: number;
+  agents_disabled: number;
   open_changes: number;
   open_tasks: number;
   pending_runs: number;
@@ -518,6 +521,10 @@ export interface RotatedAgentToken {
 
 export function listAgents(): Promise<Agent[]> {
   return request<Agent[]>("/agents");
+}
+
+export function getAgent(id: string): Promise<Agent> {
+  return request<Agent>(`/agents/${id}`);
 }
 
 export function enrollAgent(name: string, segment?: string | null): Promise<EnrolledAgent> {

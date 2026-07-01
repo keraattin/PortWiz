@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.app_settings import effective_settings
 from ...core.compliance import compliance_status
 from ...core.db import get_session
 from ...models.agent import Agent
@@ -26,9 +27,6 @@ from ..deps import get_current_user
 
 router = APIRouter(prefix="/stats", tags=["stats"])
 
-# An agent that has heartbeat within this window counts as online.
-_ONLINE_WINDOW = dt.timedelta(minutes=2)
-
 # Fixed category orders so charts stay stable and zero-fill empty buckets.
 _CHANGE_TYPES = ["opened", "closed", "service_changed", "version_changed"]
 _CRITICALITIES = [c.value for c in Criticality]
@@ -37,12 +35,12 @@ _COMPLIANCE_STATUSES = ["compliant", "due_soon", "overdue", "never"]
 _CHART_DAYS = 30
 
 
-def _is_online(last_seen: dt.datetime | None, now: dt.datetime) -> bool:
+def _is_online(last_seen: dt.datetime | None, now: dt.datetime, window: dt.timedelta) -> bool:
     if last_seen is None:
         return False
     if last_seen.tzinfo is None:  # SQLite drops tzinfo; stored values are UTC
         last_seen = last_seen.replace(tzinfo=dt.timezone.utc)
-    return (now - last_seen) < _ONLINE_WINDOW
+    return (now - last_seen) < window
 
 
 def _aware(value: dt.datetime) -> dt.datetime:
@@ -76,7 +74,20 @@ async def get_stats(
 
     agents = (await session.execute(select(Agent))).scalars().all()
     now = dt.datetime.now(tz=dt.timezone.utc)
-    agents_online = sum(1 for a in agents if _is_online(a.last_seen_at, now))
+    # Honour the admin-tunable online cut-off so the dashboard agrees with the
+    # Agents page rather than a fixed 2-minute window.
+    eff = await effective_settings(session)
+    window = dt.timedelta(seconds=eff.agent_online_seconds)
+    agents_online = agents_offline = agents_never_seen = agents_disabled = 0
+    for a in agents:
+        if not a.enabled:
+            agents_disabled += 1
+        elif a.last_seen_at is None:
+            agents_never_seen += 1
+        elif _is_online(a.last_seen_at, now, window):
+            agents_online += 1
+        else:
+            agents_offline += 1
 
     last_run = (
         await session.execute(select(ScanRun).order_by(ScanRun.created_at.desc()).limit(1))
@@ -88,6 +99,9 @@ async def get_stats(
         vlans=vlans,
         agents_total=len(agents),
         agents_online=agents_online,
+        agents_offline=agents_offline,
+        agents_never_seen=agents_never_seen,
+        agents_disabled=agents_disabled,
         open_changes=open_changes,
         open_tasks=open_tasks,
         pending_runs=pending_runs,

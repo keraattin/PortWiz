@@ -54,6 +54,8 @@ export const pt: Partial<Record<TKey, string>> = {
   "dashboard.metric.openChanges": "Alterações abertas",
   "dashboard.metric.openTasks": "Tarefas abertas",
   "dashboard.metric.pendingRuns": "Varreduras pendentes",
+  "dashboard.agentHealth": "Saúde dos agentes",
+  "dashboard.agentTotal": "{count} no total",
   "dashboard.scanWaiting": "{count} varredura(s) pendente(s), mas nenhum agente online.",
   "dashboard.checkAgents": "Verifique seus agentes",
   "dashboard.gettingStarted": "Primeiros passos",
@@ -238,6 +240,9 @@ export const pt: Partial<Record<TKey, string>> = {
   "agents.rotate": "Renovar token",
   "agents.lastRotated": "Última renovação {when}.",
   "agents.neverRotated": "O token nunca foi renovado.",
+  "agents.backToList": "Voltar aos agentes",
+  "agents.notFound": "Agente não encontrado.",
+  "agents.deleteAgent": "Excluir este agente",
   "agents.deploy.title": "Implantar este agente",
   "agents.deploy.intro":
     "Execute o agente em um host dentro do segmento de rede alvo. Ele precisa apenas de acesso de saída à API; nenhuma porta de entrada.",
@@ -256,6 +261,8 @@ export const pt: Partial<Record<TKey, string>> = {
     "TLS ativado: o tráfego do agente, incluindo seu token, é criptografado em trânsito.",
   "agents.deploy.tlsWarn":
     "Esta URL não é HTTPS. O token do agente e os dados de varredura trafegariam em texto puro. Coloque a API atrás de TLS (um proxy reverso como nginx ou Caddy) e use uma URL https:// antes de implantar em uma rede real.",
+  "agents.deploy.tokenPlaceholderHint":
+    "O token é mostrado apenas uma vez, por isso não é armazenado. Renove o token para obter um novo e cole-o no lugar do espaço reservado.",
   "agents.col.name": "Nome",
   "agents.col.segment": "Segmento",
   "agents.col.status": "Status",

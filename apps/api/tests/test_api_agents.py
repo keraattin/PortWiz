@@ -37,6 +37,24 @@ async def test_enroll_returns_token_once_and_list_hides_it(client, admin_headers
     assert all("token" not in a for a in agents)
 
 
+async def test_get_agent_by_id(client, admin_headers) -> None:
+    resp = await client.post(
+        "/api/v1/agents", json={"name": "get-agent", "segment": "vlan7"}, headers=admin_headers
+    )
+    agent_id = resp.json()["id"]
+    got = await client.get(f"/api/v1/agents/{agent_id}", headers=admin_headers)
+    assert got.status_code == 200, got.text
+    body = got.json()
+    assert body["id"] == agent_id
+    assert body["name"] == "get-agent"
+    assert body["segment"] == "vlan7"
+
+
+async def test_get_agent_unknown_is_404(client, admin_headers) -> None:
+    resp = await client.get(f"/api/v1/agents/{uuid.uuid4()}", headers=admin_headers)
+    assert resp.status_code == 404
+
+
 async def test_rotate_token_invalidates_old_and_issues_new(client, admin_headers) -> None:
     # Enroll and confirm the original token authenticates.
     resp = await client.post(
