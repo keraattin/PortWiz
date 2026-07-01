@@ -35,6 +35,11 @@ class Agent(SQLModel, table=True):
     last_seen_at: dt.datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
+    # Self-reported by the agent on each heartbeat; last_ip is observed by the
+    # server from the request (respecting a reverse proxy's forwarded header).
+    version: str | None = Field(default=None, sa_column=Column(String(32)))
+    platform: str | None = Field(default=None, sa_column=Column(String(64)))
+    last_ip: str | None = Field(default=None, sa_column=Column(String(45)))
     # Set whenever the bearer token is regenerated, so the UI can surface how
     # long the current credential has been in use.
     token_rotated_at: dt.datetime | None = Field(

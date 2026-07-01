@@ -9,7 +9,7 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +22,7 @@ from ...models.user import User, UserRole
 from ...schemas.agent import (
     AgentCreate,
     AgentCreated,
+    AgentHeartbeat,
     AgentRead,
     AgentTokenRotated,
     AgentUpdate,
@@ -34,6 +35,19 @@ router = APIRouter(prefix="/agents", tags=["agents"])
 
 def _utcnow() -> dt.datetime:
     return dt.datetime.now(tz=dt.timezone.utc)
+
+
+def _client_ip(request: Request) -> str | None:
+    """The agent's source IP, honouring a reverse proxy's forwarded header.
+
+    In production a single-origin nginx proxies agent traffic, so the real
+    client address arrives in X-Forwarded-For (first hop). Fall back to the
+    direct peer address for a direct connection.
+    """
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip() or None
+    return request.client.host if request.client else None
 
 
 @router.post("", response_model=AgentCreated, status_code=status.HTTP_201_CREATED)
@@ -173,10 +187,20 @@ async def delete_agent(
 
 @router.post("/heartbeat")
 async def heartbeat(
+    request: Request,
+    payload: AgentHeartbeat | None = None,
     agent: Agent = Depends(get_current_agent),
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, str]:
     agent.last_seen_at = _utcnow()
+    agent.last_ip = _client_ip(request)
+    if payload is not None:
+        # Only overwrite when the agent actually reports a value, so an older
+        # agent that sends nothing keeps its last-known metadata.
+        if payload.version is not None:
+            agent.version = payload.version
+        if payload.platform is not None:
+            agent.platform = payload.platform
     await session.commit()
     return {"status": "ok", "agent_id": str(agent.id)}
 

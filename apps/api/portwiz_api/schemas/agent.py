@@ -18,6 +18,13 @@ class AgentUpdate(BaseModel):
     enabled: bool | None = None
 
 
+class AgentHeartbeat(BaseModel):
+    """Optional metadata an agent self-reports on each heartbeat."""
+
+    version: str | None = Field(default=None, max_length=32)
+    platform: str | None = Field(default=None, max_length=64)
+
+
 class AgentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -26,6 +33,9 @@ class AgentRead(BaseModel):
     segment: str | None
     enabled: bool
     last_seen_at: dt.datetime | None
+    version: str | None
+    platform: str | None
+    last_ip: str | None
     token_rotated_at: dt.datetime | None
     created_at: dt.datetime
 

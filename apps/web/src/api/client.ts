@@ -494,6 +494,9 @@ export interface Agent {
   segment: string | null;
   enabled: boolean;
   last_seen_at: string | null;
+  version: string | null;
+  platform: string | null;
+  last_ip: string | null;
   token_rotated_at: string | null;
   created_at: string;
 }

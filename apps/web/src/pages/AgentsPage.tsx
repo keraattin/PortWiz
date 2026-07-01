@@ -96,6 +96,7 @@ export default function AgentsPage() {
       filter: STATUS_OPTIONS.map((s) => ({ value: s, label: t(`agents.status.${s}` as TKey) })),
       get: (a) => agentCategory(a, onlineMs),
     },
+    { key: "version", label: t("agents.col.version"), filter: "text", get: (a) => a.version ?? "" },
     { key: "lastSeen", label: t("agents.col.lastSeen"), get: (a) => a.last_seen_at },
     { key: "enrolledAt", label: t("agents.col.enrolledAt"), get: (a) => a.created_at },
   ];
@@ -269,19 +270,19 @@ export default function AgentsPage() {
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={6}>
+                <td className="px-4 py-3 text-slate-500" colSpan={7}>
                   {t("common.loading")}
                 </td>
               </tr>
             ) : agents.length === 0 ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={6}>
+                <td className="px-4 py-3 text-slate-500" colSpan={7}>
                   {t("agents.empty")}
                 </td>
               </tr>
             ) : agentRows.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
                   {t("common.noData")}
                 </td>
               </tr>
@@ -308,6 +309,9 @@ export default function AgentsPage() {
                           {t("agents.status.disabled")}
                         </span>
                       )}
+                    </td>
+                    <td className="px-4 py-2 text-xs text-slate-400">
+                      {a.version ?? <span className="text-slate-600">-</span>}
                     </td>
                     <td className="px-4 py-2 text-xs text-slate-400">
                       {a.last_seen_at ? new Date(a.last_seen_at).toLocaleString() : "-"}
@@ -371,6 +375,24 @@ export default function AgentsPage() {
             <Button type="submit">{t("agents.saveChanges")}</Button>
           </div>
         </form>
+
+        <div className="mt-4 space-y-1 border-t border-slate-800 pt-4">
+          <p className="text-sm font-medium text-slate-300">{t("agents.details")}</p>
+          <dl className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-1 text-xs">
+            <dt className="text-slate-500">{t("agents.col.version")}</dt>
+            <dd className="text-slate-300">
+              {editAgent?.version ?? <span className="text-slate-600">{t("agents.unknown")}</span>}
+            </dd>
+            <dt className="text-slate-500">{t("agents.platform")}</dt>
+            <dd className="text-slate-300">
+              {editAgent?.platform ?? <span className="text-slate-600">{t("agents.unknown")}</span>}
+            </dd>
+            <dt className="text-slate-500">{t("agents.lastIp")}</dt>
+            <dd className="text-slate-300">
+              {editAgent?.last_ip ?? <span className="text-slate-600">{t("agents.unknown")}</span>}
+            </dd>
+          </dl>
+        </div>
 
         <div className="mt-4 space-y-2 border-t border-slate-800 pt-4">
           <p className="text-sm font-medium text-slate-300">{t("agents.rotateTitle")}</p>

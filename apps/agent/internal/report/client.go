@@ -8,27 +8,36 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/portwiz/portwiz/agent/internal/contracts"
 )
 
+// Version is the agent build version reported to the control plane. Override at
+// build time with: -ldflags "-X github.com/portwiz/portwiz/agent/internal/report.Version=x.y.z".
+var Version = "dev"
+
 // Client talks to the control plane using the agent bearer token.
 type Client struct {
-	BaseURL string
-	Token   string
-	AgentID string
-	HTTP    *http.Client
+	BaseURL  string
+	Token    string
+	AgentID  string
+	Version  string
+	Platform string
+	HTTP     *http.Client
 }
 
 // New builds a client for the given control plane base URL.
 func New(baseURL, token, agentID string) *Client {
 	return &Client{
-		BaseURL: strings.TrimRight(baseURL, "/"),
-		Token:   token,
-		AgentID: agentID,
-		HTTP:    &http.Client{Timeout: 30 * time.Second},
+		BaseURL:  strings.TrimRight(baseURL, "/"),
+		Token:    token,
+		AgentID:  agentID,
+		Version:  Version,
+		Platform: runtime.GOOS + "/" + runtime.GOARCH,
+		HTTP:     &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
@@ -54,9 +63,11 @@ func (c *Client) do(ctx context.Context, method, path string, body any) (*http.R
 	return c.HTTP.Do(req)
 }
 
-// Heartbeat tells the control plane the agent is alive.
+// Heartbeat tells the control plane the agent is alive and reports its build
+// version and platform so the server can surface fleet metadata.
 func (c *Client) Heartbeat(ctx context.Context) error {
-	resp, err := c.do(ctx, http.MethodPost, "/api/v1/agents/heartbeat", nil)
+	body := map[string]string{"version": c.Version, "platform": c.Platform}
+	resp, err := c.do(ctx, http.MethodPost, "/api/v1/agents/heartbeat", body)
 	if err != nil {
 		return err
 	}

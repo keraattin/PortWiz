@@ -115,6 +115,45 @@ async def test_heartbeat_with_agent_token(client, admin_headers) -> None:
     assert resp.json()["status"] == "ok"
 
 
+async def test_heartbeat_records_metadata(client, admin_headers) -> None:
+    token = await _enroll_agent(client, admin_headers, "meta-agent")
+    resp = await client.post(
+        "/api/v1/agents/heartbeat",
+        json={"version": "1.2.3", "platform": "linux/amd64"},
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Forwarded-For": "203.0.113.9, 10.0.0.1",
+        },
+    )
+    assert resp.status_code == 200
+
+    listing = (await client.get("/api/v1/agents", headers=admin_headers)).json()
+    agent = next(a for a in listing if a["name"] == "meta-agent")
+    assert agent["version"] == "1.2.3"
+    assert agent["platform"] == "linux/amd64"
+    # First hop of X-Forwarded-For is the real client behind the proxy.
+    assert agent["last_ip"] == "203.0.113.9"
+
+
+async def test_heartbeat_without_body_keeps_metadata(client, admin_headers) -> None:
+    token = await _enroll_agent(client, admin_headers, "legacy-agent")
+    await client.post(
+        "/api/v1/agents/heartbeat",
+        json={"version": "9.9.9", "platform": "linux/arm64"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    # An older agent that sends no body must not wipe the known metadata.
+    resp = await client.post(
+        "/api/v1/agents/heartbeat", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert resp.status_code == 200
+
+    listing = (await client.get("/api/v1/agents", headers=admin_headers)).json()
+    agent = next(a for a in listing if a["name"] == "legacy-agent")
+    assert agent["version"] == "9.9.9"
+    assert agent["platform"] == "linux/arm64"
+
+
 async def test_ingest_creates_observations_and_finalizes_run(client, admin_headers, db) -> None:
     token = await _enroll_agent(client, admin_headers, "ingest-agent")
     run_id = await _make_scan_run(db)
