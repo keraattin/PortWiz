@@ -11,6 +11,7 @@ import CompliancePage from "./pages/CompliancePage";
 import TasksPage from "./pages/TasksPage";
 import SettingsPage from "./pages/SettingsPage";
 import AgentsPage from "./pages/AgentsPage";
+import AgentEnrollPage from "./pages/AgentEnrollPage";
 import AgentDetailPage from "./pages/AgentDetailPage";
 import UsersPage from "./pages/UsersPage";
 
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/vlans" element={<VlansPage />} />
         <Route path="/scans" element={<ScansPage />} />
         <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/agents/new" element={<AgentEnrollPage />} />
         <Route path="/agents/:id" element={<AgentDetailPage />} />
         <Route path="/changes" element={<ChangesPage />} />
         <Route path="/tasks" element={<TasksPage />} />
