@@ -34,9 +34,10 @@ portwiz-agent scan \
 
 | Variable | Default | Purpose |
 | - | - | - |
-| `PORTWIZ_API_URL` | `http://localhost:8000` | Control plane base URL |
+| `PORTWIZ_API_URL` | `http://localhost:8000` | Control plane base URL (use an `https://` URL in production) |
 | `PORTWIZ_AGENT_TOKEN` | (none) | Bearer token issued at enrollment |
 | `PORTWIZ_AGENT_ID` | `agent-local` | Agent identity label |
+| `PORTWIZ_POLL_SECONDS` | `15` | Seconds between heartbeat + job polls |
 
 ## Tests
 

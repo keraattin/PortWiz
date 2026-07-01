@@ -252,6 +252,10 @@ export const es: Partial<Record<TKey, string>> = {
   "agents.deploy.step3":
     "En pocos segundos el agente aparece como En línea en la tabla de arriba.",
   "agents.deploy.poll": "El agente envía un heartbeat y consulta trabajo cada {seconds}s.",
+  "agents.deploy.tlsOk":
+    "TLS activado: el tráfico del agente, incluido su token, se cifra en tránsito.",
+  "agents.deploy.tlsWarn":
+    "Esta URL no es HTTPS. El token del agente y los datos de escaneo viajarían en texto plano. Coloque la API detrás de TLS (un proxy inverso como nginx o Caddy) y use una URL https:// antes de desplegar en una red real.",
   "agents.col.name": "Nombre",
   "agents.col.segment": "Segmento",
   "agents.col.status": "Estado",

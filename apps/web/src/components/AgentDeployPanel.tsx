@@ -35,11 +35,13 @@ export default function AgentDeployPanel({ name, token, pollSeconds }: AgentDepl
   const [copied, setCopied] = useState(false);
 
   const id = slug(name);
+  const isHttps = /^https:\/\//i.test(apiUrl.trim());
   const command =
     `docker run -d --restart unless-stopped --name portwiz-agent-${id} ` +
     `-e PORTWIZ_API_URL=${apiUrl} ` +
     `-e PORTWIZ_AGENT_TOKEN=${token} ` +
     `-e PORTWIZ_AGENT_ID=${id} ` +
+    `-e PORTWIZ_POLL_SECONDS=${pollSeconds} ` +
     `portwiz/agent:latest`;
 
   return (
@@ -56,6 +58,11 @@ export default function AgentDeployPanel({ name, token, pollSeconds }: AgentDepl
           spellCheck={false}
         />
         <p className="mt-1 text-xs text-slate-500">{t("agents.deploy.apiUrlHint")}</p>
+        {isHttps ? (
+          <p className="mt-1 text-xs text-emerald-400/80">{t("agents.deploy.tlsOk")}</p>
+        ) : (
+          <p className="mt-1 text-xs text-amber-400">{t("agents.deploy.tlsWarn")}</p>
+        )}
       </div>
 
       <div>

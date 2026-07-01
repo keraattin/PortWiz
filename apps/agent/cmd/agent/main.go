@@ -19,6 +19,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -35,11 +36,22 @@ func getenv(key, def string) string {
 	return def
 }
 
+func getenvInt(key string, def int) int {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+		log.Printf("invalid %s=%q, using default %d", key, os.Getenv(key), def)
+	}
+	return def
+}
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.LUTC)
 	apiURL := getenv("PORTWIZ_API_URL", "http://localhost:8000")
 	token := getenv("PORTWIZ_AGENT_TOKEN", "")
 	agentID := getenv("PORTWIZ_AGENT_ID", "agent-local")
+	pollSeconds := getenvInt("PORTWIZ_POLL_SECONDS", 15)
 
 	mode := "run"
 	args := os.Args[1:]
@@ -50,7 +62,7 @@ func main() {
 
 	switch mode {
 	case "run":
-		runLoop(apiURL, token, agentID)
+		runLoop(apiURL, token, agentID, pollSeconds)
 	case "scan":
 		runScan(args, apiURL, token, agentID)
 	default:
@@ -58,13 +70,16 @@ func main() {
 	}
 }
 
-func runLoop(apiURL, token, agentID string) {
+func runLoop(apiURL, token, agentID string, pollSeconds int) {
 	client := report.New(apiURL, token, agentID)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	log.Printf("agent starting (id=%s api=%s, nmap=%t)", agentID, apiURL, scan.NmapAvailable())
-	ticker := time.NewTicker(15 * time.Second)
+	log.Printf(
+		"agent starting (id=%s api=%s poll=%ds nmap=%t)",
+		agentID, apiURL, pollSeconds, scan.NmapAvailable(),
+	)
+	ticker := time.NewTicker(time.Duration(pollSeconds) * time.Second)
 	defer ticker.Stop()
 
 	for {

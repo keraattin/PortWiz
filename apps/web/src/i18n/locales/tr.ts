@@ -251,6 +251,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.deploy.step3":
     "Birkaç saniye içinde ajan yukarıdaki tabloda Çevrimiçi görünür.",
   "agents.deploy.poll": "Ajan her {seconds}sn'de bir heartbeat gönderir ve iş yoklar.",
+  "agents.deploy.tlsOk": "TLS açık: ajanın trafiği, token dahil, aktarımda şifrelenir.",
+  "agents.deploy.tlsWarn":
+    "Bu URL HTTPS değil. Ajan token'ı ve tarama verisi düz metin olarak iletilir. Gerçek bir ağa dağıtmadan önce API'yi TLS arkasına alın (nginx veya Caddy gibi bir ters proxy) ve https:// URL kullanın.",
   "agents.col.name": "Ad",
   "agents.col.segment": "Segment",
   "agents.col.status": "Durum",

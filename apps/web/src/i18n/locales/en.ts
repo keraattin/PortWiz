@@ -249,6 +249,9 @@ export const en = {
   "agents.deploy.step3":
     "Within a few seconds the agent shows as Online in the table above.",
   "agents.deploy.poll": "The agent sends a heartbeat and polls for work every {seconds}s.",
+  "agents.deploy.tlsOk": "TLS is on: the agent's traffic, including its token, is encrypted in transit.",
+  "agents.deploy.tlsWarn":
+    "This URL is not HTTPS. The agent token and scan data would travel in cleartext. Put the API behind TLS (a reverse proxy such as nginx or Caddy) and use an https:// URL before deploying to a real network.",
   "agents.col.name": "Name",
   "agents.col.segment": "Segment",
   "agents.col.status": "Status",

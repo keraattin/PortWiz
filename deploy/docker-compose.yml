@@ -119,6 +119,7 @@ services:
     environment:
       PORTWIZ_API_URL: http://api:8000
       PORTWIZ_AGENT_TOKEN: ${PORTWIZ_AGENT_TOKEN:-dev-agent-token}
+      PORTWIZ_POLL_SECONDS: ${PORTWIZ_POLL_SECONDS:-15}
     # SYN scanning needs CAP_NET_RAW; enable when wiring real scans (M2).
     # cap_add: ["NET_RAW"]
     depends_on:
