@@ -18,7 +18,11 @@ case "$command" in
     exec celery -A portwiz_api.workers.celery_app.celery_app worker --loglevel=info
     ;;
   beat)
-    exec celery -A portwiz_api.workers.celery_app.celery_app beat --loglevel=info
+    # Write the schedule DB to a writable, per-user location: the image runs as a
+    # non-root user and /app is not writable. The file only caches last-run times
+    # (re-derived from the DB), so a container-local path is fine.
+    exec celery -A portwiz_api.workers.celery_app.celery_app beat --loglevel=info \
+      --schedule="${HOME:-/tmp}/celerybeat-schedule"
     ;;
   migrate)
     exec alembic upgrade head
