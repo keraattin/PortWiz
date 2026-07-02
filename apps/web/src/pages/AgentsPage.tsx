@@ -9,6 +9,7 @@ import { type Column, TableHead, processRows, useColumnFilters } from "../compon
 import { useSort } from "../components/useSort";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
+import { absoluteTime, timeAgo } from "../i18n/relativeTime";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -45,7 +46,7 @@ const SUMMARY: { cat: string; key: TKey; accent: string }[] = [
 
 export default function AgentsPage() {
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
 
@@ -189,11 +190,17 @@ export default function AgentsPage() {
                         <td className="px-4 py-2 text-xs text-slate-400">
                           {a.version ?? <span className="text-slate-600">-</span>}
                         </td>
-                        <td className="px-4 py-2 text-xs text-slate-400">
-                          {a.last_seen_at ? new Date(a.last_seen_at).toLocaleString() : "-"}
+                        <td
+                          className="px-4 py-2 text-xs text-slate-400"
+                          title={absoluteTime(a.last_seen_at)}
+                        >
+                          {timeAgo(a.last_seen_at, lang)}
                         </td>
-                        <td className="px-4 py-2 text-xs text-slate-400">
-                          {new Date(a.created_at).toLocaleString()}
+                        <td
+                          className="px-4 py-2 text-xs text-slate-400"
+                          title={absoluteTime(a.created_at)}
+                        >
+                          {timeAgo(a.created_at, lang)}
                         </td>
                       </tr>
                     );

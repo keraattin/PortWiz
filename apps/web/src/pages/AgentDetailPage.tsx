@@ -15,6 +15,7 @@ import Button from "../components/Button";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
+import { absoluteTime, timeAgo } from "../i18n/relativeTime";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -34,15 +35,11 @@ function statusInfo(a: Agent, windowMs: number): { key: TKey; cls: string } {
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
-function fmt(value: string | null): string {
-  return value ? new Date(value).toLocaleString() : "-";
-}
-
 export default function AgentDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const toast = useToast();
   const isAdmin = user?.role === "admin";
 
@@ -168,13 +165,23 @@ export default function AgentDetailPage() {
               ["agents.col.version", agent.version ?? t("agents.unknown")],
               ["agents.platform", agent.platform ?? t("agents.unknown")],
               ["agents.lastIp", agent.last_ip ?? t("agents.unknown")],
-              ["agents.col.lastSeen", fmt(agent.last_seen_at)],
-              ["agents.col.enrolledAt", fmt(agent.created_at)],
-            ] as [TKey, string][]
-          ).map(([label, value]) => (
+              [
+                "agents.col.lastSeen",
+                timeAgo(agent.last_seen_at, lang),
+                absoluteTime(agent.last_seen_at),
+              ],
+              [
+                "agents.col.enrolledAt",
+                timeAgo(agent.created_at, lang),
+                absoluteTime(agent.created_at),
+              ],
+            ] as [TKey, string, string?][]
+          ).map(([label, value, title]) => (
             <div key={label} className="flex justify-between gap-4 border-b border-slate-800/60 py-1">
               <dt className="text-slate-500">{t(label)}</dt>
-              <dd className="text-right text-slate-200">{value}</dd>
+              <dd className="text-right text-slate-200" title={title}>
+                {value}
+              </dd>
             </div>
           ))}
         </dl>

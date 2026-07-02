@@ -11,6 +11,7 @@ import {
 import DashboardCharts from "../components/DashboardCharts";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
+import { absoluteTime, timeAgo } from "../i18n/relativeTime";
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
@@ -47,7 +48,7 @@ interface Step {
 }
 
 export default function DashboardPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [charts, setCharts] = useState<Charts | null>(null);
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
@@ -217,8 +218,8 @@ export default function DashboardPage() {
       </section>
 
       {stats?.last_scan_at && (
-        <p className="text-xs text-slate-600">
-          {t("dashboard.lastScan", { when: new Date(stats.last_scan_at).toLocaleString() })}
+        <p className="text-xs text-slate-600" title={absoluteTime(stats.last_scan_at)}>
+          {t("dashboard.lastScan", { when: timeAgo(stats.last_scan_at, lang) })}
         </p>
       )}
     </div>
