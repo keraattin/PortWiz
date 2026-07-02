@@ -22,6 +22,7 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
+import InfoCallout from "../components/InfoCallout";
 import PageHeader from "../components/PageHeader";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
@@ -31,6 +32,26 @@ type Translate = (key: TKey, vars?: Record<string, string | number>) => string;
 
 function errorMessage(e: unknown): string {
   return e instanceof ApiError ? e.message : "Something went wrong";
+}
+
+// Guided "connect" helper for key-based AI providers: names the provider,
+// deep-links to its key page and states the get-key → paste → save → test flow.
+function ProviderConnectHelp({ provider, t }: { provider: AiProviderInfo; t: Translate }) {
+  if (!provider.needs_api_key || !provider.console_url) return null;
+  return (
+    <InfoCallout>
+      <p className="font-medium text-slate-200">{t("settings.ai.connectTitle")}</p>
+      <p className="mt-1 text-slate-400">{t("settings.ai.connectSteps")}</p>
+      <a
+        href={provider.console_url}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 inline-block text-sm font-medium text-emerald-400 hover:text-emerald-300"
+      >
+        {t("settings.ai.getKeyFrom", { provider: provider.label })} →
+      </a>
+    </InfoCallout>
+  );
 }
 
 const inputClass =
@@ -448,16 +469,7 @@ export default function SettingsPage() {
                   onChange={(e) => set("anthropic_api_key", e.target.value)}
                 />
               </FormField>
-              {currentProvider.console_url && (
-                <a
-                  href={currentProvider.console_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-block text-xs font-medium text-emerald-400 hover:text-emerald-300"
-                >
-                  {t("settings.getApiKey")}
-                </a>
-              )}
+              <ProviderConnectHelp provider={currentProvider} t={t} />
             </>
           )}
 
@@ -492,16 +504,7 @@ export default function SettingsPage() {
                   />
                 </FormField>
               )}
-              {currentProvider.needs_api_key && currentProvider.console_url && (
-                <a
-                  href={currentProvider.console_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-block text-xs font-medium text-emerald-400 hover:text-emerald-300"
-                >
-                  {t("settings.getApiKey")}
-                </a>
-              )}
+              <ProviderConnectHelp provider={currentProvider} t={t} />
             </>
           )}
 
