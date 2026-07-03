@@ -10,6 +10,7 @@ import {
   type TestResult,
   fetchAiProviders,
   fetchJiraIssueTypes,
+  fetchJiraPriorities,
   fetchJiraProjects,
   fetchSettings,
   fetchSettingsConfig,
@@ -88,6 +89,10 @@ interface FormState {
   jira_issue_type: string;
   jira_default_assignee: string;
   jira_labels: string;
+  jira_priority_high: string;
+  jira_priority_medium: string;
+  jira_priority_low: string;
+  jira_extra_fields: string;
   netbox_enabled: boolean;
   netbox_url: string;
   netbox_token: string;
@@ -131,6 +136,10 @@ function fromConfig(c: SettingsConfig): FormState {
     jira_issue_type: c.jira_issue_type || "Task",
     jira_default_assignee: c.jira_default_assignee ?? "",
     jira_labels: c.jira_labels ?? "",
+    jira_priority_high: c.jira_priority_high ?? "",
+    jira_priority_medium: c.jira_priority_medium ?? "",
+    jira_priority_low: c.jira_priority_low ?? "",
+    jira_extra_fields: c.jira_extra_fields ?? "",
     netbox_enabled: c.netbox_enabled,
     netbox_url: c.netbox_url ?? "",
     netbox_token: "",
@@ -218,6 +227,7 @@ export default function SettingsPage() {
   // Jira discovery: loaded on demand from the saved connection.
   const [jiraProjects, setJiraProjects] = useState<JiraProject[]>([]);
   const [jiraTypes, setJiraTypes] = useState<string[]>([]);
+  const [jiraPriorities, setJiraPriorities] = useState<string[]>([]);
   const [userQuery, setUserQuery] = useState("");
   const [userResults, setUserResults] = useState<JiraUser[]>([]);
   const [jiraLoading, setJiraLoading] = useState<string | null>(null);
@@ -266,6 +276,17 @@ export default function SettingsPage() {
     setJiraLoading("types");
     try {
       setJiraTypes(await fetchJiraIssueTypes());
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setJiraLoading(null);
+    }
+  }
+
+  async function loadJiraPriorities() {
+    setJiraLoading("priorities");
+    try {
+      setJiraPriorities(await fetchJiraPriorities());
     } catch (e) {
       toast.error(errorMessage(e));
     } finally {
@@ -838,6 +859,73 @@ export default function SettingsPage() {
               onChange={(e) => set("jira_labels", e.target.value)}
             />
           </FormField>
+
+          <div className="space-y-2 border-t border-slate-800 pt-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-slate-300">
+                {t("settings.jira.priorityTitle")}
+              </p>
+              <button
+                type="button"
+                className={testBtn}
+                disabled={jiraLoading === "priorities"}
+                onClick={loadJiraPriorities}
+              >
+                {jiraLoading === "priorities"
+                  ? t("common.loading")
+                  : t("settings.jira.loadPriorities")}
+              </button>
+            </div>
+            <p className="text-xs text-slate-500">{t("settings.jira.priorityHint")}</p>
+            {(
+              [
+                ["settings.jira.sev.high", "jira_priority_high"],
+                ["settings.jira.sev.medium", "jira_priority_medium"],
+                ["settings.jira.sev.low", "jira_priority_low"],
+              ] as [TKey, "jira_priority_high" | "jira_priority_medium" | "jira_priority_low"][]
+            ).map(([label, field]) => (
+              <div key={field} className="flex items-center gap-3">
+                <span className="w-28 shrink-0 text-xs text-slate-400">{t(label)}</span>
+                {jiraPriorities.length > 0 ? (
+                  <select
+                    className={inputClass}
+                    value={form[field]}
+                    onChange={(e) => set(field, e.target.value)}
+                  >
+                    <option value="">{t("settings.jira.priorityNone")}</option>
+                    {form[field] && !jiraPriorities.includes(form[field]) && (
+                      <option value={form[field]}>{form[field]}</option>
+                    )}
+                    {jiraPriorities.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className={inputClass}
+                    value={form[field]}
+                    onChange={(e) => set(field, e.target.value)}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+
+          <FormField
+            label={t("settings.jira.extraFields")}
+            hint={t("settings.jira.extraFieldsHint")}
+          >
+            <textarea
+              className={`${inputClass} font-mono`}
+              rows={3}
+              placeholder='{"customfield_10050": {"value": "Security"}}'
+              value={form.jira_extra_fields}
+              onChange={(e) => set("jira_extra_fields", e.target.value)}
+            />
+          </FormField>
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
@@ -853,6 +941,10 @@ export default function SettingsPage() {
                   jira_issue_type: form.jira_issue_type,
                   jira_default_assignee: form.jira_default_assignee,
                   jira_labels: form.jira_labels,
+                  jira_priority_high: form.jira_priority_high,
+                  jira_priority_medium: form.jira_priority_medium,
+                  jira_priority_low: form.jira_priority_low,
+                  jira_extra_fields: form.jira_extra_fields,
                 })
               }
             >

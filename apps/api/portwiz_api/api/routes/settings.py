@@ -69,6 +69,10 @@ def _config_from(s: Settings) -> SettingsConfig:
         jira_issue_type=s.jira_issue_type,
         jira_default_assignee=s.jira_default_assignee,
         jira_labels=s.jira_labels,
+        jira_priority_high=s.jira_priority_high,
+        jira_priority_medium=s.jira_priority_medium,
+        jira_priority_low=s.jira_priority_low,
+        jira_extra_fields=s.jira_extra_fields,
         jira_api_token_set=bool(s.jira_api_token),
         netbox_enabled=s.netbox_enabled,
         netbox_url=s.netbox_url,
@@ -278,6 +282,19 @@ async def list_jira_issue_types(
     _require_jira(tracker)
     try:
         return await tracker.list_issue_types()
+    except Exception as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Jira error: {exc}") from exc
+
+
+@router.get("/jira/priorities", response_model=list[str])
+async def list_jira_priorities(
+    _: User = Depends(AdminDep),
+    tracker: IssueTracker = Depends(get_issue_tracker),
+) -> list[str]:
+    """Instance-wide priority names, for the severity-to-priority mapping."""
+    _require_jira(tracker)
+    try:
+        return await tracker.list_priorities()
     except Exception as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Jira error: {exc}") from exc
 

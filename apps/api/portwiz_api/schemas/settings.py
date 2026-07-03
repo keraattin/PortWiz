@@ -108,6 +108,10 @@ class SettingsConfig(BaseModel):
     jira_issue_type: str
     jira_default_assignee: str | None
     jira_labels: str
+    jira_priority_high: str
+    jira_priority_medium: str
+    jira_priority_low: str
+    jira_extra_fields: str
     jira_api_token_set: bool
 
     netbox_enabled: bool
@@ -157,6 +161,10 @@ class SettingsConfigUpdate(BaseModel):
     jira_issue_type: str | None = None
     jira_default_assignee: str | None = None
     jira_labels: str | None = None
+    jira_priority_high: str | None = None
+    jira_priority_medium: str | None = None
+    jira_priority_low: str | None = None
+    jira_extra_fields: str | None = None
 
     netbox_enabled: bool | None = None
     netbox_url: str | None = None

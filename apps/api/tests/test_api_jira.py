@@ -12,14 +12,21 @@ import uuid
 class FakeTracker:
     def __init__(self) -> None:
         self.created: list[str] = []
+        self.last_severity: str | None = None
 
-    async def create_issue(self, summary: str, description: str) -> str:
+    async def create_issue(
+        self, summary: str, description: str, *, severity: str | None = None
+    ) -> str:
         key = f"PORT-{len(self.created) + 1}"
         self.created.append(key)
+        self.last_severity = severity
         return key
 
     async def get_status(self, key: str) -> str:
         return "In Progress"
+
+    async def list_priorities(self) -> list[str]:
+        return ["Highest", "High", "Medium", "Low"]
 
 
 def _use_fake_tracker() -> FakeTracker:
@@ -65,6 +72,19 @@ async def test_jira_disabled_returns_400(client, admin_headers) -> None:
         await client.post("/api/v1/tasks", json={"title": "manual"}, headers=admin_headers)
     ).json()
     resp = await client.post(f"/api/v1/tasks/{task['id']}/jira", headers=admin_headers)
+    assert resp.status_code == 400
+
+
+async def test_priorities_route_lists_names(client, admin_headers) -> None:
+    _use_fake_tracker()
+    resp = await client.get("/api/v1/settings/jira/priorities", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == ["Highest", "High", "Medium", "Low"]
+
+
+async def test_priorities_route_400_when_jira_disabled(client, admin_headers) -> None:
+    # No fake override: the real tracker is a NullTracker (Jira not configured).
+    resp = await client.get("/api/v1/settings/jira/priorities", headers=admin_headers)
     assert resp.status_code == 400
 
 

@@ -649,6 +649,17 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.jira.searchUsers": "Pesquisar",
   "settings.jira.labels": "Rótulos",
   "settings.jira.labelsHint": "Rótulos separados por vírgula adicionados a cada item, para filtrar no Jira.",
+  "settings.jira.priorityTitle": "Mapeamento gravidade → prioridade",
+  "settings.jira.priorityHint":
+    "Defina a prioridade do Jira aplicada pela gravidade da alteração. Em branco mantém o padrão do projeto. Carregue as prioridades para escolher da sua instância.",
+  "settings.jira.loadPriorities": "Carregar prioridades",
+  "settings.jira.sev.high": "Gravidade alta",
+  "settings.jira.sev.medium": "Gravidade média",
+  "settings.jira.sev.low": "Gravidade baixa",
+  "settings.jira.priorityNone": "(padrão do projeto)",
+  "settings.jira.extraFields": "Campos extras (avançado)",
+  "settings.jira.extraFieldsHint":
+    "Objeto JSON de id de campo do Jira → valor, mesclado em cada item criado (ex.: campos personalizados obrigatórios). JSON inválido é ignorado.",
   "settings.netbox.title": "NetBox (IPAM)",
   "settings.netbox.enabled": "NetBox ativado",
   "settings.netbox.url": "URL",

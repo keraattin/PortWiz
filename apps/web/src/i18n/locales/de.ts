@@ -649,6 +649,17 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.jira.searchUsers": "Suchen",
   "settings.jira.labels": "Labels",
   "settings.jira.labelsHint": "Kommagetrennte Labels, die jedem Vorgang hinzugefügt werden, zum Filtern in Jira.",
+  "settings.jira.priorityTitle": "Schweregrad → Priorität-Zuordnung",
+  "settings.jira.priorityHint":
+    "Lege die nach Änderungsschweregrad angewandte Jira-Priorität fest. Leer behält die Projektvorgabe. Lade Prioritäten, um aus deiner Instanz zu wählen.",
+  "settings.jira.loadPriorities": "Prioritäten laden",
+  "settings.jira.sev.high": "Hoher Schweregrad",
+  "settings.jira.sev.medium": "Mittlerer Schweregrad",
+  "settings.jira.sev.low": "Niedriger Schweregrad",
+  "settings.jira.priorityNone": "(Projektvorgabe)",
+  "settings.jira.extraFields": "Zusätzliche Felder (erweitert)",
+  "settings.jira.extraFieldsHint":
+    "JSON-Objekt aus Jira-Feld-ID → Wert, in jeden erstellten Vorgang eingefügt (z. B. Pflicht-Custom-Fields). Ungültiges JSON wird ignoriert.",
   "settings.netbox.title": "NetBox (IPAM)",
   "settings.netbox.enabled": "NetBox aktiviert",
   "settings.netbox.url": "URL",

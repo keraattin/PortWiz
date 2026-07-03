@@ -818,6 +818,10 @@ export function fetchJiraIssueTypes(): Promise<string[]> {
   return request<string[]>("/settings/jira/issue-types");
 }
 
+export function fetchJiraPriorities(): Promise<string[]> {
+  return request<string[]>("/settings/jira/priorities");
+}
+
 export function testNetbox(): Promise<TestResult> {
   return request<TestResult>("/settings/test/netbox", { method: "POST" });
 }
@@ -849,6 +853,10 @@ export interface SettingsConfig {
   jira_issue_type: string;
   jira_default_assignee: string | null;
   jira_labels: string;
+  jira_priority_high: string;
+  jira_priority_medium: string;
+  jira_priority_low: string;
+  jira_extra_fields: string;
   jira_api_token_set: boolean;
   netbox_enabled: boolean;
   netbox_url: string | null;
@@ -892,6 +900,10 @@ export type SettingsConfigUpdate = Partial<{
   jira_issue_type: string;
   jira_default_assignee: string;
   jira_labels: string;
+  jira_priority_high: string;
+  jira_priority_medium: string;
+  jira_priority_low: string;
+  jira_extra_fields: string;
   netbox_enabled: boolean;
   netbox_url: string;
   netbox_token: string;

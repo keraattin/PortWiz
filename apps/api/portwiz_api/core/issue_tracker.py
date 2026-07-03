@@ -7,6 +7,7 @@ makes it trivial to inject a fake in tests. Config is imported lazily.
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any, Protocol
 
@@ -23,7 +24,9 @@ logger = logging.getLogger("portwiz.issue_tracker")
 
 
 class IssueTracker(Protocol):
-    async def create_issue(self, summary: str, description: str) -> str | None: ...
+    async def create_issue(
+        self, summary: str, description: str, *, severity: str | None = None
+    ) -> str | None: ...
     async def get_status(self, key: str) -> str | None: ...
     async def verify(self) -> tuple[bool, str]: ...
     async def list_projects(self) -> list[dict[str, str]]: ...
@@ -31,12 +34,15 @@ class IssueTracker(Protocol):
         self, query: str, project: str | None
     ) -> list[dict[str, str]]: ...
     async def list_issue_types(self) -> list[str]: ...
+    async def list_priorities(self) -> list[str]: ...
 
 
 class NullTracker:
     """Used when no tracker is configured. Every operation is a no-op."""
 
-    async def create_issue(self, summary: str, description: str) -> str | None:
+    async def create_issue(
+        self, summary: str, description: str, *, severity: str | None = None
+    ) -> str | None:
         return None
 
     async def get_status(self, key: str) -> str | None:
@@ -54,6 +60,9 @@ class NullTracker:
         return []
 
     async def list_issue_types(self) -> list[str]:
+        return []
+
+    async def list_priorities(self) -> list[str]:
         return []
 
 
@@ -97,6 +106,8 @@ class JiraTracker:
         issue_type: str = "Task",
         default_assignee: str | None = None,
         labels: str = "",
+        priority_map: dict[str, str] | None = None,
+        extra_fields: dict[str, Any] | None = None,
     ) -> None:
         self._base = base_url.rstrip("/")
         self._cloud = deployment != "server"
@@ -106,6 +117,9 @@ class JiraTracker:
         self._issue_type = issue_type or "Task"
         self._assignee = default_assignee or None
         self._labels = [x.strip() for x in (labels or "").split(",") if x.strip()]
+        # severity -> Jira priority name; only non-blank entries are applied.
+        self._priority_map = {k: v for k, v in (priority_map or {}).items() if v}
+        self._extra_fields = extra_fields or {}
 
     @property
     def _api(self) -> str:
@@ -128,7 +142,9 @@ class JiraTracker:
             return None
         return {"accountId": self._assignee} if self._cloud else {"name": self._assignee}
 
-    async def create_issue(self, summary: str, description: str) -> str | None:
+    async def create_issue(
+        self, summary: str, description: str, *, severity: str | None = None
+    ) -> str | None:
         fields: dict[str, Any] = {
             "project": {"key": self._project},
             "summary": summary[:255],
@@ -140,6 +156,11 @@ class JiraTracker:
             fields["assignee"] = assignee
         if self._labels:
             fields["labels"] = self._labels
+        priority = self._priority_map.get((severity or "").lower())
+        if priority:
+            fields["priority"] = {"name": priority}
+        # Admin-supplied custom fields override anything above (they win on key clash).
+        fields.update(self._extra_fields)
         async with self._client() as client:
             resp = await client.post(
                 f"{self._base}/rest/api/{self._api}/issue", json={"fields": fields}
@@ -233,6 +254,13 @@ class JiraTracker:
                 names.append(name)
         return names
 
+    async def list_priorities(self) -> list[str]:
+        """Instance-wide priority names, for the severity-to-priority pickers."""
+        async with self._client() as client:
+            resp = await client.get(f"{self._base}/rest/api/{self._api}/priority")
+            resp.raise_for_status()
+            return [p["name"] for p in resp.json() if p.get("name")]
+
 
 def build_issue_tracker(settings) -> IssueTracker:
     # Cloud needs an email for basic auth; Server/DC only needs the bearer token.
@@ -253,7 +281,25 @@ def build_issue_tracker(settings) -> IssueTracker:
         issue_type=settings.jira_issue_type,
         default_assignee=settings.jira_default_assignee,
         labels=settings.jira_labels,
+        priority_map={
+            "high": settings.jira_priority_high,
+            "medium": settings.jira_priority_medium,
+            "low": settings.jira_priority_low,
+        },
+        extra_fields=_parse_extra_fields(settings.jira_extra_fields),
     )
+
+
+def _parse_extra_fields(raw: str) -> dict[str, Any]:
+    """Parse the admin's extra-fields JSON, tolerating blank or malformed input."""
+    if not (raw or "").strip():
+        return {}
+    try:
+        data = json.loads(raw)
+    except (ValueError, TypeError):
+        logger.warning("Ignoring invalid jira_extra_fields JSON.")
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 async def get_issue_tracker(session: AsyncSession = Depends(get_session)) -> IssueTracker:
@@ -296,7 +342,7 @@ async def link_changes_to_tracker(
     linked = 0
     for change in changes:
         summary, description = build_change_issue(change)
-        key = await tracker.create_issue(summary, description)
+        key = await tracker.create_issue(summary, description, severity=change.severity)
         if not key:
             continue
         task = (

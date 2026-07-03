@@ -645,6 +645,17 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.jira.searchUsers": "Ara",
   "settings.jira.labels": "Etiketler",
   "settings.jira.labelsHint": "Her issue'ya eklenen virgülle ayrılmış etiketler, Jira'da filtrelemek için.",
+  "settings.jira.priorityTitle": "Önem → öncelik eşlemesi",
+  "settings.jira.priorityHint":
+    "Değişiklik önemine göre uygulanacak Jira önceliğini ayarla. Boş bırakılırsa proje varsayılanı kalır. Instance'ından seçmek için öncelikleri yükle.",
+  "settings.jira.loadPriorities": "Öncelikleri yükle",
+  "settings.jira.sev.high": "Yüksek önem",
+  "settings.jira.sev.medium": "Orta önem",
+  "settings.jira.sev.low": "Düşük önem",
+  "settings.jira.priorityNone": "(proje varsayılanı)",
+  "settings.jira.extraFields": "Ek alanlar (gelişmiş)",
+  "settings.jira.extraFieldsHint":
+    "Jira alan id → değer JSON nesnesi, oluşturulan her issue'ya eklenir (ör. zorunlu custom field'lar). Geçersiz JSON yok sayılır.",
   "settings.netbox.title": "NetBox (IPAM)",
   "settings.netbox.enabled": "NetBox etkin",
   "settings.netbox.url": "URL",

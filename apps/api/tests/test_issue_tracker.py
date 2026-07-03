@@ -115,6 +115,67 @@ class _S:
     jira_issue_type = "Task"
     jira_default_assignee = None
     jira_labels = ""
+    jira_priority_high = ""
+    jira_priority_medium = ""
+    jira_priority_low = ""
+    jira_extra_fields = ""
+
+
+async def test_severity_maps_to_priority(monkeypatch) -> None:
+    captured: list[httpx.Request] = []
+    tracker = JiraTracker(
+        "https://acme.atlassian.net",
+        "token",
+        deployment="cloud",
+        email="ops@acme.io",
+        priority_map={"high": "Highest", "medium": "", "low": "Low"},
+    )
+    monkeypatch.setattr(tracker, "_client", lambda: _capturing_client(captured, {"key": "P-1"}))
+
+    await tracker.create_issue("s", "b", severity="high")
+    assert json.loads(captured[0].content)["fields"]["priority"] == {"name": "Highest"}
+
+    # A severity with a blank mapping leaves the priority unset (project default).
+    await tracker.create_issue("s", "b", severity="medium")
+    assert "priority" not in json.loads(captured[1].content)["fields"]
+
+    # No severity at all -> no priority.
+    await tracker.create_issue("s", "b")
+    assert "priority" not in json.loads(captured[2].content)["fields"]
+
+
+async def test_extra_fields_merged_into_issue(monkeypatch) -> None:
+    captured: list[httpx.Request] = []
+    tracker = JiraTracker(
+        "https://acme.atlassian.net",
+        "token",
+        deployment="cloud",
+        email="ops@acme.io",
+        extra_fields={"customfield_10050": {"value": "Security"}},
+    )
+    monkeypatch.setattr(tracker, "_client", lambda: _capturing_client(captured, {"key": "P-2"}))
+
+    await tracker.create_issue("s", "b")
+    fields = json.loads(captured[0].content)["fields"]
+    assert fields["customfield_10050"] == {"value": "Security"}
+
+
+def test_build_parses_priority_map_and_extra_fields() -> None:
+    s = _S()
+    s.jira_priority_high = "Highest"
+    s.jira_extra_fields = '{"customfield_10050": {"value": "Security"}}'
+    tracker = build_issue_tracker(s)
+    assert isinstance(tracker, JiraTracker)
+    assert tracker._priority_map == {"high": "Highest"}  # blanks dropped
+    assert tracker._extra_fields == {"customfield_10050": {"value": "Security"}}
+
+
+def test_build_ignores_invalid_extra_fields_json() -> None:
+    s = _S()
+    s.jira_extra_fields = "not json{"
+    tracker = build_issue_tracker(s)
+    assert isinstance(tracker, JiraTracker)
+    assert tracker._extra_fields == {}
 
 
 def test_build_requires_email_for_cloud_only() -> None:

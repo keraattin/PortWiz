@@ -167,7 +167,12 @@ async def link_task_to_jira(
         raise HTTPException(status.HTTP_409_CONFLICT, "Task already linked to Jira")
 
     summary, description = build_task_issue(task)
-    key = await tracker.create_issue(summary, description)
+    # Carry the linked change's severity so priority mapping can apply.
+    severity = None
+    if task.change_event_id:
+        change = await session.get(ChangeEvent, task.change_event_id)
+        severity = change.severity if change else None
+    key = await tracker.create_issue(summary, description, severity=severity)
     if not key:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Issue tracker is not configured")
 

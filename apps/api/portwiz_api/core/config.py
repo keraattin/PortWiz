@@ -113,6 +113,15 @@ class Settings(BaseSettings):
     jira_issue_type: str = "Task"
     jira_default_assignee: str | None = None  # accountId (cloud) or username (server)
     jira_labels: str = ""  # comma-separated labels added to every created issue
+    # Optional Jira priority name to set per PortWiz severity (blank = leave the
+    # priority unset so the project default applies).
+    jira_priority_high: str = ""
+    jira_priority_medium: str = ""
+    jira_priority_low: str = ""
+    # Advanced: extra Jira fields merged verbatim into every created issue, as a
+    # JSON object of field id -> value (e.g. required custom fields). A blank or
+    # invalid value is ignored.
+    jira_extra_fields: str = ""
 
     # NetBox (IPAM) inventory source. Disabled unless fully configured.
     netbox_enabled: bool = False

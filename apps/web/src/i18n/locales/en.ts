@@ -643,6 +643,17 @@ export const en = {
   "settings.jira.searchUsers": "Search",
   "settings.jira.labels": "Labels",
   "settings.jira.labelsHint": "Comma-separated labels added to every issue, for filtering in Jira.",
+  "settings.jira.priorityTitle": "Severity → priority mapping",
+  "settings.jira.priorityHint":
+    "Set the Jira priority applied by change severity. Blank keeps the project default. Load priorities to pick from your instance.",
+  "settings.jira.loadPriorities": "Load priorities",
+  "settings.jira.sev.high": "High severity",
+  "settings.jira.sev.medium": "Medium severity",
+  "settings.jira.sev.low": "Low severity",
+  "settings.jira.priorityNone": "(project default)",
+  "settings.jira.extraFields": "Extra fields (advanced)",
+  "settings.jira.extraFieldsHint":
+    "JSON object of Jira field id → value, merged into every created issue (e.g. required custom fields). Invalid JSON is ignored.",
   "settings.netbox.title": "NetBox (IPAM)",
   "settings.netbox.enabled": "NetBox enabled",
   "settings.netbox.url": "URL",

@@ -50,6 +50,10 @@ EDITABLE_KEYS: list[str] = [
     "jira_issue_type",
     "jira_default_assignee",
     "jira_labels",
+    "jira_priority_high",
+    "jira_priority_medium",
+    "jira_priority_low",
+    "jira_extra_fields",
     # NetBox
     "netbox_enabled",
     "netbox_url",
