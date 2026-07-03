@@ -16,6 +16,11 @@ class AgentCreate(BaseModel):
 class AgentUpdate(BaseModel):
     segment: str | None = Field(default=None, max_length=64)
     enabled: bool | None = None
+    # Per-agent overrides. A field sent as null clears the override (back to the
+    # global setting); an omitted field is left unchanged. Positive values only.
+    poll_seconds_override: int | None = Field(default=None, ge=1)
+    online_seconds_override: int | None = Field(default=None, ge=1)
+    rate_limit_pps_override: int | None = Field(default=None, ge=1)
 
 
 class AgentHeartbeat(BaseModel):
@@ -37,6 +42,9 @@ class AgentRead(BaseModel):
     platform: str | None
     last_ip: str | None
     token_rotated_at: dt.datetime | None
+    poll_seconds_override: int | None
+    online_seconds_override: int | None
+    rate_limit_pps_override: int | None
     created_at: dt.datetime
 
 
@@ -57,3 +65,10 @@ class AgentTokenRotated(BaseModel):
     name: str
     token: str
     token_rotated_at: dt.datetime
+
+
+class AgentConfig(BaseModel):
+    """Effective operational config an agent fetches for itself (global setting
+    overlaid with this agent's override). The agent applies poll_seconds."""
+
+    poll_seconds: int

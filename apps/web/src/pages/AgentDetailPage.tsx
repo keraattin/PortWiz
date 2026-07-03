@@ -51,6 +51,10 @@ export default function AgentDetailPage() {
 
   const [segment, setSegment] = useState("");
   const [enabled, setEnabled] = useState(true);
+  // Per-agent override inputs; blank means "use the global setting".
+  const [pollOverride, setPollOverride] = useState("");
+  const [onlineOverride, setOnlineOverride] = useState("");
+  const [rateOverride, setRateOverride] = useState("");
   // Set once after a rotation so the plaintext token can be shown and wired
   // into the deploy command; cleared on reload.
   const [freshToken, setFreshToken] = useState<string | undefined>(undefined);
@@ -63,6 +67,9 @@ export default function AgentDetailPage() {
       setAgent(a);
       setSegment(a.segment ?? "");
       setEnabled(a.enabled);
+      setPollOverride(a.poll_seconds_override != null ? String(a.poll_seconds_override) : "");
+      setOnlineOverride(a.online_seconds_override != null ? String(a.online_seconds_override) : "");
+      setRateOverride(a.rate_limit_pps_override != null ? String(a.rate_limit_pps_override) : "");
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -83,11 +90,23 @@ export default function AgentDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // Blank or non-positive input clears the override (falls back to the global).
+  function numOrNull(value: string): number | null {
+    const n = parseInt(value, 10);
+    return value.trim() && n > 0 ? n : null;
+  }
+
   async function onSave(e: FormEvent) {
     e.preventDefault();
     if (!agent) return;
     try {
-      const updated = await updateAgent(agent.id, { segment: segment || null, enabled });
+      const updated = await updateAgent(agent.id, {
+        segment: segment || null,
+        enabled,
+        poll_seconds_override: numOrNull(pollOverride),
+        online_seconds_override: numOrNull(onlineOverride),
+        rate_limit_pps_override: numOrNull(rateOverride),
+      });
       setAgent(updated);
       toast.success(t("agents.updated"));
     } catch (e) {
@@ -145,7 +164,12 @@ export default function AgentDetailPage() {
     );
   }
 
-  const status = statusInfo(agent, onlineMs);
+  // This agent's overrides win over the global values where set.
+  const effectiveOnlineMs = agent.online_seconds_override
+    ? agent.online_seconds_override * 1000
+    : onlineMs;
+  const effectivePoll = agent.poll_seconds_override ?? pollSeconds;
+  const status = statusInfo(agent, effectiveOnlineMs);
 
   return (
     <div className="space-y-6">
@@ -208,7 +232,7 @@ export default function AgentDetailPage() {
       )}
 
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-        <AgentDeployPanel name={agent.name} token={freshToken} pollSeconds={pollSeconds} />
+        <AgentDeployPanel name={agent.name} token={freshToken} pollSeconds={effectivePoll} />
       </div>
 
       {isAdmin && (
@@ -229,6 +253,47 @@ export default function AgentDetailPage() {
               {t("agents.f.enabled")}
             </label>
             <p className="text-xs text-slate-500">{t("agents.f.enabledHint")}</p>
+
+            <div className="border-t border-slate-800 pt-3">
+              <p className="text-sm font-medium text-slate-300">{t("agents.overrides")}</p>
+              <p className="mb-2 text-xs text-slate-500">{t("agents.overridesHint")}</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="block text-xs text-slate-400">{t("agents.o.poll")}</label>
+                  <input
+                    className={inputClass}
+                    type="number"
+                    min={1}
+                    placeholder={t("agents.o.global")}
+                    value={pollOverride}
+                    onChange={(e) => setPollOverride(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400">{t("agents.o.online")}</label>
+                  <input
+                    className={inputClass}
+                    type="number"
+                    min={1}
+                    placeholder={t("agents.o.global")}
+                    value={onlineOverride}
+                    onChange={(e) => setOnlineOverride(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400">{t("agents.o.rate")}</label>
+                  <input
+                    className={inputClass}
+                    type="number"
+                    min={1}
+                    placeholder={t("agents.o.global")}
+                    value={rateOverride}
+                    onChange={(e) => setRateOverride(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button type="submit">{t("agents.saveChanges")}</Button>
             </div>

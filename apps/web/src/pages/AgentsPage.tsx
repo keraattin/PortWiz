@@ -27,6 +27,11 @@ function agentStatus(lastSeen: string | null, windowMs: number): { key: TKey; cl
   return { key: "agents.status.offline", cls: "bg-red-900 text-red-300" };
 }
 
+// Effective online window for an agent: its override, else the global default.
+function effWindow(a: Agent, globalMs: number): number {
+  return a.online_seconds_override ? a.online_seconds_override * 1000 : globalMs;
+}
+
 // A single status category per agent, for filtering, sorting and the summary.
 function agentCategory(a: Agent, windowMs: number): string {
   if (!a.enabled) return "disabled";
@@ -64,7 +69,7 @@ export default function AgentsPage() {
       key: "status",
       label: t("agents.col.status"),
       filter: STATUS_OPTIONS.map((s) => ({ value: s, label: t(`agents.status.${s}` as TKey) })),
-      get: (a) => agentCategory(a, onlineMs),
+      get: (a) => agentCategory(a, effWindow(a, onlineMs)),
     },
     { key: "version", label: t("agents.col.version"), filter: "text", get: (a) => a.version ?? "" },
     { key: "lastSeen", label: t("agents.col.lastSeen"), get: (a) => a.last_seen_at },
@@ -79,7 +84,7 @@ export default function AgentsPage() {
 
   const summary = useMemo(() => {
     const counts: Record<string, number> = { online: 0, offline: 0, neverSeen: 0, disabled: 0 };
-    for (const a of agents) counts[agentCategory(a, onlineMs)]++;
+    for (const a of agents) counts[agentCategory(a, effWindow(a, onlineMs))]++;
     return counts;
   }, [agents, onlineMs]);
 
@@ -165,7 +170,7 @@ export default function AgentsPage() {
                   </tr>
                 ) : (
                   agentsPage.slice.map((a) => {
-                    const status = agentStatus(a.last_seen_at, onlineMs);
+                    const status = agentStatus(a.last_seen_at, effWindow(a, onlineMs));
                     return (
                       <tr
                         key={a.id}

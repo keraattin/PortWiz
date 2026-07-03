@@ -78,6 +78,29 @@ func (c *Client) Heartbeat(ctx context.Context) error {
 	return nil
 }
 
+// Config is the agent's effective operational config from the control plane.
+type Config struct {
+	PollSeconds int `json:"poll_seconds"`
+}
+
+// FetchConfig retrieves this agent's effective config (poll cadence, etc.) so it
+// can self-tune without a redeploy. Callers fall back to their env defaults on error.
+func (c *Client) FetchConfig(ctx context.Context) (*Config, error) {
+	resp, err := c.do(ctx, http.MethodGet, "/api/v1/agents/me/config", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("config: unexpected status %d", resp.StatusCode)
+	}
+	var cfg Config
+	if err := json.NewDecoder(resp.Body).Decode(&cfg); err != nil {
+		return nil, err
+	}
+	return &cfg, nil
+}
+
 // PollJob asks for the next assigned job. ok is false when there is none.
 func (c *Client) PollJob(ctx context.Context) (job *contracts.ScanJob, ok bool, err error) {
 	resp, err := c.do(ctx, http.MethodGet, "/api/v1/agents/jobs", nil)

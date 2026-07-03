@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.app_settings import effective_settings
 from ...core.audit import append_audit
 from ...core.db import get_session
 from ...core.security import generate_agent_token, hash_agent_token
@@ -20,6 +21,7 @@ from ...models.agent import Agent
 from ...models.scan import ScanProfile, ScanRun, ScanRunStatus, ScanSource, ScanType
 from ...models.user import User, UserRole
 from ...schemas.agent import (
+    AgentConfig,
     AgentCreate,
     AgentCreated,
     AgentHeartbeat,
@@ -205,6 +207,18 @@ async def heartbeat(
     return {"status": "ok", "agent_id": str(agent.id)}
 
 
+@router.get("/me/config", response_model=AgentConfig)
+async def my_config(
+    agent: Agent = Depends(get_current_agent),
+    session: AsyncSession = Depends(get_session),
+) -> AgentConfig:
+    """Effective config for the calling agent: the global poll interval unless
+    this agent has an override. The agent fetches this to self-tune its cadence
+    without a redeploy."""
+    eff = await effective_settings(session)
+    return AgentConfig(poll_seconds=agent.poll_seconds_override or eff.agent_poll_seconds)
+
+
 @router.get("/jobs")
 async def poll_job(
     agent: Agent = Depends(get_current_agent),
@@ -252,6 +266,11 @@ async def poll_job(
     run.attempts = run.attempts + 1
     agent.last_seen_at = now
 
+    # A per-agent rate cap only ever lowers the profile's rate (fragile segment).
+    rate_limit_pps = profile.rate_limit_pps
+    if agent.rate_limit_pps_override:
+        rate_limit_pps = min(rate_limit_pps, agent.rate_limit_pps_override)
+
     job = ScanJobOut(
         job_id=uuid.uuid4(),
         scan_run_id=run.id,
@@ -260,7 +279,7 @@ async def poll_job(
         ports=profile.ports,
         scan_type=ScanType(profile.scan_type),
         service_detection=profile.service_detection,
-        rate_limit_pps=profile.rate_limit_pps,
+        rate_limit_pps=rate_limit_pps,
         scan_source=ScanSource(profile.scan_source),
     )
     await append_audit(

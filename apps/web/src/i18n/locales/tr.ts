@@ -258,6 +258,13 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.emptyBody":
     "Ajanlar, ağ segmentlerinizin içinde çalışan tarayıcılardır. Tarama sonuçlarını toplamaya başlamak için bir tane ekleyin.",
   "agents.enrollCta": "İlk ajanınızı ekleyin",
+  "agents.overrides": "Ajana özel geçersiz kılmalar",
+  "agents.overridesHint":
+    "Global operasyonel ayarları yalnızca bu ajan için geçersiz kıl. Global değeri kullanmak için alanı boş bırak.",
+  "agents.o.poll": "Poll aralığı (sn)",
+  "agents.o.online": "Online eşiği (sn)",
+  "agents.o.rate": "Maks tarama hızı (pps)",
+  "agents.o.global": "global",
   "agents.deploy.title": "Bu ajanı dağıt",
   "agents.deploy.intro":
     "Ajanı hedef ağ segmentindeki bir makinede çalıştırın. Yalnızca API'ye giden (outbound) erişime ihtiyaç duyar; gelen port gerekmez.",

@@ -10,7 +10,7 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 
-from sqlalchemy import Column, DateTime, String
+from sqlalchemy import Column, DateTime, Integer, String
 from sqlmodel import Field, SQLModel
 
 
@@ -45,6 +45,13 @@ class Agent(SQLModel, table=True):
     token_rotated_at: dt.datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
+    # Optional per-agent overrides of global operational settings (null = use the
+    # global System setting). poll_seconds is what the agent applies; the other
+    # two are enforced server-side: online judgment and a cap on the scan rate of
+    # jobs dispatched to this agent (useful on a fragile segment).
+    poll_seconds_override: int | None = Field(default=None, sa_column=Column(Integer))
+    online_seconds_override: int | None = Field(default=None, sa_column=Column(Integer))
+    rate_limit_pps_override: int | None = Field(default=None, sa_column=Column(Integer))
     created_at: dt.datetime = Field(
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),

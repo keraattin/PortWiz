@@ -256,6 +256,13 @@ export const en = {
   "agents.emptyBody":
     "Agents are the scanners that run inside your network segments. Enroll one to start collecting scan results.",
   "agents.enrollCta": "Enroll your first agent",
+  "agents.overrides": "Per-agent overrides",
+  "agents.overridesHint":
+    "Override the global operational settings for just this agent. Leave a field blank to use the global value.",
+  "agents.o.poll": "Poll interval (s)",
+  "agents.o.online": "Online cut-off (s)",
+  "agents.o.rate": "Max scan rate (pps)",
+  "agents.o.global": "global",
   "agents.deploy.title": "Deploy this agent",
   "agents.deploy.intro":
     "Run the agent on a host inside the target network segment. It needs only outbound access to the API; no inbound ports.",

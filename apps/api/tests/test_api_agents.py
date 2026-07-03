@@ -55,6 +55,49 @@ async def test_get_agent_unknown_is_404(client, admin_headers) -> None:
     assert resp.status_code == 404
 
 
+async def test_agent_config_default_then_override(client, admin_headers) -> None:
+    resp = await client.post("/api/v1/agents", json={"name": "cfg-agent"}, headers=admin_headers)
+    aid = resp.json()["id"]
+    hdr = {"Authorization": f"Bearer {resp.json()['token']}"}
+
+    # No override: the agent gets the global poll interval (config default 15s).
+    cfg = (await client.get("/api/v1/agents/me/config", headers=hdr)).json()
+    assert cfg["poll_seconds"] == 15
+
+    # A per-agent override wins.
+    await client.patch(
+        f"/api/v1/agents/{aid}", json={"poll_seconds_override": 45}, headers=admin_headers
+    )
+    cfg = (await client.get("/api/v1/agents/me/config", headers=hdr)).json()
+    assert cfg["poll_seconds"] == 45
+
+
+async def test_agent_overrides_round_trip_and_clear(client, admin_headers) -> None:
+    resp = await client.post("/api/v1/agents", json={"name": "ovr-agent"}, headers=admin_headers)
+    aid = resp.json()["id"]
+    await client.patch(
+        f"/api/v1/agents/{aid}",
+        json={
+            "poll_seconds_override": 30,
+            "online_seconds_override": 300,
+            "rate_limit_pps_override": 250,
+        },
+        headers=admin_headers,
+    )
+    body = (await client.get(f"/api/v1/agents/{aid}", headers=admin_headers)).json()
+    assert body["poll_seconds_override"] == 30
+    assert body["online_seconds_override"] == 300
+    assert body["rate_limit_pps_override"] == 250
+
+    # A null clears just that override; the others are untouched.
+    await client.patch(
+        f"/api/v1/agents/{aid}", json={"poll_seconds_override": None}, headers=admin_headers
+    )
+    body = (await client.get(f"/api/v1/agents/{aid}", headers=admin_headers)).json()
+    assert body["poll_seconds_override"] is None
+    assert body["online_seconds_override"] == 300
+
+
 async def test_rotate_token_invalidates_old_and_issues_new(client, admin_headers) -> None:
     # Enroll and confirm the original token authenticates.
     resp = await client.post(

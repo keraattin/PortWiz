@@ -120,6 +120,31 @@ async def test_update_agent_requires_admin(client, admin_headers) -> None:
     assert resp.status_code == 403
 
 
+async def test_agent_rate_cap_only_lowers_dispatched_rate(client, admin_headers) -> None:
+    token = await _enroll(client, admin_headers, "capped")
+    aid = await _agent_id(client, admin_headers, "capped")
+    # Profile keeps the configured default rate (1000 pps); the agent caps at 200.
+    await client.patch(
+        f"/api/v1/agents/{aid}", json={"rate_limit_pps_override": 200}, headers=admin_headers
+    )
+    pid = await _profile(client, admin_headers, "fast-profile")
+    await _trigger(client, admin_headers, pid)
+    job = (await _poll(client, token)).json()
+    assert job["rate_limit_pps"] == 200  # min(1000, 200)
+
+
+async def test_agent_rate_cap_never_raises_rate(client, admin_headers) -> None:
+    token = await _enroll(client, admin_headers, "generous")
+    aid = await _agent_id(client, admin_headers, "generous")
+    await client.patch(
+        f"/api/v1/agents/{aid}", json={"rate_limit_pps_override": 5000}, headers=admin_headers
+    )
+    pid = await _profile(client, admin_headers, "normal-profile")
+    await _trigger(client, admin_headers, pid)
+    job = (await _poll(client, token)).json()
+    assert job["rate_limit_pps"] == 1000  # min(1000, 5000)
+
+
 async def test_update_agent_404(client, admin_headers) -> None:
     import uuid
 

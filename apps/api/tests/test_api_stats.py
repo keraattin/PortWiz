@@ -68,6 +68,31 @@ async def test_stats_agent_health_breakdown(client, admin_headers) -> None:
     assert body["agents_offline"] == 0
 
 
+async def test_stats_online_respects_agent_override(client, admin_headers, db) -> None:
+    import datetime as dt
+
+    from portwiz_api.core.security import generate_agent_token, hash_agent_token
+    from portwiz_api.models.agent import Agent
+
+    now = dt.datetime.now(tz=dt.timezone.utc)
+    async with db() as session:
+        session.add(
+            Agent(
+                name="flaky",
+                token_hash=hash_agent_token(generate_agent_token()),
+                enabled=True,
+                # Offline under the 120s default, but online under a 10-minute override.
+                last_seen_at=now - dt.timedelta(minutes=5),
+                online_seconds_override=600,
+            )
+        )
+        await session.commit()
+
+    body = (await client.get("/api/v1/stats", headers=admin_headers)).json()
+    assert body["agents_online"] == 1
+    assert body["agents_offline"] == 0
+
+
 async def test_charts_requires_auth(client) -> None:
     assert (await client.get("/api/v1/stats/charts")).status_code == 401
 

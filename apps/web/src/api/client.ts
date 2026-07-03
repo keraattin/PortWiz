@@ -501,6 +501,9 @@ export interface Agent {
   platform: string | null;
   last_ip: string | null;
   token_rotated_at: string | null;
+  poll_seconds_override: number | null;
+  online_seconds_override: number | null;
+  rate_limit_pps_override: number | null;
   created_at: string;
 }
 
@@ -537,6 +540,10 @@ export function enrollAgent(name: string, segment?: string | null): Promise<Enro
 export interface AgentUpdateInput {
   segment?: string | null;
   enabled?: boolean;
+  // null clears the override (use the global setting); omitted leaves it as is.
+  poll_seconds_override?: number | null;
+  online_seconds_override?: number | null;
+  rate_limit_pps_override?: number | null;
 }
 
 export function updateAgent(id: string, payload: AgentUpdateInput): Promise<Agent> {

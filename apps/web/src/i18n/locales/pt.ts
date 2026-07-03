@@ -259,6 +259,13 @@ export const pt: Partial<Record<TKey, string>> = {
   "agents.emptyBody":
     "Agentes são os scanners que rodam dentro dos seus segmentos de rede. Registre um para começar a coletar resultados de varredura.",
   "agents.enrollCta": "Registre seu primeiro agente",
+  "agents.overrides": "Substituições por agente",
+  "agents.overridesHint":
+    "Substitua as configurações operacionais globais apenas para este agente. Deixe em branco para usar o valor global.",
+  "agents.o.poll": "Intervalo de polling (s)",
+  "agents.o.online": "Limite online (s)",
+  "agents.o.rate": "Taxa máx. de varredura (pps)",
+  "agents.o.global": "global",
   "agents.deploy.title": "Implantar este agente",
   "agents.deploy.intro":
     "Execute o agente em um host dentro do segmento de rede alvo. Ele precisa apenas de acesso de saída à API; nenhuma porta de entrada.",

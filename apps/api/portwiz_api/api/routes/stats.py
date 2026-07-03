@@ -77,9 +77,10 @@ async def get_stats(
     # Honour the admin-tunable online cut-off so the dashboard agrees with the
     # Agents page rather than a fixed 2-minute window.
     eff = await effective_settings(session)
-    window = dt.timedelta(seconds=eff.agent_online_seconds)
     agents_online = agents_offline = agents_never_seen = agents_disabled = 0
     for a in agents:
+        # Each agent may override the global online cut-off (fragile segments).
+        window = dt.timedelta(seconds=a.online_seconds_override or eff.agent_online_seconds)
         if not a.enabled:
             agents_disabled += 1
         elif a.last_seen_at is None:

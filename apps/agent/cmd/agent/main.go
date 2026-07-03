@@ -75,6 +75,14 @@ func runLoop(apiURL, token, agentID string, pollSeconds int) {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	// The control plane's per-agent config wins over the env default when reachable,
+	// so an operator can retune cadence centrally; the env value is the fallback.
+	if cfg, err := client.FetchConfig(ctx); err != nil {
+		log.Printf("config fetch failed, using PORTWIZ_POLL_SECONDS=%d: %v", pollSeconds, err)
+	} else if cfg.PollSeconds > 0 {
+		pollSeconds = cfg.PollSeconds
+	}
+
 	log.Printf(
 		"agent starting (id=%s api=%s poll=%ds nmap=%t)",
 		agentID, apiURL, pollSeconds, scan.NmapAvailable(),

@@ -259,6 +259,13 @@ export const fr: Partial<Record<TKey, string>> = {
   "agents.emptyBody":
     "Les agents sont les scanners qui s'exécutent dans vos segments réseau. Enrôlez-en un pour commencer à collecter des résultats d'analyse.",
   "agents.enrollCta": "Enrôlez votre premier agent",
+  "agents.overrides": "Surcharges par agent",
+  "agents.overridesHint":
+    "Surchargez les réglages opérationnels globaux pour cet agent uniquement. Laissez vide pour utiliser la valeur globale.",
+  "agents.o.poll": "Intervalle de sondage (s)",
+  "agents.o.online": "Seuil en ligne (s)",
+  "agents.o.rate": "Débit d'analyse max (pps)",
+  "agents.o.global": "global",
   "agents.deploy.title": "Déployer cet agent",
   "agents.deploy.intro":
     "Exécutez l'agent sur un hôte du segment réseau cible. Il n'a besoin que d'un accès sortant à l'API ; aucun port entrant.",

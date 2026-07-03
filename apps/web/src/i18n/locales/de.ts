@@ -259,6 +259,13 @@ export const de: Partial<Record<TKey, string>> = {
   "agents.emptyBody":
     "Agenten sind die Scanner, die in deinen Netzsegmenten laufen. Registriere einen, um Scan-Ergebnisse zu sammeln.",
   "agents.enrollCta": "Ersten Agenten registrieren",
+  "agents.overrides": "Agent-spezifische Überschreibungen",
+  "agents.overridesHint":
+    "Überschreibe die globalen Betriebseinstellungen nur für diesen Agenten. Leer lassen, um den globalen Wert zu verwenden.",
+  "agents.o.poll": "Poll-Intervall (s)",
+  "agents.o.online": "Online-Grenze (s)",
+  "agents.o.rate": "Max. Scan-Rate (pps)",
+  "agents.o.global": "global",
   "agents.deploy.title": "Diesen Agenten bereitstellen",
   "agents.deploy.intro":
     "Führe den Agenten auf einem Host im Zielnetzsegment aus. Er benötigt nur ausgehenden Zugriff auf die API; keine eingehenden Ports.",
