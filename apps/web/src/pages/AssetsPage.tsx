@@ -12,6 +12,7 @@ import {
   createAsset,
   deleteAsset,
   downloadAssetImportTemplate,
+  fetchSettings,
   importAssets,
   listAssets,
   listUsers,
@@ -84,6 +85,7 @@ export default function AssetsPage() {
   const [pushReport, setPushReport] = useState<AssetPushReport | null>(null);
   const [pushError, setPushError] = useState<string | null>(null);
   const [pushing, setPushing] = useState(false);
+  const [netboxOn, setNetboxOn] = useState(false);
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
 
@@ -103,6 +105,12 @@ export default function AssetsPage() {
 
   useEffect(() => {
     void reload();
+    // NetBox sync/push only work once NetBox is connected in Settings.
+    fetchSettings()
+      .then((s) => setNetboxOn(s.netbox_configured))
+      .catch(() => {
+        /* leave NetBox actions disabled if status can't be read */
+      });
   }, []);
 
   const vlanName = (id: string | null) =>
@@ -318,7 +326,8 @@ export default function AssetsPage() {
             <span className="text-sm font-medium text-slate-200">{t("assets.syncTitle")}</span>
             <span className="text-xs text-slate-500">{t("assets.syncHint")}</span>
           </div>
-          <Button variant="outline" onClick={onSync} disabled={syncing}>
+          {!netboxOn && <p className="text-xs text-amber-400">{t("assets.netboxOff")}</p>}
+          <Button variant="outline" onClick={onSync} disabled={syncing || !netboxOn}>
             {syncing ? t("assets.syncing") : t("assets.syncTitle")}
           </Button>
           {syncError && <p className="text-sm text-red-400">{syncError}</p>}
@@ -349,7 +358,7 @@ export default function AssetsPage() {
               <span className="text-sm font-medium text-slate-200">{t("assets.pushTitle")}</span>
               <span className="text-xs text-slate-500">{t("assets.pushHint")}</span>
             </div>
-            <Button variant="outline" onClick={onPush} disabled={pushing}>
+            <Button variant="outline" onClick={onPush} disabled={pushing || !netboxOn}>
               {pushing ? t("assets.pushing") : t("assets.pushTitle")}
             </Button>
             {pushError && <p className="text-sm text-red-400">{pushError}</p>}

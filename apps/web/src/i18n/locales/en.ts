@@ -67,6 +67,7 @@ export const en = {
   "dashboard.step.createScan": "Create a scan profile and run it",
   "dashboard.step.reviewChanges": "Review confirmed changes",
   "dashboard.enrolledNoneOnline": "enrolled, but none online",
+  "dashboard.changesToReview": "changes need review",
   "dashboard.lastScan": "Last scan: {when}",
 
   // Dashboard charts
@@ -135,6 +136,7 @@ export const en = {
   "assets.errors": "errors",
   "assets.row": "Row",
   "assets.syncTitle": "Sync from NetBox",
+  "assets.netboxOff": "Connect NetBox in Settings to enable sync.",
   "assets.syncHint": "Pulls hosts from your configured NetBox and upserts them by IP.",
   "assets.syncing": "Syncing…",
   "assets.hosts": "hosts",

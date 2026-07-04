@@ -10,6 +10,7 @@ import {
   deleteIpRange,
   deleteVlan,
   downloadVlanImportTemplate,
+  fetchSettings,
   importVlans,
   listIpRanges,
   listVlans,
@@ -63,6 +64,7 @@ export default function VlansPage() {
   const [syncReport, setSyncReport] = useState<VlanSyncReport | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [netboxOn, setNetboxOn] = useState(false);
 
   const { sort: vlanSort, toggleSort: vlanToggle } = useSort();
   const { sort: rangeSort, toggleSort: rangeToggle } = useSort();
@@ -115,6 +117,11 @@ export default function VlansPage() {
 
   useEffect(() => {
     void reload();
+    fetchSettings()
+      .then((s) => setNetboxOn(s.netbox_configured))
+      .catch(() => {
+        /* leave NetBox sync disabled if status can't be read */
+      });
   }, []);
 
   const vlanName = (id: string | null) =>
@@ -321,7 +328,8 @@ export default function VlansPage() {
               <span className="text-sm font-medium text-slate-200">{t("vlans.syncTitle")}</span>
               <span className="text-xs text-slate-500">{t("vlans.syncHint")}</span>
             </div>
-            <Button variant="outline" onClick={onSync} disabled={syncing}>
+            {!netboxOn && <p className="text-xs text-amber-400">{t("assets.netboxOff")}</p>}
+            <Button variant="outline" onClick={onSync} disabled={syncing || !netboxOn}>
               {syncing ? t("vlans.syncing") : t("vlans.syncTitle")}
             </Button>
             {syncError && <p className="text-sm text-red-400">{syncError}</p>}

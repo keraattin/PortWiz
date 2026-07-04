@@ -67,6 +67,7 @@ export const es: Partial<Record<TKey, string>> = {
   "dashboard.step.createScan": "Crear un perfil de escaneo y ejecutarlo",
   "dashboard.step.reviewChanges": "Revisar los cambios confirmados",
   "dashboard.enrolledNoneOnline": "registrado, pero ninguno en línea",
+  "dashboard.changesToReview": "cambios por revisar",
   "dashboard.lastScan": "Último escaneo: {when}",
 
   // Dashboard charts
@@ -135,6 +136,7 @@ export const es: Partial<Record<TKey, string>> = {
   "assets.errors": "errores",
   "assets.row": "Fila",
   "assets.syncTitle": "Sincronizar desde NetBox",
+  "assets.netboxOff": "Conecta NetBox en Ajustes para activar la sincronización.",
   "assets.syncHint":
     "Obtiene hosts de tu NetBox configurado y los inserta/actualiza por IP.",
   "assets.syncing": "Sincronizando…",

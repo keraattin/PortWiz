@@ -67,6 +67,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "dashboard.step.createScan": "Criar um perfil de varredura e executá-lo",
   "dashboard.step.reviewChanges": "Revisar alterações confirmadas",
   "dashboard.enrolledNoneOnline": "registrado, mas nenhum online",
+  "dashboard.changesToReview": "alterações para revisar",
   "dashboard.lastScan": "Última varredura: {when}",
 
   // Dashboard charts
@@ -135,6 +136,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "assets.errors": "erros",
   "assets.row": "Linha",
   "assets.syncTitle": "Sincronizar do NetBox",
+  "assets.netboxOff": "Conecte o NetBox nas Configurações para ativar a sincronização.",
   "assets.syncHint":
     "Obtém hosts do seu NetBox configurado e os insere/atualiza por IP.",
   "assets.syncing": "Sincronizando…",

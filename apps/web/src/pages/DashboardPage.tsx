@@ -86,16 +86,20 @@ export default function DashboardPage() {
               : undefined,
         },
         {
+          // A scan has been set up once it has run or is at least queued.
           labelKey: "dashboard.step.createScan",
-          done: stats.last_scan_at !== null,
+          done: stats.last_scan_at !== null || stats.pending_runs > 0,
           to: "/scans",
           ctaKey: "nav.scans",
         },
         {
+          // "Caught up" when there are no open changes left to review; when
+          // changes appear this flips to a call to action.
           labelKey: "dashboard.step.reviewChanges",
-          done: stats.open_changes > 0,
+          done: stats.open_changes === 0,
           to: "/changes",
           ctaKey: "nav.changes",
+          note: stats.open_changes > 0 ? "dashboard.changesToReview" : undefined,
         },
       ]
     : [];

@@ -67,6 +67,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "dashboard.step.createScan": "Bir tarama profili oluştur ve çalıştır",
   "dashboard.step.reviewChanges": "Teyitli değişiklikleri incele",
   "dashboard.enrolledNoneOnline": "kayıtlı ama çevrimiçi değil",
+  "dashboard.changesToReview": "gözden geçirilecek değişiklikler var",
   "dashboard.lastScan": "Son tarama: {when}",
 
   // Dashboard charts
@@ -135,6 +136,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "assets.errors": "hata",
   "assets.row": "Satır",
   "assets.syncTitle": "NetBox'tan eşitle",
+  "assets.netboxOff": "Eşitlemeyi etkinleştirmek için Ayarlar'dan NetBox'ı bağlayın.",
   "assets.syncHint":
     "Yapılandırılmış NetBox'tan ana makineleri çeker ve IP'ye göre ekler/günceller.",
   "assets.syncing": "Eşitleniyor…",
