@@ -48,6 +48,16 @@ def test_parse_reply_variants() -> None:
     reply, action = parse_reply("Port 22 is SSH.")
     assert reply == "Port 22 is SSH." and action is None
 
+    # Truncated JSON tail (weak model dropped the closing braces) is repaired.
+    reply, action = parse_reply(
+        '{"reply": "Running it.", "action": {"name": "scan.run", "args": {"profile_name": "Weekly"}'
+    )
+    assert action is not None and action["name"] == "scan.run"
+
+    # Malformed structured output must NOT leak the raw blob to the user.
+    reply, action = parse_reply('{"reply": "oops" garbage not json')
+    assert reply == "" and action is None
+
 
 async def test_run_chat_proposes_vlan(db) -> None:
     from portwiz_api.core.assistant import run_chat
@@ -87,6 +97,32 @@ async def test_run_chat_query_only(db) -> None:
     async with db() as session:
         reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
     assert action is None and "0 assets" in reply
+
+
+async def test_run_chat_malformed_output_returns_fallback(db) -> None:
+    from portwiz_api.core.assistant import _FALLBACK_REPLY, run_chat
+
+    # A weak model returns unparseable structured output; the user gets a clear
+    # fallback, never a blank message or a raw JSON blob.
+    text = '{"reply": "half" this is broken not json'
+    msgs = [{"role": "user", "content": "create a vlan"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is None
+    assert reply == _FALLBACK_REPLY
+
+
+async def test_run_chat_action_without_reply_defaults_to_summary(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+
+    # Model proposes a valid action but no prose; the reply falls back to the
+    # action summary so the user always sees a description.
+    text = '{"reply": "", "action": {"name": "vlan.create", "args": {"name": "NetA", "vlan_tag": 5}}}'
+    msgs = [{"role": "user", "content": "add vlan NetA"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None and action["name"] == "vlan.create"
+    assert isinstance(reply, str) and reply.strip()  # never blank
 
 
 async def test_run_chat_unknown_reference_is_reported(db) -> None:

@@ -11,6 +11,7 @@ catalog, scoped to the caller's role, before it is returned.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from typing import Any
 
@@ -71,23 +72,58 @@ def format_messages(messages: list[dict[str, str]]) -> str:
     return "\n".join(lines)
 
 
+logger = logging.getLogger("portwiz.assistant")
+
 _JSON_RE = re.compile(r"\{.*\}", re.S)
+# Shown when the model produced something that was meant to be structured but
+# couldn't be parsed, so we never dump a raw/half-formed JSON blob at the user.
+_FALLBACK_REPLY = "Sorry, I couldn't process that. Could you rephrase your request?"
+# Shown when the model proposed a valid action but gave no accompanying prose.
+_ACTION_REPLY = "I've prepared an action for you — review and confirm below."
+
+
+def _extract_json(text: str) -> dict[str, Any] | None:
+    """Best-effort extraction of the model's ``{...}`` object, tolerating trailing
+    prose and a truncated tail (a weak model that drops the final braces)."""
+    # First the greedy match (handles trailing prose after a complete object).
+    match = _JSON_RE.search(text)
+    if match:
+        try:
+            obj = json.loads(match.group(0))
+            if isinstance(obj, dict):
+                return obj
+        except json.JSONDecodeError:
+            pass
+    # Truncation repair: from the first "{", append up to a few closing braces.
+    start = text.find("{")
+    if start != -1:
+        blob = text[start:]
+        for extra in range(1, 4):
+            try:
+                obj = json.loads(blob + ("}" * extra))
+                if isinstance(obj, dict):
+                    return obj
+            except json.JSONDecodeError:
+                continue
+    return None
 
 
 def parse_reply(text: str) -> tuple[str, dict[str, Any] | None]:
-    """Extract ``(reply, action)`` from the model output. Tolerant of code
-    fences and surrounding prose; falls back to (text, None) on any failure."""
+    """Extract ``(reply, action)`` from the model output. Tolerant of code fences,
+    surrounding prose and a truncated JSON tail. If the model clearly attempted
+    structured output but it can't be parsed, return a friendly fallback rather
+    than leaking a raw/half-formed JSON blob to the user; plain-prose replies
+    (no JSON at all) pass through unchanged."""
     text = (text or "").strip()
     if text.startswith("```"):
         text = re.sub(r"^```[a-zA-Z]*", "", text).strip().strip("`").strip()
-    match = _JSON_RE.search(text)
-    if not match:
-        return text, None
-    try:
-        obj = json.loads(match.group(0))
-    except json.JSONDecodeError:
-        return text, None
-    if not isinstance(obj, dict):
+    obj = _extract_json(text)
+    if obj is None:
+        # No JSON at all -> the model just answered in prose. A "{" that failed to
+        # parse means malformed structured output -> don't surface the raw blob.
+        if "{" in text:
+            logger.warning("assistant: unparseable model output: %r", text[:300])
+            return "", None
         return text, None
     reply = obj.get("reply")
     action = obj.get("action")
@@ -108,10 +144,14 @@ async def run_chat(
     snapshot = await build_snapshot(session)
     system = build_chat_system(role, snapshot)
     raw = await provider.complete(system, format_messages(messages))
+    logger.debug("assistant raw completion: %r", raw[:1000])
     reply, action_obj = parse_reply(raw)
 
     if not action_obj:
-        return reply, None
+        # Empty reply with no action means we couldn't make sense of the output
+        # (e.g. a weak model returned malformed JSON) — return a clear fallback
+        # instead of a blank message.
+        return (reply or _FALLBACK_REPLY), None
 
     name = action_obj.get("name")
     args = action_obj.get("args")
@@ -120,11 +160,14 @@ async def run_chat(
     spec = CATALOG_BY_NAME.get(name) if isinstance(name, str) else None
     if spec is None or role not in spec.roles:
         # The model named an action that does not exist or is not allowed for
-        # this role; drop it silently and keep the reply.
-        return reply, None
+        # this role; drop it and keep the reply (or a fallback if it was blank).
+        logger.info("assistant: dropped unknown/denied action %r for role %s", name, role)
+        return (reply or _FALLBACK_REPLY), None
     try:
         summary, request = await spec.build(session, args)
     except ActionError as exc:
         suffix = f" ({exc})"
         return (reply + suffix if reply else str(exc)), None
-    return reply, {"name": name, "summary": summary, "request": request}
+    # Always give the user some prose alongside the confirm button, even if the
+    # model returned only the action.
+    return (reply or _ACTION_REPLY), {"name": name, "summary": summary, "request": request}

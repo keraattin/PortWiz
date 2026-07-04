@@ -251,7 +251,7 @@ PROVIDER_REGISTRY: list[ProviderInfo] = [
         "Ollama (local)",
         "ollama",
         default_base_url="http://ollama:11434",
-        default_model="llama3.3",
+        default_model="qwen2.5:3b",
         needs_base_url=True,
     ),
     ProviderInfo(

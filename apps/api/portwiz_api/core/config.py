@@ -84,7 +84,10 @@ class Settings(BaseSettings):
     # "openai" | "gemini" | "mistral" | "groq" | "openrouter" | "deepseek" | "custom".
     ai_provider: str = "ollama"
     ollama_base_url: str = "http://ollama:11434"
-    ollama_model: str = "llama3.3"
+    # A small-but-capable default: reliable enough for the assistant's structured
+    # actions and fingerprint enrichment, and a ~2GB pull rather than tens of GB.
+    # Sub-1B models (e.g. qwen2.5:0.5b) are too weak for the assistant.
+    ollama_model: str = "qwen2.5:3b"
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-sonnet-4-6"
     # Shared config for every OpenAI-compatible provider (one is active at a time).
