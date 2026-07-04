@@ -76,6 +76,13 @@ async def test_change_confirmed_after_threshold(client, admin_headers) -> None:
     assert by_type["closed"]["before"]["state"] == "open"
 
 
+async def test_changes_limit_bounds(client, admin_headers) -> None:
+    # A negative/zero limit is a clean 422, not a 500 (Postgres LIMIT -1 crash).
+    assert (await client.get("/api/v1/changes?limit=-1", headers=admin_headers)).status_code == 422
+    assert (await client.get("/api/v1/changes?limit=0", headers=admin_headers)).status_code == 422
+    assert (await client.get("/api/v1/changes?limit=10", headers=admin_headers)).status_code == 200
+
+
 async def test_change_confirmations_setting(client, admin_headers) -> None:
     # With the admin-tunable confirmations lowered to 1, a candidate confirms on
     # its first appearance instead of needing a second consecutive run.

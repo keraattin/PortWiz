@@ -77,6 +77,13 @@ async def test_profile_crud_and_trigger(client, admin_headers) -> None:
     assert any(r["id"] == run["id"] for r in resp.json())
 
 
+async def test_scan_runs_limit_bounds(client, admin_headers) -> None:
+    # A negative/zero limit is a clean 422, not a 500 (Postgres LIMIT -1 crash).
+    assert (await client.get("/api/v1/scan-runs?limit=-1", headers=admin_headers)).status_code == 422
+    assert (await client.get("/api/v1/scan-runs?limit=0", headers=admin_headers)).status_code == 422
+    assert (await client.get("/api/v1/scan-runs?limit=5", headers=admin_headers)).status_code == 200
+
+
 async def test_profile_rejects_invalid_targets(client, admin_headers) -> None:
     resp = await client.post(
         "/api/v1/scan-profiles",

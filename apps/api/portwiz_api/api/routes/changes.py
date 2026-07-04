@@ -29,11 +29,11 @@ async def list_changes(
     scan_profile_id: uuid.UUID | None = None,
     change_type: str | None = None,
     status_filter: str | None = Query(default=None, alias="status"),
-    limit: int = 100,
+    limit: int = Query(default=100, ge=1, le=500),
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> list[ChangeEvent]:
-    query = select(ChangeEvent).order_by(ChangeEvent.detected_at.desc()).limit(min(limit, 500))
+    query = select(ChangeEvent).order_by(ChangeEvent.detected_at.desc()).limit(limit)
     if scan_profile_id is not None:
         query = query.where(ChangeEvent.scan_profile_id == scan_profile_id)
     if change_type is not None:

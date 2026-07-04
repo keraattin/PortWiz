@@ -9,7 +9,7 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -174,11 +174,11 @@ async def trigger_run(
 @runs_router.get("", response_model=list[ScanRunRead])
 async def list_runs(
     scan_profile_id: uuid.UUID | None = None,
-    limit: int = 50,
+    limit: int = Query(default=50, ge=1, le=200),
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> list[ScanRun]:
-    query = select(ScanRun).order_by(ScanRun.created_at.desc()).limit(min(limit, 200))
+    query = select(ScanRun).order_by(ScanRun.created_at.desc()).limit(limit)
     if scan_profile_id is not None:
         query = query.where(ScanRun.scan_profile_id == scan_profile_id)
     result = await session.execute(query)
