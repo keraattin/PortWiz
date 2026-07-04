@@ -60,6 +60,45 @@ async def test_run_due_scans_triggers_then_dedups(db) -> None:
         assert len(created_again) == 0
 
 
+async def test_run_due_scans_does_not_stack_pending(db) -> None:
+    # A profile whose prior run is still pending (no agent claimed it) must not
+    # accumulate a second run when the next cron fire is due.
+    from sqlalchemy import func, select
+
+    from portwiz_api.core.scheduler import run_due_scans
+    from portwiz_api.models.scan import ScanProfile, ScanRun, ScanSource
+
+    async with db() as session:
+        profile = ScanProfile(
+            name="unclaimed",
+            targets=["10.0.0.9"],
+            ports="22",
+            scan_source=ScanSource.internal_unauthenticated,
+            cron="* * * * *",
+            created_at=_NOW - dt.timedelta(minutes=5),
+            updated_at=_NOW,
+        )
+        session.add(profile)
+        await session.commit()
+        pid = profile.id
+
+    async with db() as session:
+        assert len(await run_due_scans(session, now=_NOW)) == 1
+
+    # A later, due tick while the first run is still pending -> no new run.
+    later = _NOW + dt.timedelta(minutes=5)
+    async with db() as session:
+        assert len(await run_due_scans(session, now=later)) == 0
+
+    async with db() as session:
+        count = (
+            await session.execute(
+                select(func.count()).select_from(ScanRun).where(ScanRun.scan_profile_id == pid)
+            )
+        ).scalar_one()
+        assert count == 1
+
+
 async def _add_run(db, *, status, started_at, attempts):
     from portwiz_api.models.scan import ScanRun, ScanSource
 

@@ -49,10 +49,31 @@ async def run_due_scans(session: AsyncSession, now: dt.datetime | None = None) -
         )
     ).scalars().all()
 
+    # Profiles that already have an unclaimed pending run: don't stack another.
+    # This bounds the queue to one waiting run per profile, so a segment with no
+    # online agent doesn't accumulate an unbounded backlog of scheduled runs.
+    pending_profile_ids = set(
+        (
+            await session.execute(
+                select(ScanRun.scan_profile_id).where(
+                    ScanRun.status == ScanRunStatus.pending,
+                    ScanRun.scan_profile_id.is_not(None),
+                )
+            )
+        ).scalars().all()
+    )
+
     created: list[ScanRun] = []
+    touched = False
     for profile in profiles:
         baseline = profile.last_scheduled_at or profile.created_at
         if not cron_due(profile.cron, baseline, now):
+            continue
+        if profile.id in pending_profile_ids:
+            # A prior run is still waiting to be claimed; advance the cursor so we
+            # don't re-evaluate this fire every tick, but skip creating a duplicate.
+            profile.last_scheduled_at = now
+            touched = True
             continue
         run = ScanRun(
             scan_profile_id=profile.id,
@@ -72,7 +93,7 @@ async def run_due_scans(session: AsyncSession, now: dt.datetime | None = None) -
         )
         created.append(run)
 
-    if created:
+    if created or touched:
         await session.commit()
     return created
 
