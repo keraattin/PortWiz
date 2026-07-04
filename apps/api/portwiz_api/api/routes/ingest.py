@@ -36,7 +36,7 @@ from ...core.issue_tracker import IssueTracker, get_issue_tracker, link_changes_
 from ...core.notifications import build_notifier, notify_changes
 from ...models.agent import Agent
 from ...models.asset import Asset, Criticality
-from ...models.scan import Observation, ScanRun, ScanRunStatus
+from ...models.scan import Observation, ScanProfile, ScanRun, ScanRunStatus
 from ...schemas.scan import ScanResultIn
 from ..deps import get_current_agent
 
@@ -93,6 +93,22 @@ async def ingest_scan_results(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Scan run not found")
     if run.status in _FINALIZED:
         raise HTTPException(status.HTTP_409_CONFLICT, "Scan run already finalized")
+
+    # Bind ingest to the calling agent so a token cannot write results to a run
+    # it has no business with: a run already claimed via poll may be reported
+    # only by the agent that claimed it, and an agent may only write to runs in
+    # its own segment (the same routing rule used to dispatch jobs). This closes
+    # the gap where any enrolled token could inject observations into any run.
+    if run.agent_id is not None and run.agent_id != str(agent.id):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "Scan run was claimed by a different agent"
+        )
+    if run.scan_profile_id is not None:
+        profile = await session.get(ScanProfile, run.scan_profile_id)
+        if profile is not None and profile.segment != agent.segment:
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN, "Scan run belongs to a different segment"
+            )
 
     received_at = _utcnow()
 
