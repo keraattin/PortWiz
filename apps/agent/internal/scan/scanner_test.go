@@ -47,6 +47,41 @@ func TestConnectScannerFindsOpenPort(t *testing.T) {
 	}
 }
 
+func TestConnectScannerRateLimitPaces(t *testing.T) {
+	t.Parallel()
+	scanner := NewConnectScanner()
+	scanner.DialTimeout = 100 * time.Millisecond
+	// 10 closed ports paced at 20 pps => ~9 intervals of 50ms => well over 300ms.
+	start := time.Now()
+	_, err := scanner.Scan(context.Background(), contracts.ScanJob{
+		Targets:      []string{"127.0.0.1"},
+		Ports:        "59990-59999",
+		RateLimitPPS: 20,
+	})
+	if err != nil {
+		t.Fatalf("scan: %v", err)
+	}
+	if elapsed := time.Since(start); elapsed < 300*time.Millisecond {
+		t.Fatalf("rate limit did not pace the scan; finished in %v", elapsed)
+	}
+}
+
+func TestConnectScannerRateLimitContextCancel(t *testing.T) {
+	t.Parallel()
+	// A slow rate must still abort promptly when the context is cancelled.
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+	defer cancel()
+	scanner := NewConnectScanner()
+	_, err := scanner.Scan(ctx, contracts.ScanJob{
+		Targets:      []string{"127.0.0.1"},
+		Ports:        "50000-59999", // many ports
+		RateLimitPPS: 5,             // very slow
+	})
+	if err == nil {
+		t.Fatal("expected context cancellation error")
+	}
+}
+
 func TestConnectScannerSkipsClosedPort(t *testing.T) {
 	t.Parallel()
 	// Bind then immediately release a port so it is (very likely) closed.

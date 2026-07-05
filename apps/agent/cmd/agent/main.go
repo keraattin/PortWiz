@@ -160,6 +160,13 @@ func runScan(args []string, apiURL, token, agentID string) {
 
 func executeJob(ctx context.Context, job contracts.ScanJob, agentID string) contracts.ScanResult {
 	started := time.Now().UTC()
+	// Bound the scan to the dispatched budget so a large target/port range can't
+	// block the poll loop indefinitely (0 = no explicit limit).
+	if job.TimeoutSeconds > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(job.TimeoutSeconds)*time.Second)
+		defer cancel()
+	}
 	scanner := scan.NewConnectScanner()
 	hosts, err := scanner.Scan(ctx, job)
 

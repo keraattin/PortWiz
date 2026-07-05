@@ -61,6 +61,18 @@ func (s *ConnectScanner) Scan(ctx context.Context, job contracts.ScanJob) ([]con
 	var mu sync.Mutex
 	openByIP := make(map[string][]contracts.Port)
 
+	// Honour the dispatched rate cap by pacing how fast probes are started
+	// (packets per second). 0 means unlimited. This is what makes a fragile
+	// segment's per-agent rate limit actually take effect on the wire.
+	var pace <-chan time.Time
+	if job.RateLimitPPS > 0 {
+		if interval := time.Second / time.Duration(job.RateLimitPPS); interval > 0 {
+			ticker := time.NewTicker(interval)
+			defer ticker.Stop()
+			pace = ticker.C
+		}
+	}
+
 	for _, ip := range ips {
 		for _, port := range ports {
 			select {
@@ -68,6 +80,14 @@ func (s *ConnectScanner) Scan(ctx context.Context, job contracts.ScanJob) ([]con
 				wg.Wait()
 				return nil, ctx.Err()
 			default:
+			}
+			if pace != nil {
+				select {
+				case <-ctx.Done():
+					wg.Wait()
+					return nil, ctx.Err()
+				case <-pace:
+				}
 			}
 			wg.Add(1)
 			sem <- struct{}{}
