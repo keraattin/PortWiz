@@ -139,3 +139,37 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return a cached Settings instance."""
     return Settings()
+
+
+# Substrings that mark a value as an unfilled placeholder from the env examples.
+_PLACEHOLDER_MARKERS = ("change-me", "dev-insecure")
+
+
+def check_production_secrets(settings: Settings) -> None:
+    """Refuse to run production with unset or placeholder security secrets.
+
+    In non-production environments this is a no-op (the dev defaults are fine for
+    localhost). In production, a missing or still-placeholder ``secret_key`` or
+    ``encryption_key`` is a hard startup error rather than a silent fail-open to
+    weak signing / plaintext-at-rest.
+    """
+    if settings.environment != "production":
+        return
+
+    def _placeholder(value: str | None) -> bool:
+        return not value or any(m in value.lower() for m in _PLACEHOLDER_MARKERS)
+
+    missing = [
+        name
+        for name, value in (
+            ("PORTWIZ_SECRET_KEY", settings.secret_key),
+            ("PORTWIZ_ENCRYPTION_KEY", settings.encryption_key),
+        )
+        if _placeholder(value)
+    ]
+    if missing:
+        raise RuntimeError(
+            "Refusing to start in production with a missing or placeholder "
+            + " and ".join(missing)
+            + ". Generate real values (e.g. `openssl rand -hex 32` and a Fernet key)."
+        )

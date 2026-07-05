@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import __version__
 from .api import api_router
 from .api.routes.health import router as health_router
-from .core.config import get_settings
+from .core.config import check_production_secrets, get_settings
 from .seed import seed_first_admin
 
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +22,8 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Migrations are applied by the container entrypoint (alembic upgrade head)
-    # before the app boots; here we only seed idempotent data.
+    # before the app boots; here we only validate config and seed idempotent data.
+    check_production_secrets(settings)
     if not settings.encryption_key:
         logger.warning(
             "PORTWIZ_ENCRYPTION_KEY is not set; stored secrets are kept in "
