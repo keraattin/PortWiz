@@ -21,6 +21,19 @@ os.environ["PORTWIZ_JIRA_ENABLED"] = "false"
 os.environ["PORTWIZ_NETBOX_ENABLED"] = "false"
 
 
+@pytest.fixture(autouse=True)
+def _reset_login_limiter():
+    # The login rate limiter is process-global; clear it between tests so the many
+    # per-test admin logins don't trip the limit and cascade failures.
+    try:
+        from portwiz_api.api.routes.auth import _login_limiter
+
+        _login_limiter.reset()
+    except Exception:
+        pass
+    yield
+
+
 @pytest_asyncio.fixture
 async def db():
     # Importing the app pulls in core.db, which builds an asyncpg engine.
