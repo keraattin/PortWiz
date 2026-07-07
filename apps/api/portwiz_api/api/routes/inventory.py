@@ -514,7 +514,11 @@ async def create_asset(
         actor_email=current_user.email,
         target_type="asset",
         target_id=str(asset.id),
-        payload={"ip": asset.ip, "criticality": asset.criticality, "owner_id": str(asset.owner_id) if asset.owner_id else None},
+        payload={
+            "ip": asset.ip,
+            "criticality": asset.criticality,
+            "owner_id": str(asset.owner_id) if asset.owner_id else None,
+        },
     )
     await session.commit()
     await session.refresh(asset)
