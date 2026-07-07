@@ -12,7 +12,6 @@ export const fr: Partial<Record<TKey, string>> = {
   "nav.changes": "Changements",
   "nav.tasks": "Tâches",
   "nav.compliance": "Conformité",
-  "nav.assistant": "Assistant",
   "nav.admin": "Administration",
   "nav.users": "Utilisateurs",
   "nav.settings": "Paramètres",
@@ -479,6 +478,9 @@ export const fr: Partial<Record<TKey, string>> = {
   "scans.schedule.monthly": "Mensuel (le 1er, 02:00)",
   "scans.schedule.advanced": "Avancé (cron)",
   "scans.f.scanType": "Type d'analyse",
+  "scans.scanType.connect": "TCP connect (par défaut sûr)",
+  "scans.scanType.syn": "SYN (rapide, nécessite des privilèges)",
+  "scans.scanType.udp": "UDP",
   "scans.f.scanTypeHint":
     "connect est la valeur par défaut sûre ; syn est plus rapide mais nécessite des privilèges raw-socket.",
   "scans.f.serviceDetection": "Détection de service (identifier le logiciel derrière chaque port ouvert)",
@@ -536,8 +538,6 @@ export const fr: Partial<Record<TKey, string>> = {
   "compliance.col.target": "Cible",
   "compliance.system": "système",
   "compliance.noAuditEvents": "Aucun événement d'audit.",
-  "compliance.showing": "Affichage de {shown} sur {total}",
-  "compliance.loadMore": "Charger plus",
 
   // Settings
   "settings.title": "Paramètres et intégrations",
@@ -598,7 +598,6 @@ export const fr: Partial<Record<TKey, string>> = {
     "p. ex. http://localhost:1234/v1 pour un runtime local (LM Studio, vLLM, llama.cpp), ou un proxy de fournisseur.",
   "settings.compat.model": "Modèle",
   "settings.compat.apiKey": "Clé API",
-  "settings.getApiKey": "Obtenir votre clé API →",
   "settings.ai.ollamaLocal": "Ollama (local)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Aucun",
@@ -675,21 +674,8 @@ export const fr: Partial<Record<TKey, string>> = {
     "Si activé, chaque analyse réécrit ses hôtes nouvellement détectés dans NetBox. Désactivé par défaut ; sinon utilisez le bouton manuel sur la page Actifs.",
 
   // Assistant
-  "assistant.intro":
-    "L'IA est une couche optionnelle et indépendante du fournisseur. Par défaut, elle s'exécute sur un modèle Ollama local afin que les données d'analyse ne quittent jamais votre réseau ; une clé API Claude peut être configurée à la place. Les bannières de service sont traitées comme des entrées non fiables et nettoyées avant d'atteindre tout modèle.",
   "assistant.providerUnavailable":
     "Fournisseur d'IA indisponible. Vérifiez qu'Ollama est en cours d'exécution ou qu'une clé API Claude est définie.",
-  "assistant.fingerprintTitle": "Identifier une bannière",
-  "assistant.bannerPlaceholder": "Collez une bannière de service (p. ex. SSH-2.0-OpenSSH_9.6)",
-  "assistant.portPlaceholder": "Port",
-  "assistant.protocolPlaceholder": "Protocole",
-  "assistant.analyzing": "Analyse…",
-  "assistant.identify": "Identifier le service",
-  "assistant.askTitle": "Demander à l'assistant",
-  "assistant.questionPlaceholder":
-    "Posez une question sur un port, un service ou un protocole (p. ex. Qu'est-ce qui tourne sur le port 3389 ?)",
-  "assistant.thinking": "Réflexion…",
-  "assistant.ask": "Demander",
 
   // Widget de l'assistant (global, chat + actions proposées)
   "assistant.widget.title": "Assistant",

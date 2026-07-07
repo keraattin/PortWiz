@@ -12,7 +12,6 @@ export const tr: Partial<Record<TKey, string>> = {
   "nav.changes": "Değişiklikler",
   "nav.tasks": "Görevler",
   "nav.compliance": "Uyumluluk",
-  "nav.assistant": "Asistan",
   "nav.admin": "Yönetim",
   "nav.users": "Kullanıcılar",
   "nav.settings": "Ayarlar",
@@ -477,6 +476,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "scans.schedule.monthly": "Aylık (ayın 1'i, 02:00)",
   "scans.schedule.advanced": "Gelişmiş (cron)",
   "scans.f.scanType": "Tarama türü",
+  "scans.scanType.connect": "TCP connect (güvenli varsayılan)",
+  "scans.scanType.syn": "SYN (hızlı, ayrıcalık gerekir)",
+  "scans.scanType.udp": "UDP",
   "scans.f.scanTypeHint":
     "connect güvenli varsayılandır; syn daha hızlıdır ama ham soket ayrıcalığı gerektirir.",
   "scans.f.serviceDetection": "Servis tespiti (her açık portun arkasındaki yazılımı belirle)",
@@ -534,8 +536,6 @@ export const tr: Partial<Record<TKey, string>> = {
   "compliance.col.target": "Hedef",
   "compliance.system": "sistem",
   "compliance.noAuditEvents": "Denetim olayı yok.",
-  "compliance.showing": "{total} içinden {shown} gösteriliyor",
-  "compliance.loadMore": "Daha fazla yükle",
 
   // Settings
   "settings.title": "Ayarlar ve entegrasyonlar",
@@ -595,7 +595,6 @@ export const tr: Partial<Record<TKey, string>> = {
     "ör. yerel bir runtime için http://localhost:1234/v1 (LM Studio, vLLM, llama.cpp) veya bir sağlayıcı proxy'si.",
   "settings.compat.model": "Model",
   "settings.compat.apiKey": "API anahtarı",
-  "settings.getApiKey": "API anahtarını al →",
   "settings.ai.ollamaLocal": "Ollama (yerel)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Yok",
@@ -671,21 +670,8 @@ export const tr: Partial<Record<TKey, string>> = {
     "Açıkken her tarama, yeni keşfettiği host'ları NetBox'a geri yazar. Varsayılan kapalı; aksi halde Varlıklar sayfasındaki manuel butonu kullanın.",
 
   // Assistant
-  "assistant.intro":
-    "Yapay zekâ; isteğe bağlı, sağlayıcıdan bağımsız bir katmandır. Varsayılan olarak yerel bir Ollama modeliyle çalışır; böylece tarama verisi ağınızdan çıkmaz. Bunun yerine bir Claude API anahtarı da yapılandırılabilir. Servis banner'ları güvenilmeyen girdi olarak ele alınır ve herhangi bir modele ulaşmadan önce arındırılır.",
   "assistant.providerUnavailable":
     "Yapay zekâ sağlayıcısı kullanılamıyor. Ollama'nın çalıştığından veya bir Claude API anahtarının ayarlı olduğundan emin olun.",
-  "assistant.fingerprintTitle": "Bir banner'ı parmak izi al",
-  "assistant.bannerPlaceholder": "Bir servis banner'ı yapıştırın (ör. SSH-2.0-OpenSSH_9.6)",
-  "assistant.portPlaceholder": "Port",
-  "assistant.protocolPlaceholder": "Protokol",
-  "assistant.analyzing": "Analiz ediliyor…",
-  "assistant.identify": "Servisi tanımla",
-  "assistant.askTitle": "Asistana sor",
-  "assistant.questionPlaceholder":
-    "Bir port, servis veya protokol hakkında sorun (ör. 3389 portunda ne çalışır?)",
-  "assistant.thinking": "Düşünüyor…",
-  "assistant.ask": "Sor",
 
   // Asistan widget'ı (global, sohbet + önerilen aksiyonlar)
   "assistant.widget.title": "Asistan",

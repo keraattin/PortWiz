@@ -1109,9 +1109,9 @@ export default function SettingsPage() {
               value={form.default_scan_type}
               onChange={(e) => set("default_scan_type", e.target.value)}
             >
-              <option value="connect">connect</option>
-              <option value="syn">syn</option>
-              <option value="udp">udp</option>
+              <option value="connect">{t("scans.scanType.connect")}</option>
+              <option value="syn">{t("scans.scanType.syn")}</option>
+              <option value="udp">{t("scans.scanType.udp")}</option>
             </select>
           </FormField>
           <FormField label={t("settings.system.defaultRateLimit")} hint={t("settings.system.defaultRateLimitHint")}>

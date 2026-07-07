@@ -12,7 +12,6 @@ export const de: Partial<Record<TKey, string>> = {
   "nav.changes": "Änderungen",
   "nav.tasks": "Aufgaben",
   "nav.compliance": "Compliance",
-  "nav.assistant": "Assistent",
   "nav.admin": "Verwaltung",
   "nav.users": "Benutzer",
   "nav.settings": "Einstellungen",
@@ -479,6 +478,9 @@ export const de: Partial<Record<TKey, string>> = {
   "scans.schedule.monthly": "Monatlich (1., 02:00)",
   "scans.schedule.advanced": "Erweitert (Cron)",
   "scans.f.scanType": "Scan-Typ",
+  "scans.scanType.connect": "TCP connect (sichere Vorgabe)",
+  "scans.scanType.syn": "SYN (schnell, benötigt Rechte)",
+  "scans.scanType.udp": "UDP",
   "scans.f.scanTypeHint":
     "connect ist der sichere Standard; syn ist schneller, benötigt aber Raw-Socket-Rechte.",
   "scans.f.serviceDetection": "Diensterkennung (die Software hinter jedem offenen Port erkennen)",
@@ -536,8 +538,6 @@ export const de: Partial<Record<TKey, string>> = {
   "compliance.col.target": "Ziel",
   "compliance.system": "System",
   "compliance.noAuditEvents": "Keine Audit-Ereignisse.",
-  "compliance.showing": "{shown} von {total} werden angezeigt",
-  "compliance.loadMore": "Mehr laden",
 
   // Settings
   "settings.title": "Einstellungen & Integrationen",
@@ -598,7 +598,6 @@ export const de: Partial<Record<TKey, string>> = {
     "z. B. http://localhost:1234/v1 für eine lokale Runtime (LM Studio, vLLM, llama.cpp) oder ein Anbieter-Proxy.",
   "settings.compat.model": "Modell",
   "settings.compat.apiKey": "API-Schlüssel",
-  "settings.getApiKey": "API-Schlüssel holen →",
   "settings.ai.ollamaLocal": "Ollama (lokal)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Keiner",
@@ -675,21 +674,8 @@ export const de: Partial<Record<TKey, string>> = {
     "Wenn aktiviert, schreibt jeder Scan seine neu erkannten Hosts zurück nach NetBox. Standardmäßig aus; nutzen Sie sonst die manuelle Schaltfläche auf der Assets-Seite.",
 
   // Assistant
-  "assistant.intro":
-    "Die KI ist eine optionale, anbieterunabhängige Schicht. Standardmäßig läuft sie gegen ein lokales Ollama-Modell, sodass Scan-Daten Ihr Netzwerk nie verlassen; alternativ kann ein Claude-API-Schlüssel konfiguriert werden. Dienst-Banner werden als nicht vertrauenswürdige Eingabe behandelt und bereinigt, bevor sie ein Modell erreichen.",
   "assistant.providerUnavailable":
     "KI-Anbieter nicht verfügbar. Prüfen Sie, ob Ollama läuft oder ein Claude-API-Schlüssel gesetzt ist.",
-  "assistant.fingerprintTitle": "Banner per Fingerprint bestimmen",
-  "assistant.bannerPlaceholder": "Fügen Sie ein Dienst-Banner ein (z. B. SSH-2.0-OpenSSH_9.6)",
-  "assistant.portPlaceholder": "Port",
-  "assistant.protocolPlaceholder": "Protokoll",
-  "assistant.analyzing": "Wird analysiert…",
-  "assistant.identify": "Dienst identifizieren",
-  "assistant.askTitle": "Den Assistenten fragen",
-  "assistant.questionPlaceholder":
-    "Fragen Sie zu einem Port, Dienst oder Protokoll (z. B. Was läuft auf Port 3389?)",
-  "assistant.thinking": "Denkt nach…",
-  "assistant.ask": "Fragen",
 
   // Assistent-Widget (global, Chat + vorgeschlagene Aktionen)
   "assistant.widget.title": "Assistent",

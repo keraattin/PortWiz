@@ -12,7 +12,6 @@ export const pt: Partial<Record<TKey, string>> = {
   "nav.changes": "Alterações",
   "nav.tasks": "Tarefas",
   "nav.compliance": "Conformidade",
-  "nav.assistant": "Assistente",
   "nav.admin": "Administração",
   "nav.users": "Usuários",
   "nav.settings": "Configurações",
@@ -479,6 +478,9 @@ export const pt: Partial<Record<TKey, string>> = {
   "scans.schedule.monthly": "Mensal (dia 1, 02:00)",
   "scans.schedule.advanced": "Avançado (cron)",
   "scans.f.scanType": "Tipo de varredura",
+  "scans.scanType.connect": "TCP connect (padrão seguro)",
+  "scans.scanType.syn": "SYN (rápido, requer privilégios)",
+  "scans.scanType.udp": "UDP",
   "scans.f.scanTypeHint":
     "connect é o padrão seguro; syn é mais rápido, mas exige privilégios de raw-socket.",
   "scans.f.serviceDetection": "Detecção de serviço (identificar o software por trás de cada porta aberta)",
@@ -536,8 +538,6 @@ export const pt: Partial<Record<TKey, string>> = {
   "compliance.col.target": "Alvo",
   "compliance.system": "sistema",
   "compliance.noAuditEvents": "Nenhum evento de auditoria.",
-  "compliance.showing": "Mostrando {shown} de {total}",
-  "compliance.loadMore": "Carregar mais",
 
   // Settings
   "settings.title": "Configurações e integrações",
@@ -598,7 +598,6 @@ export const pt: Partial<Record<TKey, string>> = {
     "ex.: http://localhost:1234/v1 para um runtime local (LM Studio, vLLM, llama.cpp), ou um proxy de provedor.",
   "settings.compat.model": "Modelo",
   "settings.compat.apiKey": "Chave de API",
-  "settings.getApiKey": "Obter sua chave de API →",
   "settings.ai.ollamaLocal": "Ollama (local)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Nenhum",
@@ -675,21 +674,8 @@ export const pt: Partial<Record<TKey, string>> = {
     "Quando ativado, cada varredura escreve seus hosts recém-descobertos de volta no NetBox. Desativado por padrão; caso contrário, use o botão manual na página Ativos.",
 
   // Assistant
-  "assistant.intro":
-    "A IA é uma camada opcional e independente de provedor. Por padrão, ela é executada em um modelo Ollama local para que os dados de varredura nunca saiam da sua rede; uma chave de API Claude pode ser configurada em vez disso. Banners de serviço são tratados como entrada não confiável e higienizados antes de chegar a qualquer modelo.",
   "assistant.providerUnavailable":
     "Provedor de IA indisponível. Verifique se o Ollama está em execução ou se uma chave de API Claude está definida.",
-  "assistant.fingerprintTitle": "Identificar um banner",
-  "assistant.bannerPlaceholder": "Cole um banner de serviço (ex.: SSH-2.0-OpenSSH_9.6)",
-  "assistant.portPlaceholder": "Porta",
-  "assistant.protocolPlaceholder": "Protocolo",
-  "assistant.analyzing": "Analisando…",
-  "assistant.identify": "Identificar serviço",
-  "assistant.askTitle": "Perguntar ao assistente",
-  "assistant.questionPlaceholder":
-    "Pergunte sobre uma porta, serviço ou protocolo (ex.: O que roda na porta 3389?)",
-  "assistant.thinking": "Pensando…",
-  "assistant.ask": "Perguntar",
 
   // Widget do assistente (global, chat + ações propostas)
   "assistant.widget.title": "Assistente",

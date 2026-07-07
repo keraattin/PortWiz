@@ -98,6 +98,7 @@ export default function ScansPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [ranges, setRanges] = useState<IpRange[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRun, setSelectedRun] = useState<ScanRun | null>(null);
   const [observations, setObservations] = useState<Observation[]>([]);
@@ -148,12 +149,15 @@ export default function ScansPage() {
     portsPreset === "custom" ? ports.trim() || "top-1000" : PRESET_PORTS[portsPreset];
 
   async function reload() {
+    setLoading(true);
     try {
       const [p, r] = await Promise.all([listScanProfiles(), listScanRuns()]);
       setProfiles(p);
       setRuns(r);
     } catch (e) {
       setError(errorMessage(e));
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -322,7 +326,13 @@ export default function ScansPage() {
               trailing
             />
             <tbody className="divide-y divide-slate-800">
-              {profiles.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+                    {t("common.loading")}
+                  </td>
+                </tr>
+              ) : profiles.length === 0 ? (
                 <tr>
                   <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
                     {t("scans.empty")}
@@ -413,7 +423,13 @@ export default function ScansPage() {
               trailing
             />
             <tbody className="divide-y divide-slate-800">
-              {runs.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                    {t("common.loading")}
+                  </td>
+                </tr>
+              ) : runs.length === 0 ? (
                 <tr>
                   <td className="px-4 py-3 text-slate-500" colSpan={5}>
                     {t("scans.runsEmpty")}
@@ -600,7 +616,7 @@ export default function ScansPage() {
             >
               {SCAN_TYPES.map((st) => (
                 <option key={st} value={st}>
-                  {st}
+                  {t(`scans.scanType.${st}` as TKey)}
                 </option>
               ))}
             </select>

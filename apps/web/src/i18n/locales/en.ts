@@ -12,7 +12,6 @@ export const en = {
   "nav.changes": "Changes",
   "nav.tasks": "Tasks",
   "nav.compliance": "Compliance",
-  "nav.assistant": "Assistant",
   "nav.admin": "Admin",
   "nav.users": "Users",
   "nav.settings": "Settings",
@@ -475,6 +474,9 @@ export const en = {
   "scans.schedule.monthly": "Monthly (1st, 02:00)",
   "scans.schedule.advanced": "Advanced (cron)",
   "scans.f.scanType": "Scan type",
+  "scans.scanType.connect": "TCP connect (safe default)",
+  "scans.scanType.syn": "SYN (fast, needs privileges)",
+  "scans.scanType.udp": "UDP",
   "scans.f.scanTypeHint":
     "connect is the safe default; syn is faster but needs raw-socket privileges.",
   "scans.f.serviceDetection": "Service detection (identify the software behind each open port)",
@@ -532,8 +534,6 @@ export const en = {
   "compliance.col.target": "Target",
   "compliance.system": "system",
   "compliance.noAuditEvents": "No audit events.",
-  "compliance.showing": "Showing {shown} of {total}",
-  "compliance.loadMore": "Load more",
 
   // Settings
   "settings.title": "Settings & integrations",
@@ -593,7 +593,6 @@ export const en = {
     "e.g. http://localhost:1234/v1 for a local runtime (LM Studio, vLLM, llama.cpp), or a provider proxy.",
   "settings.compat.model": "Model",
   "settings.compat.apiKey": "API key",
-  "settings.getApiKey": "Get your API key →",
   "settings.ai.ollamaLocal": "Ollama (local)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "None",
@@ -669,21 +668,8 @@ export const en = {
     "When on, each scan writes its newly discovered hosts back to NetBox. Off by default; otherwise use the manual button on the Assets page.",
 
   // Assistant
-  "assistant.intro":
-    "AI is an optional, provider-agnostic layer. By default it runs against a local Ollama model so scan data never leaves your network; a Claude API key can be configured instead. Service banners are treated as untrusted input and sanitized before reaching any model.",
   "assistant.providerUnavailable":
     "AI provider is unavailable. Check that Ollama is running or a Claude API key is set.",
-  "assistant.fingerprintTitle": "Fingerprint a banner",
-  "assistant.bannerPlaceholder": "Paste a service banner (e.g. SSH-2.0-OpenSSH_9.6)",
-  "assistant.portPlaceholder": "Port",
-  "assistant.protocolPlaceholder": "Protocol",
-  "assistant.analyzing": "Analyzing…",
-  "assistant.identify": "Identify service",
-  "assistant.askTitle": "Ask the assistant",
-  "assistant.questionPlaceholder":
-    "Ask about a port, service, or protocol (e.g. What runs on port 3389?)",
-  "assistant.thinking": "Thinking…",
-  "assistant.ask": "Ask",
 
   // Assistant widget (global, chat + proposed actions)
   "assistant.widget.title": "Assistant",

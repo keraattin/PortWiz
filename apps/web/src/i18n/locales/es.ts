@@ -12,7 +12,6 @@ export const es: Partial<Record<TKey, string>> = {
   "nav.changes": "Cambios",
   "nav.tasks": "Tareas",
   "nav.compliance": "Cumplimiento",
-  "nav.assistant": "Asistente",
   "nav.admin": "Administración",
   "nav.users": "Usuarios",
   "nav.settings": "Ajustes",
@@ -479,6 +478,9 @@ export const es: Partial<Record<TKey, string>> = {
   "scans.schedule.monthly": "Mensual (día 1, 02:00)",
   "scans.schedule.advanced": "Avanzado (cron)",
   "scans.f.scanType": "Tipo de escaneo",
+  "scans.scanType.connect": "TCP connect (predeterminado seguro)",
+  "scans.scanType.syn": "SYN (rápido, requiere privilegios)",
+  "scans.scanType.udp": "UDP",
   "scans.f.scanTypeHint":
     "connect es el valor predeterminado seguro; syn es más rápido pero requiere privilegios de raw-socket.",
   "scans.f.serviceDetection": "Detección de servicios (identificar el software detrás de cada puerto abierto)",
@@ -536,8 +538,6 @@ export const es: Partial<Record<TKey, string>> = {
   "compliance.col.target": "Objetivo",
   "compliance.system": "sistema",
   "compliance.noAuditEvents": "Sin eventos de auditoría.",
-  "compliance.showing": "Mostrando {shown} de {total}",
-  "compliance.loadMore": "Cargar más",
 
   // Settings
   "settings.title": "Ajustes e integraciones",
@@ -598,7 +598,6 @@ export const es: Partial<Record<TKey, string>> = {
     "p. ej. http://localhost:1234/v1 para un runtime local (LM Studio, vLLM, llama.cpp), o un proxy de proveedor.",
   "settings.compat.model": "Modelo",
   "settings.compat.apiKey": "Clave de API",
-  "settings.getApiKey": "Obtén tu clave de API →",
   "settings.ai.ollamaLocal": "Ollama (local)",
   "settings.ai.claude": "Claude (Anthropic)",
   "settings.ai.none": "Ninguno",
@@ -675,21 +674,8 @@ export const es: Partial<Record<TKey, string>> = {
     "Cuando está activado, cada escaneo escribe sus hosts recién descubiertos de vuelta en NetBox. Desactivado por defecto; de lo contrario usa el botón manual en la página Activos.",
 
   // Assistant
-  "assistant.intro":
-    "La IA es una capa opcional e independiente del proveedor. De forma predeterminada se ejecuta contra un modelo Ollama local para que los datos de escaneo nunca salgan de tu red; en su lugar se puede configurar una clave de API de Claude. Los banners de servicio se tratan como entrada no confiable y se depuran antes de llegar a cualquier modelo.",
   "assistant.providerUnavailable":
     "Proveedor de IA no disponible. Comprueba que Ollama esté en ejecución o que haya una clave de API de Claude configurada.",
-  "assistant.fingerprintTitle": "Identificar un banner",
-  "assistant.bannerPlaceholder": "Pega un banner de servicio (p. ej. SSH-2.0-OpenSSH_9.6)",
-  "assistant.portPlaceholder": "Puerto",
-  "assistant.protocolPlaceholder": "Protocolo",
-  "assistant.analyzing": "Analizando…",
-  "assistant.identify": "Identificar servicio",
-  "assistant.askTitle": "Preguntar al asistente",
-  "assistant.questionPlaceholder":
-    "Pregunta sobre un puerto, servicio o protocolo (p. ej. ¿Qué se ejecuta en el puerto 3389?)",
-  "assistant.thinking": "Pensando…",
-  "assistant.ask": "Preguntar",
 
   // Widget del asistente (global, chat + acciones propuestas)
   "assistant.widget.title": "Asistente",
