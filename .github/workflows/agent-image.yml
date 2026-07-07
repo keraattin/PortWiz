@@ -1,0 +1,48 @@
+# Build and publish the scan-agent image to GHCR, so operators can pull a ready
+# image instead of building from source. Publishes:
+#   ghcr.io/<owner>/portwiz-agent:latest        (default branch)
+#   ghcr.io/<owner>/portwiz-agent:<version>     (on v* tags)
+# The package inherits the repo's visibility; make it public for `docker pull`
+# without auth. Uses the built-in GITHUB_TOKEN — no extra secrets to configure.
+name: agent-image
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/portwiz-agent
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=sha,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/agent
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
