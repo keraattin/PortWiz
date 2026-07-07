@@ -192,8 +192,24 @@ async def test_heartbeat_records_metadata(client, admin_headers) -> None:
     agent = next(a for a in listing if a["name"] == "meta-agent")
     assert agent["version"] == "1.2.3"
     assert agent["platform"] == "linux/amd64"
-    # First hop of X-Forwarded-For is the real client behind the proxy.
-    assert agent["last_ip"] == "203.0.113.9"
+    # X-Forwarded-For is NOT trusted by default (trust_forwarded_for is off), so a
+    # client can't spoof its recorded address; last_ip is the real peer, not the header.
+    assert agent["last_ip"] != "203.0.113.9"
+
+
+def test_client_ip_trust_toggle() -> None:
+    from types import SimpleNamespace
+
+    from portwiz_api.api.routes.agents import _client_ip
+
+    req = SimpleNamespace(
+        headers={"x-forwarded-for": "203.0.113.9, 10.0.0.1"},
+        client=SimpleNamespace(host="10.9.9.9"),
+    )
+    # Trusted proxy: take the first forwarded hop.
+    assert _client_ip(req, True) == "203.0.113.9"
+    # Untrusted: ignore the (spoofable) header, use the direct peer.
+    assert _client_ip(req, False) == "10.9.9.9"
 
 
 async def test_heartbeat_without_body_keeps_metadata(client, admin_headers) -> None:

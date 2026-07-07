@@ -48,6 +48,12 @@ class Settings(BaseSettings):
     # --- CORS ---
     cors_origins: list[str] = ["http://localhost:5173"]
 
+    # Trust the X-Forwarded-For header for the client IP (agent last_ip). Enable
+    # ONLY when the API sits behind a trusted reverse proxy that sets it (the
+    # production single-origin nginx does); otherwise a direct client could spoof
+    # it. Off by default so a directly-exposed API can't be fooled.
+    trust_forwarded_for: bool = False
+
     # --- Task queue (Celery + Valkey/Redis) ---
     celery_broker_url: str = "redis://valkey:6379/0"
     celery_result_backend: str = "redis://valkey:6379/1"

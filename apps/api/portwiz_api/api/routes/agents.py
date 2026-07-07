@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.app_settings import effective_settings
 from ...core.audit import append_audit
+from ...core.config import get_settings
 from ...core.db import get_session
 from ...core.security import generate_agent_token, hash_agent_token
 from ...models.agent import Agent
@@ -39,16 +40,18 @@ def _utcnow() -> dt.datetime:
     return dt.datetime.now(tz=dt.timezone.utc)
 
 
-def _client_ip(request: Request) -> str | None:
-    """The agent's source IP, honouring a reverse proxy's forwarded header.
+def _client_ip(request: Request, trust_forwarded: bool) -> str | None:
+    """The agent's source IP.
 
-    In production a single-origin nginx proxies agent traffic, so the real
-    client address arrives in X-Forwarded-For (first hop). Fall back to the
-    direct peer address for a direct connection.
+    When ``trust_forwarded`` is set (API behind a trusted reverse proxy such as
+    the production single-origin nginx), the real client is the first hop of
+    X-Forwarded-For. Otherwise the header is ignored — a directly-exposed API
+    must not let a client spoof its recorded address — and the direct peer is used.
     """
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip() or None
+    if trust_forwarded:
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip() or None
     return request.client.host if request.client else None
 
 
@@ -195,7 +198,7 @@ async def heartbeat(
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, str]:
     agent.last_seen_at = _utcnow()
-    agent.last_ip = _client_ip(request)
+    agent.last_ip = _client_ip(request, get_settings().trust_forwarded_for)
     if payload is not None:
         # Only overwrite when the agent actually reports a value, so an older
         # agent that sends nothing keeps its last-known metadata.
