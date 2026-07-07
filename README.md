@@ -110,7 +110,12 @@ and beat services wait for that. Notes:
   random values, and use a strong `POSTGRES_PASSWORD` (kept in sync with
   `PORTWIZ_DATABASE_URL`).
 - **Agents** are deployed per network segment, not by this compose file. Enroll
-  an agent in the UI and use the guided deploy panel for a ready-to-run command.
+  an agent in the UI and use the guided deploy panel, which gives you a one-time
+  `docker build` and a ready-to-run `docker run` command. The agent image is
+  either built from `apps/agent` (the panel's build command) or pulled from GHCR
+  once the `agent-image` workflow has published it
+  (`ghcr.io/<your-org>/portwiz-agent`); make that package public to pull without
+  authentication.
 - **Local AI (optional):** add `--profile ai` to start Ollama and set
   `PORTWIZ_AI_PROVIDER=ollama`.
 

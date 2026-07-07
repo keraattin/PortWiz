@@ -272,8 +272,11 @@ export const en = {
   "agents.deploy.apiUrlHint":
     "The address this agent can reach the server at. Prefilled with this page's origin; change it if the agent runs elsewhere.",
   "agents.deploy.command": "Run command",
+  "agents.deploy.buildTitle": "Build the agent image (one time)",
+  "agents.deploy.buildHint":
+    "Run once from the PortWiz repo root. Or pull a published image (e.g. ghcr.io/<your-org>/portwiz-agent) and use its name in the run command.",
   "agents.deploy.step1":
-    "Build the agent image from apps/agent, or pull your published portwiz/agent image.",
+    "Build the image once with the first command (skip if you pulled a published image).",
   "agents.deploy.step2":
     "Run the command on a host in the target segment. The token is embedded, so keep it private.",
   "agents.deploy.step3":

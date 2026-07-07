@@ -274,8 +274,11 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.deploy.apiUrlHint":
     "Bu ajanın sunucuya ulaşabileceği adres. Bu sayfanın origin'i ile dolduruldu; ajan başka yerde çalışıyorsa değiştirin.",
   "agents.deploy.command": "Çalıştırma komutu",
+  "agents.deploy.buildTitle": "Ajan imajını derle (tek sefer)",
+  "agents.deploy.buildHint":
+    "PortWiz repo kökünde bir kez çalıştırın. Ya da yayınlanmış bir imaj çekin (ör. ghcr.io/<kurulusunuz>/portwiz-agent) ve adını çalıştırma komutunda kullanın.",
   "agents.deploy.step1":
-    "Ajan imajını apps/agent'tan derleyin ya da yayınladığınız portwiz/agent imajını çekin.",
+    "İmajı ilk komutla bir kez derleyin (yayınlanmış imaj çektiyseniz atlayın).",
   "agents.deploy.step2":
     "Komutu hedef segmentteki bir makinede çalıştırın. Token komuta gömülüdür, gizli tutun.",
   "agents.deploy.step3":

@@ -275,8 +275,11 @@ export const pt: Partial<Record<TKey, string>> = {
   "agents.deploy.apiUrlHint":
     "O endereço pelo qual este agente alcança o servidor. Preenchido com a origem desta página; altere se o agente rodar em outro lugar.",
   "agents.deploy.command": "Comando de execução",
+  "agents.deploy.buildTitle": "Construir a imagem do agente (uma vez)",
+  "agents.deploy.buildHint":
+    "Execute uma vez na raiz do repositório PortWiz. Ou baixe uma imagem publicada (ex.: ghcr.io/<sua-org>/portwiz-agent) e use o nome dela no comando de execução.",
   "agents.deploy.step1":
-    "Construa a imagem do agente a partir de apps/agent, ou baixe sua imagem portwiz/agent publicada.",
+    "Construa a imagem uma vez com o primeiro comando (pule se baixou uma imagem publicada).",
   "agents.deploy.step2":
     "Execute o comando em um host no segmento alvo. O token está embutido, mantenha-o privado.",
   "agents.deploy.step3":
