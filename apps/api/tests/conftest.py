@@ -22,15 +22,19 @@ os.environ["PORTWIZ_NETBOX_ENABLED"] = "false"
 
 
 @pytest.fixture(autouse=True)
-def _reset_login_limiter():
-    # The login rate limiter is process-global; clear it between tests so the many
-    # per-test admin logins don't trip the limit and cascade failures.
-    try:
-        from portwiz_api.api.routes.auth import _login_limiter
+def _reset_rate_limiters():
+    # The rate limiters are process-global; clear them between tests so repeated
+    # per-test logins / AI calls don't trip the limits and cascade failures.
+    for module, attr in (
+        ("portwiz_api.api.routes.auth", "_login_limiter"),
+        ("portwiz_api.api.routes.ai", "_ai_limiter"),
+    ):
+        try:
+            import importlib
 
-        _login_limiter.reset()
-    except Exception:
-        pass
+            getattr(importlib.import_module(module), attr).reset()
+        except Exception:
+            pass
     yield
 
 

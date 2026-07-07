@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.ai import AIProvider, ask_assistant, enrich_fingerprint, get_ai_provider
 from ...core.assistant import run_chat
 from ...core.db import get_session
+from ...core.ratelimit import SlidingWindowLimiter
 from ...models.user import User
 from ...schemas.ai import (
     AssistantRequest,
@@ -34,11 +35,24 @@ router = APIRouter(prefix="/ai", tags=["ai"])
 
 _UNAVAILABLE = HTTPException(status.HTTP_502_BAD_GATEWAY, "AI provider unavailable")
 
+# Cap AI calls per user to bound cost and load (an LLM call is far more expensive
+# than an ordinary request, and a paid provider makes this a direct cost vector).
+_ai_limiter = SlidingWindowLimiter(max_attempts=30, window_seconds=60)
+
+
+def ai_rate_limited(current_user: User = Depends(get_current_user)) -> User:
+    if not _ai_limiter.check(str(current_user.id)):
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Too many AI requests. Please slow down.",
+        )
+    return current_user
+
 
 @router.post("/fingerprint", response_model=FingerprintResponse)
 async def fingerprint(
     payload: FingerprintRequest,
-    _: User = Depends(get_current_user),
+    _: User = Depends(ai_rate_limited),
     provider: AIProvider = Depends(get_ai_provider),
 ) -> FingerprintResponse:
     try:
@@ -58,7 +72,7 @@ async def fingerprint(
 @router.post("/assistant", response_model=AssistantResponse)
 async def assistant(
     payload: AssistantRequest,
-    _: User = Depends(get_current_user),
+    _: User = Depends(ai_rate_limited),
     provider: AIProvider = Depends(get_ai_provider),
 ) -> AssistantResponse:
     try:
@@ -72,7 +86,7 @@ async def assistant(
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     payload: ChatRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(ai_rate_limited),
     provider: AIProvider = Depends(get_ai_provider),
     session: AsyncSession = Depends(get_session),
 ) -> ChatResponse:
