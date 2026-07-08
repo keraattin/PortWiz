@@ -159,3 +159,4 @@ class ObservationRead(BaseModel):
     product: str | None
     banner_sha256: str | None
     fingerprint_confidence: float | None
+    fingerprint_source: str | None

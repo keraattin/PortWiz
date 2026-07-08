@@ -158,3 +158,6 @@ class Observation(SQLModel, table=True):
     product: str | None = Field(default=None, sa_column=Column(String(256)))
     banner_sha256: str | None = Field(default=None, sa_column=Column(String(64)))
     fingerprint_confidence: float | None = Field(default=None, sa_column=Column(Float))
+    # Where the service/version came from: "agent" (edge nmap probe), "heuristic"
+    # (server-side banner table), or "ai" (LLM enrichment). None when unresolved.
+    fingerprint_source: str | None = Field(default=None, sa_column=Column(String(16)))

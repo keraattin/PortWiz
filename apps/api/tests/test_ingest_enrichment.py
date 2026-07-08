@@ -13,7 +13,7 @@ class _FakeProvider:
     name = "fake"
 
     async def complete(self, system: str, user: str) -> str:
-        return "Service: ssh\nVersion: OpenSSH 9.6\nSummary: secure shell"
+        return "Service: acme-appliance\nVersion: 2.1\nSummary: custom device"
 
 
 async def _enroll(client, admin_headers) -> str:
@@ -36,6 +36,8 @@ async def _run(client, admin_headers, ip: str) -> str:
 
 
 def _payload(run_id: str, ip: str) -> dict:
+    # A custom banner the deterministic heuristic does not recognize, so the AI
+    # fallback still runs (and no heuristic match short-circuits it).
     return {
         "version": 1,
         "job_id": str(uuid.uuid4()),
@@ -49,10 +51,10 @@ def _payload(run_id: str, ip: str) -> dict:
                 "ip": ip,
                 "ports": [
                     {
-                        "port": 22,
+                        "port": 9999,
                         "protocol": "tcp",
                         "state": "open",
-                        "banner": "SSH-2.0-OpenSSH_9.6",
+                        "banner": "ACME Appliance ready v2.1",
                         "fingerprint_confidence": 0.2,
                     }
                 ],
@@ -94,8 +96,9 @@ async def test_ingest_enriches_low_confidence_banner(client, admin_headers, db) 
 
     obs = await _observation(db, run_id)
     assert obs is not None
-    assert obs.service == "ssh"
-    assert obs.version == "OpenSSH 9.6"
+    assert obs.service == "acme-appliance"
+    assert obs.version == "2.1"
+    assert obs.fingerprint_source == "ai"
 
 
 def _payload_host(run_id: str, ip: str, hostname: str | None) -> dict:
@@ -199,6 +202,79 @@ async def test_ingest_without_ai_keeps_raw(client, admin_headers, db) -> None:
     obs = await _observation(db, run_id)
     assert obs is not None
     assert obs.service is None  # not enriched
+
+
+def _banner_payload(
+    run_id: str, ip: str, port: int, banner: str | None, confidence: float
+) -> dict:
+    entry: dict = {
+        "port": port,
+        "protocol": "tcp",
+        "state": "open",
+        "fingerprint_confidence": confidence,
+    }
+    if banner is not None:
+        entry["banner"] = banner
+    return {
+        "version": 1,
+        "job_id": str(uuid.uuid4()),
+        "scan_run_id": run_id,
+        "agent_id": "a",
+        "started_at": "2026-06-20T10:00:00Z",
+        "finished_at": "2026-06-20T10:05:00Z",
+        "status": "completed",
+        "hosts": [{"ip": ip, "ports": [entry]}],
+    }
+
+
+async def test_ingest_heuristic_resolves_ssh_without_ai(client, admin_headers, db) -> None:
+    # A self-announcing SSH banner is resolved by the deterministic server-side
+    # heuristic, so no AI provider is needed and provenance is "heuristic".
+    from portwiz_api.core.ai import NullProvider, get_ai_provider
+    from portwiz_api.main import app
+
+    app.dependency_overrides[get_ai_provider] = lambda: NullProvider()
+    try:
+        token = await _enroll(client, admin_headers)
+        ip = "10.0.0.60"
+        run_id = await _run(client, admin_headers, ip)
+        resp = await client.post(
+            "/api/v1/ingest/scan-results",
+            json=_banner_payload(run_id, ip, 22, "SSH-2.0-OpenSSH_9.6p1 Ubuntu-3", 0.2),
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 202, resp.text
+    finally:
+        del app.dependency_overrides[get_ai_provider]
+
+    obs = await _observation(db, run_id)
+    assert obs is not None
+    assert obs.service == "ssh"
+    assert obs.product == "OpenSSH"
+    assert obs.version == "9.6p1"
+    assert obs.fingerprint_source == "heuristic"
+
+
+async def test_ingest_confident_fingerprint_marked_agent(client, admin_headers, db) -> None:
+    # A confident edge fingerprint is trusted as-is and recorded as coming from
+    # the agent's probe; neither the heuristic nor AI overrides it.
+    token = await _enroll(client, admin_headers)
+    ip = "10.0.0.61"
+    run_id = await _run(client, admin_headers, ip)
+    payload = _banner_payload(run_id, ip, 443, None, 0.95)
+    payload["hosts"][0]["ports"][0]["service"] = "https"
+    payload["hosts"][0]["ports"][0]["version"] = "1.1"
+    resp = await client.post(
+        "/api/v1/ingest/scan-results",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 202, resp.text
+
+    obs = await _observation(db, run_id)
+    assert obs is not None
+    assert obs.service == "https"
+    assert obs.fingerprint_source == "agent"
 
 
 class _FakeSource:

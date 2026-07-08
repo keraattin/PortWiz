@@ -27,6 +27,7 @@ from ...core.app_settings import effective_settings
 from ...core.audit import append_audit
 from ...core.change_detection import detect_changes
 from ...core.db import get_session
+from ...core.fingerprint import match_banner
 from ...core.inventory_source import (
     InventorySource,
     SourceAsset,
@@ -73,6 +74,8 @@ async def _enrich_observations(
                 obs.service = service
             if version:
                 obs.version = version
+            if service or version:
+                obs.fingerprint_source = "ai"
         except Exception as exc:  # noqa: BLE001 - never fail ingest on enrichment
             logger.warning("AI fingerprint enrichment failed (%s): %s", provider.name, exc)
 
@@ -151,6 +154,28 @@ async def ingest_scan_results(
             banner_hash = port.banner_sha256
             if banner_hash is None and port.banner is not None:
                 banner_hash = hashlib.sha256(port.banner.encode("utf-8")).hexdigest()
+
+            service = port.service
+            version = port.version
+            product = port.product
+            confidence = port.fingerprint_confidence
+            low_confidence = confidence is None or confidence < CONFIDENCE_FLOOR
+            # Provenance: a confident edge fingerprint is the agent's nmap probe.
+            fp_source = "agent" if service and not low_confidence else None
+
+            # Deterministic server-side banner heuristic: resolve common
+            # self-announcing banners (SSH/SMTP/FTP/IMAP/POP3/HTTP) with no LLM
+            # cost, before the AI fallback runs.
+            if low_confidence and port.banner:
+                match = match_banner(port.banner)
+                if match is not None:
+                    service = match.service
+                    product = match.product or product
+                    version = match.version or version
+                    confidence = match.confidence
+                    fp_source = "heuristic"
+                    low_confidence = False
+
             obs = Observation(
                 ts=received_at,
                 scan_run_id=run.id,
@@ -159,18 +184,15 @@ async def ingest_scan_results(
                 port=port.port,
                 protocol=port.protocol,
                 state=port.state,
-                service=port.service,
-                version=port.version,
-                product=port.product,
+                service=service,
+                version=version,
+                product=product,
                 banner_sha256=banner_hash,
-                fingerprint_confidence=port.fingerprint_confidence,
+                fingerprint_confidence=confidence,
+                fingerprint_source=fp_source,
             )
             session.add(obs)
             count += 1
-            low_confidence = (
-                port.fingerprint_confidence is None
-                or port.fingerprint_confidence < CONFIDENCE_FLOOR
-            )
             if port.banner and low_confidence:
                 enrich_candidates.append((obs, port.banner))
 
