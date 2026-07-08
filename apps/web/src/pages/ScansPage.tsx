@@ -41,6 +41,14 @@ const inputClass =
 
 const SCAN_TYPES: ScanType[] = ["connect", "syn", "udp"];
 
+// Provenance of a service/version: agent nmap probe (most trusted), a
+// deterministic server-side banner match, or an AI guess (treat with caution).
+const SOURCE_CLASS: Record<string, string> = {
+  agent: "bg-emerald-500/10 text-emerald-400",
+  heuristic: "bg-sky-500/10 text-sky-400",
+  ai: "bg-amber-500/10 text-amber-400",
+};
+
 // Friendly scan frequency, compiled to a cron expression so non-technical users
 // never have to write cron. "advanced" reveals a raw cron field.
 const SCHEDULES = ["off", "hourly", "sixHours", "daily", "weekly", "monthly", "advanced"] as const;
@@ -658,12 +666,13 @@ export default function ScansPage() {
                 <th className="px-4 py-2 font-medium">{t("scans.col.state")}</th>
                 <th className="px-4 py-2 font-medium">{t("scans.col.service")}</th>
                 <th className="px-4 py-2 font-medium">{t("scans.col.version")}</th>
+                <th className="px-4 py-2 font-medium">{t("scans.col.source")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {observations.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                  <td className="px-4 py-3 text-slate-500" colSpan={6}>
                     {t("scans.noOpenPorts")}
                   </td>
                 </tr>
@@ -678,6 +687,19 @@ export default function ScansPage() {
                     <td className="px-4 py-2 text-slate-300">{o.service ?? "-"}</td>
                     <td className="px-4 py-2 text-slate-400">
                       {[o.product, o.version].filter(Boolean).join(" ") || "-"}
+                    </td>
+                    <td className="px-4 py-2">
+                      {o.fingerprint_source ? (
+                        <span
+                          className={`rounded px-2 py-0.5 text-xs ${
+                            SOURCE_CLASS[o.fingerprint_source] ?? "bg-slate-700 text-slate-300"
+                          }`}
+                        >
+                          {t(`fingerprint.${o.fingerprint_source}` as TKey)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-600">-</span>
+                      )}
                     </td>
                   </tr>
                 ))
