@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  ApiError,
   type ChangeEvent,
   type ChangeStatus,
   type ChangeType,
@@ -10,6 +9,7 @@ import {
   listScanProfiles,
   updateChangeStatus,
 } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
@@ -18,10 +18,6 @@ import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
-
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
 
 const CHANGE_BADGE: Record<ChangeType, string> = {
   opened: "bg-emerald-900 text-emerald-300",
@@ -62,6 +58,7 @@ export default function ChangesPage() {
   const { user } = useAuth();
   const toast = useToast();
   const { t } = useI18n();
+  const errorMessage = useErrorMessage();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);

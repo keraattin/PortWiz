@@ -1,7 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-  ApiError,
   type Agent,
   deleteAgent,
   fetchSettings,
@@ -9,6 +8,7 @@ import {
   rotateAgentToken,
   updateAgent,
 } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import AgentDeployPanel from "../components/AgentDeployPanel";
 import Button from "../components/Button";
@@ -16,10 +16,6 @@ import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 import { absoluteTime, timeAgo } from "../i18n/relativeTime";
-
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
 
 const DEFAULT_ONLINE_MS = 2 * 60 * 1000;
 
@@ -40,6 +36,7 @@ export default function AgentDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t, lang } = useI18n();
+  const errorMessage = useErrorMessage();
   const toast = useToast();
   const isAdmin = user?.role === "admin";
 

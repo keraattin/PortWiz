@@ -1,23 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ApiError,
   type CVEFinding,
   fetchCVEFindings,
   fetchSettings,
   recheckCVEs,
   summarizeCVEs,
 } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import PageHeader from "../components/PageHeader";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
-
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
 
 const SEVERITIES = ["critical", "high", "medium", "low", "unknown"] as const;
 
@@ -32,6 +28,7 @@ const SEV_CLASS: Record<string, string> = {
 export default function CVEPage() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const errorMessage = useErrorMessage();
   const toast = useToast();
   const canWrite = user?.role === "admin" || user?.role === "operator";
 

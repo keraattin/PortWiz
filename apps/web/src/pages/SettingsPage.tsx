@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   type AiProviderInfo,
-  ApiError,
   type JiraProject,
   type JiraUser,
   type SettingsConfig,
@@ -22,6 +21,7 @@ import {
   testNetbox,
   updateSettingsConfig,
 } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import InfoCallout from "../components/InfoCallout";
@@ -31,10 +31,6 @@ import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
 type Translate = (key: TKey, vars?: Record<string, string | number>) => string;
-
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
 
 // Guided "connect" helper for key-based AI providers: names the provider,
 // deep-links to its key page and states the get-key → paste → save → test flow.
@@ -218,6 +214,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const toast = useToast();
   const { t } = useI18n();
+  const errorMessage = useErrorMessage();
   const isAdmin = user?.role === "admin";
 
   const [config, setConfig] = useState<SettingsConfig | null>(null);

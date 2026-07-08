@@ -1,6 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
 import {
-  ApiError,
   type AuditEvent,
   type ChainVerification,
   type ComplianceStatusItem,
@@ -12,16 +11,13 @@ import {
   listScanProfiles,
   verifyAudit,
 } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import Pagination, { usePagination } from "../components/Pagination";
 import { useToast } from "../components/Toast";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
-
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
 
 const PAGE_SIZE = 50;
 const inputClass =
@@ -44,6 +40,7 @@ const FRAMEWORK_LABEL: Record<string, string> = {
 
 export default function CompliancePage() {
   const { t } = useI18n();
+  const errorMessage = useErrorMessage();
   const toast = useToast();
   const [chain, setChain] = useState<ChainVerification | null>(null);
   const [events, setEvents] = useState<AuditEvent[]>([]);

@@ -1,6 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
 import {
-  ApiError,
   type IpRange,
   type Vlan,
   type VlanImportReport,
@@ -16,6 +15,7 @@ import {
   listVlans,
   syncVlans,
 } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import FormField from "../components/FormField";
@@ -28,10 +28,6 @@ import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../i18n/I18nContext";
 
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
-
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
@@ -39,6 +35,7 @@ export default function VlansPage() {
   const { user } = useAuth();
   const toast = useToast();
   const { t } = useI18n();
+  const errorMessage = useErrorMessage();
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [ipRanges, setIpRanges] = useState<IpRange[]>([]);

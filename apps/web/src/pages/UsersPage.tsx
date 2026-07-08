@@ -1,12 +1,12 @@
 import { type FormEvent, useEffect, useState } from "react";
 import {
-  ApiError,
   type CurrentUser,
   type Role,
   createUser,
   listUsers,
   updateUser,
 } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
@@ -17,10 +17,6 @@ import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
-
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
 
 const ROLES: Role[] = ["admin", "operator", "auditor"];
 
@@ -40,6 +36,7 @@ export default function UsersPage() {
   const { user } = useAuth();
   const toast = useToast();
   const { t } = useI18n();
+  const errorMessage = useErrorMessage();
   const isAdmin = user?.role === "admin";
 
   const [users, setUsers] = useState<CurrentUser[]>([]);

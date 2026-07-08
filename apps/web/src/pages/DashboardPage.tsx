@@ -1,21 +1,17 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ApiError,
   type DashboardCharts as Charts,
   type DashboardStats,
   fetchCharts,
   fetchHealth,
   fetchStats,
 } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import DashboardCharts from "../components/DashboardCharts";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 import { absoluteTime, timeAgo } from "../i18n/relativeTime";
-
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
 
 function Metric({
   to,
@@ -49,6 +45,7 @@ interface Step {
 
 export default function DashboardPage() {
   const { t, lang } = useI18n();
+  const errorMessage = useErrorMessage();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [charts, setCharts] = useState<Charts | null>(null);
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);

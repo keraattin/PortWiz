@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, type Agent, fetchSettings, listAgents } from "../api/client";
+import { type Agent, fetchSettings, listAgents } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import PageHeader from "../components/PageHeader";
@@ -10,10 +11,6 @@ import { useSort } from "../components/useSort";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 import { absoluteTime, timeAgo } from "../i18n/relativeTime";
-
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
 
 // Default online cut-off until the admin-configured value loads from /settings.
 const DEFAULT_ONLINE_MS = 2 * 60 * 1000;
@@ -52,6 +49,7 @@ const SUMMARY: { cat: string; key: TKey; accent: string }[] = [
 export default function AgentsPage() {
   const { user } = useAuth();
   const { t, lang } = useI18n();
+  const errorMessage = useErrorMessage();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
 

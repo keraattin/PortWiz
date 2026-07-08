@@ -1,15 +1,12 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { ApiError, type EnrolledAgent, enrollAgent, fetchSettings } from "../api/client";
+import { type EnrolledAgent, enrollAgent, fetchSettings } from "../api/client";
+import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import AgentDeployPanel from "../components/AgentDeployPanel";
 import Button from "../components/Button";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
-
-function errorMessage(e: unknown): string {
-  return e instanceof ApiError ? e.message : "Something went wrong";
-}
 
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
@@ -19,6 +16,7 @@ const WHAT_POINTS: TKey[] = ["agents.what1", "agents.what2", "agents.what3", "ag
 export default function AgentEnrollPage() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const errorMessage = useErrorMessage();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
