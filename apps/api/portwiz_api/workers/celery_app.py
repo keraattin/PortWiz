@@ -67,9 +67,40 @@ def schedule_due_scans() -> dict[str, int]:
     return asyncio.run(_run())
 
 
+@celery_app.task(name="portwiz.recheck_cves_due")
+def recheck_cves_due() -> dict[str, int] | None:
+    """Beat tick: run an automatic CVE re-check when its cadence is due.
+
+    Kept off the 60s scan tick because a rate-limited lookup sweep can take
+    minutes; a DB cursor (not this poll interval) sets the real cadence.
+    """
+    import asyncio
+
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from ..core.app_settings import effective_settings
+    from ..core.scheduler import run_due_cve_recheck
+
+    async def _run() -> dict[str, int] | None:
+        engine = create_async_engine(settings.database_url)
+        maker = async_sessionmaker(engine, expire_on_commit=False)
+        try:
+            async with maker() as session:
+                eff = await effective_settings(session)
+                return await run_due_cve_recheck(session, eff)
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(_run())
+
+
 celery_app.conf.beat_schedule = {
     "schedule-due-scans": {
         "task": "portwiz.schedule_due_scans",
         "schedule": 60.0,
+    },
+    "recheck-cves-due": {
+        "task": "portwiz.recheck_cves_due",
+        "schedule": 600.0,  # poll every 10 min; cve_recheck_hours sets the cadence
     },
 }

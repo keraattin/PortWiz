@@ -140,6 +140,7 @@ class Settings(BaseSettings):
     cve_api_url: str = ""  # blank = the source's default endpoint
     cve_api_key: str | None = None  # NVD API key raises the rate limit (optional)
     cve_min_cvss: float = 0.0  # ignore findings below this CVSS base score
+    cve_recheck_hours: int = 0  # 0 = manual only; >0 auto re-checks on this cadence
 
     # NetBox (IPAM) inventory source. Disabled unless fully configured.
     netbox_enabled: bool = False

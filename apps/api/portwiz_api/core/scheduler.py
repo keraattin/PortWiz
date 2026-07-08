@@ -13,8 +13,14 @@ import datetime as dt
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..models.app_setting import AppSetting
 from ..models.scan import Observation, ScanProfile, ScanRun, ScanRunStatus, ScanSource
 from .audit import append_audit
+
+# Internal state cursor: when the last automatic CVE re-check ran. Stored in
+# app_settings (not an EDITABLE_KEYS entry), so it is scheduler state, never
+# user-settable, and effective_settings ignores it.
+_CVE_CURSOR_KEY = "cve_last_recheck_at"
 
 
 def _utcnow() -> dt.datetime:
@@ -150,6 +156,71 @@ async def requeue_stale_runs(
     if requeued or failed:
         await session.commit()
     return {"requeued": requeued, "failed": failed}
+
+
+async def _get_cursor(session: AsyncSession, key: str) -> dt.datetime | None:
+    row = await session.get(AppSetting, key)
+    if row is None or not row.value:
+        return None
+    try:
+        return _aware(dt.datetime.fromisoformat(row.value))
+    except ValueError:
+        return None
+
+
+async def _set_cursor(session: AsyncSession, key: str, value: dt.datetime) -> None:
+    row = await session.get(AppSetting, key)
+    iso = value.isoformat()
+    if row is None:
+        session.add(AppSetting(key=key, value=iso, updated_at=value))
+    else:
+        row.value = iso
+        row.updated_at = value
+
+
+async def run_due_cve_recheck(
+    session: AsyncSession,
+    settings,
+    now: dt.datetime | None = None,
+) -> dict[str, int] | None:
+    """Run a bounded CVE re-check when enabled and its interval has elapsed.
+
+    Returns the re-check result, or ``None`` when skipped: CVE enrichment is off,
+    ``cve_recheck_hours`` is 0 (manual only), the source is not configured, or the
+    interval has not passed yet. A global cursor in ``app_settings`` paces it
+    independently of the beat poll, and is claimed *before* the (rate-limited)
+    lookups run so overlapping ticks never double-check.
+    """
+    from .cve import NullCVESource, build_cve_source, recheck_cves
+
+    hours = settings.cve_recheck_hours
+    if not settings.cve_enabled or hours <= 0:
+        return None
+    source = build_cve_source(settings)
+    if isinstance(source, NullCVESource):
+        return None
+
+    now = _utcnow() if now is None else _aware(now)
+    last = await _get_cursor(session, _CVE_CURSOR_KEY)
+    if last is not None and now - last < dt.timedelta(hours=hours):
+        return None
+
+    # Claim the slot first so a later tick, arriving while the rate-limited
+    # lookups are still running, sees the advanced cursor and skips.
+    await _set_cursor(session, _CVE_CURSOR_KEY, now)
+    await session.commit()
+
+    result = await recheck_cves(session, source)
+    await append_audit(
+        session,
+        action="cve.rechecked",
+        actor_email="system:scheduler",
+        target_type="cve",
+        target_id="*",
+        payload={"source": source.name, **result},
+    )
+    await session.commit()
+    return result
 
 
 async def prune_observations(

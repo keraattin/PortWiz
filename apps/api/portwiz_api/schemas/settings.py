@@ -127,6 +127,7 @@ class SettingsConfig(BaseModel):
     cve_source: str
     cve_api_url: str
     cve_min_cvss: float
+    cve_recheck_hours: int
     cve_api_key_set: bool
 
     change_confirmations: int
@@ -186,6 +187,7 @@ class SettingsConfigUpdate(BaseModel):
     cve_api_url: str | None = None
     cve_api_key: str | None = None
     cve_min_cvss: float | None = None
+    cve_recheck_hours: int | None = None
 
     change_confirmations: int | None = None
     agent_online_seconds: int | None = None
