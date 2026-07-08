@@ -794,7 +794,7 @@ export function testJira(): Promise<TestResult> {
   return request<TestResult>("/settings/test/jira", { method: "POST" });
 }
 
-// Jira discovery (admin) — populate the settings pickers from the live instance.
+// Jira discovery (admin): populate the settings pickers from the live instance.
 export interface JiraProject {
   key: string;
   name: string;

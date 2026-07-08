@@ -45,8 +45,8 @@ def _client_ip(request: Request, trust_forwarded: bool) -> str | None:
 
     When ``trust_forwarded`` is set (API behind a trusted reverse proxy such as
     the production single-origin nginx), the real client is the first hop of
-    X-Forwarded-For. Otherwise the header is ignored — a directly-exposed API
-    must not let a client spoof its recorded address — and the direct peer is used.
+    X-Forwarded-For. Otherwise the header is ignored (a directly-exposed API
+    must not let a client spoof its recorded address) and the direct peer is used.
     """
     if trust_forwarded:
         forwarded = request.headers.get("x-forwarded-for")

@@ -105,9 +105,9 @@ export const tr: Partial<Record<TKey, string>> = {
 
   // Assets
   "inventory.assetExplain":
-    "Bir varlık, taradığınız tek bir host'tur — bir IP adresi, örneğin bir sunucu veya cihaz. Varlıkları VLAN'lar (ağ segmentleri) altında VLAN sekmesinde gruplayın.",
+    "Bir varlık, taradığınız tek bir host'tur: bir IP adresi, örneğin bir sunucu veya cihaz. Varlıkları VLAN'lar (ağ segmentleri) altında VLAN sekmesinde gruplayın.",
   "inventory.vlanExplain":
-    "Bir VLAN, varlıkları gruplayan bir ağ segmentidir — örneğin DMZ veya Sunucular. Buradan ekleyin, sonra Varlıklar sekmesinden varlık atayın.",
+    "Bir VLAN, varlıkları gruplayan bir ağ segmentidir, örneğin DMZ veya Sunucular. Buradan ekleyin, sonra Varlıklar sekmesinden varlık atayın.",
 
   "assets.title": "Varlıklar",
   "assets.subtitle":
@@ -223,7 +223,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.subtitle":
     "Ajanlar, her VLAN için dağıttığınız dağıtık tarayıcılardır. Buradan bir tane kaydedin, ardından token'ıyla çalıştırın (PORTWIZ_AGENT_TOKEN değişkenini ayarlayın). Çevrimiçi bir ajan alana kadar tarama beklemede kalır.",
   "agents.enrolledNotice":
-    '"{name}" ajanı kaydedildi. Token\'ını şimdi kopyalayın — tekrar gösterilmeyecek.',
+    '"{name}" ajanı kaydedildi. Token\'ını şimdi kopyalayın. Tekrar gösterilmeyecek.',
   "agents.copy": "Kopyala",
   "agents.copied": "Kopyalandı",
   "agents.dismiss": "Kapat",
@@ -726,7 +726,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "assistant.widget.openAria": "Asistanı aç",
   "assistant.widget.closeAria": "Asistanı kapat",
   "assistant.widget.greeting":
-    "Merhaba! Kurulumun hakkında soru sor ya da bana VLAN ekle, tarama oluştur gibi şeyler söyle — onaylaman için sana önereyim.",
+    "Merhaba! Kurulumun hakkında soru sor ya da bana VLAN ekle, tarama oluştur gibi şeyler söyle. Onaylaman için sana önereyim.",
   "assistant.widget.placeholder": "Sor ya da ne yapmamı istediğini söyle…",
   "assistant.widget.send": "Gönder",
   "assistant.widget.thinking": "Düşünüyor…",

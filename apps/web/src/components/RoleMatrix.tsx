@@ -14,7 +14,7 @@ const ROWS: { key: TKey; admin: Level; operator: Level; auditor: Level }[] = [
 
 function Cell({ level }: { level: Level }) {
   const { t } = useI18n();
-  if (level === "none") return <span className="text-slate-600">—</span>;
+  if (level === "none") return <span className="text-slate-600">-</span>;
   return (
     <span className={level === "manage" ? "text-emerald-400" : "text-slate-400"}>
       {t(level === "manage" ? "roleMatrix.manage" : "roleMatrix.view")}

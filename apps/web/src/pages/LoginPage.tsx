@@ -26,7 +26,7 @@ export default function LoginPage() {
       await login(email, password);
       navigate("/", { replace: true });
     } catch (err) {
-      // Don't mask a down/erroring server as "wrong password" — a non-technical
+      // Don't mask a down/erroring server as "wrong password": a non-technical
       // user would retype their password forever. Distinguish the real cause.
       if (err instanceof ApiError) {
         if (err.status === 429) setError(t("login.tooMany"));

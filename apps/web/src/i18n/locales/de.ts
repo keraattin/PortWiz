@@ -105,9 +105,9 @@ export const de: Partial<Record<TKey, string>> = {
 
   // Assets
   "inventory.assetExplain":
-    "Ein Asset ist ein einzelner Host, den Sie scannen — eine IP-Adresse, z. B. ein Server oder Gerät. Gruppieren Sie Assets in VLANs (Netzwerksegmenten) im Tab VLANs.",
+    "Ein Asset ist ein einzelner Host, den Sie scannen: eine IP-Adresse, z. B. ein Server oder Gerät. Gruppieren Sie Assets in VLANs (Netzwerksegmenten) im Tab VLANs.",
   "inventory.vlanExplain":
-    "Ein VLAN ist ein Netzwerksegment, das Assets gruppiert — z. B. DMZ oder Server. Fügen Sie hier eines hinzu und weisen Sie ihm im Tab Assets Assets zu.",
+    "Ein VLAN ist ein Netzwerksegment, das Assets gruppiert, z. B. DMZ oder Server. Fügen Sie hier eines hinzu und weisen Sie ihm im Tab Assets Assets zu.",
 
   "assets.title": "Assets",
   "assets.subtitle":
@@ -224,7 +224,7 @@ export const de: Partial<Record<TKey, string>> = {
   "agents.subtitle":
     "Agenten sind die verteilten Scanner, die Sie pro VLAN bereitstellen. Registrieren Sie hier einen und führen Sie ihn mit seinem Token aus (setzen Sie PORTWIZ_AGENT_TOKEN). Ein Scan bleibt ausstehend, bis ein Online-Agent ihn übernimmt.",
   "agents.enrolledNotice":
-    'Agent "{name}" registriert. Kopieren Sie jetzt sein Token — es wird nicht erneut angezeigt.',
+    'Agent "{name}" registriert. Kopieren Sie jetzt sein Token. Es wird nicht erneut angezeigt.',
   "agents.copy": "Kopieren",
   "agents.copied": "Kopiert",
   "agents.dismiss": "Schließen",
@@ -730,7 +730,7 @@ export const de: Partial<Record<TKey, string>> = {
   "assistant.widget.openAria": "Assistent öffnen",
   "assistant.widget.closeAria": "Assistent schließen",
   "assistant.widget.greeting":
-    "Hallo! Fragen Sie zu Ihrer Installation oder sagen Sie mir, ein VLAN hinzuzufügen, einen Scan zu erstellen und mehr — ich schlage es Ihnen zur Bestätigung vor.",
+    "Hallo! Fragen Sie zu Ihrer Installation oder sagen Sie mir, ein VLAN hinzuzufügen, einen Scan zu erstellen und mehr. Ich schlage es Ihnen zur Bestätigung vor.",
   "assistant.widget.placeholder": "Fragen Sie oder sagen Sie mir, was ich tun soll…",
   "assistant.widget.send": "Senden",
   "assistant.widget.thinking": "Denkt nach…",

@@ -105,9 +105,9 @@ export const es: Partial<Record<TKey, string>> = {
 
   // Assets
   "inventory.assetExplain":
-    "Un activo es un único host que escaneas — una dirección IP, como un servidor o dispositivo. Agrupa activos en VLAN (segmentos de red) en la pestaña VLAN.",
+    "Un activo es un único host que escaneas: una dirección IP, como un servidor o dispositivo. Agrupa activos en VLAN (segmentos de red) en la pestaña VLAN.",
   "inventory.vlanExplain":
-    "Una VLAN es un segmento de red que agrupa activos — como DMZ o Servidores. Añade una aquí y luego asígnale activos en la pestaña Activos.",
+    "Una VLAN es un segmento de red que agrupa activos, como DMZ o Servidores. Añade una aquí y luego asígnale activos en la pestaña Activos.",
 
   "assets.title": "Activos",
   "assets.subtitle":
@@ -224,7 +224,7 @@ export const es: Partial<Record<TKey, string>> = {
   "agents.subtitle":
     "Los agentes son los escáneres distribuidos que despliegas por VLAN. Registra uno aquí y luego ejecútalo con su token (define PORTWIZ_AGENT_TOKEN). Un escaneo queda pendiente hasta que un agente en línea lo tome.",
   "agents.enrolledNotice":
-    'Agente "{name}" registrado. Copia su token ahora — no se mostrará de nuevo.',
+    'Agente "{name}" registrado. Copia su token ahora. No se mostrará de nuevo.',
   "agents.copy": "Copiar",
   "agents.copied": "Copiado",
   "agents.dismiss": "Descartar",
@@ -730,7 +730,7 @@ export const es: Partial<Record<TKey, string>> = {
   "assistant.widget.openAria": "Abrir asistente",
   "assistant.widget.closeAria": "Cerrar asistente",
   "assistant.widget.greeting":
-    "¡Hola! Pregunta sobre tu instalación, o dime que añada una VLAN, cree un escaneo y más — te lo propondré para que lo confirmes.",
+    "¡Hola! Pregunta sobre tu instalación, o dime que añada una VLAN, cree un escaneo y más. Te lo propondré para que lo confirmes.",
   "assistant.widget.placeholder": "Pregunta, o dime qué hacer…",
   "assistant.widget.send": "Enviar",
   "assistant.widget.thinking": "Pensando…",

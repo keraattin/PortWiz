@@ -3,7 +3,7 @@
 A provider-agnostic ``CVESource`` so other backends (an offline NVD feed, CIRCL
 cve-search, a private vuln DB) can be added behind the same interface. Online
 sources need outbound access and are disabled until configured. CVE data is
-authoritative from the source — never invented; the AI layer only summarises or
+authoritative from the source, never invented; the AI layer only summarises or
 prioritises what a source returns.
 """
 

@@ -105,9 +105,9 @@ export const fr: Partial<Record<TKey, string>> = {
 
   // Assets
   "inventory.assetExplain":
-    "Un actif est un hôte unique que vous analysez — une adresse IP, comme un serveur ou un périphérique. Regroupez les actifs dans des VLAN (segments réseau) dans l'onglet VLAN.",
+    "Un actif est un hôte unique que vous analysez : une adresse IP, comme un serveur ou un périphérique. Regroupez les actifs dans des VLAN (segments réseau) dans l'onglet VLAN.",
   "inventory.vlanExplain":
-    "Un VLAN est un segment réseau qui regroupe des actifs — comme DMZ ou Serveurs. Ajoutez-en un ici, puis attribuez-lui des actifs dans l'onglet Actifs.",
+    "Un VLAN est un segment réseau qui regroupe des actifs, comme DMZ ou Serveurs. Ajoutez-en un ici, puis attribuez-lui des actifs dans l'onglet Actifs.",
 
   "assets.title": "Actifs",
   "assets.subtitle":
@@ -224,7 +224,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "agents.subtitle":
     "Les agents sont les scanners distribués que vous déployez par VLAN. Enregistrez-en un ici, puis exécutez-le avec son jeton (définissez PORTWIZ_AGENT_TOKEN). Une analyse reste en attente jusqu'à ce qu'un agent en ligne la prenne en charge.",
   "agents.enrolledNotice":
-    'Agent « {name} » enregistré. Copiez son jeton maintenant — il ne sera plus affiché.',
+    'Agent « {name} » enregistré. Copiez son jeton maintenant. Il ne sera plus affiché.',
   "agents.copy": "Copier",
   "agents.copied": "Copié",
   "agents.dismiss": "Fermer",
@@ -730,7 +730,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "assistant.widget.openAria": "Ouvrir l'assistant",
   "assistant.widget.closeAria": "Fermer l'assistant",
   "assistant.widget.greeting":
-    "Bonjour ! Posez une question sur votre installation, ou demandez-moi d'ajouter un VLAN, de créer une analyse, etc. — je vous le proposerai pour confirmation.",
+    "Bonjour ! Posez une question sur votre installation, ou demandez-moi d'ajouter un VLAN, de créer une analyse, etc. Je vous le proposerai pour confirmation.",
   "assistant.widget.placeholder": "Demandez, ou dites-moi quoi faire…",
   "assistant.widget.send": "Envoyer",
   "assistant.widget.thinking": "Réflexion…",

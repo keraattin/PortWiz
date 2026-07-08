@@ -79,7 +79,7 @@ _JSON_RE = re.compile(r"\{.*\}", re.S)
 # couldn't be parsed, so we never dump a raw/half-formed JSON blob at the user.
 _FALLBACK_REPLY = "Sorry, I couldn't process that. Could you rephrase your request?"
 # Shown when the model proposed a valid action but gave no accompanying prose.
-_ACTION_REPLY = "I've prepared an action for you — review and confirm below."
+_ACTION_REPLY = "I've prepared an action for you. Review and confirm below."
 
 
 def _extract_json(text: str) -> dict[str, Any] | None:
@@ -149,7 +149,7 @@ async def run_chat(
 
     if not action_obj:
         # Empty reply with no action means we couldn't make sense of the output
-        # (e.g. a weak model returned malformed JSON) — return a clear fallback
+        # (e.g. a weak model returned malformed JSON): return a clear fallback
         # instead of a blank message.
         return (reply or _FALLBACK_REPLY), None
 

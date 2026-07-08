@@ -105,9 +105,9 @@ export const en = {
 
   // Assets
   "inventory.assetExplain":
-    "An asset is a single host you scan — one IP address, like a server or device. Group assets into VLANs (network segments) on the VLANs tab.",
+    "An asset is a single host you scan: one IP address, like a server or device. Group assets into VLANs (network segments) on the VLANs tab.",
   "inventory.vlanExplain":
-    "A VLAN is a network segment that groups assets — like DMZ or Servers. Add one here, then assign assets to it on the Assets tab.",
+    "A VLAN is a network segment that groups assets, like DMZ or Servers. Add one here, then assign assets to it on the Assets tab.",
 
   "assets.title": "Assets",
   "assets.subtitle":
@@ -221,7 +221,7 @@ export const en = {
   "agents.subtitle":
     "Agents are the distributed scanners you deploy per VLAN. Enroll one here, then run it with its token (set PORTWIZ_AGENT_TOKEN). A scan run stays pending until an online agent picks it up.",
   "agents.enrolledNotice":
-    'Agent "{name}" enrolled. Copy its token now — it will not be shown again.',
+    'Agent "{name}" enrolled. Copy its token now. It will not be shown again.',
   "agents.copy": "Copy",
   "agents.copied": "Copied",
   "agents.dismiss": "Dismiss",
@@ -724,7 +724,7 @@ export const en = {
   "assistant.widget.openAria": "Open assistant",
   "assistant.widget.closeAria": "Close assistant",
   "assistant.widget.greeting":
-    "Hi! Ask about your deployment, or tell me to add a VLAN, create a scan, and more — I'll propose it for you to confirm.",
+    "Hi! Ask about your deployment, or tell me to add a VLAN, create a scan, and more. I'll propose it for you to confirm.",
   "assistant.widget.placeholder": "Ask, or tell me what to do…",
   "assistant.widget.send": "Send",
   "assistant.widget.thinking": "Thinking…",

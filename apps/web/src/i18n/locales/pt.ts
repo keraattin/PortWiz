@@ -105,9 +105,9 @@ export const pt: Partial<Record<TKey, string>> = {
 
   // Assets
   "inventory.assetExplain":
-    "Um ativo é um único host que você examina — um endereço IP, como um servidor ou dispositivo. Agrupe ativos em VLANs (segmentos de rede) na aba VLANs.",
+    "Um ativo é um único host que você examina: um endereço IP, como um servidor ou dispositivo. Agrupe ativos em VLANs (segmentos de rede) na aba VLANs.",
   "inventory.vlanExplain":
-    "Uma VLAN é um segmento de rede que agrupa ativos — como DMZ ou Servidores. Adicione uma aqui e depois atribua ativos a ela na aba Ativos.",
+    "Uma VLAN é um segmento de rede que agrupa ativos, como DMZ ou Servidores. Adicione uma aqui e depois atribua ativos a ela na aba Ativos.",
 
   "assets.title": "Ativos",
   "assets.subtitle":
@@ -224,7 +224,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "agents.subtitle":
     "Agentes são os scanners distribuídos que você implanta por VLAN. Registre um aqui e depois execute-o com o seu token (defina PORTWIZ_AGENT_TOKEN). Uma varredura fica pendente até que um agente online a assuma.",
   "agents.enrolledNotice":
-    'Agente "{name}" registrado. Copie o token agora — ele não será mostrado novamente.',
+    'Agente "{name}" registrado. Copie o token agora. Ele não será mostrado novamente.',
   "agents.copy": "Copiar",
   "agents.copied": "Copiado",
   "agents.dismiss": "Dispensar",
@@ -730,7 +730,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "assistant.widget.openAria": "Abrir assistente",
   "assistant.widget.closeAria": "Fechar assistente",
   "assistant.widget.greeting":
-    "Olá! Pergunte sobre a sua instalação, ou peça para adicionar uma VLAN, criar uma varredura e mais — vou propor para você confirmar.",
+    "Olá! Pergunte sobre a sua instalação, ou peça para adicionar uma VLAN, criar uma varredura e mais. Vou propor para você confirmar.",
   "assistant.widget.placeholder": "Pergunte, ou diga o que devo fazer…",
   "assistant.widget.send": "Enviar",
   "assistant.widget.thinking": "Pensando…",
