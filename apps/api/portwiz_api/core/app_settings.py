@@ -59,6 +59,11 @@ EDITABLE_KEYS: list[str] = [
     "netbox_url",
     "netbox_token",
     "netbox_writeback_enabled",
+    # CVE enrichment
+    "cve_enabled",
+    "cve_source",
+    "cve_api_url",
+    "cve_min_cvss",
     # Operational (system)
     "change_confirmations",
     "agent_online_seconds",
@@ -75,7 +80,14 @@ EDITABLE_KEYS: list[str] = [
 # Keys whose values must never be returned to clients and are only updated when a
 # non-empty replacement is supplied.
 SECRET_KEYS: frozenset[str] = frozenset(
-    {"anthropic_api_key", "compat_api_key", "smtp_password", "jira_api_token", "netbox_token"}
+    {
+        "anthropic_api_key",
+        "compat_api_key",
+        "smtp_password",
+        "jira_api_token",
+        "netbox_token",
+        "cve_api_key",
+    }
 )
 
 

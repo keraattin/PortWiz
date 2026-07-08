@@ -132,6 +132,15 @@ class Settings(BaseSettings):
     # invalid value is ignored.
     jira_extra_fields: str = ""
 
+    # CVE enrichment: look up known vulnerabilities for discovered service+version.
+    # Disabled unless enabled. Data is authoritative from the source (never
+    # invented); the AI layer only summarises what a source returns.
+    cve_enabled: bool = False
+    cve_source: str = "nvd"  # nvd (offline/other sources plug in behind CVESource later)
+    cve_api_url: str = ""  # blank = the source's default endpoint
+    cve_api_key: str | None = None  # NVD API key raises the rate limit (optional)
+    cve_min_cvss: float = 0.0  # ignore findings below this CVSS base score
+
     # NetBox (IPAM) inventory source. Disabled unless fully configured.
     netbox_enabled: bool = False
     netbox_url: str | None = None  # e.g. https://netbox.example.com

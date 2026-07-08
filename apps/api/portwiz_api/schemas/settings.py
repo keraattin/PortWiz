@@ -38,6 +38,10 @@ class SettingsStatus(BaseModel):
     netbox_url: str | None
     netbox_configured: bool
 
+    # CVE enrichment
+    cve_enabled: bool
+    cve_configured: bool
+
     # Operational (read-only, for clients: agent health windows + scan defaults)
     agent_online_seconds: int
     agent_poll_seconds: int
@@ -119,6 +123,12 @@ class SettingsConfig(BaseModel):
     netbox_writeback_enabled: bool
     netbox_token_set: bool
 
+    cve_enabled: bool
+    cve_source: str
+    cve_api_url: str
+    cve_min_cvss: float
+    cve_api_key_set: bool
+
     change_confirmations: int
     agent_online_seconds: int
     agent_poll_seconds: int
@@ -170,6 +180,12 @@ class SettingsConfigUpdate(BaseModel):
     netbox_url: str | None = None
     netbox_token: str | None = None
     netbox_writeback_enabled: bool | None = None
+
+    cve_enabled: bool | None = None
+    cve_source: str | None = None
+    cve_api_url: str | None = None
+    cve_api_key: str | None = None
+    cve_min_cvss: float | None = None
 
     change_confirmations: int | None = None
     agent_online_seconds: int | None = None

@@ -9,6 +9,7 @@ from .routes import (
     auth,
     changes,
     compliance,
+    cve,
     evidence,
     ingest,
     settings,
@@ -37,5 +38,6 @@ api_router.include_router(ai.router)
 api_router.include_router(settings.router)
 api_router.include_router(stats.router)
 api_router.include_router(compliance.router)
+api_router.include_router(cve.router)
 
 __all__ = ["api_router"]

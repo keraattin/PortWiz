@@ -21,6 +21,7 @@ from ...core.ai import (
 )
 from ...core.app_settings import effective_settings, set_overrides
 from ...core.config import Settings
+from ...core.cve import CVESource, get_cve_source
 from ...core.db import get_session
 from ...core.inventory_source import InventorySource, get_inventory_source
 from ...core.issue_tracker import IssueTracker, NullTracker, get_issue_tracker
@@ -78,6 +79,11 @@ def _config_from(s: Settings) -> SettingsConfig:
         netbox_url=s.netbox_url,
         netbox_writeback_enabled=s.netbox_writeback_enabled,
         netbox_token_set=bool(s.netbox_token),
+        cve_enabled=s.cve_enabled,
+        cve_source=s.cve_source,
+        cve_api_url=s.cve_api_url,
+        cve_min_cvss=s.cve_min_cvss,
+        cve_api_key_set=bool(s.cve_api_key),
         change_confirmations=s.change_confirmations,
         agent_online_seconds=s.agent_online_seconds,
         agent_poll_seconds=s.agent_poll_seconds,
@@ -136,6 +142,8 @@ async def get_settings_status(
         netbox_enabled=s.netbox_enabled,
         netbox_url=s.netbox_url,
         netbox_configured=netbox_configured,
+        cve_enabled=s.cve_enabled,
+        cve_configured=bool(s.cve_enabled),
         agent_online_seconds=s.agent_online_seconds,
         agent_poll_seconds=s.agent_poll_seconds,
         default_scan_ports=s.default_scan_ports,
@@ -303,6 +311,15 @@ async def list_jira_priorities(
 async def test_netbox(
     _: User = Depends(AdminDep),
     source: InventorySource = Depends(get_inventory_source),
+) -> TestResult:
+    ok, detail = await source.verify()
+    return TestResult(ok=ok, detail=detail)
+
+
+@router.post("/test/cve", response_model=TestResult)
+async def test_cve(
+    _: User = Depends(AdminDep),
+    source: CVESource = Depends(get_cve_source),
 ) -> TestResult:
     ok, detail = await source.verify()
     return TestResult(ok=ok, detail=detail)

@@ -9,6 +9,7 @@ from .app_setting import AppSetting
 from .asset import VLAN, Asset, Criticality, DataSensitivity, IPRange
 from .audit import AuditEvent
 from .change import ChangeEvent, PortState
+from .cve import CVEFinding
 from .scan import (
     Observation,
     ScanProfile,
@@ -27,6 +28,7 @@ __all__ = [
     "AuditEvent",
     "ChangeEvent",
     "PortState",
+    "CVEFinding",
     "Criticality",
     "DataSensitivity",
     "IPRange",
