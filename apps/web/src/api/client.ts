@@ -920,6 +920,7 @@ export interface SettingsConfig {
   cve_source: string;
   cve_api_url: string;
   cve_min_cvss: number;
+  cve_recheck_hours: number;
   cve_api_key_set: boolean;
   change_confirmations: number;
   agent_online_seconds: number;
@@ -972,6 +973,7 @@ export type SettingsConfigUpdate = Partial<{
   cve_api_url: string;
   cve_api_key: string;
   cve_min_cvss: number;
+  cve_recheck_hours: number;
   change_confirmations: number;
   agent_online_seconds: number;
   agent_poll_seconds: number;

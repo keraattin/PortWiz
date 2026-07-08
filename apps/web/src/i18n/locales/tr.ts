@@ -597,6 +597,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.cve.apiKey": "API anahtarı (isteğe bağlı)",
   "settings.cve.minCvss": "Minimum CVSS",
   "settings.cve.minCvssHint": "Bu CVSS temel puanının altındaki bulguları yok say (0-10).",
+  "settings.cve.recheckHours": "Otomatik yeniden kontrol (saat)",
+  "settings.cve.recheckHoursHint":
+    "0 yeniden kontrolü manuel bırakır. 0'dan büyükse PortWiz açık servisleri bu aralıkla yeniden kontrol eder, bulgular güncel kalır.",
   "settings.section.system": "Sistem",
   "settings.system.title": "Sistem",
   "settings.system.subtitle": "Tarama ve değişiklik tespiti için operasyonel ayarlar.",

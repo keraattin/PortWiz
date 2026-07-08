@@ -600,6 +600,9 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.cve.apiKey": "Chave da API (opcional)",
   "settings.cve.minCvss": "CVSS mínimo",
   "settings.cve.minCvssHint": "Ignorar achados abaixo desta pontuação base CVSS (0-10).",
+  "settings.cve.recheckHours": "Reverificar automaticamente a cada (horas)",
+  "settings.cve.recheckHoursHint":
+    "0 mantém a reverificação manual. Acima de 0, o PortWiz reverifica os serviços abertos nesta cadência para manter os achados atualizados.",
   "settings.section.system": "Sistema",
   "settings.system.title": "Sistema",
   "settings.system.subtitle": "Ajustes operacionais para varredura e detecção de alterações.",

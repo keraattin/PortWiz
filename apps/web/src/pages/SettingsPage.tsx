@@ -103,6 +103,7 @@ interface FormState {
   cve_api_url: string;
   cve_api_key: string;
   cve_min_cvss: string;
+  cve_recheck_hours: string;
   change_confirmations: string;
   agent_online_seconds: string;
   agent_poll_seconds: string;
@@ -155,6 +156,7 @@ function fromConfig(c: SettingsConfig): FormState {
     cve_api_url: c.cve_api_url ?? "",
     cve_api_key: "",
     cve_min_cvss: String(c.cve_min_cvss ?? 0),
+    cve_recheck_hours: String(c.cve_recheck_hours ?? 0),
     change_confirmations: String(c.change_confirmations),
     agent_online_seconds: String(c.agent_online_seconds),
     agent_poll_seconds: String(c.agent_poll_seconds),
@@ -1091,6 +1093,19 @@ export default function SettingsPage() {
               onChange={(e) => set("cve_min_cvss", e.target.value)}
             />
           </FormField>
+          <FormField
+            label={t("settings.cve.recheckHours")}
+            hint={t("settings.cve.recheckHoursHint")}
+          >
+            <input
+              className={inputClass}
+              type="number"
+              min={0}
+              step={1}
+              value={form.cve_recheck_hours}
+              onChange={(e) => set("cve_recheck_hours", e.target.value)}
+            />
+          </FormField>
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
@@ -1102,6 +1117,7 @@ export default function SettingsPage() {
                   cve_api_url: form.cve_api_url,
                   cve_api_key: form.cve_api_key,
                   cve_min_cvss: Math.min(10, Math.max(0, parseFloat(form.cve_min_cvss) || 0)),
+                  cve_recheck_hours: Math.max(0, parseInt(form.cve_recheck_hours, 10) || 0),
                 })
               }
             >

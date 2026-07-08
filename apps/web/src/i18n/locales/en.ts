@@ -595,6 +595,9 @@ export const en = {
   "settings.cve.apiKey": "API key (optional)",
   "settings.cve.minCvss": "Minimum CVSS",
   "settings.cve.minCvssHint": "Ignore findings below this CVSS base score (0-10).",
+  "settings.cve.recheckHours": "Auto re-check every (hours)",
+  "settings.cve.recheckHoursHint":
+    "0 keeps re-checks manual. Above 0, PortWiz re-checks open services on this cadence so findings stay current.",
   "settings.section.system": "System",
   "settings.system.title": "System",
   "settings.system.subtitle": "Operational tuning for scanning and change detection.",
