@@ -2,17 +2,24 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.ai import AIProvider, get_ai_provider
 from ...core.audit import append_audit
 from ...core.cve import CVESource, NullCVESource, get_cve_source, recheck_cves
+from ...core.cve_ai import summarize_cves
 from ...core.db import get_session
 from ...models.cve import CVEFinding
 from ...models.user import User, UserRole
-from ...schemas.cve import CVEFindingRead, CVERecheckResult
+from ...schemas.cve import CVEFindingRead, CVERecheckResult, CVESummary
 from ..deps import get_current_user, require_roles
+from .ai import ai_rate_limited
+
+logger = logging.getLogger("portwiz.cve")
 
 router = APIRouter(prefix="/cve", tags=["cve"])
 
@@ -65,3 +72,38 @@ async def list_findings(
         query = query.where(CVEFinding.cvss >= min_cvss)
     result = await session.execute(query.limit(limit))
     return list(result.scalars().all())
+
+
+@router.post("/summary", response_model=CVESummary)
+async def summary(
+    ip: str | None = None,
+    limit: int = Query(default=50, ge=1, le=200),
+    _: User = Depends(ai_rate_limited),
+    provider: AIProvider = Depends(get_ai_provider),
+    session: AsyncSession = Depends(get_session),
+) -> CVESummary:
+    """Plain-language, prioritised brief of the REAL stored CVE findings.
+
+    The AI only summarises what a source already returned: it is handed the
+    findings verbatim and its output is scrubbed of any CVE id not in that set,
+    so it can never introduce an invented vulnerability.
+    """
+    if provider.name == "none":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "AI is not configured")
+
+    query = select(CVEFinding).order_by(func.coalesce(CVEFinding.cvss, 0).desc())
+    if ip is not None:
+        query = query.where(CVEFinding.ip == ip)
+    findings = list((await session.execute(query.limit(limit))).scalars().all())
+    if not findings:
+        # Nothing to brief: skip the (billable) AI call entirely.
+        return CVESummary(provider=provider.name, count=0, summary="")
+
+    try:
+        text = await summarize_cves(provider, findings)
+    except Exception as exc:  # external call boundary: never leak a 500
+        logger.warning("CVE summary failed (%s): %s", provider.name, exc)
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, "AI provider unavailable"
+        ) from exc
+    return CVESummary(provider=provider.name, count=len(findings), summary=text)

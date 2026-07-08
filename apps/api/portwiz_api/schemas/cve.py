@@ -30,3 +30,9 @@ class CVEFindingRead(BaseModel):
 class CVERecheckResult(BaseModel):
     checked: int
     findings: int
+
+
+class CVESummary(BaseModel):
+    provider: str
+    count: int  # number of real findings the brief was built from
+    summary: str
