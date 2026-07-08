@@ -128,6 +128,30 @@ def render_evidence_pdf(pkg: EvidencePackage) -> bytes:
     else:
         story.append(Paragraph("No open ports.", _meta))
 
+    story += [
+        Spacer(1, 8),
+        Paragraph(f"Known vulnerabilities ({len(pkg.cve_findings)})", _h2),
+    ]
+    if pkg.cve_findings:
+        story.append(
+            _table(
+                ["Host:Port", "CVE", "CVSS", "Severity", "Summary"],
+                [
+                    [
+                        f"{f.ip}:{f.port}",
+                        f.cve_id,
+                        "-" if f.cvss is None else f"{f.cvss:.1f}",
+                        f.severity,
+                        f.summary or "-",
+                    ]
+                    for f in pkg.cve_findings
+                ],
+                [30 * mm, 32 * mm, 15 * mm, 20 * mm, 83 * mm],
+            )
+        )
+    else:
+        story.append(Paragraph("No known vulnerabilities recorded.", _meta))
+
     story += [Spacer(1, 8), Paragraph(f"Confirmed changes ({len(pkg.changes)})", _h2)]
     if pkg.changes:
         story.append(

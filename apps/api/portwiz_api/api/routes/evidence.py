@@ -19,10 +19,12 @@ from ...core.audit import append_audit, verify_chain
 from ...core.db import get_session
 from ...models.audit import AuditEvent
 from ...models.change import ChangeEvent, PortState
+from ...models.cve import CVEFinding
 from ...models.scan import ScanProfile, ScanRun
 from ...models.user import User, UserRole
 from ...schemas.audit import AuditEventRead, ChainVerification
 from ...schemas.change import ChangeEventRead
+from ...schemas.cve import CVEFindingRead
 from ...schemas.evidence import EvidencePackage, OpenPort
 from ...schemas.scan import ScanProfileRead, ScanRunRead
 from ..deps import require_roles
@@ -69,6 +71,22 @@ async def build_evidence(
         )
     ).scalars().all()
 
+    # Known vulnerabilities for exactly the profile's confirmed-open exposure.
+    # Findings are keyed by (ip, port); intersect them with the open states so
+    # the package documents CVEs for what is actually exposed, most severe first.
+    open_pairs = {(s.ip, s.port) for s in states}
+    open_ips = {s.ip for s in states}
+    cve_findings: list[CVEFinding] = []
+    if open_ips:
+        cve_rows = (
+            await session.execute(
+                select(CVEFinding)
+                .where(CVEFinding.ip.in_(open_ips))
+                .order_by(func.coalesce(CVEFinding.cvss, 0).desc(), CVEFinding.cve_id)
+            )
+        ).scalars().all()
+        cve_findings = [c for c in cve_rows if (c.ip, c.port) in open_pairs]
+
     # Audit events touching this profile, its runs, or its changes.
     audit_conditions = [
         and_(AuditEvent.target_type == "scan_profile", AuditEvent.target_id == str(profile.id))
@@ -108,6 +126,7 @@ async def build_evidence(
             )
             for s in states
         ],
+        cve_findings=[CVEFindingRead.model_validate(c) for c in cve_findings],
         scan_runs=[ScanRunRead.model_validate(r) for r in runs],
         changes=[ChangeEventRead.model_validate(c) for c in changes],
         audit_slice=[AuditEventRead.model_validate(a) for a in audit_rows],
@@ -134,7 +153,12 @@ async def evidence_for_profile(
         actor_email=current_user.email,
         target_type="scan_profile",
         target_id=str(profile_id),
-        payload={"format": "json", "runs": len(package.scan_runs), "changes": len(package.changes)},
+        payload={
+            "format": "json",
+            "runs": len(package.scan_runs),
+            "changes": len(package.changes),
+            "cves": len(package.cve_findings),
+        },
     )
     await session.commit()
     return package
@@ -163,7 +187,12 @@ async def evidence_for_profile_pdf(
         actor_email=current_user.email,
         target_type="scan_profile",
         target_id=str(profile_id),
-        payload={"format": "pdf", "runs": len(package.scan_runs), "changes": len(package.changes)},
+        payload={
+            "format": "pdf",
+            "runs": len(package.scan_runs),
+            "changes": len(package.changes),
+            "cves": len(package.cve_findings),
+        },
     )
     await session.commit()
 

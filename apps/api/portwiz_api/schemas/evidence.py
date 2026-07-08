@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from .audit import AuditEventRead, ChainVerification
 from .change import ChangeEventRead
+from .cve import CVEFindingRead
 from .scan import ScanProfileRead, ScanRunRead
 
 
@@ -26,6 +27,7 @@ class EvidencePackage(BaseModel):
     profile: ScanProfileRead
     chain_verification: ChainVerification
     current_open_ports: list[OpenPort]
+    cve_findings: list[CVEFindingRead]
     scan_runs: list[ScanRunRead]
     changes: list[ChangeEventRead]
     audit_slice: list[AuditEventRead]

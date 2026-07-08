@@ -92,6 +92,50 @@ async def test_evidence_package_contents_and_custody(client, admin_headers) -> N
     assert resp.json()["total"] >= 1
 
 
+async def test_evidence_includes_cve_findings_for_open_ports(
+    client, admin_headers, db
+) -> None:
+    from portwiz_api.models.cve import CVEFinding
+
+    token = await _enroll(client, admin_headers, "cve-ev-agent")
+    profile = await _profile(client, admin_headers, "cve-ev", "10.0.0.15", "22,443")
+    pid, ip = profile["id"], "10.0.0.15"
+    # Two consistent observations confirm 22 and 443 as open exposure.
+    await _ingest(client, admin_headers, token, pid, ip, [22, 443])
+    await _ingest(client, admin_headers, token, pid, ip, [22, 443])
+
+    async with db() as session:
+        session.add_all(
+            [
+                CVEFinding(
+                    ip=ip, port=443, protocol="tcp", service="https", version="1.1",
+                    cve_id="CVE-2024-9999", cvss=9.8, severity="critical",
+                    summary="Critical flaw", url="https://x", source="nvd",
+                ),
+                # A finding on a port that is not confirmed-open is excluded.
+                CVEFinding(
+                    ip=ip, port=8080, protocol="tcp", service="http", version="1",
+                    cve_id="CVE-2024-1111", cvss=5.0, severity="medium",
+                    summary="Other", url="https://y", source="nvd",
+                ),
+            ]
+        )
+        await session.commit()
+
+    resp = await client.get(f"/api/v1/evidence/scan-profiles/{pid}", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    pkg = resp.json()
+    cve_ids = {c["cve_id"] for c in pkg["cve_findings"]}
+    assert "CVE-2024-9999" in cve_ids  # matched to open port 443
+    assert "CVE-2024-1111" not in cve_ids  # port 8080 not part of exposure
+
+    # The export records how many CVEs were bundled (chain of custody).
+    audit = await client.get(
+        "/api/v1/audit?action=evidence.exported", headers=admin_headers
+    )
+    assert audit.json()["total"] >= 1
+
+
 async def test_evidence_rbac(client, admin_headers) -> None:
     profile = await _profile(client, admin_headers, "rbac-ev", "10.0.0.9", "22")
     pid = profile["id"]
