@@ -383,6 +383,12 @@ export const en = {
   "cve.col.cvss": "CVSS",
   "cve.col.severity": "Severity",
   "cve.col.summary": "Summary",
+  "cve.aiBrief": "AI risk brief",
+  "cve.aiBriefing": "Briefing…",
+  "cve.aiBriefTitle": "AI risk brief",
+  "cve.aiBriefNote":
+    "AI-generated from the real findings above. It rephrases and prioritises them; it never invents CVEs.",
+  "cve.aiBriefEmpty": "No findings to brief. Re-check CVEs first.",
 
   // Roles (shared)
   "role.admin": "admin",
@@ -506,6 +512,10 @@ export const en = {
   "scans.col.state": "State",
   "scans.col.service": "Service",
   "scans.col.version": "Version",
+  "scans.col.source": "Source",
+  "fingerprint.agent": "Scanner",
+  "fingerprint.heuristic": "Banner",
+  "fingerprint.ai": "AI",
   "scans.noOpenPorts": "No open ports recorded for this run.",
 
   // Compliance cadence status (shared)

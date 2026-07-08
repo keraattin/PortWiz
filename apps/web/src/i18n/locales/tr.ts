@@ -385,6 +385,12 @@ export const tr: Partial<Record<TKey, string>> = {
   "cve.col.cvss": "CVSS",
   "cve.col.severity": "Önem",
   "cve.col.summary": "Özet",
+  "cve.aiBrief": "AI risk özeti",
+  "cve.aiBriefing": "Özetleniyor…",
+  "cve.aiBriefTitle": "AI risk özeti",
+  "cve.aiBriefNote":
+    "Yukarıdaki gerçek bulgulardan AI ile üretildi. Onları yeniden ifade edip önceliklendirir; asla CVE uydurmaz.",
+  "cve.aiBriefEmpty": "Özetlenecek bulgu yok. Önce CVE'leri yeniden kontrol edin.",
 
   // Roles
   "role.admin": "yönetici",
@@ -508,6 +514,10 @@ export const tr: Partial<Record<TKey, string>> = {
   "scans.col.state": "Durum",
   "scans.col.service": "Servis",
   "scans.col.version": "Sürüm",
+  "scans.col.source": "Kaynak",
+  "fingerprint.agent": "Tarayıcı",
+  "fingerprint.heuristic": "Banner",
+  "fingerprint.ai": "AI",
   "scans.noOpenPorts": "Bu çalışma için kayıtlı açık port yok.",
 
   // Compliance cadence status

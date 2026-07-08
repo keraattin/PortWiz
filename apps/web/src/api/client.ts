@@ -450,6 +450,7 @@ export interface Observation {
   product: string | null;
   banner_sha256: string | null;
   fingerprint_confidence: number | null;
+  fingerprint_source: string | null;
 }
 
 export interface ScanProfileInput {
@@ -864,6 +865,19 @@ export function fetchCVEFindings(params?: {
 
 export function recheckCVEs(): Promise<{ checked: number; findings: number }> {
   return request<{ checked: number; findings: number }>("/cve/recheck", { method: "POST" });
+}
+
+export interface CVESummary {
+  provider: string;
+  count: number;
+  summary: string;
+}
+
+// Plain-language AI brief of the REAL stored CVE findings. The backend feeds the
+// model only these findings and scrubs any CVE id it invents, so nothing here is
+// fabricated.
+export function summarizeCVEs(): Promise<CVESummary> {
+  return request<CVESummary>("/cve/summary", { method: "POST" });
 }
 
 // Editable settings (admin). Secrets are never returned; a `*_set` flag reports

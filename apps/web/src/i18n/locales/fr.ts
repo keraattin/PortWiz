@@ -387,6 +387,12 @@ export const fr: Partial<Record<TKey, string>> = {
   "cve.col.cvss": "CVSS",
   "cve.col.severity": "Gravité",
   "cve.col.summary": "Résumé",
+  "cve.aiBrief": "Synthèse de risque IA",
+  "cve.aiBriefing": "Génération…",
+  "cve.aiBriefTitle": "Synthèse de risque IA",
+  "cve.aiBriefNote":
+    "Générée par l'IA à partir des résultats réels ci-dessus. Elle les reformule et les priorise ; elle n'invente jamais de CVE.",
+  "cve.aiBriefEmpty": "Aucun résultat à synthétiser. Relancez d'abord la vérification CVE.",
 
   // Roles
   "role.admin": "administrateur",
@@ -510,6 +516,10 @@ export const fr: Partial<Record<TKey, string>> = {
   "scans.col.state": "État",
   "scans.col.service": "Service",
   "scans.col.version": "Version",
+  "scans.col.source": "Source",
+  "fingerprint.agent": "Scanner",
+  "fingerprint.heuristic": "Bannière",
+  "fingerprint.ai": "IA",
   "scans.noOpenPorts": "Aucun port ouvert enregistré pour cette analyse.",
 
   // Compliance cadence status

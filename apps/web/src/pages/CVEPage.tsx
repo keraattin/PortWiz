@@ -6,6 +6,7 @@ import {
   fetchCVEFindings,
   fetchSettings,
   recheckCVEs,
+  summarizeCVEs,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
@@ -38,8 +39,11 @@ export default function CVEPage() {
   const [loading, setLoading] = useState(true);
   const [rechecking, setRechecking] = useState(false);
   const [configured, setConfigured] = useState(true);
+  const [aiConfigured, setAiConfigured] = useState(false);
   const [severity, setSeverity] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [brief, setBrief] = useState<string | null>(null);
+  const [briefing, setBriefing] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -55,7 +59,10 @@ export default function CVEPage() {
   useEffect(() => {
     void load();
     fetchSettings()
-      .then((s) => setConfigured(s.cve_configured))
+      .then((s) => {
+        setConfigured(s.cve_configured);
+        setAiConfigured(s.ai_configured);
+      })
       .catch(() => {
         /* leave configured=true; the recheck will surface a real error */
       });
@@ -72,6 +79,18 @@ export default function CVEPage() {
       toast.error(errorMessage(e));
     } finally {
       setRechecking(false);
+    }
+  }
+
+  async function onSummarize() {
+    setBriefing(true);
+    try {
+      const r = await summarizeCVEs();
+      setBrief(r.count === 0 ? t("cve.aiBriefEmpty") : r.summary);
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setBriefing(false);
     }
   }
 
@@ -110,7 +129,33 @@ export default function CVEPage() {
             </option>
           ))}
         </select>
+        {aiConfigured && (
+          <Button
+            variant="outline"
+            className="ml-auto"
+            onClick={() => void onSummarize()}
+            disabled={briefing || findings.length === 0}
+          >
+            {briefing ? t("cve.aiBriefing") : t("cve.aiBrief")}
+          </Button>
+        )}
       </div>
+
+      {brief !== null && (
+        <div className="rounded-xl border border-sky-900 bg-sky-950/30 p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-sky-300">{t("cve.aiBriefTitle")}</h3>
+            <button
+              className="text-xs text-slate-500 hover:text-slate-300"
+              onClick={() => setBrief(null)}
+            >
+              {t("common.close")}
+            </button>
+          </div>
+          <p className="whitespace-pre-wrap text-sm text-slate-200">{brief}</p>
+          <p className="mt-3 text-xs text-slate-500">{t("cve.aiBriefNote")}</p>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">

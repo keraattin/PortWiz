@@ -387,6 +387,12 @@ export const de: Partial<Record<TKey, string>> = {
   "cve.col.cvss": "CVSS",
   "cve.col.severity": "Schweregrad",
   "cve.col.summary": "Zusammenfassung",
+  "cve.aiBrief": "KI-Risikobericht",
+  "cve.aiBriefing": "Wird erstellt…",
+  "cve.aiBriefTitle": "KI-Risikobericht",
+  "cve.aiBriefNote":
+    "KI-generiert aus den echten Befunden oben. Sie werden umformuliert und priorisiert; CVEs werden nie erfunden.",
+  "cve.aiBriefEmpty": "Keine Befunde zum Zusammenfassen. Prüfen Sie zuerst die CVEs erneut.",
 
   // Roles
   "role.admin": "Administrator",
@@ -510,6 +516,10 @@ export const de: Partial<Record<TKey, string>> = {
   "scans.col.state": "Zustand",
   "scans.col.service": "Dienst",
   "scans.col.version": "Version",
+  "scans.col.source": "Quelle",
+  "fingerprint.agent": "Scanner",
+  "fingerprint.heuristic": "Banner",
+  "fingerprint.ai": "KI",
   "scans.noOpenPorts": "Für diesen Lauf wurden keine offenen Ports erfasst.",
 
   // Compliance cadence status
