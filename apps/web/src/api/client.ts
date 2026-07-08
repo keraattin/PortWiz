@@ -760,6 +760,8 @@ export interface SettingsStatus {
   netbox_enabled: boolean;
   netbox_url: string | null;
   netbox_configured: boolean;
+  cve_enabled: boolean;
+  cve_configured: boolean;
   agent_online_seconds: number;
   agent_poll_seconds: number;
   default_scan_ports: string;
@@ -826,6 +828,44 @@ export function testNetbox(): Promise<TestResult> {
   return request<TestResult>("/settings/test/netbox", { method: "POST" });
 }
 
+export function testCve(): Promise<TestResult> {
+  return request<TestResult>("/settings/test/cve", { method: "POST" });
+}
+
+export interface CVEFinding {
+  id: string;
+  asset_id: string | null;
+  ip: string;
+  port: number;
+  protocol: string;
+  service: string | null;
+  version: string | null;
+  cve_id: string;
+  cvss: number | null;
+  severity: string;
+  summary: string;
+  url: string;
+  source: string;
+  detected_at: string;
+}
+
+export function fetchCVEFindings(params?: {
+  severity?: string;
+  ip?: string;
+  min_cvss?: number;
+}): Promise<CVEFinding[]> {
+  const q = new URLSearchParams();
+  if (params?.severity) q.set("severity", params.severity);
+  if (params?.ip) q.set("ip", params.ip);
+  if (params?.min_cvss != null) q.set("min_cvss", String(params.min_cvss));
+  const qs = q.toString();
+  return request<CVEFinding[]>(`/cve/findings${qs ? `?${qs}` : ""}`);
+}
+
+export function recheckCVEs(): Promise<{ checked: number; findings: number }> {
+  return request<{ checked: number; findings: number }>("/cve/recheck", { method: "POST" });
+}
+
 // Editable settings (admin). Secrets are never returned; a `*_set` flag reports
 // whether each is currently set.
 export interface SettingsConfig {
@@ -862,6 +902,11 @@ export interface SettingsConfig {
   netbox_url: string | null;
   netbox_writeback_enabled: boolean;
   netbox_token_set: boolean;
+  cve_enabled: boolean;
+  cve_source: string;
+  cve_api_url: string;
+  cve_min_cvss: number;
+  cve_api_key_set: boolean;
   change_confirmations: number;
   agent_online_seconds: number;
   agent_poll_seconds: number;
@@ -908,6 +953,11 @@ export type SettingsConfigUpdate = Partial<{
   netbox_url: string;
   netbox_token: string;
   netbox_writeback_enabled: boolean;
+  cve_enabled: boolean;
+  cve_source: string;
+  cve_api_url: string;
+  cve_api_key: string;
+  cve_min_cvss: number;
   change_confirmations: number;
   agent_online_seconds: number;
   agent_poll_seconds: number;

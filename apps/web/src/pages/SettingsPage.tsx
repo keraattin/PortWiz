@@ -18,6 +18,7 @@ import {
   testAi,
   testEmail,
   testJira,
+  testCve,
   testNetbox,
   updateSettingsConfig,
 } from "../api/client";
@@ -97,6 +98,11 @@ interface FormState {
   netbox_url: string;
   netbox_token: string;
   netbox_writeback_enabled: boolean;
+  cve_enabled: boolean;
+  cve_source: string;
+  cve_api_url: string;
+  cve_api_key: string;
+  cve_min_cvss: string;
   change_confirmations: string;
   agent_online_seconds: string;
   agent_poll_seconds: string;
@@ -144,6 +150,11 @@ function fromConfig(c: SettingsConfig): FormState {
     netbox_url: c.netbox_url ?? "",
     netbox_token: "",
     netbox_writeback_enabled: c.netbox_writeback_enabled,
+    cve_enabled: c.cve_enabled,
+    cve_source: c.cve_source || "nvd",
+    cve_api_url: c.cve_api_url ?? "",
+    cve_api_key: "",
+    cve_min_cvss: String(c.cve_min_cvss ?? 0),
     change_confirmations: String(c.change_confirmations),
     agent_online_seconds: String(c.agent_online_seconds),
     agent_poll_seconds: String(c.agent_poll_seconds),
@@ -214,14 +225,15 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"ai" | "email" | "jira" | "netbox" | "system">(
-    "ai",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "ai" | "email" | "jira" | "netbox" | "cve" | "system"
+  >("ai");
 
   const [aiResult, setAiResult] = useState<TestResult | null>(null);
   const [emailResult, setEmailResult] = useState<TestResult | null>(null);
   const [jiraResult, setJiraResult] = useState<TestResult | null>(null);
   const [netboxResult, setNetboxResult] = useState<TestResult | null>(null);
+  const [cveResult, setCveResult] = useState<TestResult | null>(null);
   const [emailTo, setEmailTo] = useState("");
 
   // Jira discovery: loaded on demand from the saved connection.
@@ -406,7 +418,7 @@ export default function SettingsPage() {
       <PageHeader title={t("settings.title")} subtitle={t("settings.adminSubtitle")} />
 
       <div className="flex flex-wrap gap-1 border-b border-slate-800">
-        {(["ai", "email", "jira", "netbox", "system"] as const).map((tab) => (
+        {(["ai", "email", "jira", "netbox", "cve", "system"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -1024,6 +1036,86 @@ export default function SettingsPage() {
             </button>
           </div>
           <TestRow result={netboxResult} />
+        </section>
+        )}
+
+        {activeTab === "cve" && (
+        <section className={cardClass}>
+          <h3 className="font-medium text-slate-100">{t("settings.cve.title")}</h3>
+          {status && (
+            <ConnectionBanner
+              ok={status.cve_configured}
+              label={t(status.cve_configured ? "settings.conn.connected" : "settings.conn.notConfigured")}
+            />
+          )}
+          <p className="text-xs text-slate-500">{t("settings.cve.intro")}</p>
+          <Toggle
+            label={t("settings.cve.enabled")}
+            checked={form.cve_enabled}
+            onChange={(v) => set("cve_enabled", v)}
+          />
+          <FormField label={t("settings.cve.source")}>
+            <select
+              className={inputClass}
+              value={form.cve_source}
+              onChange={(e) => set("cve_source", e.target.value)}
+            >
+              <option value="nvd">NVD</option>
+            </select>
+          </FormField>
+          <FormField label={t("settings.cve.apiUrl")} hint={t("settings.cve.apiUrlHint")}>
+            <input
+              className={inputClass}
+              placeholder="https://services.nvd.nist.gov/rest/json/cves/2.0"
+              value={form.cve_api_url}
+              onChange={(e) => set("cve_api_url", e.target.value)}
+            />
+          </FormField>
+          <FormField label={t("settings.cve.apiKey")} hint={secretHint(config.cve_api_key_set, t)}>
+            <input
+              className={inputClass}
+              type="password"
+              placeholder={config.cve_api_key_set ? "••••••••" : t("settings.notSetPlaceholder")}
+              value={form.cve_api_key}
+              onChange={(e) => set("cve_api_key", e.target.value)}
+            />
+          </FormField>
+          <FormField label={t("settings.cve.minCvss")} hint={t("settings.cve.minCvssHint")}>
+            <input
+              className={inputClass}
+              type="number"
+              min={0}
+              max={10}
+              step={0.1}
+              value={form.cve_min_cvss}
+              onChange={(e) => set("cve_min_cvss", e.target.value)}
+            />
+          </FormField>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              className={primaryBtn}
+              disabled={saving === "cve"}
+              onClick={() =>
+                save("cve", {
+                  cve_enabled: form.cve_enabled,
+                  cve_source: form.cve_source,
+                  cve_api_url: form.cve_api_url,
+                  cve_api_key: form.cve_api_key,
+                  cve_min_cvss: Math.min(10, Math.max(0, parseFloat(form.cve_min_cvss) || 0)),
+                })
+              }
+            >
+              {saving === "cve" ? t("common.saving") : t("common.save")}
+            </button>
+            <button
+              className={testBtn}
+              disabled={testing === "cve"}
+              onClick={() => runTest("cve", testCve, setCveResult)}
+            >
+              {testing === "cve" ? t("settings.testing") : t("settings.testConnection")}
+            </button>
+          </div>
+          <TestRow result={cveResult} />
         </section>
         )}
 

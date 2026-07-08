@@ -49,6 +49,7 @@ const SECTIONS: Section[] = [
     tabs: [
       { to: "/changes", labelKey: "nav.changes" },
       { to: "/tasks", labelKey: "nav.tasks" },
+      { to: "/cve", labelKey: "nav.cve" },
     ],
   },
   {

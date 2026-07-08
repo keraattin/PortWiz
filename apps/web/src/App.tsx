@@ -7,6 +7,7 @@ import AssetsPage from "./pages/AssetsPage";
 import VlansPage from "./pages/VlansPage";
 import ScansPage from "./pages/ScansPage";
 import ChangesPage from "./pages/ChangesPage";
+import CVEPage from "./pages/CVEPage";
 import CompliancePage from "./pages/CompliancePage";
 import TasksPage from "./pages/TasksPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/agents/:id" element={<AgentDetailPage />} />
         <Route path="/changes" element={<ChangesPage />} />
         <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/cve" element={<CVEPage />} />
         <Route path="/compliance" element={<CompliancePage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/settings" element={<SettingsPage />} />
