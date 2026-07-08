@@ -246,27 +246,30 @@ export default function SettingsPage() {
   const [userResults, setUserResults] = useState<JiraUser[]>([]);
   const [jiraLoading, setJiraLoading] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        if (isAdmin) {
-          const [c, p, s] = await Promise.all([
-            fetchSettingsConfig(),
-            fetchAiProviders(),
-            fetchSettings(),
-          ]);
-          setConfig(c);
-          setForm(fromConfig(c));
-          setProviders(p);
-          setStatus(s);
-        } else {
-          setStatus(await fetchSettings());
-        }
-      } catch (e) {
-        setError(errorMessage(e));
+  async function load() {
+    setError(null);
+    try {
+      if (isAdmin) {
+        const [c, p, s] = await Promise.all([
+          fetchSettingsConfig(),
+          fetchAiProviders(),
+          fetchSettings(),
+        ]);
+        setConfig(c);
+        setForm(fromConfig(c));
+        setProviders(p);
+        setStatus(s);
+      } else {
+        setStatus(await fetchSettings());
       }
+    } catch (e) {
+      setError(errorMessage(e));
     }
+  }
+
+  useEffect(() => {
     void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -371,7 +374,24 @@ export default function SettingsPage() {
     }
   }
 
-  if (error) return <p className="text-sm text-red-400">{error}</p>;
+  if (error) {
+    // Keep the page shell and offer a retry instead of wiping everything to a
+    // single red line on a transient fetch failure.
+    return (
+      <div className="space-y-4">
+        <PageHeader title={t("settings.title")} />
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-red-900 bg-red-950/40 p-4 text-sm text-red-300">
+          <span>{error}</span>
+          <button
+            onClick={() => void load()}
+            className="rounded-lg border border-red-800 px-3 py-1 text-red-200 hover:bg-red-900/40"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Read-only view for non-admins (auditors).
   if (!isAdmin) {

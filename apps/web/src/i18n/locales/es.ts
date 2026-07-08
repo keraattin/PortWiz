@@ -38,6 +38,7 @@ export const es: Partial<Record<TKey, string>> = {
   "common.loading": "Cargando…",
   "common.noData": "Aún no hay datos",
   "common.error": "Algo salió mal",
+  "common.retry": "Reintentar",
   "common.search": "Buscar…",
   "common.filter": "Filtrar…",
   "common.active": "Activo",
@@ -86,6 +87,9 @@ export const es: Partial<Record<TKey, string>> = {
   "login.signIn": "Iniciar sesión",
   "login.signingIn": "Iniciando sesión…",
   "login.invalid": "Correo o contraseña incorrectos.",
+  "login.tooMany": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+  "login.serverError": "El servidor tuvo un problema. Inténtalo de nuevo en breve.",
+  "login.unreachable": "No se puede conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
 
   // Pagination
   "pagination.total": "{total} en total",

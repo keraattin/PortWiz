@@ -50,6 +50,10 @@
   --color-amber-900: #fef3c7;
   --color-amber-950: #fffbeb;
 
+  /* Orange (CVE "high" severity chip): pale bg + dark text, like the others. */
+  --color-orange-200: #9a3412;
+  --color-orange-900: #ffedd5;
+
   /* Sky */
   --color-sky-300: #075985;
   --color-sky-400: #0369a1;

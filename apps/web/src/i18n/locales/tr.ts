@@ -38,6 +38,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "common.loading": "Yükleniyor…",
   "common.noData": "Henüz veri yok",
   "common.error": "Bir şeyler ters gitti",
+  "common.retry": "Tekrar dene",
   "common.search": "Ara…",
   "common.filter": "Filtrele…",
   "common.active": "Aktif",
@@ -86,6 +87,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "login.signIn": "Giriş yap",
   "login.signingIn": "Giriş yapılıyor…",
   "login.invalid": "E-posta veya parola hatalı.",
+  "login.tooMany": "Çok fazla deneme. Lütfen biraz bekleyip tekrar deneyin.",
+  "login.serverError": "Sunucuda bir sorun oluştu. Lütfen birazdan tekrar deneyin.",
+  "login.unreachable": "Sunucuya ulaşılamıyor. Bağlantınızı kontrol edip tekrar deneyin.",
 
   // Pagination
   "pagination.total": "toplam {total}",

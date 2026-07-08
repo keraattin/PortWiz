@@ -44,10 +44,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-80 flex-col gap-2">
+      <div
+        className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-80 flex-col gap-2"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
+            role={t.type === "error" ? "alert" : "status"}
             className={`pointer-events-auto rounded-lg border px-4 py-2 text-sm shadow-lg ${TOAST_CLASS[t.type]}`}
           >
             {t.message}

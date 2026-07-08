@@ -54,7 +54,8 @@ export default function DashboardPage() {
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
+    setError(null);
     fetchHealth()
       .then((h) => setApiHealthy(h.status === "ok"))
       .catch(() => setApiHealthy(false));
@@ -64,6 +65,11 @@ export default function DashboardPage() {
     fetchCharts()
       .then(setCharts)
       .catch((e) => setError(errorMessage(e)));
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const steps: Step[] = stats
@@ -122,7 +128,17 @@ export default function DashboardPage() {
         </span>
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-red-900 bg-red-950/40 p-4 text-sm text-red-300">
+          <span>{error}</span>
+          <button
+            onClick={load}
+            className="rounded-lg border border-red-800 px-3 py-1 text-red-200 hover:bg-red-900/40"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      )}
 
       {stats && stats.pending_runs > 0 && stats.agents_online === 0 && (
         <div className="rounded-xl border border-amber-800 bg-amber-950/40 p-4 text-sm text-amber-300">

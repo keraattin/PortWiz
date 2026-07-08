@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useI18n } from "../i18n/I18nContext";
@@ -24,8 +25,16 @@ export default function LoginPage() {
     try {
       await login(email, password);
       navigate("/", { replace: true });
-    } catch {
-      setError(t("login.invalid"));
+    } catch (err) {
+      // Don't mask a down/erroring server as "wrong password" — a non-technical
+      // user would retype their password forever. Distinguish the real cause.
+      if (err instanceof ApiError) {
+        if (err.status === 429) setError(t("login.tooMany"));
+        else if (err.status === 401 || err.status === 400) setError(t("login.invalid"));
+        else setError(t("login.serverError"));
+      } else {
+        setError(t("login.unreachable"));
+      }
     } finally {
       setSubmitting(false);
     }

@@ -69,6 +69,7 @@ export default function ChangesPage() {
   const [groupBy, setGroupBy] = useState<"none" | "host" | "scan">("none");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
   const profileName = (id: string) =>
@@ -100,10 +101,13 @@ export default function ChangesPage() {
   };
 
   async function reload(filter = statusFilter) {
+    setLoading(true);
     try {
       setChanges(await listChanges(filter === "all" ? undefined : { status: filter }));
     } catch (e) {
       setError(errorMessage(e));
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -244,7 +248,11 @@ export default function ChangesPage() {
         </div>
       )}
 
-      {changes.length === 0 ? (
+      {loading ? (
+        <div className="rounded-xl border border-slate-800 p-4 text-sm text-slate-500">
+          {t("common.loading")}
+        </div>
+      ) : changes.length === 0 ? (
         <div className="rounded-xl border border-slate-800 p-4 text-sm text-slate-500">
           {t("changes.empty")}
         </div>
@@ -258,12 +266,15 @@ export default function ChangesPage() {
             <div key={key} className="overflow-hidden rounded-xl border border-slate-800">
               <button
                 onClick={() => toggleGroup(key)}
+                aria-expanded={!collapsed.has(key)}
                 className="flex w-full items-center justify-between bg-slate-900 px-4 py-2 text-left text-sm font-medium text-slate-200"
               >
                 <span>
                   {key} <span className="text-slate-500">({items.length})</span>
                 </span>
-                <span className="text-slate-500">{collapsed.has(key) ? "▸" : "▾"}</span>
+                <span className="text-slate-500" aria-hidden="true">
+                  {collapsed.has(key) ? "▸" : "▾"}
+                </span>
               </button>
               {!collapsed.has(key) && (
                 <table className="w-full text-left text-sm">

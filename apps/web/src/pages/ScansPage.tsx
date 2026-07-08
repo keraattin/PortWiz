@@ -110,6 +110,7 @@ export default function ScansPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRun, setSelectedRun] = useState<ScanRun | null>(null);
   const [observations, setObservations] = useState<Observation[]>([]);
+  const [obsLoading, setObsLoading] = useState(false);
   const obsPage = usePagination(observations, 12);
 
   const { sort: profileSort, toggleSort: profileToggle } = useSort();
@@ -298,11 +299,14 @@ export default function ScansPage() {
     setError(null);
     setSelectedRun(run);
     setObservations([]);
+    setObsLoading(true);
     obsPage.setPage(0);
     try {
       setObservations(await listRunObservations(run.id));
     } catch (e) {
       setError(errorMessage(e));
+    } finally {
+      setObsLoading(false);
     }
   }
 
@@ -670,7 +674,13 @@ export default function ScansPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {observations.length === 0 ? (
+              {obsLoading ? (
+                <tr>
+                  <td className="px-4 py-3 text-slate-500" colSpan={6}>
+                    {t("common.loading")}
+                  </td>
+                </tr>
+              ) : observations.length === 0 ? (
                 <tr>
                   <td className="px-4 py-3 text-slate-500" colSpan={6}>
                     {t("scans.noOpenPorts")}

@@ -54,13 +54,17 @@ export default function TasksPage() {
   const { sort, toggleSort } = useSort();
   const { filters, setFilter: setColFilter } = useColumnFilters();
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function reload(f = filter) {
     setError(null);
+    setLoading(true);
     try {
       setTasks(await listTasks(f === "all" ? undefined : { status: f }));
     } catch (e) {
       setError(errorMessage(e));
+    } finally {
+      setLoading(false);
     }
     try {
       setUsers(await listUsers());
@@ -159,7 +163,13 @@ export default function TasksPage() {
             setFilter={onColFilter}
           />
           <tbody className="divide-y divide-slate-800">
-            {tasks.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                  {t("common.loading")}
+                </td>
+              </tr>
+            ) : tasks.length === 0 ? (
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={5}>
                   {t("tasks.empty")}

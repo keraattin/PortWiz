@@ -38,6 +38,7 @@ export const en = {
   "common.loading": "Loading…",
   "common.noData": "No data yet",
   "common.error": "Something went wrong",
+  "common.retry": "Retry",
   "common.search": "Search…",
   "common.filter": "Filter…",
   "common.active": "Active",
@@ -86,6 +87,9 @@ export const en = {
   "login.signIn": "Sign in",
   "login.signingIn": "Signing in…",
   "login.invalid": "Incorrect email or password.",
+  "login.tooMany": "Too many attempts. Please wait a moment and try again.",
+  "login.serverError": "The server had a problem. Please try again shortly.",
+  "login.unreachable": "Can't reach the server. Check your connection and try again.",
 
   // Pagination
   "pagination.total": "{total} total",

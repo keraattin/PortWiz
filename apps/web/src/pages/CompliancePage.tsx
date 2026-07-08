@@ -13,6 +13,7 @@ import {
   verifyAudit,
 } from "../api/client";
 import Pagination, { usePagination } from "../components/Pagination";
+import { useToast } from "../components/Toast";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { type TKey } from "../i18n/locales/en";
@@ -43,6 +44,7 @@ const FRAMEWORK_LABEL: Record<string, string> = {
 
 export default function CompliancePage() {
   const { t } = useI18n();
+  const toast = useToast();
   const [chain, setChain] = useState<ChainVerification | null>(null);
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [total, setTotal] = useState(0);
@@ -51,6 +53,7 @@ export default function CompliancePage() {
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [cadence, setCadence] = useState<ComplianceStatusItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const { sort: cadenceSort, toggleSort: cadenceToggle } = useSort();
   const { filters: cadenceFilters, setFilter: setCadenceFilter } = useColumnFilters();
@@ -123,14 +126,20 @@ export default function CompliancePage() {
   }
 
   useEffect(() => {
-    void verify();
-    void loadAudit(0);
-    listScanProfiles()
-      .then(setProfiles)
-      .catch((e) => setError(errorMessage(e)));
-    fetchComplianceStatus()
-      .then(setCadence)
-      .catch((e) => setError(errorMessage(e)));
+    async function init() {
+      await Promise.allSettled([
+        verify(),
+        loadAudit(0),
+        listScanProfiles()
+          .then(setProfiles)
+          .catch((e) => setError(errorMessage(e))),
+        fetchComplianceStatus()
+          .then(setCadence)
+          .catch((e) => setError(errorMessage(e))),
+      ]);
+      setLoading(false);
+    }
+    void init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -140,11 +149,12 @@ export default function CompliancePage() {
   }
 
   async function onDownload(fn: () => Promise<void>) {
-    setError(null);
+    // Surface as a toast: the evidence table is far from the only inline error
+    // slot, so a download failure would otherwise appear detached or unseen.
     try {
       await fn();
     } catch (e) {
-      setError(errorMessage(e));
+      toast.error(errorMessage(e));
     }
   }
 
@@ -154,7 +164,9 @@ export default function CompliancePage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-slate-200">{t("compliance.cadenceTitle")}</h2>
         <p className="text-sm text-slate-500">{t("compliance.cadenceSubtitle")}</p>
-        {cadence.length === 0 ? (
+        {loading ? (
+          <p className="text-sm text-slate-500">{t("common.loading")}</p>
+        ) : cadence.length === 0 ? (
           <p className="text-sm text-slate-500">{t("compliance.noFrameworkProfiles")}</p>
         ) : (
           <div className="overflow-hidden rounded-xl border border-slate-800">
@@ -270,7 +282,13 @@ export default function CompliancePage() {
               trailing
             />
             <tbody className="divide-y divide-slate-800">
-              {profiles.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td className="px-4 py-3 text-slate-500" colSpan={3}>
+                    {t("common.loading")}
+                  </td>
+                </tr>
+              ) : profiles.length === 0 ? (
                 <tr>
                   <td className="px-4 py-3 text-slate-500" colSpan={3}>
                     {t("compliance.noProfiles")}
@@ -351,7 +369,13 @@ export default function CompliancePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {events.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                    {t("common.loading")}
+                  </td>
+                </tr>
+              ) : events.length === 0 ? (
                 <tr>
                   <td className="px-4 py-3 text-slate-500" colSpan={5}>
                     {t("compliance.noAuditEvents")}
