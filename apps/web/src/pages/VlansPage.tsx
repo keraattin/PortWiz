@@ -358,7 +358,7 @@ export default function VlansPage() {
         </section>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-800">
+      <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <TableHead
             columns={vlanColumns}
@@ -439,7 +439,7 @@ export default function VlansPage() {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-800">
+      <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <TableHead
             columns={rangeColumns}

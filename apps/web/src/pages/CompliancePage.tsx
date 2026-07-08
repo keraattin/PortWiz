@@ -169,7 +169,7 @@ export default function CompliancePage() {
         ) : cadence.length === 0 ? (
           <p className="text-sm text-slate-500">{t("compliance.noFrameworkProfiles")}</p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-800">
+          <div className="overflow-x-auto rounded-xl border border-slate-800">
             <table className="w-full text-left text-sm">
               <TableHead
                 columns={cadenceColumns}
@@ -271,7 +271,7 @@ export default function CompliancePage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-slate-200">{t("compliance.evidenceTitle")}</h2>
         <p className="text-sm text-slate-500">{t("compliance.evidenceSubtitle")}</p>
-        <div className="overflow-hidden rounded-xl border border-slate-800">
+        <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
             <TableHead
               columns={evidenceColumns}
@@ -357,7 +357,7 @@ export default function CompliancePage() {
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
-        <div className="overflow-hidden rounded-xl border border-slate-800">
+        <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-900 text-slate-400">
               <tr>

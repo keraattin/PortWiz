@@ -157,7 +157,7 @@ export default function CVEPage() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-800">
+      <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-900 text-xs uppercase text-slate-400">
             <tr>

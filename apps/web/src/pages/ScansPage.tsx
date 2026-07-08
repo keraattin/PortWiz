@@ -327,7 +327,7 @@ export default function ScansPage() {
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
-        <div className="overflow-hidden rounded-xl border border-slate-800">
+        <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
             <TableHead
               columns={profileColumns}
@@ -424,7 +424,7 @@ export default function ScansPage() {
           </button>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-800">
+        <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
             <TableHead
               columns={runsColumns}
@@ -661,7 +661,7 @@ export default function ScansPage() {
         }
         wide
       >
-        <div className="overflow-hidden rounded-xl border border-slate-800">
+        <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-900 text-slate-400">
               <tr>

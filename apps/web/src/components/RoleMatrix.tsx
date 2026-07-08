@@ -29,7 +29,8 @@ export default function RoleMatrix() {
       <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
         {t("roleMatrix.title")}
       </p>
-      <table className="w-full text-left text-xs">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-xs">
         <thead className="text-slate-500">
           <tr>
             <th className="py-1 pr-2 font-medium">{t("roleMatrix.area")}</th>
@@ -54,7 +55,8 @@ export default function RoleMatrix() {
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 }

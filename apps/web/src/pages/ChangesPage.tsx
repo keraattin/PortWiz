@@ -263,7 +263,7 @@ export default function ChangesPage() {
       ) : groupBy !== "none" ? (
         <div className="space-y-3">
           {groups.map(([key, items]) => (
-            <div key={key} className="overflow-hidden rounded-xl border border-slate-800">
+            <div key={key} className="overflow-x-auto rounded-xl border border-slate-800">
               <button
                 onClick={() => toggleGroup(key)}
                 aria-expanded={!collapsed.has(key)}
@@ -286,7 +286,7 @@ export default function ChangesPage() {
         </div>
       ) : (
         <>
-          <div className="overflow-hidden rounded-xl border border-slate-800">
+          <div className="overflow-x-auto rounded-xl border border-slate-800">
             <table className="w-full text-left text-sm">
               <TableHead
                 columns={columns}
