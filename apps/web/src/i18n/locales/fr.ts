@@ -39,6 +39,30 @@ export const fr: Partial<Record<TKey, string>> = {
   "common.noData": "Aucune donnée",
   "common.error": "Une erreur est survenue",
   "common.retry": "Réessayer",
+  "tour.title": "Visite rapide",
+  "tour.launch": "Lancer la visite",
+  "tour.next": "Suivant",
+  "tour.back": "Retour",
+  "tour.skip": "Passer",
+  "tour.finish": "Commencer",
+  "tour.welcome.title": "Bienvenue dans PortWiz",
+  "tour.welcome.body":
+    "PortWiz surveille les ports et services ouverts de votre réseau et signale les changements confirmés avec une trace prête pour l'audit. Cette visite rapide montre comment les pièces s'assemblent.",
+  "tour.inventory.title": "1. Constituez votre inventaire",
+  "tour.inventory.body":
+    "Sous Inventaire, ajoutez les hôtes à surveiller comme Actifs et regroupez-les dans des VLAN (segments réseau). Les analyses portent sur cet inventaire.",
+  "tour.scanning.title": "2. Analysez votre réseau",
+  "tour.scanning.body":
+    "Sous Analyse, enrôlez un agent (un petit programme déployé dans votre réseau) et créez des profils d'analyse qui s'exécutent selon un calendrier de votre choix.",
+  "tour.changes.title": "3. Examinez les changements",
+  "tour.changes.body":
+    "Changements est le cœur de PortWiz : chaque changement confirmé de port ou de service apparaît avec un avant/après, une gravité et un flux Accuser réception / Résoudre.",
+  "tour.compliance.title": "4. Prouvez la conformité",
+  "tour.compliance.body":
+    "Sous Conformité, exportez en un clic un dossier de preuves pour les auditeurs et vérifiez le journal d'audit inviolable.",
+  "tour.start.title": "Vous êtes prêt",
+  "tour.start.body":
+    "Suivez la liste de démarrage sur le Tableau de bord pour passer de zéro à votre première analyse. Rouvrez cette visite à tout moment via le bouton ? de la barre supérieure.",
   "common.search": "Rechercher…",
   "common.filter": "Filtrer…",
   "common.active": "Actif",
@@ -93,6 +117,7 @@ export const fr: Partial<Record<TKey, string>> = {
 
   // Pagination
   "pagination.total": "{total} au total",
+  "pagination.pageSize": "Par page",
   "pagination.prev": "Précédent",
   "pagination.next": "Suivant",
   "pagination.pageOf": "Page {page} sur {pageCount}",
@@ -342,6 +367,12 @@ export const fr: Partial<Record<TKey, string>> = {
 
   // Changes
   "changes.title": "Changements confirmés",
+  "changes.info":
+    "Un changement confirmé est un port ou service qui a changé entre deux analyses et a été vu de façon cohérente, donc ce n'est pas du bruit. Examinez chacun : Accusez réception une fois vu, ou Résolvez une fois traité. La gravité indique son importance.",
+  "changes.before": "Avant",
+  "changes.after": "Après",
+  "changes.severityInfo":
+    "L'importance de ce changement, combinant le type de changement et la criticité de l'hôte.",
   "changes.subtitle":
     "Seuls les changements confirmés sur des analyses consécutives apparaissent ici, afin que les fluctuations du réseau ne génèrent pas de bruit.",
   "changes.marked": "Marqué {status}",
@@ -389,6 +420,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "cve.col.service": "Service",
   "cve.col.cve": "CVE",
   "cve.col.cvss": "CVSS",
+  "cve.cvssInfo": "Le CVSS note la gravité d'une vulnérabilité de 0 à 10 ; plus élevé est pire.",
   "cve.col.severity": "Gravité",
   "cve.col.summary": "Résumé",
   "cve.aiBrief": "Synthèse de risque IA",

@@ -13,6 +13,7 @@ import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
@@ -50,6 +51,7 @@ export default function TasksPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const { sort, toggleSort } = useSort();
   const { filters, setFilter: setColFilter } = useColumnFilters();
+  const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -103,7 +105,7 @@ export default function TasksPage() {
     },
     { key: "jira", label: t("tasks.col.jira"), filter: "text", get: (task) => task.jira_key ?? "" },
   ];
-  const processed = processRows(tasks, columns, sort, filters);
+  const processed = processRows(tasks, columns, sort, filters, search);
   const tasksPage = usePagination(processed, 15);
   const onColFilter = (key: string, v: string) => {
     setColFilter(key, v);
@@ -149,6 +151,10 @@ export default function TasksPage() {
       <p className="text-sm text-slate-500">{t("tasks.subtitle")}</p>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
+
+      <div className="flex justify-end">
+        <SearchInput value={search} onChange={setSearch} />
+      </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
@@ -264,6 +270,8 @@ export default function TasksPage() {
         pageCount={tasksPage.pageCount}
         total={tasksPage.total}
         onPage={tasksPage.setPage}
+        pageSize={tasksPage.pageSize}
+        onPageSize={tasksPage.setPageSize}
       />
     </div>
   );

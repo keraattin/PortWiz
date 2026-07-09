@@ -28,6 +28,7 @@ import InfoCallout from "../components/InfoCallout";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
@@ -83,6 +84,7 @@ export default function AssetsPage() {
   const [netboxOn, setNetboxOn] = useState(false);
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
+  const [search, setSearch] = useState("");
 
   async function reload() {
     setLoading(true);
@@ -132,7 +134,7 @@ export default function AssetsPage() {
       get: (a) => a.data_sensitivity,
     },
   ];
-  const processed = processRows(assets, columns, sort, filters);
+  const processed = processRows(assets, columns, sort, filters, search);
   const assetsPage = usePagination(processed, 15);
   const onFilter = (key: string, v: string) => {
     setFilter(key, v);
@@ -379,6 +381,10 @@ export default function AssetsPage() {
       </section>
       )}
 
+      <div className="flex justify-end">
+        <SearchInput value={search} onChange={setSearch} />
+      </div>
+
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <TableHead
@@ -454,6 +460,8 @@ export default function AssetsPage() {
         pageCount={assetsPage.pageCount}
         total={assetsPage.total}
         onPage={assetsPage.setPage}
+        pageSize={assetsPage.pageSize}
+        onPageSize={assetsPage.setPageSize}
       />
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t("assets.add")}>

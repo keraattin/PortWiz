@@ -11,31 +11,38 @@ import {
 } from "../api/client";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
+import InfoCallout from "../components/InfoCallout";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
+// Change type is a category, not a verdict: avoid green/red here so a new port
+// ("opened") doesn't read as "success" to a non-technical reader. Severity
+// carries the good/bad signal instead.
 const CHANGE_BADGE: Record<ChangeType, string> = {
-  opened: "bg-emerald-900 text-emerald-300",
-  closed: "bg-red-900 text-red-300",
+  opened: "bg-sky-900 text-sky-300",
+  closed: "bg-slate-700 text-slate-300",
   service_changed: "bg-amber-900 text-amber-300",
-  version_changed: "bg-sky-900 text-sky-300",
+  version_changed: "bg-orange-900 text-orange-200",
 };
 
+// Severity = filled badges (how bad).
 const SEVERITY_BADGE: Record<string, string> = {
   high: "bg-red-900 text-red-300",
   medium: "bg-amber-900 text-amber-300",
   low: "bg-slate-700 text-slate-300",
 };
 
+// Status = outline pills (what stage) so it reads distinctly from severity.
 const STATUS_BADGE: Record<ChangeStatus, string> = {
-  open: "bg-sky-900 text-sky-300",
-  acknowledged: "bg-amber-900 text-amber-300",
-  resolved: "bg-emerald-900 text-emerald-300",
+  open: "border border-sky-700 text-sky-300",
+  acknowledged: "border border-amber-700 text-amber-300",
+  resolved: "border border-emerald-700 text-emerald-300",
 };
 
 const STATUS_FILTERS = ["all", "open", "acknowledged", "resolved"] as const;
@@ -69,6 +76,7 @@ export default function ChangesPage() {
   const [loading, setLoading] = useState(true);
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
+  const [search, setSearch] = useState("");
   const profileName = (id: string) =>
     profiles.find((p) => p.id === id)?.name ?? t("scans.deletedProfile");
   const columns: Column<ChangeEvent>[] = [
@@ -85,12 +93,13 @@ export default function ChangesPage() {
       key: "severity",
       label: t("changes.col.severity"),
       filter: SEVERITIES.map((s) => ({ value: s, label: t(`severity.${s}` as TKey) })),
+      info: t("changes.severityInfo"),
       get: (c) => c.severity,
       rank: SEV_RANK,
     },
     { key: "status", label: t("changes.col.status"), get: (c) => c.status },
   ];
-  const processed = processRows(changes, columns, sort, filters);
+  const processed = processRows(changes, columns, sort, filters, search);
   const changesPage = usePagination(processed, 15);
   const onColFilter = (key: string, v: string) => {
     setFilter(key, v);
@@ -168,9 +177,11 @@ export default function ChangesPage() {
             {t(`changeType.${c.change_type}` as TKey)}
           </span>
         </td>
-        <td className="px-4 py-2 text-xs text-slate-300">
-          <span className="text-slate-500">{describe(c.before, t)}</span>
-          <span className="px-1 text-slate-500">{t("changes.to")}</span>
+        <td className="px-4 py-2 text-xs">
+          <span className="text-slate-500">{t("changes.before")} </span>
+          <span className="text-slate-400">{describe(c.before, t)}</span>
+          <span className="px-1.5 text-slate-600">→</span>
+          <span className="text-slate-500">{t("changes.after")} </span>
           <span className="text-slate-100">{describe(c.after, t)}</span>
         </td>
         <td className="px-4 py-2">
@@ -226,6 +237,8 @@ export default function ChangesPage() {
 
       <p className="text-sm text-slate-500">{t("changes.subtitle")}</p>
 
+      <InfoCallout>{t("changes.info")}</InfoCallout>
+
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {changes.length > 0 && (
@@ -242,6 +255,9 @@ export default function ChangesPage() {
               <option value="scan">{t("changes.group.scan")}</option>
             </select>
           </label>
+          <div className="ml-auto">
+            <SearchInput value={search} onChange={setSearch} />
+          </div>
         </div>
       )}
 
@@ -303,6 +319,8 @@ export default function ChangesPage() {
             pageCount={changesPage.pageCount}
             total={changesPage.total}
             onPage={changesPage.setPage}
+            pageSize={changesPage.pageSize}
+            onPageSize={changesPage.setPageSize}
           />
         </>
       )}

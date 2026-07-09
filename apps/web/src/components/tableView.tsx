@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useI18n } from "../i18n/I18nContext";
+import InfoDot from "./InfoDot";
 import SortHeader from "./SortHeader";
 import { type SortState, sortRows } from "./useSort";
 
@@ -18,6 +19,7 @@ export interface Column<T> {
   filter?: "text" | FilterOption[]; // text box, dropdown, or (omitted) not filterable
   sortable?: boolean; // default true
   rank?: Record<string, number>; // sort an enum column by rank, not alphabetically
+  info?: string; // optional hover-help explaining a jargon column
 }
 
 /** Per-column filter values, keyed by column key. */
@@ -29,23 +31,33 @@ export function useColumnFilters() {
   return { filters, setFilter };
 }
 
-/** Apply column filters then sort. Enum columns match by equality, text columns
- * by case-insensitive substring. Pure; returns a new array. */
+/** Apply an optional free-text search (across every column) and per-column
+ * filters, then sort. Enum columns match by equality, text columns by
+ * case-insensitive substring. Pure; returns a new array. */
 export function processRows<T>(
   rows: T[],
   columns: Column<T>[],
   sort: SortState,
   filters: Record<string, string>,
+  search = "",
 ): T[] {
-  const filtered = rows.filter((row) =>
-    columns.every((col) => {
+  const q = search.trim().toLowerCase();
+  const filtered = rows.filter((row) => {
+    if (q) {
+      const hit = columns.some((col) => {
+        const raw = col.get(row);
+        return raw != null && String(raw).toLowerCase().includes(q);
+      });
+      if (!hit) return false;
+    }
+    return columns.every((col) => {
       const fv = filters[col.key];
       if (!fv || !col.filter) return true;
       const raw = col.get(row);
       const s = raw == null ? "" : String(raw);
       return Array.isArray(col.filter) ? s === fv : s.toLowerCase().includes(fv.toLowerCase());
-    }),
-  );
+    });
+  });
   if (!sort.key) return filtered;
   const col = columns.find((c) => c.key === sort.key);
   if (!col) return filtered;
@@ -117,7 +129,10 @@ export function TableHead<T>({
         {columns.map((c) =>
           c.sortable === false ? (
             <th key={c.key} className="px-4 py-2 font-medium">
-              {c.label}
+              <span className="inline-flex items-center gap-1">
+                {c.label}
+                {c.info && <InfoDot text={c.info} />}
+              </span>
             </th>
           ) : (
             <SortHeader
@@ -126,6 +141,7 @@ export function TableHead<T>({
               sortKey={c.key}
               sort={sort}
               onSort={toggleSort}
+              info={c.info}
             />
           ),
         )}

@@ -39,6 +39,30 @@ export const tr: Partial<Record<TKey, string>> = {
   "common.noData": "Henüz veri yok",
   "common.error": "Bir şeyler ters gitti",
   "common.retry": "Tekrar dene",
+  "tour.title": "Hızlı tur",
+  "tour.launch": "Turu başlat",
+  "tour.next": "İleri",
+  "tour.back": "Geri",
+  "tour.skip": "Atla",
+  "tour.finish": "Başla",
+  "tour.welcome.title": "PortWiz'e hoş geldiniz",
+  "tour.welcome.body":
+    "PortWiz, ağınızdaki açık portları ve servisleri izler ve teyitli değişiklikleri denetime-hazır bir kayıtla işaretler. Bu hızlı tur parçaların nasıl bir araya geldiğini gösterir.",
+  "tour.inventory.title": "1. Envanterinizi oluşturun",
+  "tour.inventory.body":
+    "Envanter altında izlemek istediğiniz host'ları Varlık olarak ekleyin ve VLAN'lar (ağ segmentleri) altında gruplayın. Taramalar bu envantere karşı çalışır.",
+  "tour.scanning.title": "2. Ağınızı tarayın",
+  "tour.scanning.body":
+    "Tarama altında bir agent (ağınızın içine kurduğunuz küçük bir program) kaydedin ve seçtiğiniz bir zamanlamayla çalışan tarama profilleri oluşturun.",
+  "tour.changes.title": "3. Değişiklikleri inceleyin",
+  "tour.changes.body":
+    "Değişiklikler, PortWiz'in kalbidir: teyitli her port veya servis değişikliği; öncesi/sonrası, bir şiddet ve Onayla / Çöz akışıyla görünür.",
+  "tour.compliance.title": "4. Uyumluluğu kanıtlayın",
+  "tour.compliance.body":
+    "Uyumluluk altında denetçiler için tek tıkla kanıt paketi dışa aktarın ve kurcalamaya-dayanıklı denetim kaydını doğrulayın.",
+  "tour.start.title": "Hazırsınız",
+  "tour.start.body":
+    "İlk taramanıza ulaşmak için Panodaki başlangıç kontrol listesini izleyin. Bu turu üst çubuktaki ? düğmesinden istediğiniz zaman yeniden açabilirsiniz.",
   "common.search": "Ara…",
   "common.filter": "Filtrele…",
   "common.active": "Aktif",
@@ -93,6 +117,7 @@ export const tr: Partial<Record<TKey, string>> = {
 
   // Pagination
   "pagination.total": "toplam {total}",
+  "pagination.pageSize": "Sayfa başına",
   "pagination.prev": "Önceki",
   "pagination.next": "Sonraki",
   "pagination.pageOf": "Sayfa {page} / {pageCount}",
@@ -340,6 +365,12 @@ export const tr: Partial<Record<TKey, string>> = {
 
   // Changes
   "changes.title": "Teyitli değişiklikler",
+  "changes.info":
+    "Teyitli bir değişiklik, taramalar arasında değişen ve tutarlı biçimde görülen (yani gürültü olmayan) bir port ya da servistir. Her birini inceleyin: gördüyseniz Onayla, halledildiyse Çöz. Şiddet, ne kadar önemli olduğunu gösterir.",
+  "changes.before": "Önce",
+  "changes.after": "Sonra",
+  "changes.severityInfo":
+    "Bu değişikliğin ne kadar önemli olduğu; değişiklik türü ile host'un kritikliğini birleştirir.",
   "changes.subtitle":
     "Yalnızca ardışık taramalarda teyit edilen değişiklikler burada görünür, böylece ağ titreşimi gürültü oluşturmaz.",
   "changes.marked": "{status} olarak işaretlendi",
@@ -387,6 +418,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "cve.col.service": "Servis",
   "cve.col.cve": "CVE",
   "cve.col.cvss": "CVSS",
+  "cve.cvssInfo": "CVSS, bir zafiyetin şiddetini 0-10 arası puanlar; yüksek olan daha kötüdür.",
   "cve.col.severity": "Önem",
   "cve.col.summary": "Özet",
   "cve.aiBrief": "AI risk özeti",

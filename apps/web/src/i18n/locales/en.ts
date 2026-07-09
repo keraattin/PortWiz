@@ -39,6 +39,30 @@ export const en = {
   "common.noData": "No data yet",
   "common.error": "Something went wrong",
   "common.retry": "Retry",
+  "tour.title": "Quick tour",
+  "tour.launch": "Take a tour",
+  "tour.next": "Next",
+  "tour.back": "Back",
+  "tour.skip": "Skip",
+  "tour.finish": "Get started",
+  "tour.welcome.title": "Welcome to PortWiz",
+  "tour.welcome.body":
+    "PortWiz watches the open ports and services on your network and flags confirmed changes with an audit-ready trail. This quick tour shows how the pieces fit together.",
+  "tour.inventory.title": "1. Build your inventory",
+  "tour.inventory.body":
+    "Under Inventory, add the hosts you want to watch as Assets and group them into VLANs (network segments). Scans run against this inventory.",
+  "tour.scanning.title": "2. Scan your network",
+  "tour.scanning.body":
+    "Under Scanning, enroll an agent (a small program you deploy inside your network) and create scan profiles that run on a schedule you choose.",
+  "tour.changes.title": "3. Review changes",
+  "tour.changes.body":
+    "Changes is the heart of PortWiz: every confirmed port or service change appears with a before/after, a severity, and an Acknowledge / Resolve workflow.",
+  "tour.compliance.title": "4. Prove compliance",
+  "tour.compliance.body":
+    "Under Compliance, export a one-click evidence package for auditors and verify the tamper-evident audit log.",
+  "tour.start.title": "You're ready",
+  "tour.start.body":
+    "Follow the getting-started checklist on the Dashboard to go from zero to your first scan. Reopen this tour anytime from the ? button in the top bar.",
   "common.search": "Search…",
   "common.filter": "Filter…",
   "common.active": "Active",
@@ -93,6 +117,7 @@ export const en = {
 
   // Pagination
   "pagination.total": "{total} total",
+  "pagination.pageSize": "Per page",
   "pagination.prev": "Prev",
   "pagination.next": "Next",
   "pagination.pageOf": "Page {page} of {pageCount}",
@@ -338,6 +363,12 @@ export const en = {
 
   // Changes
   "changes.title": "Confirmed changes",
+  "changes.info":
+    "A confirmed change is a port or service that changed between scans and was seen consistently, so it is not noise. Review each one: Acknowledge it once you have seen it, or Resolve it once it is handled. Severity shows how much it matters.",
+  "changes.before": "Before",
+  "changes.after": "After",
+  "changes.severityInfo":
+    "How much this change matters, combining the change type with the host's criticality.",
   "changes.subtitle":
     "Only changes confirmed across consecutive scans appear here, so network flapping does not raise noise.",
   "changes.marked": "Marked {status}",
@@ -385,6 +416,7 @@ export const en = {
   "cve.col.service": "Service",
   "cve.col.cve": "CVE",
   "cve.col.cvss": "CVSS",
+  "cve.cvssInfo": "CVSS scores a vulnerability's severity from 0 to 10; higher is worse.",
   "cve.col.severity": "Severity",
   "cve.col.summary": "Summary",
   "cve.aiBrief": "AI risk brief",

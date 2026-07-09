@@ -7,6 +7,7 @@ import AssistantWidget from "./AssistantWidget";
 import LanguageSwitcher from "./LanguageSwitcher";
 import NavIcon, { type IconKey } from "./NavIcon";
 import ThemeToggle from "./ThemeToggle";
+import Tour from "./Tour";
 
 // Navigation lives in a left sidebar. Each top-level section carries an icon so
 // the sidebar stays legible when collapsed to icons only; the active section
@@ -73,6 +74,7 @@ function pathInTab(pathname: string, to: string): boolean {
 }
 
 const STORAGE_KEY = "portwiz-sidebar";
+const TOUR_KEY = "portwiz-tour-seen";
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -87,6 +89,16 @@ export default function Layout() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, collapsed ? "collapsed" : "expanded");
   }, [collapsed]);
+
+  // First-run welcome tour: shown once, then reopenable from the header.
+  const [tourOpen, setTourOpen] = useState(false);
+  useEffect(() => {
+    if (localStorage.getItem(TOUR_KEY) !== "1") setTourOpen(true);
+  }, []);
+  function closeTour() {
+    setTourOpen(false);
+    localStorage.setItem(TOUR_KEY, "1");
+  }
 
   const sections = SECTIONS.filter((s) => !s.roles || (role != null && s.roles.includes(role)))
     .map((s) => ({
@@ -185,6 +197,14 @@ export default function Layout() {
             <p className="text-slate-200">{user?.email}</p>
             <p className="text-xs uppercase tracking-wide text-emerald-500">{user?.role}</p>
           </div>
+          <button
+            onClick={() => setTourOpen(true)}
+            title={t("tour.launch")}
+            aria-label={t("tour.launch")}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 text-sm text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+          >
+            ?
+          </button>
           <LanguageSwitcher />
           <ThemeToggle />
           <button
@@ -199,6 +219,7 @@ export default function Layout() {
         </main>
       </div>
       <AssistantWidget />
+      <Tour open={tourOpen} onClose={closeTour} />
     </div>
   );
 }

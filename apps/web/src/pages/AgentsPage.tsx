@@ -6,6 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { type TKey } from "../i18n/locales/en";
@@ -60,6 +61,7 @@ export default function AgentsPage() {
 
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
+  const [search, setSearch] = useState("");
   const columns: Column<Agent>[] = [
     { key: "name", label: t("agents.col.name"), filter: "text", get: (a) => a.name },
     { key: "segment", label: t("agents.col.segment"), filter: "text", get: (a) => a.segment ?? "" },
@@ -73,7 +75,7 @@ export default function AgentsPage() {
     { key: "lastSeen", label: t("agents.col.lastSeen"), get: (a) => a.last_seen_at },
     { key: "enrolledAt", label: t("agents.col.enrolledAt"), get: (a) => a.created_at },
   ];
-  const agentRows = processRows(agents, columns, sort, filters);
+  const agentRows = processRows(agents, columns, sort, filters, search);
   const agentsPage = usePagination(agentRows, 15);
   const onFilter = (key: string, v: string) => {
     setFilter(key, v);
@@ -144,6 +146,9 @@ export default function AgentsPage() {
         </div>
       ) : (
         <>
+          <div className="flex justify-end">
+            <SearchInput value={search} onChange={setSearch} />
+          </div>
           <div className="overflow-x-auto rounded-xl border border-slate-800">
             <table className="w-full text-left text-sm">
               <TableHead
@@ -217,6 +222,8 @@ export default function AgentsPage() {
             pageCount={agentsPage.pageCount}
             total={agentsPage.total}
             onPage={agentsPage.setPage}
+            pageSize={agentsPage.pageSize}
+            onPageSize={agentsPage.setPageSize}
           />
         </>
       )}

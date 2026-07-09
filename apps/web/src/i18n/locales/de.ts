@@ -39,6 +39,30 @@ export const de: Partial<Record<TKey, string>> = {
   "common.noData": "Noch keine Daten",
   "common.error": "Etwas ist schiefgelaufen",
   "common.retry": "Erneut versuchen",
+  "tour.title": "Kurze Tour",
+  "tour.launch": "Tour starten",
+  "tour.next": "Weiter",
+  "tour.back": "Zurück",
+  "tour.skip": "Überspringen",
+  "tour.finish": "Loslegen",
+  "tour.welcome.title": "Willkommen bei PortWiz",
+  "tour.welcome.body":
+    "PortWiz überwacht die offenen Ports und Dienste in Ihrem Netzwerk und meldet bestätigte Änderungen mit einem prüfungssicheren Verlauf. Diese kurze Tour zeigt, wie alles zusammenpasst.",
+  "tour.inventory.title": "1. Inventar aufbauen",
+  "tour.inventory.body":
+    "Fügen Sie unter Inventar die zu überwachenden Hosts als Assets hinzu und gruppieren Sie sie in VLANs (Netzwerksegmente). Scans laufen gegen dieses Inventar.",
+  "tour.scanning.title": "2. Netzwerk scannen",
+  "tour.scanning.body":
+    "Registrieren Sie unter Scannen einen Agenten (ein kleines Programm, das Sie in Ihrem Netzwerk bereitstellen) und erstellen Sie Scan-Profile, die nach einem von Ihnen gewählten Zeitplan laufen.",
+  "tour.changes.title": "3. Änderungen prüfen",
+  "tour.changes.body":
+    "Änderungen ist das Herz von PortWiz: Jede bestätigte Port- oder Dienständerung erscheint mit Vorher/Nachher, einem Schweregrad und einem Bestätigen-/Lösen-Ablauf.",
+  "tour.compliance.title": "4. Compliance nachweisen",
+  "tour.compliance.body":
+    "Exportieren Sie unter Compliance mit einem Klick ein Nachweispaket für Prüfer und verifizieren Sie das manipulationssichere Prüfprotokoll.",
+  "tour.start.title": "Sie sind bereit",
+  "tour.start.body":
+    "Folgen Sie der Erste-Schritte-Checkliste auf dem Dashboard, um von null zum ersten Scan zu gelangen. Öffnen Sie diese Tour jederzeit über die Schaltfläche ? in der oberen Leiste erneut.",
   "common.search": "Suchen…",
   "common.filter": "Filtern…",
   "common.active": "Aktiv",
@@ -93,6 +117,7 @@ export const de: Partial<Record<TKey, string>> = {
 
   // Pagination
   "pagination.total": "{total} gesamt",
+  "pagination.pageSize": "Pro Seite",
   "pagination.prev": "Zurück",
   "pagination.next": "Weiter",
   "pagination.pageOf": "Seite {page} von {pageCount}",
@@ -342,6 +367,12 @@ export const de: Partial<Record<TKey, string>> = {
 
   // Changes
   "changes.title": "Bestätigte Änderungen",
+  "changes.info":
+    "Eine bestätigte Änderung ist ein Port oder Dienst, der sich zwischen Scans geändert hat und konsistent gesehen wurde, also kein Rauschen ist. Prüfen Sie jede: Bestätigen Sie sie, sobald Sie sie gesehen haben, oder lösen Sie sie, sobald sie behoben ist. Der Schweregrad zeigt, wie wichtig sie ist.",
+  "changes.before": "Vorher",
+  "changes.after": "Nachher",
+  "changes.severityInfo":
+    "Wie wichtig diese Änderung ist; kombiniert den Änderungstyp mit der Kritikalität des Hosts.",
   "changes.subtitle":
     "Hier erscheinen nur Änderungen, die über aufeinanderfolgende Scans bestätigt wurden, sodass Netzwerk-Flattern kein Rauschen erzeugt.",
   "changes.marked": "Als {status} markiert",
@@ -389,6 +420,7 @@ export const de: Partial<Record<TKey, string>> = {
   "cve.col.service": "Dienst",
   "cve.col.cve": "CVE",
   "cve.col.cvss": "CVSS",
+  "cve.cvssInfo": "CVSS bewertet den Schweregrad einer Schwachstelle von 0 bis 10; höher ist schlechter.",
   "cve.col.severity": "Schweregrad",
   "cve.col.summary": "Zusammenfassung",
   "cve.aiBrief": "KI-Risikobericht",

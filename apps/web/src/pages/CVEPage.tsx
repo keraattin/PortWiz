@@ -7,16 +7,28 @@ import {
   recheckCVEs,
   summarizeCVEs,
 } from "../api/client";
-import { controlClass as inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import PageHeader from "../components/PageHeader";
+import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
+import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
+import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
 const SEVERITIES = ["critical", "high", "medium", "low", "unknown"] as const;
+
+// Sort severity by impact, not alphabetically.
+const SEV_RANK: Record<string, number> = {
+  unknown: 0,
+  low: 1,
+  medium: 2,
+  high: 3,
+  critical: 4,
+};
 
 const SEV_CLASS: Record<string, string> = {
   critical: "bg-red-900 text-red-200",
@@ -38,15 +50,43 @@ export default function CVEPage() {
   const [rechecking, setRechecking] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [aiConfigured, setAiConfigured] = useState(false);
-  const [severity, setSeverity] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [brief, setBrief] = useState<string | null>(null);
   const [briefing, setBriefing] = useState(false);
+  const { sort, toggleSort } = useSort();
+  const { filters, setFilter } = useColumnFilters();
+  const [search, setSearch] = useState("");
+
+  const columns: Column<CVEFinding>[] = [
+    { key: "host", label: t("cve.col.host"), filter: "text", get: (f) => `${f.ip}:${f.port}` },
+    {
+      key: "service",
+      label: t("cve.col.service"),
+      filter: "text",
+      get: (f) => [f.service, f.version].filter(Boolean).join(" "),
+    },
+    { key: "cve", label: t("cve.col.cve"), filter: "text", get: (f) => f.cve_id },
+    { key: "cvss", label: t("cve.col.cvss"), get: (f) => f.cvss, info: t("cve.cvssInfo") },
+    {
+      key: "severity",
+      label: t("cve.col.severity"),
+      filter: SEVERITIES.map((s) => ({ value: s, label: t(`severity.${s}` as TKey) })),
+      get: (f) => f.severity,
+      rank: SEV_RANK,
+    },
+    { key: "summary", label: t("cve.col.summary"), sortable: false, get: (f) => f.summary },
+  ];
+  const processed = processRows(findings, columns, sort, filters, search);
+  const page = usePagination(processed, 15);
+  const onColFilter = (key: string, v: string) => {
+    setFilter(key, v);
+    page.setPage(0);
+  };
 
   async function load() {
     setLoading(true);
     try {
-      setFindings(await fetchCVEFindings(severity ? { severity } : undefined));
+      setFindings(await fetchCVEFindings());
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -65,7 +105,7 @@ export default function CVEPage() {
         /* leave configured=true; the recheck will surface a real error */
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [severity]);
+  }, []);
 
   async function onRecheck() {
     setRechecking(true);
@@ -114,16 +154,8 @@ export default function CVEPage() {
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
-      <div className="flex items-center gap-3">
-        <label className="text-xs text-slate-400">{t("cve.filterSeverity")}</label>
-        <select className={inputClass} value={severity} onChange={(e) => setSeverity(e.target.value)}>
-          <option value="">{t("cve.allSeverities")}</option>
-          {SEVERITIES.map((s) => (
-            <option key={s} value={s}>
-              {t(`severity.${s}` as TKey)}
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput value={search} onChange={setSearch} />
         {aiConfigured && (
           <Button
             variant="outline"
@@ -154,16 +186,13 @@ export default function CVEPage() {
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-900 text-xs uppercase text-slate-400">
-            <tr>
-              <th className="px-4 py-2">{t("cve.col.host")}</th>
-              <th className="px-4 py-2">{t("cve.col.service")}</th>
-              <th className="px-4 py-2">{t("cve.col.cve")}</th>
-              <th className="px-4 py-2">{t("cve.col.cvss")}</th>
-              <th className="px-4 py-2">{t("cve.col.severity")}</th>
-              <th className="px-4 py-2">{t("cve.col.summary")}</th>
-            </tr>
-          </thead>
+          <TableHead
+            columns={columns}
+            sort={sort}
+            toggleSort={toggleSort}
+            filters={filters}
+            setFilter={onColFilter}
+          />
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>
@@ -177,8 +206,14 @@ export default function CVEPage() {
                   {t("cve.empty")}
                 </td>
               </tr>
+            ) : processed.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+                  {t("common.noData")}
+                </td>
+              </tr>
             ) : (
-              findings.map((f) => (
+              page.slice.map((f) => (
                 <tr key={f.id} className="bg-slate-950">
                   <td className="px-4 py-2 font-mono text-xs text-slate-200">
                     {f.ip}:{f.port}
@@ -214,6 +249,14 @@ export default function CVEPage() {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={page.page}
+        pageCount={page.pageCount}
+        total={page.total}
+        onPage={page.setPage}
+        pageSize={page.pageSize}
+        onPageSize={page.setPageSize}
+      />
     </div>
   );
 }

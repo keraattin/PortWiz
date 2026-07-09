@@ -39,6 +39,30 @@ export const es: Partial<Record<TKey, string>> = {
   "common.noData": "Aún no hay datos",
   "common.error": "Algo salió mal",
   "common.retry": "Reintentar",
+  "tour.title": "Tour rápido",
+  "tour.launch": "Hacer el tour",
+  "tour.next": "Siguiente",
+  "tour.back": "Atrás",
+  "tour.skip": "Omitir",
+  "tour.finish": "Empezar",
+  "tour.welcome.title": "Bienvenido a PortWiz",
+  "tour.welcome.body":
+    "PortWiz vigila los puertos y servicios abiertos de tu red y señala los cambios confirmados con un registro listo para auditoría. Este tour rápido muestra cómo encajan las piezas.",
+  "tour.inventory.title": "1. Crea tu inventario",
+  "tour.inventory.body":
+    "En Inventario, añade los hosts que quieres vigilar como Activos y agrúpalos en VLAN (segmentos de red). Los escaneos se ejecutan sobre este inventario.",
+  "tour.scanning.title": "2. Escanea tu red",
+  "tour.scanning.body":
+    "En Escaneo, registra un agente (un pequeño programa que despliegas dentro de tu red) y crea perfiles de escaneo que se ejecutan según el horario que elijas.",
+  "tour.changes.title": "3. Revisa los cambios",
+  "tour.changes.body":
+    "Cambios es el corazón de PortWiz: cada cambio confirmado de puerto o servicio aparece con un antes/después, una gravedad y un flujo Reconocer / Resolver.",
+  "tour.compliance.title": "4. Demuestra el cumplimiento",
+  "tour.compliance.body":
+    "En Cumplimiento, exporta con un clic un paquete de evidencias para auditores y verifica el registro de auditoría a prueba de manipulaciones.",
+  "tour.start.title": "Estás listo",
+  "tour.start.body":
+    "Sigue la lista de primeros pasos en el Panel para pasar de cero a tu primer escaneo. Reabre este tour cuando quieras con el botón ? de la barra superior.",
   "common.search": "Buscar…",
   "common.filter": "Filtrar…",
   "common.active": "Activo",
@@ -93,6 +117,7 @@ export const es: Partial<Record<TKey, string>> = {
 
   // Pagination
   "pagination.total": "{total} en total",
+  "pagination.pageSize": "Por página",
   "pagination.prev": "Anterior",
   "pagination.next": "Siguiente",
   "pagination.pageOf": "Página {page} de {pageCount}",
@@ -342,6 +367,12 @@ export const es: Partial<Record<TKey, string>> = {
 
   // Changes
   "changes.title": "Cambios confirmados",
+  "changes.info":
+    "Un cambio confirmado es un puerto o servicio que cambió entre escaneos y se vio de forma consistente, así que no es ruido. Revisa cada uno: Reconócelo cuando lo hayas visto, o Resuélvelo cuando esté atendido. La gravedad muestra cuánto importa.",
+  "changes.before": "Antes",
+  "changes.after": "Después",
+  "changes.severityInfo":
+    "Cuánto importa este cambio, combinando el tipo de cambio con la criticidad del host.",
   "changes.subtitle":
     "Aquí solo aparecen los cambios confirmados en escaneos consecutivos, para que las fluctuaciones de la red no generen ruido.",
   "changes.marked": "Marcado como {status}",
@@ -389,6 +420,7 @@ export const es: Partial<Record<TKey, string>> = {
   "cve.col.service": "Servicio",
   "cve.col.cve": "CVE",
   "cve.col.cvss": "CVSS",
+  "cve.cvssInfo": "CVSS puntúa la gravedad de una vulnerabilidad de 0 a 10; más alto es peor.",
   "cve.col.severity": "Severidad",
   "cve.col.summary": "Resumen",
   "cve.aiBrief": "Resumen de riesgo IA",

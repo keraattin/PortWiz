@@ -420,6 +420,8 @@ export default function VlansPage() {
         pageCount={vlansPage.pageCount}
         total={vlansPage.total}
         onPage={vlansPage.setPage}
+        pageSize={vlansPage.pageSize}
+        onPageSize={vlansPage.setPageSize}
       />
 
       <div className="flex items-start justify-between gap-3 pt-2">
@@ -501,6 +503,8 @@ export default function VlansPage() {
         pageCount={rangesPage.pageCount}
         total={rangesPage.total}
         onPage={rangesPage.setPage}
+        pageSize={rangesPage.pageSize}
+        onPageSize={rangesPage.setPageSize}
       />
 
       <Modal open={vlanOpen} onClose={() => setVlanOpen(false)} title={t("vlans.add")}>

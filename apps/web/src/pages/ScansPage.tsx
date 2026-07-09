@@ -405,6 +405,8 @@ export default function ScansPage() {
           pageCount={profilesPage.pageCount}
           total={profilesPage.total}
           onPage={profilesPage.setPage}
+          pageSize={profilesPage.pageSize}
+          onPageSize={profilesPage.setPageSize}
         />
       </section>
 
@@ -482,6 +484,8 @@ export default function ScansPage() {
           pageCount={runsPage.pageCount}
           total={runsPage.total}
           onPage={runsPage.setPage}
+          pageSize={runsPage.pageSize}
+          onPageSize={runsPage.setPageSize}
         />
       </section>
 
@@ -717,6 +721,8 @@ export default function ScansPage() {
           pageCount={obsPage.pageCount}
           total={obsPage.total}
           onPage={obsPage.setPage}
+          pageSize={obsPage.pageSize}
+          onPageSize={obsPage.setPageSize}
         />
       </Modal>
     </div>

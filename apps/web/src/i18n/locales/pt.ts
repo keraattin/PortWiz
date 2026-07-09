@@ -39,6 +39,30 @@ export const pt: Partial<Record<TKey, string>> = {
   "common.noData": "Ainda sem dados",
   "common.error": "Algo deu errado",
   "common.retry": "Tentar novamente",
+  "tour.title": "Tour rápido",
+  "tour.launch": "Fazer o tour",
+  "tour.next": "Próximo",
+  "tour.back": "Voltar",
+  "tour.skip": "Pular",
+  "tour.finish": "Começar",
+  "tour.welcome.title": "Bem-vindo ao PortWiz",
+  "tour.welcome.body":
+    "O PortWiz monitora as portas e serviços abertos na sua rede e sinaliza alterações confirmadas com um registro pronto para auditoria. Este tour rápido mostra como as peças se encaixam.",
+  "tour.inventory.title": "1. Monte seu inventário",
+  "tour.inventory.body":
+    "Em Inventário, adicione os hosts que deseja monitorar como Ativos e agrupe-os em VLANs (segmentos de rede). As varreduras rodam contra esse inventário.",
+  "tour.scanning.title": "2. Faça a varredura da rede",
+  "tour.scanning.body":
+    "Em Varredura, registre um agente (um pequeno programa implantado na sua rede) e crie perfis de varredura que rodam num agendamento à sua escolha.",
+  "tour.changes.title": "3. Revise as alterações",
+  "tour.changes.body":
+    "Alterações é o coração do PortWiz: cada alteração confirmada de porta ou serviço aparece com um antes/depois, uma gravidade e um fluxo Reconhecer / Resolver.",
+  "tour.compliance.title": "4. Comprove a conformidade",
+  "tour.compliance.body":
+    "Em Conformidade, exporte com um clique um pacote de evidências para auditores e verifique o registro de auditoria à prova de adulteração.",
+  "tour.start.title": "Você está pronto",
+  "tour.start.body":
+    "Siga a lista de primeiros passos no Painel para ir do zero à sua primeira varredura. Reabra este tour a qualquer momento pelo botão ? na barra superior.",
   "common.search": "Pesquisar…",
   "common.filter": "Filtrar…",
   "common.active": "Ativo",
@@ -93,6 +117,7 @@ export const pt: Partial<Record<TKey, string>> = {
 
   // Pagination
   "pagination.total": "{total} no total",
+  "pagination.pageSize": "Por página",
   "pagination.prev": "Anterior",
   "pagination.next": "Próximo",
   "pagination.pageOf": "Página {page} de {pageCount}",
@@ -342,6 +367,12 @@ export const pt: Partial<Record<TKey, string>> = {
 
   // Changes
   "changes.title": "Alterações confirmadas",
+  "changes.info":
+    "Uma alteração confirmada é uma porta ou serviço que mudou entre varreduras e foi visto de forma consistente, ou seja, não é ruído. Revise cada uma: Reconheça depois de vê-la, ou Resolva depois de tratada. A gravidade mostra o quanto importa.",
+  "changes.before": "Antes",
+  "changes.after": "Depois",
+  "changes.severityInfo":
+    "O quanto esta alteração importa, combinando o tipo de alteração com a criticidade do host.",
   "changes.subtitle":
     "Apenas alterações confirmadas em varreduras consecutivas aparecem aqui, para que oscilações de rede não gerem ruído.",
   "changes.marked": "Marcado como {status}",
@@ -389,6 +420,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "cve.col.service": "Serviço",
   "cve.col.cve": "CVE",
   "cve.col.cvss": "CVSS",
+  "cve.cvssInfo": "O CVSS pontua a gravidade de uma vulnerabilidade de 0 a 10; maior é pior.",
   "cve.col.severity": "Severidade",
   "cve.col.summary": "Resumo",
   "cve.aiBrief": "Resumo de risco IA",

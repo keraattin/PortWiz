@@ -228,6 +228,8 @@ export default function CompliancePage() {
           pageCount={cadencePage.pageCount}
           total={cadencePage.total}
           onPage={cadencePage.setPage}
+          pageSize={cadencePage.pageSize}
+          onPageSize={cadencePage.setPageSize}
         />
       </section>
 
@@ -329,6 +331,8 @@ export default function CompliancePage() {
           pageCount={evidencePage.pageCount}
           total={evidencePage.total}
           onPage={evidencePage.setPage}
+          pageSize={evidencePage.pageSize}
+          onPageSize={evidencePage.setPageSize}
         />
       </section>
 

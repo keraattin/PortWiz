@@ -14,6 +14,7 @@ import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import RoleMatrix from "../components/RoleMatrix";
+import SearchInput from "../components/SearchInput";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
@@ -42,6 +43,7 @@ export default function UsersPage() {
   const [error, setError] = useState<string | null>(null);
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
+  const [search, setSearch] = useState("");
   const columns: Column<CurrentUser>[] = [
     { key: "email", label: t("users.col.email"), filter: "text", get: (u) => u.email },
     { key: "name", label: t("users.col.name"), filter: "text", get: (u) => u.full_name ?? "" },
@@ -62,7 +64,7 @@ export default function UsersPage() {
     },
     { key: "created", label: t("users.col.created"), get: (u) => u.created_at },
   ];
-  const processed = processRows(users, columns, sort, filters);
+  const processed = processRows(users, columns, sort, filters, search);
   const usersPage = usePagination(processed, 15);
   const onFilter = (key: string, v: string) => {
     setFilter(key, v);
@@ -169,6 +171,10 @@ export default function UsersPage() {
         <p className="text-sm text-red-400">{error}</p>
       )}
 
+      <div className="flex justify-end">
+        <SearchInput value={search} onChange={setSearch} />
+      </div>
+
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <TableHead
@@ -235,6 +241,8 @@ export default function UsersPage() {
         pageCount={usersPage.pageCount}
         total={usersPage.total}
         onPage={usersPage.setPage}
+        pageSize={usersPage.pageSize}
+        onPageSize={usersPage.setPageSize}
       />
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t("users.add")}>
