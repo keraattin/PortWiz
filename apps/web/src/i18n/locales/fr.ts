@@ -50,6 +50,18 @@ export const fr: Partial<Record<TKey, string>> = {
     "Cliquez ici pour enregistrer un hôte comme Actif. Vous pouvez aussi en importer plusieurs à la fois depuis un CSV ou Excel.",
   "tour.help.title": "Besoin de la visite ?",
   "tour.help.body": "Rouvrez cette visite rapide à tout moment via ce bouton.",
+  "tour.dashboard.title": "Votre tableau de bord",
+  "tour.dashboard.body":
+    "Cette liste suit votre configuration, de l'ajout d'hôtes à votre première analyse. Les coches vertes montrent ce qui est fait.",
+  "tour.enrollAgent.title": "Déployez un agent",
+  "tour.enrollAgent.body":
+    "Un agent est un petit programme que vous exécutez dans votre réseau. Cliquez ici pour en enrôler un et obtenir une commande prête à l'emploi.",
+  "tour.newScan.title": "Créez une analyse",
+  "tour.newScan.body":
+    "Cliquez ici pour configurer une analyse : cibles, ports et fréquence d'exécution (quotidienne, hebdomadaire...).",
+  "tour.settings.title": "Connectez vos outils",
+  "tour.settings.body":
+    "Dans Paramètres, connectez un fournisseur d'IA, une source CVE, l'e-mail et Jira, et ajustez les valeurs par défaut des analyses.",
   "tour.welcome.title": "Bienvenue dans PortWiz",
   "tour.welcome.body":
     "PortWiz surveille les ports et services ouverts de votre réseau et signale les changements confirmés avec une trace prête pour l'audit. Cette visite rapide montre comment les pièces s'assemblent.",

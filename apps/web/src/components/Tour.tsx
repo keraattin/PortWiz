@@ -17,11 +17,15 @@ interface Step {
 
 const STEPS: Step[] = [
   { key: "welcome" },
+  { key: "dashboard", route: "/", target: '[data-tour="getting-started"]', placement: "bottom" },
   { key: "inventory", target: '[data-tour="nav-inventory"]', placement: "right" },
   { key: "addAsset", route: "/assets", target: '[data-tour="add-asset"]', placement: "bottom" },
   { key: "scanning", target: '[data-tour="nav-scanning"]', placement: "right" },
+  { key: "enrollAgent", route: "/agents", target: '[data-tour="enroll-agent"]', placement: "bottom" },
+  { key: "newScan", route: "/scans", target: '[data-tour="new-scan"]', placement: "bottom" },
   { key: "changes", target: '[data-tour="nav-changes"]', placement: "right" },
   { key: "compliance", target: '[data-tour="nav-compliance"]', placement: "right" },
+  { key: "settings", route: "/settings", target: '[data-tour="settings-tabs"]', placement: "bottom" },
   { key: "help", target: '[data-tour="help"]', placement: "bottom" },
   { key: "start", route: "/" },
 ];

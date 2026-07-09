@@ -50,6 +50,18 @@ export const pt: Partial<Record<TKey, string>> = {
     "Clique aqui para registrar um host como Ativo. Você também pode importar vários de uma vez de CSV ou Excel.",
   "tour.help.title": "Precisa do tour de novo?",
   "tour.help.body": "Reabra este tour rápido a qualquer momento por este botão.",
+  "tour.dashboard.title": "Seu painel",
+  "tour.dashboard.body":
+    "Esta lista acompanha sua configuração, de adicionar hosts à sua primeira varredura. Marcas verdes mostram o que já foi feito.",
+  "tour.enrollAgent.title": "Implante um agente",
+  "tour.enrollAgent.body":
+    "Um agente é um pequeno programa que você executa dentro da sua rede. Clique aqui para registrar um e obter um comando pronto para rodar.",
+  "tour.newScan.title": "Crie uma varredura",
+  "tour.newScan.body":
+    "Clique aqui para configurar uma varredura: escolha alvos, portas e a frequência (diária, semanal...).",
+  "tour.settings.title": "Conecte suas ferramentas",
+  "tour.settings.body":
+    "Em Configurações, conecte um provedor de IA, uma fonte de CVE, e-mail e Jira, e ajuste os padrões de varredura.",
   "tour.welcome.title": "Bem-vindo ao PortWiz",
   "tour.welcome.body":
     "O PortWiz monitora as portas e serviços abertos na sua rede e sinaliza alterações confirmadas com um registro pronto para auditoria. Este tour rápido mostra como as peças se encaixam.",

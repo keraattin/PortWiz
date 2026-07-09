@@ -50,6 +50,18 @@ export const en = {
     "Click here to register a host as an Asset. You can also import many at once from CSV or Excel.",
   "tour.help.title": "Need the tour again?",
   "tour.help.body": "Reopen this quick tour anytime from this button.",
+  "tour.dashboard.title": "Your dashboard",
+  "tour.dashboard.body":
+    "This checklist tracks your setup, from adding hosts to your first scan. Green ticks show what's already done.",
+  "tour.enrollAgent.title": "Deploy an agent",
+  "tour.enrollAgent.body":
+    "An agent is a small program you run inside your network. Click here to enroll one and get a ready-to-run command.",
+  "tour.newScan.title": "Create a scan",
+  "tour.newScan.body":
+    "Click here to set up a scan: choose targets, ports, and how often it runs (daily, weekly...).",
+  "tour.settings.title": "Connect your tools",
+  "tour.settings.body":
+    "In Settings, connect an AI provider, a CVE source, email, and Jira, and tune scan defaults.",
   "tour.welcome.title": "Welcome to PortWiz",
   "tour.welcome.body":
     "PortWiz watches the open ports and services on your network and flags confirmed changes with an audit-ready trail. This quick tour shows how the pieces fit together.",

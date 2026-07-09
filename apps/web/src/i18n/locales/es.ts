@@ -50,6 +50,18 @@ export const es: Partial<Record<TKey, string>> = {
     "Haz clic aquí para registrar un host como Activo. También puedes importar muchos a la vez desde CSV o Excel.",
   "tour.help.title": "¿Necesitas el tour otra vez?",
   "tour.help.body": "Reabre este tour rápido cuando quieras con este botón.",
+  "tour.dashboard.title": "Tu panel",
+  "tour.dashboard.body":
+    "Esta lista sigue tu configuración, desde añadir hosts hasta tu primer escaneo. Las marcas verdes muestran lo ya hecho.",
+  "tour.enrollAgent.title": "Despliega un agente",
+  "tour.enrollAgent.body":
+    "Un agente es un pequeño programa que ejecutas dentro de tu red. Haz clic aquí para registrar uno y obtener un comando listo para ejecutar.",
+  "tour.newScan.title": "Crea un escaneo",
+  "tour.newScan.body":
+    "Haz clic aquí para configurar un escaneo: elige objetivos, puertos y con qué frecuencia se ejecuta (diario, semanal...).",
+  "tour.settings.title": "Conecta tus herramientas",
+  "tour.settings.body":
+    "En Configuración, conecta un proveedor de IA, una fuente de CVE, correo y Jira, y ajusta los valores predeterminados de escaneo.",
   "tour.welcome.title": "Bienvenido a PortWiz",
   "tour.welcome.body":
     "PortWiz vigila los puertos y servicios abiertos de tu red y señala los cambios confirmados con un registro listo para auditoría. Este tour rápido muestra cómo encajan las piezas.",

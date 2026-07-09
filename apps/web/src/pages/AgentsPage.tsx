@@ -109,7 +109,11 @@ export default function AgentsPage() {
   }, []);
 
   const enrollButton = isAdmin && (
-    <Button onClick={() => navigate("/agents/new")} className="whitespace-nowrap">
+    <Button
+      onClick={() => navigate("/agents/new")}
+      data-tour="enroll-agent"
+      className="whitespace-nowrap"
+    >
       + {t("agents.enroll")}
     </Button>
   );

@@ -314,7 +314,7 @@ export default function ScansPage() {
             <p className="text-sm text-slate-500">{t("scans.profilesSubtitle")}</p>
           </div>
           {canWrite && (
-            <Button onClick={openAdd} className="whitespace-nowrap">
+            <Button onClick={openAdd} data-tour="new-scan" className="whitespace-nowrap">
               {t("scans.add")}
             </Button>
           )}

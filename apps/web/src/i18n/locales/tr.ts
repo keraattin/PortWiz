@@ -50,6 +50,18 @@ export const tr: Partial<Record<TKey, string>> = {
     "Bir host'u Varlık olarak kaydetmek için buraya tıklayın. CSV veya Excel'den toplu olarak da içe aktarabilirsiniz.",
   "tour.help.title": "Tur tekrar mı lazım?",
   "tour.help.body": "Bu hızlı turu istediğiniz zaman bu düğmeden yeniden açın.",
+  "tour.dashboard.title": "Panonuz",
+  "tour.dashboard.body":
+    "Bu kontrol listesi kurulumunuzu takip eder: host eklemekten ilk taramaya kadar. Yeşil işaretler yapılanları gösterir.",
+  "tour.enrollAgent.title": "Bir agent kurun",
+  "tour.enrollAgent.body":
+    "Agent, ağınızın içinde çalıştırdığınız küçük bir programdır. Bir tane kaydetmek ve çalıştırmaya-hazır komut almak için buraya tıklayın.",
+  "tour.newScan.title": "Tarama oluşturun",
+  "tour.newScan.body":
+    "Bir tarama kurmak için buraya tıklayın: hedefleri, portları ve ne sıklıkta çalışacağını (günlük, haftalık...) seçin.",
+  "tour.settings.title": "Araçlarınızı bağlayın",
+  "tour.settings.body":
+    "Ayarlar'da bir AI sağlayıcı, bir CVE kaynağı, e-posta ve Jira bağlayın; tarama varsayılanlarını ayarlayın.",
   "tour.welcome.title": "PortWiz'e hoş geldiniz",
   "tour.welcome.body":
     "PortWiz, ağınızdaki açık portları ve servisleri izler ve teyitli değişiklikleri denetime-hazır bir kayıtla işaretler. Bu hızlı tur parçaların nasıl bir araya geldiğini gösterir.",

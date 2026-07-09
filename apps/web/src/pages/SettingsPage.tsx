@@ -435,7 +435,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <PageHeader title={t("settings.title")} subtitle={t("settings.adminSubtitle")} />
 
-      <div className="flex flex-wrap gap-1 border-b border-slate-800">
+      <div data-tour="settings-tabs" className="flex flex-wrap gap-1 border-b border-slate-800">
         {(["ai", "email", "jira", "netbox", "cve", "system"] as const).map((tab) => (
           <button
             key={tab}

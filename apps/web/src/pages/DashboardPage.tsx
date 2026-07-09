@@ -206,7 +206,7 @@ export default function DashboardPage() {
 
       {charts && <DashboardCharts data={charts} />}
 
-      <section className="space-y-3">
+      <section data-tour="getting-started" className="space-y-3">
         <h2 className="text-lg font-semibold text-slate-200">{t("dashboard.gettingStarted")}</h2>
         <p className="text-sm text-slate-500">{t("dashboard.gettingStartedHint")}</p>
         <ol className="space-y-2">

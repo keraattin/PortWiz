@@ -50,6 +50,18 @@ export const de: Partial<Record<TKey, string>> = {
     "Klicken Sie hier, um einen Host als Asset zu registrieren. Sie können auch viele auf einmal aus CSV oder Excel importieren.",
   "tour.help.title": "Tour erneut nötig?",
   "tour.help.body": "Öffnen Sie diese kurze Tour jederzeit über diese Schaltfläche erneut.",
+  "tour.dashboard.title": "Ihr Dashboard",
+  "tour.dashboard.body":
+    "Diese Checkliste verfolgt Ihre Einrichtung, vom Hinzufügen von Hosts bis zum ersten Scan. Grüne Haken zeigen, was erledigt ist.",
+  "tour.enrollAgent.title": "Agenten bereitstellen",
+  "tour.enrollAgent.body":
+    "Ein Agent ist ein kleines Programm, das Sie in Ihrem Netzwerk ausführen. Klicken Sie hier, um einen zu registrieren und einen sofort ausführbaren Befehl zu erhalten.",
+  "tour.newScan.title": "Scan erstellen",
+  "tour.newScan.body":
+    "Klicken Sie hier, um einen Scan einzurichten: Ziele, Ports und wie oft er läuft (täglich, wöchentlich...).",
+  "tour.settings.title": "Tools verbinden",
+  "tour.settings.body":
+    "Verbinden Sie in den Einstellungen einen KI-Anbieter, eine CVE-Quelle, E-Mail und Jira und passen Sie die Scan-Standards an.",
   "tour.welcome.title": "Willkommen bei PortWiz",
   "tour.welcome.body":
     "PortWiz überwacht die offenen Ports und Dienste in Ihrem Netzwerk und meldet bestätigte Änderungen mit einem prüfungssicheren Verlauf. Diese kurze Tour zeigt, wie alles zusammenpasst.",
