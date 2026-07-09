@@ -40,6 +40,18 @@ export const pt: Partial<Record<TKey, string>> = {
   "common.error": "Algo deu errado",
   "common.retry": "Tentar novamente",
   "tour.title": "Tour rápido",
+  "tour.addVlan.title": "Agrupe em VLANs",
+  "tour.addVlan.body":
+    "Clique aqui para adicionar uma VLAN, um segmento de rede como DMZ ou Servidores. Os ativos pertencem a VLANs, então você pode varrer e reportar por segmento.",
+  "tour.changesReview.title": "Como revisar uma alteração",
+  "tour.changesReview.body":
+    "Cada alteração confirmada mostra um antes/depois e uma gravidade. Use Reconhecer depois de vê-la, e Resolver depois de tratada.",
+  "tour.evidence.title": "Exporte evidências de auditoria",
+  "tour.evidence.body":
+    "Um clique reúne varreduras, alterações, tarefas e o registro de auditoria à prova de adulteração num pacote JSON/PDF assinado para o seu auditor.",
+  "tour.language.title": "Idioma e tema",
+  "tour.language.body":
+    "O PortWiz fala seis idiomas e tem temas claro e escuro. Troque quando quiser por aqui.",
   "tour.launch": "Fazer o tour",
   "tour.next": "Próximo",
   "tour.back": "Voltar",

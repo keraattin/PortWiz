@@ -40,6 +40,18 @@ export const fr: Partial<Record<TKey, string>> = {
   "common.error": "Une erreur est survenue",
   "common.retry": "Réessayer",
   "tour.title": "Visite rapide",
+  "tour.addVlan.title": "Regroupez en VLAN",
+  "tour.addVlan.body":
+    "Cliquez ici pour ajouter un VLAN, un segment réseau comme DMZ ou Serveurs. Les actifs appartiennent aux VLAN, ce qui permet d'analyser et de rapporter par segment.",
+  "tour.changesReview.title": "Comment examiner un changement",
+  "tour.changesReview.body":
+    "Chaque changement confirmé montre un avant/après et une gravité. Utilisez Accuser réception une fois vu, et Résoudre une fois traité.",
+  "tour.evidence.title": "Exportez les preuves d'audit",
+  "tour.evidence.body":
+    "Un clic regroupe analyses, changements, tâches et le journal d'audit inviolable dans un dossier JSON/PDF signé pour votre auditeur.",
+  "tour.language.title": "Langue et thème",
+  "tour.language.body":
+    "PortWiz parle six langues et propose des thèmes clair et sombre. Changez à tout moment ici.",
   "tour.launch": "Lancer la visite",
   "tour.next": "Suivant",
   "tour.back": "Retour",

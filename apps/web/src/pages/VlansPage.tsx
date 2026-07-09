@@ -235,7 +235,7 @@ export default function VlansPage() {
         subtitle={t("vlans.subtitle")}
         actions={
           canWrite && (
-            <Button onClick={openAddVlan} className="whitespace-nowrap">
+            <Button onClick={openAddVlan} data-tour="add-vlan" className="whitespace-nowrap">
               {t("vlans.add")}
             </Button>
           )

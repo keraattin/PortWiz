@@ -40,6 +40,18 @@ export const de: Partial<Record<TKey, string>> = {
   "common.error": "Etwas ist schiefgelaufen",
   "common.retry": "Erneut versuchen",
   "tour.title": "Kurze Tour",
+  "tour.addVlan.title": "In VLANs gruppieren",
+  "tour.addVlan.body":
+    "Klicken Sie hier, um ein VLAN hinzuzufügen, ein Netzwerksegment wie DMZ oder Server. Assets gehören zu VLANs, sodass Sie pro Segment scannen und berichten können.",
+  "tour.changesReview.title": "So prüfen Sie eine Änderung",
+  "tour.changesReview.body":
+    "Jede bestätigte Änderung zeigt Vorher/Nachher und einen Schweregrad. Nutzen Sie Bestätigen, wenn Sie sie gesehen haben, und Lösen, sobald sie behoben ist.",
+  "tour.evidence.title": "Prüfnachweise exportieren",
+  "tour.evidence.body":
+    "Ein Klick bündelt Scans, Änderungen, Aufgaben und das manipulationssichere Prüfprotokoll in einem signierten JSON/PDF-Paket für Ihren Prüfer.",
+  "tour.language.title": "Sprache & Design",
+  "tour.language.body":
+    "PortWiz spricht sechs Sprachen und hat helle und dunkle Designs. Wechseln Sie jederzeit hier.",
   "tour.launch": "Tour starten",
   "tour.next": "Weiter",
   "tour.back": "Zurück",

@@ -237,7 +237,9 @@ export default function ChangesPage() {
 
       <p className="text-sm text-slate-500">{t("changes.subtitle")}</p>
 
-      <InfoCallout>{t("changes.info")}</InfoCallout>
+      <div data-tour="changes-info">
+        <InfoCallout>{t("changes.info")}</InfoCallout>
+      </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 

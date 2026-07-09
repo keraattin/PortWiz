@@ -40,6 +40,18 @@ export const tr: Partial<Record<TKey, string>> = {
   "common.error": "Bir şeyler ters gitti",
   "common.retry": "Tekrar dene",
   "tour.title": "Hızlı tur",
+  "tour.addVlan.title": "VLAN'larda gruplayın",
+  "tour.addVlan.body":
+    "Bir VLAN eklemek için buraya tıklayın (DMZ veya Sunucular gibi bir ağ segmenti). Varlıklar VLAN'lara aittir; böylece segment bazında tarayıp raporlayabilirsiniz.",
+  "tour.changesReview.title": "Bir değişikliği nasıl incelersiniz",
+  "tour.changesReview.body":
+    "Teyitli her değişiklik bir öncesi/sonrası ve bir şiddet gösterir. Gördüğünüzde Onayla, halledildiğinde Çöz kullanın.",
+  "tour.evidence.title": "Denetim kanıtı dışa aktarın",
+  "tour.evidence.body":
+    "Tek tık; taramaları, değişiklikleri, task'ları ve kurcalamaya-dayanıklı denetim kaydını denetçiniz için imzalı JSON/PDF paketinde toplar.",
+  "tour.language.title": "Dil ve tema",
+  "tour.language.body":
+    "PortWiz altı dil konuşur ve açık/koyu temaları vardır. İstediğiniz zaman buradan değiştirin.",
   "tour.launch": "Turu başlat",
   "tour.next": "İleri",
   "tour.back": "Geri",

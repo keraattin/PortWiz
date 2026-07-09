@@ -267,7 +267,7 @@ export default function CompliancePage() {
       </section>
 
       {/* Evidence export */}
-      <section className="space-y-3">
+      <section data-tour="evidence" className="space-y-3">
         <h2 className="text-lg font-semibold text-slate-200">{t("compliance.evidenceTitle")}</h2>
         <p className="text-sm text-slate-500">{t("compliance.evidenceSubtitle")}</p>
         <div className="overflow-x-auto rounded-xl border border-slate-800">

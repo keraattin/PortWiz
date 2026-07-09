@@ -207,7 +207,9 @@ export default function Layout() {
           >
             ?
           </button>
-          <LanguageSwitcher />
+          <span data-tour="language" className="inline-flex">
+            <LanguageSwitcher />
+          </span>
           <ThemeToggle />
           <button
             onClick={logout}

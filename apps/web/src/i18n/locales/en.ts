@@ -40,6 +40,18 @@ export const en = {
   "common.error": "Something went wrong",
   "common.retry": "Retry",
   "tour.title": "Quick tour",
+  "tour.addVlan.title": "Group into VLANs",
+  "tour.addVlan.body":
+    "Click here to add a VLAN, a network segment like DMZ or Servers. Assets belong to VLANs, so you can scan and report by segment.",
+  "tour.changesReview.title": "How to review a change",
+  "tour.changesReview.body":
+    "Each confirmed change shows a before/after and a severity. Use Acknowledge when you've seen it, and Resolve once it's handled.",
+  "tour.evidence.title": "Export audit evidence",
+  "tour.evidence.body":
+    "One click bundles scans, changes, tasks and the tamper-evident audit log into a signed JSON/PDF package for your auditor.",
+  "tour.language.title": "Language & theme",
+  "tour.language.body":
+    "PortWiz speaks six languages and has light and dark themes. Switch anytime from here.",
   "tour.launch": "Take a tour",
   "tour.next": "Next",
   "tour.back": "Back",
