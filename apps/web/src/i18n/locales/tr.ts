@@ -45,6 +45,11 @@ export const tr: Partial<Record<TKey, string>> = {
   "tour.back": "Geri",
   "tour.skip": "Atla",
   "tour.finish": "Başla",
+  "tour.addAsset.title": "İlk host'unuzu ekleyin",
+  "tour.addAsset.body":
+    "Bir host'u Varlık olarak kaydetmek için buraya tıklayın. CSV veya Excel'den toplu olarak da içe aktarabilirsiniz.",
+  "tour.help.title": "Tur tekrar mı lazım?",
+  "tour.help.body": "Bu hızlı turu istediğiniz zaman bu düğmeden yeniden açın.",
   "tour.welcome.title": "PortWiz'e hoş geldiniz",
   "tour.welcome.body":
     "PortWiz, ağınızdaki açık portları ve servisleri izler ve teyitli değişiklikleri denetime-hazır bir kayıtla işaretler. Bu hızlı tur parçaların nasıl bir araya geldiğini gösterir.",

@@ -153,6 +153,7 @@ export default function Layout() {
               <div key={s.labelKey}>
                 <Link
                   to={s.tabs[0].to}
+                  data-tour={`nav-${s.icon}`}
                   title={collapsed ? t(s.labelKey) : undefined}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
                     collapsed ? "justify-center" : ""
@@ -199,6 +200,7 @@ export default function Layout() {
           </div>
           <button
             onClick={() => setTourOpen(true)}
+            data-tour="help"
             title={t("tour.launch")}
             aria-label={t("tour.launch")}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 text-sm text-slate-300 hover:bg-slate-800 hover:text-slate-100"

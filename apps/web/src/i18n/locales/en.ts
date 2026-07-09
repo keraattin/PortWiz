@@ -45,6 +45,11 @@ export const en = {
   "tour.back": "Back",
   "tour.skip": "Skip",
   "tour.finish": "Get started",
+  "tour.addAsset.title": "Add your first host",
+  "tour.addAsset.body":
+    "Click here to register a host as an Asset. You can also import many at once from CSV or Excel.",
+  "tour.help.title": "Need the tour again?",
+  "tour.help.body": "Reopen this quick tour anytime from this button.",
   "tour.welcome.title": "Welcome to PortWiz",
   "tour.welcome.body":
     "PortWiz watches the open ports and services on your network and flags confirmed changes with an audit-ready trail. This quick tour shows how the pieces fit together.",

@@ -235,7 +235,7 @@ export default function AssetsPage() {
         subtitle={t("assets.subtitle")}
         actions={
           canWrite && (
-            <Button onClick={openAdd} className="whitespace-nowrap">
+            <Button onClick={openAdd} data-tour="add-asset" className="whitespace-nowrap">
               {t("assets.add")}
             </Button>
           )

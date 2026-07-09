@@ -45,6 +45,11 @@ export const es: Partial<Record<TKey, string>> = {
   "tour.back": "Atrás",
   "tour.skip": "Omitir",
   "tour.finish": "Empezar",
+  "tour.addAsset.title": "Añade tu primer host",
+  "tour.addAsset.body":
+    "Haz clic aquí para registrar un host como Activo. También puedes importar muchos a la vez desde CSV o Excel.",
+  "tour.help.title": "¿Necesitas el tour otra vez?",
+  "tour.help.body": "Reabre este tour rápido cuando quieras con este botón.",
   "tour.welcome.title": "Bienvenido a PortWiz",
   "tour.welcome.body":
     "PortWiz vigila los puertos y servicios abiertos de tu red y señala los cambios confirmados con un registro listo para auditoría. Este tour rápido muestra cómo encajan las piezas.",
