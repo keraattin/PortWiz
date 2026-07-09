@@ -8,6 +8,7 @@ import {
   rotateAgentToken,
   updateAgent,
 } from "../api/client";
+import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import AgentDeployPanel from "../components/AgentDeployPanel";
@@ -27,9 +28,6 @@ function statusInfo(a: Agent, windowMs: number): { key: TKey; cls: string } {
     ? { key: "agents.status.online", cls: "bg-emerald-900 text-emerald-300" }
     : { key: "agents.status.offline", cls: "bg-red-900 text-red-300" };
 }
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
 export default function AgentDetailPage() {
   const { id = "" } = useParams();
@@ -215,15 +213,14 @@ export default function AgentDetailPage() {
             <code className="flex-1 overflow-x-auto rounded bg-slate-900 px-3 py-2 font-mono text-xs text-slate-200">
               {freshToken}
             </code>
-            <button
+            <Button
               onClick={() => {
                 void navigator.clipboard?.writeText(freshToken);
                 setCopiedToken(true);
               }}
-              className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
               {copiedToken ? t("agents.copied") : t("agents.copy")}
-            </button>
+            </Button>
           </div>
         </div>
       )}

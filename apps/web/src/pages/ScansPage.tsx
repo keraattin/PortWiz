@@ -20,6 +20,7 @@ import {
   listVlans,
   runScanProfile,
 } from "../api/client";
+import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
@@ -31,9 +32,6 @@ import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
 const SCAN_TYPES: ScanType[] = ["connect", "syn", "udp"];
 

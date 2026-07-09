@@ -21,6 +21,7 @@ import {
   testNetbox,
   updateSettingsConfig,
 } from "../api/client";
+import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
@@ -52,8 +53,6 @@ function ProviderConnectHelp({ provider, t }: { provider: AiProviderInfo; t: Tra
   );
 }
 
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 const cardClass = "space-y-3 rounded-xl border border-slate-800 bg-slate-900 p-5";
 const primaryBtn =
   "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50";

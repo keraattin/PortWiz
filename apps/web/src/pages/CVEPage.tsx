@@ -7,6 +7,7 @@ import {
   recheckCVEs,
   summarizeCVEs,
 } from "../api/client";
+import { controlClass as inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
@@ -90,9 +91,6 @@ export default function CVEPage() {
       setBriefing(false);
     }
   }
-
-  const inputClass =
-    "rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
   return (
     <div className="space-y-6">

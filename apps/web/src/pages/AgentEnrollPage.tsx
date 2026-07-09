@@ -1,15 +1,13 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { type EnrolledAgent, enrollAgent, fetchSettings } from "../api/client";
+import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import AgentDeployPanel from "../components/AgentDeployPanel";
 import Button from "../components/Button";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
 const WHAT_POINTS: TKey[] = ["agents.what1", "agents.what2", "agents.what3", "agents.what4"];
 
@@ -101,15 +99,14 @@ export default function AgentEnrollPage() {
               <code className="flex-1 overflow-x-auto rounded bg-slate-900 px-3 py-2 font-mono text-xs text-slate-200">
                 {enrolled.token}
               </code>
-              <button
+              <Button
                 onClick={() => {
                   void navigator.clipboard?.writeText(enrolled.token);
                   setCopied(true);
                 }}
-                className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500"
               >
                 {copied ? t("agents.copied") : t("agents.copy")}
-              </button>
+              </Button>
             </div>
             <AgentDeployPanel
               name={enrolled.name}

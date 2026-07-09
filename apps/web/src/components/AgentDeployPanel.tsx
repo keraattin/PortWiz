@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useI18n } from "../i18n/I18nContext";
+import { inputClass } from "./formStyles";
 
 interface AgentDeployPanelProps {
   name: string;
@@ -21,9 +22,6 @@ function slug(name: string): string {
       .replace(/^-+|-+$/g, "") || "agent"
   );
 }
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
 /**
  * Guided deploy instructions shown once, right after a token is revealed

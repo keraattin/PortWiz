@@ -15,6 +15,7 @@ import {
   listVlans,
   syncVlans,
 } from "../api/client";
+import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
@@ -27,9 +28,6 @@ import { type Column, TableHead, processRows, useColumnFilters } from "../compon
 import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../i18n/I18nContext";
-
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
 export default function VlansPage() {
   const { user } = useAuth();

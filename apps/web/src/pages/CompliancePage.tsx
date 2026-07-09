@@ -11,7 +11,9 @@ import {
   listScanProfiles,
   verifyAudit,
 } from "../api/client";
+import { controlClass as inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
+import Button from "../components/Button";
 import Pagination, { usePagination } from "../components/Pagination";
 import { useToast } from "../components/Toast";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
@@ -20,8 +22,6 @@ import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
 const PAGE_SIZE = 50;
-const inputClass =
-  "rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 
 const CADENCE_BADGE: Record<string, string> = {
   compliant: "bg-emerald-900 text-emerald-300",
@@ -343,12 +343,7 @@ export default function CompliancePage() {
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
             />
-            <button
-              type="submit"
-              className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-            >
-              {t("compliance.apply")}
-            </button>
+            <Button type="submit">{t("compliance.apply")}</Button>
           </form>
         </div>
 

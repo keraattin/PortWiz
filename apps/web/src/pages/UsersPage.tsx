@@ -6,8 +6,10 @@ import {
   listUsers,
   updateUser,
 } from "../api/client";
+import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
+import Button from "../components/Button";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
@@ -26,11 +28,7 @@ const ROLE_BADGE: Record<string, string> = {
   auditor: "bg-slate-700 text-slate-300",
 };
 
-const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500";
 const labelClass = "block text-sm text-slate-300";
-const primaryBtn =
-  "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50";
 
 export default function UsersPage() {
   const { user } = useAuth();
@@ -160,9 +158,9 @@ export default function UsersPage() {
         }
         actions={
           isAdmin && (
-            <button onClick={openAdd} className={`${primaryBtn} whitespace-nowrap`}>
+            <Button onClick={openAdd} className="whitespace-nowrap">
               {t("users.add")}
-            </button>
+            </Button>
           )
         }
       />
@@ -288,9 +286,9 @@ export default function UsersPage() {
           <RoleMatrix />
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
-            <button type="submit" className={primaryBtn}>
+            <Button type="submit">
               {t("users.create")}
-            </button>
+            </Button>
           </div>
         </form>
       </Modal>
@@ -338,9 +336,9 @@ export default function UsersPage() {
           <RoleMatrix />
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
-            <button type="submit" className={primaryBtn}>
+            <Button type="submit">
               {t("users.saveChanges")}
-            </button>
+            </Button>
           </div>
         </form>
       </Modal>

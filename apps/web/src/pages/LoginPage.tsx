@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import Button from "../components/Button";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -74,13 +75,9 @@ export default function LoginPage() {
             />
           </div>
           {error && <p className="text-sm text-red-400">{error}</p>}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-emerald-600 py-2 font-medium text-white transition hover:bg-emerald-500 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={submitting} className="w-full">
             {submitting ? t("login.signingIn") : t("login.signIn")}
-          </button>
+          </Button>
         </form>
       </div>
     </div>
