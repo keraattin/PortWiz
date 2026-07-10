@@ -45,7 +45,9 @@ services:
   api:
     build:
       context: ../apps/api
-    image: portwiz-api:prod
+    # Local build by default. Point PORTWIZ_API_IMAGE at ghcr.io/<owner>/portwiz-api
+    # (a tag or :latest) to deploy prebuilt images and enable one-click updates.
+    image: ${PORTWIZ_API_IMAGE:-portwiz-api:prod}
     env_file: .env.prod
     restart: unless-stopped
     depends_on:
@@ -62,7 +64,7 @@ services:
       start_period: 40s
 
   worker:
-    image: portwiz-api:prod
+    image: ${PORTWIZ_API_IMAGE:-portwiz-api:prod}
     env_file: .env.prod
     restart: unless-stopped
     depends_on:
@@ -72,7 +74,7 @@ services:
     command: ["worker"]
 
   beat:
-    image: portwiz-api:prod
+    image: ${PORTWIZ_API_IMAGE:-portwiz-api:prod}
     env_file: .env.prod
     restart: unless-stopped
     depends_on:
@@ -84,7 +86,7 @@ services:
     build:
       context: ../apps/web
       target: prod
-    image: portwiz-web:prod
+    image: ${PORTWIZ_WEB_IMAGE:-portwiz-web:prod}
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-8080}:80"
@@ -99,6 +101,29 @@ services:
     restart: unless-stopped
     volumes:
       - ollama-data:/root/.ollama
+
+  # One-click updater (opt-in). Start with: --profile updater. Watches for an
+  # in-app "Update now" request, then pulls new images and recreates the stack.
+  # It holds the Docker socket (the API never does). Requires, in .env.prod:
+  #   PORTWIZ_UPDATE_APPLY_ENABLED=true   (API shows the button)
+  #   PORTWIZ_API_IMAGE / PORTWIZ_WEB_IMAGE pointing at ghcr.io/<owner>/portwiz-*
+  # so there are actually new images to pull. See updater.sh for details.
+  updater:
+    image: docker:27-cli
+    profiles: ["updater"]
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      PORTWIZ_COMPOSE_FILE: docker-compose.prod.yml
+      PORTWIZ_ENV_FILE: .env.prod
+    working_dir: /deploy
+    entrypoint: ["sh", "/deploy/updater.sh"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/deploy
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   postgres-data:

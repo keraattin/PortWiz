@@ -1,0 +1,62 @@
+# Build and publish the API and web images to GHCR, so operators can pull ready
+# images (and use one-click in-app updates) instead of building from source.
+# Publishes, for each of portwiz-api and portwiz-web:
+#   ghcr.io/<owner>/portwiz-<svc>:latest        (default branch)
+#   ghcr.io/<owner>/portwiz-<svc>:<version>     (on v* tags)
+# Mirrors agent-image.yml. The API image is stamped with PORTWIZ_VERSION (the
+# release tag) so the running instance knows its own version for the update check.
+name: app-images
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: api
+            context: apps/api
+            target: ""
+          - name: web
+            context: apps/web
+            target: prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/portwiz-${{ matrix.name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=sha,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          target: ${{ matrix.target }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Only the API consumes PORTWIZ_VERSION; web ignores it (benign warning).
+          build-args: |
+            PORTWIZ_VERSION=${{ steps.meta.outputs.version }}
