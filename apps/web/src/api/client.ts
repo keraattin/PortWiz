@@ -503,6 +503,8 @@ export function listRunObservations(runId: string): Promise<Observation[]> {
 }
 
 // Scan agents
+export type AgentStatus = "online" | "offline" | "never" | "disabled";
+
 export interface Agent {
   id: string;
   name: string;
@@ -517,6 +519,26 @@ export interface Agent {
   online_seconds_override: number | null;
   rate_limit_pps_override: number | null;
   created_at: string;
+  // Live status computed server-side (matches the dashboard's online window).
+  status: AgentStatus | null;
+}
+
+export interface SegmentCoverage {
+  segment: string | null; // null = the unsegmented pool
+  agents_total: number;
+  agents_online: number;
+  profiles: number;
+  covered: boolean;
+}
+
+export interface FleetSummary {
+  agents_total: number;
+  agents_online: number;
+  agents_offline: number;
+  agents_never_seen: number;
+  agents_disabled: number;
+  segments: SegmentCoverage[];
+  gaps: SegmentCoverage[]; // segments with profiles but no online agent
 }
 
 export interface EnrolledAgent {
@@ -536,6 +558,10 @@ export interface RotatedAgentToken {
 
 export function listAgents(): Promise<Agent[]> {
   return request<Agent[]>("/agents");
+}
+
+export function fetchFleetSummary(): Promise<FleetSummary> {
+  return request<FleetSummary>("/agents/fleet");
 }
 
 export function getAgent(id: string): Promise<Agent> {

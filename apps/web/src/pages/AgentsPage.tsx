@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { type Agent, fetchSettings, listAgents } from "../api/client";
+import {
+  type Agent,
+  type AgentStatus,
+  type FleetSummary,
+  fetchFleetSummary,
+  listAgents,
+} from "../api/client";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
@@ -13,39 +19,33 @@ import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 import { absoluteTime, timeAgo } from "../i18n/relativeTime";
 
-// Default online cut-off until the admin-configured value loads from /settings.
-const DEFAULT_ONLINE_MS = 2 * 60 * 1000;
+// Server-computed status -> its i18n label key and badge/accent classes. The API
+// returns "never"; the existing label key is "neverSeen".
+const STATUS_META: Record<AgentStatus, { key: TKey; badge: string; accent: string }> = {
+  online: {
+    key: "agents.status.online",
+    badge: "bg-emerald-900 text-emerald-300",
+    accent: "text-emerald-400",
+  },
+  offline: { key: "agents.status.offline", badge: "bg-red-900 text-red-300", accent: "text-red-400" },
+  never: {
+    key: "agents.status.neverSeen",
+    badge: "bg-slate-700 text-slate-400",
+    accent: "text-slate-300",
+  },
+  disabled: {
+    key: "agents.status.disabled",
+    badge: "bg-slate-700 text-slate-400",
+    accent: "text-slate-400",
+  },
+};
 
-// Returns the i18n key for the status label plus its badge classes.
-function agentStatus(lastSeen: string | null, windowMs: number): { key: TKey; cls: string } {
-  if (!lastSeen) return { key: "agents.status.neverSeen", cls: "bg-slate-700 text-slate-400" };
-  const ageMs = Date.now() - new Date(lastSeen).getTime();
-  if (ageMs < windowMs)
-    return { key: "agents.status.online", cls: "bg-emerald-900 text-emerald-300" };
-  return { key: "agents.status.offline", cls: "bg-red-900 text-red-300" };
+const STATUS_OPTIONS: AgentStatus[] = ["online", "offline", "never", "disabled"];
+
+// The server computes status; fall back to "never" only if it is somehow absent.
+function statusOf(a: Agent): AgentStatus {
+  return a.status ?? "never";
 }
-
-// Effective online window for an agent: its override, else the global default.
-function effWindow(a: Agent, globalMs: number): number {
-  return a.online_seconds_override ? a.online_seconds_override * 1000 : globalMs;
-}
-
-// A single status category per agent, for filtering, sorting and the summary.
-function agentCategory(a: Agent, windowMs: number): string {
-  if (!a.enabled) return "disabled";
-  if (!a.last_seen_at) return "neverSeen";
-  return Date.now() - new Date(a.last_seen_at).getTime() < windowMs ? "online" : "offline";
-}
-
-const STATUS_OPTIONS = ["online", "offline", "neverSeen", "disabled"] as const;
-
-// Summary strip config: category -> label key + accent.
-const SUMMARY: { cat: string; key: TKey; accent: string }[] = [
-  { cat: "online", key: "agents.status.online", accent: "text-emerald-400" },
-  { cat: "offline", key: "agents.status.offline", accent: "text-red-400" },
-  { cat: "neverSeen", key: "agents.status.neverSeen", accent: "text-slate-300" },
-  { cat: "disabled", key: "agents.status.disabled", accent: "text-slate-400" },
-];
 
 export default function AgentsPage() {
   const { user } = useAuth();
@@ -55,9 +55,9 @@ export default function AgentsPage() {
   const isAdmin = user?.role === "admin";
 
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [fleet, setFleet] = useState<FleetSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [onlineMs, setOnlineMs] = useState(DEFAULT_ONLINE_MS);
 
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
@@ -68,8 +68,8 @@ export default function AgentsPage() {
     {
       key: "status",
       label: t("agents.col.status"),
-      filter: STATUS_OPTIONS.map((s) => ({ value: s, label: t(`agents.status.${s}` as TKey) })),
-      get: (a) => agentCategory(a, effWindow(a, onlineMs)),
+      filter: STATUS_OPTIONS.map((s) => ({ value: s, label: t(STATUS_META[s].key) })),
+      get: (a) => statusOf(a),
     },
     { key: "version", label: t("agents.col.version"), filter: "text", get: (a) => a.version ?? "" },
     { key: "lastSeen", label: t("agents.col.lastSeen"), get: (a) => a.last_seen_at },
@@ -83,15 +83,20 @@ export default function AgentsPage() {
   };
 
   const summary = useMemo(() => {
-    const counts: Record<string, number> = { online: 0, offline: 0, neverSeen: 0, disabled: 0 };
-    for (const a of agents) counts[agentCategory(a, effWindow(a, onlineMs))]++;
+    const counts: Record<AgentStatus, number> = { online: 0, offline: 0, never: 0, disabled: 0 };
+    for (const a of agents) counts[statusOf(a)]++;
     return counts;
-  }, [agents, onlineMs]);
+  }, [agents]);
 
   async function reload() {
     setLoading(true);
     try {
-      setAgents(await listAgents());
+      const [ags, fl] = await Promise.all([
+        listAgents(),
+        fetchFleetSummary().catch(() => null), // coverage panel is best-effort
+      ]);
+      setAgents(ags);
+      setFleet(fl);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -101,11 +106,6 @@ export default function AgentsPage() {
 
   useEffect(() => {
     void reload();
-    fetchSettings()
-      .then((s) => setOnlineMs(s.agent_online_seconds * 1000))
-      .catch(() => {
-        /* keep the default window if settings can't be read */
-      });
   }, []);
 
   const enrollButton = isAdmin && (
@@ -129,13 +129,64 @@ export default function AgentsPage() {
 
       {agents.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {SUMMARY.map(({ cat, key, accent }) => (
-            <div key={cat} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-              <div className={`text-2xl font-semibold ${accent}`}>{summary[cat]}</div>
-              <div className="mt-0.5 text-xs text-slate-400">{t(key)}</div>
+          {STATUS_OPTIONS.map((s) => (
+            <div key={s} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <div className={`text-2xl font-semibold ${STATUS_META[s].accent}`}>{summary[s]}</div>
+              <div className="mt-0.5 text-xs text-slate-400">{t(STATUS_META[s].key)}</div>
             </div>
           ))}
         </div>
+      )}
+
+      {fleet && fleet.segments.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-slate-300">{t("agents.coverage.title")}</h2>
+          {fleet.gaps.length > 0 && (
+            <div className="rounded-xl border border-amber-800 bg-amber-950/40 p-3 text-sm text-amber-300">
+              {t("agents.coverage.gapsBody", { count: fleet.gaps.length })}
+            </div>
+          )}
+          <div className="overflow-x-auto rounded-xl border border-slate-800">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-2 font-medium">{t("agents.coverage.col.segment")}</th>
+                  <th className="px-4 py-2 font-medium">{t("agents.coverage.col.agents")}</th>
+                  <th className="px-4 py-2 font-medium">{t("agents.coverage.col.profiles")}</th>
+                  <th className="px-4 py-2 font-medium">{t("agents.coverage.col.status")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {fleet.segments.map((s) => (
+                  <tr key={s.segment ?? "__none__"} className="bg-slate-950">
+                    <td className="px-4 py-2 text-slate-200">
+                      {s.segment ?? (
+                        <span className="text-slate-500">{t("agents.coverage.unsegmented")}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 text-slate-300">
+                      {s.agents_online}/{s.agents_total}
+                    </td>
+                    <td className="px-4 py-2 text-slate-300">{s.profiles}</td>
+                    <td className="px-4 py-2">
+                      {s.covered ? (
+                        <span className="rounded-full bg-emerald-900 px-2 py-0.5 text-xs text-emerald-300">
+                          {t("agents.coverage.covered")}
+                        </span>
+                      ) : s.profiles > 0 ? (
+                        <span className="rounded-full bg-amber-900 px-2 py-0.5 text-xs text-amber-300">
+                          {t("agents.coverage.gap")}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-600">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
 
       {!loading && agents.length === 0 ? (
@@ -177,7 +228,7 @@ export default function AgentsPage() {
                   </tr>
                 ) : (
                   agentsPage.slice.map((a) => {
-                    const status = agentStatus(a.last_seen_at, effWindow(a, onlineMs));
+                    const meta = STATUS_META[statusOf(a)];
                     return (
                       <tr
                         key={a.id}
@@ -189,15 +240,9 @@ export default function AgentsPage() {
                           {a.segment ?? <span className="text-slate-600">{t("agents.any")}</span>}
                         </td>
                         <td className="px-4 py-2">
-                          {a.enabled ? (
-                            <span className={`rounded-full px-2 py-0.5 text-xs ${status.cls}`}>
-                              {t(status.key)}
-                            </span>
-                          ) : (
-                            <span className="rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-400">
-                              {t("agents.status.disabled")}
-                            </span>
-                          )}
+                          <span className={`rounded-full px-2 py-0.5 text-xs ${meta.badge}`}>
+                            {t(meta.key)}
+                          </span>
                         </td>
                         <td className="px-4 py-2 text-xs text-slate-400">
                           {a.version ?? <span className="text-slate-600">-</span>}

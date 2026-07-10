@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   type Agent,
+  type AgentStatus,
   deleteAgent,
   fetchSettings,
   getAgent,
@@ -18,16 +19,14 @@ import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 import { absoluteTime, timeAgo } from "../i18n/relativeTime";
 
-const DEFAULT_ONLINE_MS = 2 * 60 * 1000;
-
-function statusInfo(a: Agent, windowMs: number): { key: TKey; cls: string } {
-  if (!a.enabled) return { key: "agents.status.disabled", cls: "bg-slate-700 text-slate-400" };
-  if (!a.last_seen_at)
-    return { key: "agents.status.neverSeen", cls: "bg-slate-700 text-slate-400" };
-  return Date.now() - new Date(a.last_seen_at).getTime() < windowMs
-    ? { key: "agents.status.online", cls: "bg-emerald-900 text-emerald-300" }
-    : { key: "agents.status.offline", cls: "bg-red-900 text-red-300" };
-}
+// Server-computed status -> its i18n label key and badge classes. The API
+// returns "never"; the existing label key is "neverSeen".
+const STATUS_META: Record<AgentStatus, { key: TKey; cls: string }> = {
+  online: { key: "agents.status.online", cls: "bg-emerald-900 text-emerald-300" },
+  offline: { key: "agents.status.offline", cls: "bg-red-900 text-red-300" },
+  never: { key: "agents.status.neverSeen", cls: "bg-slate-700 text-slate-400" },
+  disabled: { key: "agents.status.disabled", cls: "bg-slate-700 text-slate-400" },
+};
 
 export default function AgentDetailPage() {
   const { id = "" } = useParams();
@@ -41,7 +40,6 @@ export default function AgentDetailPage() {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [onlineMs, setOnlineMs] = useState(DEFAULT_ONLINE_MS);
   const [pollSeconds, setPollSeconds] = useState(15);
 
   const [segment, setSegment] = useState("");
@@ -75,12 +73,9 @@ export default function AgentDetailPage() {
   useEffect(() => {
     void load();
     fetchSettings()
-      .then((s) => {
-        setOnlineMs(s.agent_online_seconds * 1000);
-        setPollSeconds(s.agent_poll_seconds);
-      })
+      .then((s) => setPollSeconds(s.agent_poll_seconds))
       .catch(() => {
-        /* keep defaults */
+        /* keep the default poll interval */
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -159,12 +154,9 @@ export default function AgentDetailPage() {
     );
   }
 
-  // This agent's overrides win over the global values where set.
-  const effectiveOnlineMs = agent.online_seconds_override
-    ? agent.online_seconds_override * 1000
-    : onlineMs;
+  // This agent's poll override wins over the global value where set.
   const effectivePoll = agent.poll_seconds_override ?? pollSeconds;
-  const status = statusInfo(agent, effectiveOnlineMs);
+  const status = STATUS_META[agent.status ?? "never"];
 
   return (
     <div className="space-y-6">
