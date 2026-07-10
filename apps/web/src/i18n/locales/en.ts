@@ -525,6 +525,8 @@ export const en = {
     "A profile defines what to scan (targets, ports) and, optionally, a cron schedule. Runs are picked up by an online agent; without one they stay pending.",
   "scans.add": "Add scan",
   "scans.added": "Scan profile added",
+  "scans.editTitle": "Edit scan profile",
+  "scans.updated": "Scan profile updated",
   "scans.deleted": "Scan profile deleted",
   "scans.confirmDelete": "Delete this scan profile?",
   "scans.queued": "Scan queued for {name}",

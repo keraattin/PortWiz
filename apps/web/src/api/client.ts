@@ -476,6 +476,16 @@ export function createScanProfile(payload: ScanProfileInput): Promise<ScanProfil
   });
 }
 
+export function updateScanProfile(
+  id: string,
+  payload: ScanProfileInput,
+): Promise<ScanProfile> {
+  return request<ScanProfile>(`/scan-profiles/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function deleteScanProfile(id: string): Promise<void> {
   return request<void>(`/scan-profiles/${id}`, { method: "DELETE" });
 }

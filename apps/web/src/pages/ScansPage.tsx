@@ -13,6 +13,7 @@ import {
   type Vlan,
   createScanProfile,
   deleteScanProfile,
+  updateScanProfile,
   fetchFrameworkTemplates,
   fetchSettings,
   listAssets,
@@ -106,6 +107,16 @@ function presetFor(ports: string): { preset: PortPreset; custom: string } {
   return { preset: "custom", custom: ports };
 }
 
+// Map a stored cron back to a friendly preset (or "advanced" with the raw value),
+// so editing a profile shows the same simple schedule picker used to create it.
+function scheduleFor(cron: string | null): { schedule: Schedule; cron: string } {
+  if (!cron) return { schedule: "off", cron: "" };
+  for (const s of SCHEDULES) {
+    if (s !== "advanced" && SCHEDULE_CRON[s] === cron) return { schedule: s, cron: "" };
+  }
+  return { schedule: "advanced", cron };
+}
+
 const STATUS_BADGE: Record<ScanRunStatus, string> = {
   pending: "bg-slate-700 text-slate-300",
   running: "bg-sky-900 text-sky-300",
@@ -163,6 +174,8 @@ export default function ScansPage() {
   };
 
   const [addOpen, setAddOpen] = useState(false);
+  // When set, the modal edits this existing profile instead of creating one.
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [targets, setTargets] = useState("");
   const [portsPreset, setPortsPreset] = useState<PortPreset>("top1000");
@@ -292,6 +305,7 @@ export default function ScansPage() {
 
   function openAdd() {
     setError(null);
+    setEditingId(null);
     setName("");
     setTargets("");
     const dp = presetFor(scanDefaults.ports);
@@ -307,23 +321,49 @@ export default function ScansPage() {
     setAddOpen(true);
   }
 
-  async function onCreate(e: FormEvent) {
+  function openEdit(p: ScanProfile) {
+    setError(null);
+    setEditingId(p.id);
+    setName(p.name);
+    setTargets(p.targets.join(", "));
+    const dp = presetFor(p.ports);
+    setPortsPreset(dp.preset);
+    setPorts(dp.custom);
+    setSegment(p.segment ?? "");
+    setFramework(p.compliance_framework ?? "");
+    setScanSource(p.scan_source);
+    const sch = scheduleFor(p.cron);
+    setSchedule(sch.schedule);
+    setCron(sch.cron);
+    setScanType(p.scan_type);
+    setServiceDetection(p.service_detection);
+    setAddOpen(true);
+  }
+
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    const payload = {
+      name,
+      targets: parseTargets(targets),
+      ports: effectivePorts,
+      scan_type: scanType,
+      service_detection: serviceDetection,
+      scan_source: scanSource,
+      segment: segment || null,
+      compliance_framework: framework || null,
+      cron: effectiveCron || null,
+    };
     try {
-      await createScanProfile({
-        name,
-        targets: parseTargets(targets),
-        ports: effectivePorts,
-        scan_type: scanType,
-        service_detection: serviceDetection,
-        scan_source: scanSource,
-        segment: segment || null,
-        compliance_framework: framework || null,
-        cron: effectiveCron || null,
-      });
+      if (editingId) {
+        await updateScanProfile(editingId, payload);
+        toast.success(t("scans.updated"));
+      } else {
+        await createScanProfile(payload);
+        toast.success(t("scans.added"));
+      }
       setAddOpen(false);
-      toast.success(t("scans.added"));
+      setEditingId(null);
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -445,6 +485,12 @@ export default function ScansPage() {
                             {t("scans.runNow")}
                           </button>
                           <button
+                            onClick={() => openEdit(p)}
+                            className="mr-3 text-xs font-medium text-sky-400 hover:text-sky-300"
+                          >
+                            {t("common.edit")}
+                          </button>
+                          <button
                             onClick={() => onDeleteProfile(p.id)}
                             className="text-xs text-red-400 hover:text-red-300"
                           >
@@ -550,8 +596,16 @@ export default function ScansPage() {
         />
       </section>
 
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t("scans.addTitle")} wide>
-        <form onSubmit={onCreate} className="space-y-3">
+      <Modal
+        open={addOpen}
+        onClose={() => {
+          setAddOpen(false);
+          setEditingId(null);
+        }}
+        title={editingId ? t("scans.editTitle") : t("scans.addTitle")}
+        wide
+      >
+        <form onSubmit={onSubmit} className="space-y-3">
           <FormField label={t("scans.f.name")} hint={t("scans.f.nameHint")}>
             <input
               className={inputClass}
@@ -748,7 +802,7 @@ export default function ScansPage() {
           </label>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
-            <Button type="submit">{t("scans.addTitle")}</Button>
+            <Button type="submit">{editingId ? t("scans.editTitle") : t("scans.addTitle")}</Button>
           </div>
         </form>
       </Modal>

@@ -529,6 +529,8 @@ export const pt: Partial<Record<TKey, string>> = {
     "Um perfil define o que varrer (alvos, portas) e, opcionalmente, um agendamento cron. As execuções são assumidas por um agente online; sem um, ficam pendentes.",
   "scans.add": "Adicionar varredura",
   "scans.added": "Perfil de varredura adicionado",
+  "scans.editTitle": "Editar perfil de varredura",
+  "scans.updated": "Perfil de varredura atualizado",
   "scans.deleted": "Perfil de varredura excluído",
   "scans.confirmDelete": "Excluir este perfil de varredura?",
   "scans.queued": "Varredura enfileirada para {name}",

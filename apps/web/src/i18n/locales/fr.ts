@@ -529,6 +529,8 @@ export const fr: Partial<Record<TKey, string>> = {
     "Un profil définit ce qu'il faut analyser (cibles, ports) et, en option, une planification cron. Les analyses sont prises en charge par un agent en ligne ; sans agent, elles restent en attente.",
   "scans.add": "Ajouter une analyse",
   "scans.added": "Profil d'analyse ajouté",
+  "scans.editTitle": "Modifier le profil d'analyse",
+  "scans.updated": "Profil d'analyse mis à jour",
   "scans.deleted": "Profil d'analyse supprimé",
   "scans.confirmDelete": "Supprimer ce profil d'analyse ?",
   "scans.queued": "Analyse mise en file pour {name}",

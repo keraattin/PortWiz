@@ -527,6 +527,8 @@ export const tr: Partial<Record<TKey, string>> = {
     "Bir profil, neyin taranacağını (hedefler, portlar) ve isteğe bağlı olarak bir cron zamanlamasını tanımlar. Çalışmalar çevrimiçi bir ajan tarafından alınır; ajan yoksa beklemede kalır.",
   "scans.add": "Tarama ekle",
   "scans.added": "Tarama profili eklendi",
+  "scans.editTitle": "Tarama profilini düzenle",
+  "scans.updated": "Tarama profili güncellendi",
   "scans.deleted": "Tarama profili silindi",
   "scans.confirmDelete": "Bu tarama profili silinsin mi?",
   "scans.queued": "{name} için tarama kuyruğa alındı",

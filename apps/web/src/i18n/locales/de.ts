@@ -529,6 +529,8 @@ export const de: Partial<Record<TKey, string>> = {
     "Ein Profil definiert, was gescannt wird (Ziele, Ports) und optional einen Cron-Zeitplan. Läufe werden von einem Online-Agenten übernommen; ohne einen bleiben sie ausstehend.",
   "scans.add": "Scan hinzufügen",
   "scans.added": "Scan-Profil hinzugefügt",
+  "scans.editTitle": "Scan-Profil bearbeiten",
+  "scans.updated": "Scan-Profil aktualisiert",
   "scans.deleted": "Scan-Profil gelöscht",
   "scans.confirmDelete": "Dieses Scan-Profil löschen?",
   "scans.queued": "Scan für {name} eingereiht",

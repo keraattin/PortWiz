@@ -529,6 +529,8 @@ export const es: Partial<Record<TKey, string>> = {
     "Un perfil define qué escanear (objetivos, puertos) y, opcionalmente, una programación cron. Las ejecuciones las toma un agente en línea; sin uno, quedan pendientes.",
   "scans.add": "Añadir escaneo",
   "scans.added": "Perfil de escaneo añadido",
+  "scans.editTitle": "Editar perfil de escaneo",
+  "scans.updated": "Perfil de escaneo actualizado",
   "scans.deleted": "Perfil de escaneo eliminado",
   "scans.confirmDelete": "¿Eliminar este perfil de escaneo?",
   "scans.queued": "Escaneo en cola para {name}",
