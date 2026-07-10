@@ -140,6 +140,7 @@ class SettingsConfig(BaseModel):
     default_service_detection: bool
     default_scan_rate_limit_pps: int
     retention_observation_days: int
+    update_check_enabled: bool
 
 
 class SettingsConfigUpdate(BaseModel):
@@ -199,3 +200,4 @@ class SettingsConfigUpdate(BaseModel):
     default_service_detection: bool | None = None
     default_scan_rate_limit_pps: int | None = None
     retention_observation_days: int | None = None
+    update_check_enabled: bool | None = None

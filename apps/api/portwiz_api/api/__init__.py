@@ -15,6 +15,7 @@ from .routes import (
     settings,
     stats,
     tasks,
+    update,
     users,
 )
 from .routes.inventory import assets_router, ip_ranges_router, vlans_router
@@ -39,5 +40,6 @@ api_router.include_router(settings.router)
 api_router.include_router(stats.router)
 api_router.include_router(compliance.router)
 api_router.include_router(cve.router)
+api_router.include_router(update.router)
 
 __all__ = ["api_router"]

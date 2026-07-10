@@ -95,6 +95,7 @@ def _config_from(s: Settings) -> SettingsConfig:
         default_service_detection=s.default_service_detection,
         default_scan_rate_limit_pps=s.default_scan_rate_limit_pps,
         retention_observation_days=s.retention_observation_days,
+        update_check_enabled=s.update_check_enabled,
     )
 
 

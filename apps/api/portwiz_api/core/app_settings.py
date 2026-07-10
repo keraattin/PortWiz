@@ -76,6 +76,11 @@ EDITABLE_KEYS: list[str] = [
     "default_service_detection",
     "default_scan_rate_limit_pps",
     "retention_observation_days",
+    "update_check_enabled",
+    # update_apply_enabled is intentionally NOT here: one-click apply is gated by
+    # whether the updater sidecar is deployed (env PORTWIZ_UPDATE_APPLY_ENABLED,
+    # set by the updater compose profile), not a UI toggle. Enabling it without a
+    # sidecar would queue update requests that nothing ever applies.
 ]
 
 # Keys whose values must never be returned to clients and are only updated when a

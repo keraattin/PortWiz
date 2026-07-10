@@ -26,6 +26,11 @@ RUN pip install --upgrade pip \
 RUN useradd --create-home --uid 10001 appuser
 USER appuser
 
+# Release version, passed at build (e.g. --build-arg PORTWIZ_VERSION=0.19.0 from
+# the git tag in CI). Read by the update check; empty falls back to __version__.
+ARG PORTWIZ_VERSION=""
+ENV PORTWIZ_VERSION=$PORTWIZ_VERSION
+
 EXPOSE 8000
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["api"]

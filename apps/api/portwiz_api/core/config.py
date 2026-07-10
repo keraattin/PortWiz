@@ -23,6 +23,19 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = True
     api_v1_prefix: str = "/api/v1"
+    # Running version, injected at image build from the release tag (PORTWIZ_VERSION).
+    # Empty falls back to the packaged __version__; drives the update check.
+    app_version: str = ""
+
+    # Update check: poll GitHub Releases for a newer version. On by default but
+    # disable-able for air-gapped/compliance installs (it contacts an external
+    # service). The repo is configurable for forks.
+    update_check_enabled: bool = True
+    update_repo: str = "keraattin/PortWiz"
+    # One-click "update now": the API only records a request; a separate updater
+    # sidecar (which holds the Docker socket) applies it. Off unless that sidecar
+    # is deployed, so the API never gets Docker access.
+    update_apply_enabled: bool = False
 
     # --- Database ---
     # Async SQLAlchemy URL (asyncpg driver).
