@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.app_settings import effective_settings
 from ...core.compliance import compliance_status
 from ...core.db import get_session
+from ...core.fleet import DISABLED, NEVER, OFFLINE, ONLINE, agent_status
 from ...models.agent import Agent
 from ...models.asset import VLAN, Asset, Criticality
 from ...models.change import ChangeEvent
@@ -33,14 +34,6 @@ _CRITICALITIES = [c.value for c in Criticality]
 _RUN_STATUSES = [s.value for s in ScanRunStatus]
 _COMPLIANCE_STATUSES = ["compliant", "due_soon", "overdue", "never"]
 _CHART_DAYS = 30
-
-
-def _is_online(last_seen: dt.datetime | None, now: dt.datetime, window: dt.timedelta) -> bool:
-    if last_seen is None:
-        return False
-    if last_seen.tzinfo is None:  # SQLite drops tzinfo; stored values are UTC
-        last_seen = last_seen.replace(tzinfo=dt.timezone.utc)
-    return (now - last_seen) < window
 
 
 def _aware(value: dt.datetime) -> dt.datetime:
@@ -74,21 +67,16 @@ async def get_stats(
 
     agents = (await session.execute(select(Agent))).scalars().all()
     now = dt.datetime.now(tz=dt.timezone.utc)
-    # Honour the admin-tunable online cut-off so the dashboard agrees with the
-    # Agents page rather than a fixed 2-minute window.
+    # Honour the admin-tunable online cut-off (and per-agent overrides) so the
+    # dashboard agrees with the Agents page. Shared with the fleet view.
     eff = await effective_settings(session)
-    agents_online = agents_offline = agents_never_seen = agents_disabled = 0
+    counts = {ONLINE: 0, OFFLINE: 0, NEVER: 0, DISABLED: 0}
     for a in agents:
-        # Each agent may override the global online cut-off (fragile segments).
-        window = dt.timedelta(seconds=a.online_seconds_override or eff.agent_online_seconds)
-        if not a.enabled:
-            agents_disabled += 1
-        elif a.last_seen_at is None:
-            agents_never_seen += 1
-        elif _is_online(a.last_seen_at, now, window):
-            agents_online += 1
-        else:
-            agents_offline += 1
+        counts[agent_status(a, now, eff.agent_online_seconds)] += 1
+    agents_online = counts[ONLINE]
+    agents_offline = counts[OFFLINE]
+    agents_never_seen = counts[NEVER]
+    agents_disabled = counts[DISABLED]
 
     last_run = (
         await session.execute(select(ScanRun).order_by(ScanRun.created_at.desc()).limit(1))

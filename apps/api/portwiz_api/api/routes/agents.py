@@ -17,6 +17,7 @@ from ...core.app_settings import effective_settings
 from ...core.audit import append_audit
 from ...core.config import get_settings
 from ...core.db import get_session
+from ...core.fleet import agent_status, fleet_summary
 from ...core.security import generate_agent_token, hash_agent_token
 from ...models.agent import Agent
 from ...models.scan import ScanProfile, ScanRun, ScanRunStatus, ScanSource, ScanType
@@ -29,6 +30,8 @@ from ...schemas.agent import (
     AgentRead,
     AgentTokenRotated,
     AgentUpdate,
+    FleetSummaryRead,
+    SegmentCoverageRead,
 )
 from ...schemas.scan import ScanJobOut
 from ..deps import get_current_agent, require_roles
@@ -94,13 +97,44 @@ async def enroll_agent(
     )
 
 
+async def _with_status(agents: list[Agent], session: AsyncSession) -> list[AgentRead]:
+    """Attach each agent's live status, computed with the effective online window."""
+    eff = await effective_settings(session)
+    now = _utcnow()
+    out: list[AgentRead] = []
+    for a in agents:
+        read = AgentRead.model_validate(a)
+        read.status = agent_status(a, now, eff.agent_online_seconds)
+        out.append(read)
+    return out
+
+
 @router.get("", response_model=list[AgentRead])
 async def list_agents(
     _: User = Depends(require_roles(UserRole.admin, UserRole.auditor)),
     session: AsyncSession = Depends(get_session),
-) -> list[Agent]:
-    result = await session.execute(select(Agent).order_by(Agent.name))
-    return list(result.scalars().all())
+) -> list[AgentRead]:
+    agents = list((await session.execute(select(Agent).order_by(Agent.name))).scalars().all())
+    return await _with_status(agents, session)
+
+
+@router.get("/fleet", response_model=FleetSummaryRead)
+async def get_fleet(
+    _: User = Depends(require_roles(UserRole.admin, UserRole.auditor)),
+    session: AsyncSession = Depends(get_session),
+) -> FleetSummaryRead:
+    """Fleet-wide health plus per-segment coverage. Highlights coverage gaps:
+    segments with scan profiles but no online agent to run them."""
+    summary = await fleet_summary(session)
+    return FleetSummaryRead(
+        agents_total=summary["agents_total"],
+        agents_online=summary["agents_online"],
+        agents_offline=summary["agents_offline"],
+        agents_never_seen=summary["agents_never_seen"],
+        agents_disabled=summary["agents_disabled"],
+        segments=[SegmentCoverageRead(**vars(s)) for s in summary["segments"]],
+        gaps=[SegmentCoverageRead(**vars(s)) for s in summary["gaps"]],
+    )
 
 
 @router.patch("/{agent_id}", response_model=AgentRead)
@@ -304,8 +338,8 @@ async def get_agent(
     agent_id: uuid.UUID,
     _: User = Depends(require_roles(UserRole.admin, UserRole.auditor)),
     session: AsyncSession = Depends(get_session),
-) -> Agent:
+) -> AgentRead:
     agent = await session.get(Agent, agent_id)
     if agent is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Agent not found")
-    return agent
+    return (await _with_status([agent], session))[0]

@@ -46,6 +46,28 @@ class AgentRead(BaseModel):
     online_seconds_override: int | None
     rate_limit_pps_override: int | None
     created_at: dt.datetime
+    # Live status computed server-side: online | offline | never | disabled.
+    status: str | None = None
+
+
+class SegmentCoverageRead(BaseModel):
+    segment: str | None  # None = the unsegmented pool
+    agents_total: int
+    agents_online: int
+    profiles: int
+    covered: bool
+
+
+class FleetSummaryRead(BaseModel):
+    """Fleet-wide status counts plus per-segment coverage and coverage gaps."""
+
+    agents_total: int
+    agents_online: int
+    agents_offline: int
+    agents_never_seen: int
+    agents_disabled: int
+    segments: list[SegmentCoverageRead]
+    gaps: list[SegmentCoverageRead]  # segments with profiles but no online agent
 
 
 class AgentCreated(BaseModel):
