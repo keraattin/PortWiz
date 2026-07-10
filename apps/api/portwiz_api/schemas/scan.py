@@ -22,6 +22,19 @@ def _validate_targets(targets: list[str]) -> list[str]:
     return targets
 
 
+def _validate_cron(cron: str | None) -> str | None:
+    """Reject a malformed cron up front. Without this a bad expression is stored
+    and simply never fires (the scheduler skips invalid crons silently), so the
+    profile looks scheduled but never runs."""
+    if cron is None or cron == "":
+        return None
+    from croniter import croniter
+
+    if not croniter.is_valid(cron):
+        raise ValueError(f"invalid cron expression: '{cron}'")
+    return cron
+
+
 # ScanProfile
 class ScanProfileCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
@@ -41,6 +54,11 @@ class ScanProfileCreate(BaseModel):
     def _targets(cls, v: list[str]) -> list[str]:
         return _validate_targets(v)
 
+    @field_validator("cron")
+    @classmethod
+    def _cron(cls, v: str | None) -> str | None:
+        return _validate_cron(v)
+
 
 class ScanProfileUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=128)
@@ -59,6 +77,11 @@ class ScanProfileUpdate(BaseModel):
     @classmethod
     def _targets(cls, v: list[str] | None) -> list[str] | None:
         return _validate_targets(v) if v is not None else v
+
+    @field_validator("cron")
+    @classmethod
+    def _cron(cls, v: str | None) -> str | None:
+        return _validate_cron(v)
 
 
 class ScanProfileRead(BaseModel):
