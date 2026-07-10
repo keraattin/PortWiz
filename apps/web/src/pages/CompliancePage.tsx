@@ -63,6 +63,7 @@ export default function CompliancePage() {
       get: (c) => c.framework,
     },
     { key: "required", label: t("compliance.col.required"), get: (c) => c.cadence_days },
+    { key: "schedule", label: t("compliance.col.schedule"), get: (c) => (c.schedule_ok ? 1 : 0) },
     { key: "lastScan", label: t("compliance.col.lastScan"), get: (c) => c.last_scan_at },
     {
       key: "status",
@@ -178,7 +179,7 @@ export default function CompliancePage() {
               <tbody className="divide-y divide-slate-800">
                 {processedCadence.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+                    <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
                       {t("common.noData")}
                     </td>
                   </tr>
@@ -191,6 +192,17 @@ export default function CompliancePage() {
                     </td>
                     <td className="px-4 py-2 text-slate-400">
                       {t("compliance.everyDays", { days: c.cadence_days })}
+                    </td>
+                    <td className="px-4 py-2 text-xs">
+                      {c.schedule_ok ? (
+                        <span className="text-emerald-400">{t("compliance.scheduleOk")}</span>
+                      ) : c.cron ? (
+                        <span className="text-amber-400">
+                          {t("compliance.scheduleSparse", { days: c.schedule_gap_days ?? 0 })}
+                        </span>
+                      ) : (
+                        <span className="text-amber-400">{t("compliance.scheduleNone")}</span>
+                      )}
                     </td>
                     <td className="px-4 py-2 text-xs text-slate-400">
                       {c.last_scan_at

@@ -2,15 +2,18 @@ import { type FormEvent, useEffect, useState } from "react";
 import {
   type Asset,
   type ComplianceFramework,
+  type FrameworkTemplate,
   type IpRange,
   type Observation,
   type ScanProfile,
   type ScanRun,
   type ScanRunStatus,
+  type ScanSource,
   type ScanType,
   type Vlan,
   createScanProfile,
   deleteScanProfile,
+  fetchFrameworkTemplates,
   fetchSettings,
   listAssets,
   listIpRanges,
@@ -45,7 +48,16 @@ const SOURCE_CLASS: Record<string, string> = {
 
 // Friendly scan frequency, compiled to a cron expression so non-technical users
 // never have to write cron. "advanced" reveals a raw cron field.
-const SCHEDULES = ["off", "hourly", "sixHours", "daily", "weekly", "monthly", "advanced"] as const;
+const SCHEDULES = [
+  "off",
+  "hourly",
+  "sixHours",
+  "daily",
+  "weekly",
+  "monthly",
+  "quarterly",
+  "advanced",
+] as const;
 type Schedule = (typeof SCHEDULES)[number];
 const SCHEDULE_CRON: Record<Exclude<Schedule, "advanced">, string> = {
   off: "",
@@ -54,7 +66,28 @@ const SCHEDULE_CRON: Record<Exclude<Schedule, "advanced">, string> = {
   daily: "0 2 * * *",
   weekly: "0 2 * * 1",
   monthly: "0 2 1 * *",
+  quarterly: "0 2 1 */3 *",
 };
+
+// Worst-case gap (days) between runs for each preset, so we can warn when a
+// chosen schedule is too sparse to keep a framework-tagged profile compliant.
+// "advanced" is unknown here; the backend validates it and the Compliance page
+// reports its adequacy after the profile is saved.
+const PRESET_MAX_GAP_DAYS: Record<Exclude<Schedule, "advanced">, number> = {
+  off: Infinity,
+  hourly: 1,
+  sixHours: 1,
+  daily: 1,
+  weekly: 7,
+  monthly: 31,
+  quarterly: 92,
+};
+
+const SCAN_SOURCES: ScanSource[] = [
+  "internal-unauthenticated",
+  "internal-authenticated",
+  "external-asv",
+];
 
 // Common port selections so users rarely need the raw "ports" syntax.
 const PORT_PRESETS = ["top1000", "full", "web", "custom"] as const;
@@ -136,10 +169,14 @@ export default function ScansPage() {
   const [ports, setPorts] = useState("");
   const [segment, setSegment] = useState("");
   const [framework, setFramework] = useState<ComplianceFramework | "">("");
+  const [scanSource, setScanSource] = useState<ScanSource>("internal-unauthenticated");
   const [schedule, setSchedule] = useState<Schedule>("off");
   const [cron, setCron] = useState("");
   const [scanType, setScanType] = useState<ScanType>("connect");
   const [serviceDetection, setServiceDetection] = useState(true);
+  // Framework cadence catalog: maps a framework to its required interval and a
+  // recommended schedule the form can apply in one click.
+  const [templates, setTemplates] = useState<FrameworkTemplate[]>([]);
   // Admin-configured defaults that pre-fill a new scan form.
   const [scanDefaults, setScanDefaults] = useState({
     ports: "top-1000",
@@ -151,6 +188,23 @@ export default function ScansPage() {
   const effectiveCron = schedule === "advanced" ? cron.trim() : SCHEDULE_CRON[schedule];
   const effectivePorts =
     portsPreset === "custom" ? ports.trim() || "top-1000" : PRESET_PORTS[portsPreset];
+
+  // Cadence guidance derived from the selected framework.
+  const activeTemplate = framework ? (templates.find((t) => t.framework === framework) ?? null) : null;
+  const scheduleGap = schedule === "advanced" ? null : PRESET_MAX_GAP_DAYS[schedule];
+  // A preset schedule too sparse to keep this framework compliant (advanced is
+  // left to backend validation, so we do not warn on it here).
+  const scheduleUnderScans =
+    activeTemplate !== null && scheduleGap !== null && scheduleGap > activeTemplate.cadence_days;
+  // PCI-style external-ASV requirement that the chosen scan source does not meet.
+  const asvGap = activeTemplate?.requires_external_asv === true && scanSource !== "external-asv";
+
+  function applyRecommendedSchedule() {
+    if (!activeTemplate) return;
+    // recommended_label ("monthly"/"quarterly") is also a preset value.
+    setSchedule(activeTemplate.recommended_label as Schedule);
+    setCron("");
+  }
 
   async function reload() {
     setLoading(true);
@@ -187,6 +241,11 @@ export default function ScansPage() {
       )
       .catch(() => {
         /* fall back to the built-in defaults */
+      });
+    fetchFrameworkTemplates()
+      .then(setTemplates)
+      .catch(() => {
+        /* cadence hints just stay hidden if the catalog can't be loaded */
       });
   }, []);
 
@@ -240,6 +299,7 @@ export default function ScansPage() {
     setPorts(dp.custom);
     setSegment("");
     setFramework("");
+    setScanSource("internal-unauthenticated");
     setSchedule("off");
     setCron("");
     setScanType(scanDefaults.scanType);
@@ -257,6 +317,7 @@ export default function ScansPage() {
         ports: effectivePorts,
         scan_type: scanType,
         service_detection: serviceDetection,
+        scan_source: scanSource,
         segment: segment || null,
         compliance_framework: framework || null,
         cron: effectiveCron || null,
@@ -596,6 +657,43 @@ export default function ScansPage() {
               <option value="nist">NIST</option>
             </select>
           </FormField>
+          {activeTemplate && (
+            <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs text-slate-400">
+              <p>
+                {t("scans.f.cadenceRequirement", {
+                  label: activeTemplate.label,
+                  days: activeTemplate.cadence_days,
+                })}
+              </p>
+              <button
+                type="button"
+                onClick={applyRecommendedSchedule}
+                className="mt-2 rounded-md border border-sky-800 bg-sky-950/50 px-2.5 py-1 font-medium text-sky-300 hover:bg-sky-900/50"
+              >
+                {t("scans.f.useRecommended", {
+                  schedule: t(`scans.schedule.${activeTemplate.recommended_label}` as TKey),
+                })}
+              </button>
+            </div>
+          )}
+          <FormField label={t("scans.f.scanSource")} hint={t("scans.f.scanSourceHint")}>
+            <select
+              className={inputClass}
+              value={scanSource}
+              onChange={(e) => setScanSource(e.target.value as ScanSource)}
+            >
+              {SCAN_SOURCES.map((s) => (
+                <option key={s} value={s}>
+                  {t(`scans.source.${s}` as TKey)}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          {asvGap && (
+            <p className="rounded-lg border border-amber-900 bg-amber-950/40 px-3 py-2 text-xs text-amber-300">
+              {t("scans.f.asvNote", { label: activeTemplate?.label ?? "" })}
+            </p>
+          )}
           <FormField label={t("scans.f.schedule")} hint={t("scans.f.scheduleHint")}>
             <select
               className={inputClass}
@@ -609,6 +707,14 @@ export default function ScansPage() {
               ))}
             </select>
           </FormField>
+          {scheduleUnderScans && activeTemplate && (
+            <p className="rounded-lg border border-amber-900 bg-amber-950/40 px-3 py-2 text-xs text-amber-300">
+              {t("scans.f.scheduleUnderScans", {
+                label: activeTemplate.label,
+                days: activeTemplate.cadence_days,
+              })}
+            </p>
+          )}
           {schedule === "advanced" && (
             <FormField label={t("scans.f.cron")} hint={t("scans.f.cronHint")}>
               <input

@@ -459,6 +459,7 @@ export interface ScanProfileInput {
   ports?: string;
   scan_type?: ScanType;
   service_detection?: boolean;
+  scan_source?: ScanSource;
   segment?: string | null;
   compliance_framework?: ComplianceFramework | null;
   cron?: string | null;
@@ -698,10 +699,28 @@ export interface ComplianceStatusItem {
   status: string; // compliant | due_soon | overdue | never
   scan_source: string;
   asv_satisfied: boolean;
+  cron: string | null;
+  recommended_cron: string;
+  schedule_ok: boolean;
+  schedule_gap_days: number | null;
+}
+
+export interface FrameworkTemplate {
+  framework: ComplianceFramework;
+  label: string;
+  cadence_days: number;
+  recommended_cron: string;
+  recommended_label: string;
+  requires_external_asv: boolean;
+  description: string;
 }
 
 export function fetchComplianceStatus(): Promise<ComplianceStatusItem[]> {
   return request<ComplianceStatusItem[]>("/compliance/status");
+}
+
+export function fetchFrameworkTemplates(): Promise<FrameworkTemplate[]> {
+  return request<FrameworkTemplate[]>("/compliance/frameworks");
 }
 
 // Tasks
