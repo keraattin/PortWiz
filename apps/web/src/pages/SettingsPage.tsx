@@ -7,12 +7,16 @@ import {
   type SettingsConfigUpdate,
   type SettingsStatus,
   type TestResult,
+  type UpdateStatus,
+  applyUpdate,
+  checkForUpdate,
   fetchAiProviders,
   fetchJiraIssueTypes,
   fetchJiraPriorities,
   fetchJiraProjects,
   fetchSettings,
   fetchSettingsConfig,
+  fetchUpdateStatus,
   searchJiraUsers,
   testAi,
   testEmail,
@@ -109,6 +113,7 @@ interface FormState {
   default_service_detection: boolean;
   default_scan_rate_limit_pps: string;
   retention_observation_days: string;
+  update_check_enabled: boolean;
 }
 
 function fromConfig(c: SettingsConfig): FormState {
@@ -162,6 +167,7 @@ function fromConfig(c: SettingsConfig): FormState {
     default_service_detection: c.default_service_detection,
     default_scan_rate_limit_pps: String(c.default_scan_rate_limit_pps),
     retention_observation_days: String(c.retention_observation_days),
+    update_check_enabled: c.update_check_enabled,
   };
 }
 
@@ -233,6 +239,10 @@ export default function SettingsPage() {
   const [netboxResult, setNetboxResult] = useState<TestResult | null>(null);
   const [cveResult, setCveResult] = useState<TestResult | null>(null);
   const [emailTo, setEmailTo] = useState("");
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [applyingUpdate, setApplyingUpdate] = useState(false);
+  const [updateApplied, setUpdateApplied] = useState(false);
 
   // Jira discovery: loaded on demand from the saved connection.
   const [jiraProjects, setJiraProjects] = useState<JiraProject[]>([]);
@@ -255,11 +265,40 @@ export default function SettingsPage() {
         setForm(fromConfig(c));
         setProviders(p);
         setStatus(s);
+        fetchUpdateStatus()
+          .then(setUpdateStatus)
+          .catch(() => {
+            /* update check is best-effort */
+          });
       } else {
         setStatus(await fetchSettings());
       }
     } catch (e) {
       setError(errorMessage(e));
+    }
+  }
+
+  async function checkUpdateNow() {
+    setCheckingUpdate(true);
+    try {
+      setUpdateStatus(await checkForUpdate());
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setCheckingUpdate(false);
+    }
+  }
+
+  async function applyUpdateNow() {
+    setApplyingUpdate(true);
+    try {
+      await applyUpdate();
+      setUpdateApplied(true);
+      toast.success(t("update.inProgress"));
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setApplyingUpdate(false);
     }
   }
 
@@ -1269,6 +1308,71 @@ export default function SettingsPage() {
             />
           </FormField>
 
+          <p className="pt-2 text-sm font-medium text-slate-300">
+            {t("settings.system.updates")}
+          </p>
+          <Toggle
+            label={t("settings.system.updateCheck")}
+            checked={form.update_check_enabled}
+            onChange={(v) => set("update_check_enabled", v)}
+          />
+          <p className="text-xs text-slate-500">{t("settings.system.updateCheckHint")}</p>
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <span className="text-slate-400">
+              {t("update.current", { version: updateStatus?.current ?? "—" })}
+            </span>
+            {updateStatus?.update_available ? (
+              <span className="text-emerald-400">
+                {t("update.available", {
+                  latest: updateStatus.latest ?? "",
+                  current: updateStatus.current,
+                })}
+                {updateStatus.url && (
+                  <a
+                    href={updateStatus.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ml-2 underline"
+                  >
+                    {t("update.whatsNew")}
+                  </a>
+                )}
+              </span>
+            ) : updateStatus?.enabled && updateStatus.latest ? (
+              <span className="text-slate-500">{t("update.upToDate")}</span>
+            ) : null}
+            <button
+              type="button"
+              className={testBtn}
+              disabled={checkingUpdate}
+              onClick={() => void checkUpdateNow()}
+            >
+              {checkingUpdate ? t("update.checking") : t("update.checkNow")}
+            </button>
+          </div>
+          {updateStatus?.update_available &&
+            (updateApplied ? (
+              <p className="rounded-lg border border-emerald-800 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-300">
+                {t("update.inProgress")}
+              </p>
+            ) : updateStatus.apply_available ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  className={primaryBtn}
+                  disabled={applyingUpdate}
+                  onClick={() => void applyUpdateNow()}
+                >
+                  {applyingUpdate ? t("update.applying") : t("update.applyNow")}
+                </button>
+                <span className="text-xs text-slate-500">{t("update.applyHint")}</span>
+              </div>
+            ) : (
+              <p className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-400">
+                {t("update.instructions")}
+              </p>
+            ))}
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
@@ -1294,6 +1398,7 @@ export default function SettingsPage() {
                     0,
                     parseInt(form.retention_observation_days, 10) || 0,
                   ),
+                  update_check_enabled: form.update_check_enabled,
                 })
               }
             >

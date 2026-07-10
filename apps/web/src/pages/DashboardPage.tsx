@@ -3,10 +3,14 @@ import { Link } from "react-router-dom";
 import {
   type DashboardCharts as Charts,
   type DashboardStats,
+  type UpdateStatus,
+  applyUpdate,
   fetchCharts,
   fetchHealth,
   fetchStats,
+  fetchUpdateStatus,
 } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import DashboardCharts from "../components/DashboardCharts";
 import { type TKey } from "../i18n/locales/en";
@@ -45,11 +49,24 @@ interface Step {
 
 export default function DashboardPage() {
   const { t, lang } = useI18n();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const errorMessage = useErrorMessage();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [charts, setCharts] = useState<Charts | null>(null);
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
+  const [update, setUpdate] = useState<UpdateStatus | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function startUpdate() {
+    setApplying(true);
+    applyUpdate()
+      .then(() => setApplied(true))
+      .catch((e) => setError(errorMessage(e)))
+      .finally(() => setApplying(false));
+  }
 
   function load() {
     setError(null);
@@ -62,6 +79,13 @@ export default function DashboardPage() {
     fetchCharts()
       .then(setCharts)
       .catch((e) => setError(errorMessage(e)));
+    if (isAdmin) {
+      fetchUpdateStatus()
+        .then(setUpdate)
+        .catch(() => {
+          /* update check is best-effort; never block the dashboard on it */
+        });
+    }
   }
 
   useEffect(() => {
@@ -109,6 +133,37 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {update?.update_available && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-800 bg-emerald-950/40 p-4 text-sm text-emerald-200">
+          <span>
+            {applied
+              ? t("update.inProgress")
+              : t("update.available", { latest: update.latest ?? "", current: update.current })}
+          </span>
+          <div className="flex items-center gap-3">
+            {update.url && (
+              <a href={update.url} target="_blank" rel="noreferrer" className="underline">
+                {t("update.whatsNew")}
+              </a>
+            )}
+            {update.apply_available && !applied ? (
+              <button
+                onClick={startUpdate}
+                disabled={applying}
+                className="rounded-lg border border-emerald-700 bg-emerald-900/50 px-3 py-1 font-medium text-emerald-100 hover:bg-emerald-800/60 disabled:opacity-60"
+              >
+                {applying ? t("update.applying") : t("update.applyNow")}
+              </button>
+            ) : (
+              !applied && (
+                <Link to="/settings" className="underline">
+                  {t("update.howTo")}
+                </Link>
+              )
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <span
           className={`inline-block h-2.5 w-2.5 rounded-full ${

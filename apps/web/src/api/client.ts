@@ -880,6 +880,30 @@ export function summarizeCVEs(): Promise<CVESummary> {
   return request<CVESummary>("/cve/summary", { method: "POST" });
 }
 
+export interface UpdateStatus {
+  enabled: boolean;
+  current: string;
+  latest: string | null;
+  update_available: boolean;
+  url: string | null;
+  checked_at: string | null;
+  error: string | null;
+  apply_available: boolean;
+}
+
+export function fetchUpdateStatus(): Promise<UpdateStatus> {
+  return request<UpdateStatus>("/update/status");
+}
+
+export function checkForUpdate(): Promise<UpdateStatus> {
+  return request<UpdateStatus>("/update/check", { method: "POST" });
+}
+
+// Record a one-click update request; the updater sidecar applies it out of band.
+export function applyUpdate(): Promise<{ status: string }> {
+  return request<{ status: string }>("/update/apply", { method: "POST" });
+}
+
 // Editable settings (admin). Secrets are never returned; a `*_set` flag reports
 // whether each is currently set.
 export interface SettingsConfig {
@@ -932,6 +956,7 @@ export interface SettingsConfig {
   default_service_detection: boolean;
   default_scan_rate_limit_pps: number;
   retention_observation_days: number;
+  update_check_enabled: boolean;
 }
 
 export type SettingsConfigUpdate = Partial<{
@@ -984,6 +1009,7 @@ export type SettingsConfigUpdate = Partial<{
   default_service_detection: boolean;
   default_scan_rate_limit_pps: number;
   retention_observation_days: number;
+  update_check_enabled: boolean;
 }>;
 
 export function fetchSettingsConfig(): Promise<SettingsConfig> {
