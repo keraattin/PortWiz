@@ -156,7 +156,7 @@ export default function DashboardPage() {
               </button>
             ) : (
               !applied && (
-                <Link to="/settings" className="underline">
+                <Link to="/settings?tab=system" className="underline">
                   {t("update.howTo")}
                 </Link>
               )

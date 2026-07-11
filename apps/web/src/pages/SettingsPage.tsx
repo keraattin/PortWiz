@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   type AiProviderInfo,
   type JiraProject,
@@ -229,9 +230,18 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<
-    "ai" | "email" | "jira" | "netbox" | "cve" | "system"
-  >("ai");
+  // Allow deep-linking to a tab, e.g. /settings?tab=system from the update banner.
+  const [searchParams] = useSearchParams();
+  const TABS = ["ai", "email", "jira", "netbox", "cve", "system"] as const;
+  const requestedTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>(
+    (TABS as readonly string[]).includes(requestedTab ?? "")
+      ? (requestedTab as (typeof TABS)[number])
+      : "ai",
+  );
+  // Reveal the updates section once when arriving via ?tab=system.
+  const updatesRef = useRef<HTMLDivElement | null>(null);
+  const revealedUpdates = useRef(false);
 
   const [aiResult, setAiResult] = useState<TestResult | null>(null);
   const [emailResult, setEmailResult] = useState<TestResult | null>(null);
@@ -306,6 +316,21 @@ export default function SettingsPage() {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
+
+  // Once the system tab has rendered (config loaded), scroll the updates section
+  // into view when the user arrived from the "How to update" link.
+  useEffect(() => {
+    if (
+      !revealedUpdates.current &&
+      requestedTab === "system" &&
+      activeTab === "system" &&
+      config &&
+      updatesRef.current
+    ) {
+      revealedUpdates.current = true;
+      updatesRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [requestedTab, activeTab, config]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => (f ? { ...f, [key]: value } : f));
@@ -1308,9 +1333,11 @@ export default function SettingsPage() {
             />
           </FormField>
 
-          <p className="pt-2 text-sm font-medium text-slate-300">
-            {t("settings.system.updates")}
-          </p>
+          <div ref={updatesRef} className="pt-2 scroll-mt-4">
+            <p className="text-sm font-medium text-slate-300">
+              {t("settings.system.updates")}
+            </p>
+          </div>
           <Toggle
             label={t("settings.system.updateCheck")}
             checked={form.update_check_enabled}
