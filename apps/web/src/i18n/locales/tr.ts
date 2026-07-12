@@ -702,6 +702,16 @@ export const tr: Partial<Record<TKey, string>> = {
     "Keşfedilen servis versiyonlarını bir zafiyet kaynağından bilinen CVE'lere eşle. Veri kaynaktan otantiktir; AI katmanı CVE ID uydurmaz.",
   "settings.cve.enabled": "CVE zenginleştirmeyi etkinleştir",
   "settings.cve.source": "Kaynak",
+  "settings.cve.sourceHint":
+    "NVD internete bağlanır. Çevrimdışı, air-gapped kurulumlar için yüklediğiniz NVD feed'ini kullanır.",
+  "settings.cve.sourceNvd": "NVD (çevrimiçi)",
+  "settings.cve.sourceOffline": "Çevrimdışı (yüklenen NVD feed'i)",
+  "settings.cve.offlineIntro":
+    "Bağlantısı olan bir makinede NVD 2.0 JSON feed'ini indirin, sonra buraya yükleyin (.json veya .json.gz). Aramalar internet erişimi olmadan çalışır.",
+  "settings.cve.importFeed": "Feed'i içe aktar",
+  "settings.cve.importing": "İçe aktarılıyor…",
+  "settings.cve.importResult": "{imported} içe aktarıldı. Çevrimdışı {loaded} CVE mevcut.",
+  "settings.cve.imported": "{count} CVE içe aktarıldı",
   "settings.cve.apiUrl": "API URL (isteğe bağlı)",
   "settings.cve.apiUrlHint": "Boş bırakılırsa kaynağın varsayılan uç noktası kullanılır.",
   "settings.cve.apiKey": "API anahtarı (isteğe bağlı)",

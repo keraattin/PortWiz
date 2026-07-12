@@ -700,6 +700,16 @@ export const en = {
     "Match discovered service versions to known CVEs from a vulnerability source. Data is authoritative from the source; the AI layer never invents CVE IDs.",
   "settings.cve.enabled": "Enable CVE enrichment",
   "settings.cve.source": "Source",
+  "settings.cve.sourceHint":
+    "NVD queries the internet. Offline uses an NVD feed you upload, for air-gapped installs.",
+  "settings.cve.sourceNvd": "NVD (online)",
+  "settings.cve.sourceOffline": "Offline (uploaded NVD feed)",
+  "settings.cve.offlineIntro":
+    "Download an NVD 2.0 JSON feed on a connected machine, then upload it here (.json or .json.gz). Lookups then run with no internet access.",
+  "settings.cve.importFeed": "Import feed",
+  "settings.cve.importing": "Importing…",
+  "settings.cve.importResult": "Imported {imported}. {loaded} CVEs now available offline.",
+  "settings.cve.imported": "Imported {count} CVEs",
   "settings.cve.apiUrl": "API URL (optional)",
   "settings.cve.apiUrlHint": "Blank uses the source's default endpoint.",
   "settings.cve.apiKey": "API key (optional)",

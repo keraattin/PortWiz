@@ -705,6 +705,16 @@ export const fr: Partial<Record<TKey, string>> = {
     "Associez les versions de service découvertes aux CVE connues d'une source de vulnérabilités. Les données font autorité depuis la source ; la couche IA n'invente jamais d'identifiants CVE.",
   "settings.cve.enabled": "Activer l'enrichissement CVE",
   "settings.cve.source": "Source",
+  "settings.cve.sourceHint":
+    "NVD interroge Internet. Hors ligne utilise un flux NVD que vous téléversez, pour les installations air-gapped.",
+  "settings.cve.sourceNvd": "NVD (en ligne)",
+  "settings.cve.sourceOffline": "Hors ligne (flux NVD téléversé)",
+  "settings.cve.offlineIntro":
+    "Téléchargez un flux NVD 2.0 JSON sur une machine connectée, puis téléversez-le ici (.json ou .json.gz). Les recherches fonctionnent alors sans accès Internet.",
+  "settings.cve.importFeed": "Importer le flux",
+  "settings.cve.importing": "Importation…",
+  "settings.cve.importResult": "{imported} importés. {loaded} CVE désormais disponibles hors ligne.",
+  "settings.cve.imported": "{count} CVE importés",
   "settings.cve.apiUrl": "URL de l'API (facultatif)",
   "settings.cve.apiUrlHint": "Vide utilise le point de terminaison par défaut de la source.",
   "settings.cve.apiKey": "Clé API (facultatif)",

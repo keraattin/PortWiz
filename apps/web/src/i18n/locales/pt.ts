@@ -705,6 +705,16 @@ export const pt: Partial<Record<TKey, string>> = {
     "Associe as versões de serviço descobertas a CVEs conhecidas de uma fonte de vulnerabilidades. Os dados são autoritativos da fonte; a camada de IA nunca inventa IDs de CVE.",
   "settings.cve.enabled": "Ativar enriquecimento CVE",
   "settings.cve.source": "Fonte",
+  "settings.cve.sourceHint":
+    "NVD consulta a internet. Offline usa um feed NVD que você envia, para instalações air-gapped.",
+  "settings.cve.sourceNvd": "NVD (online)",
+  "settings.cve.sourceOffline": "Offline (feed NVD enviado)",
+  "settings.cve.offlineIntro":
+    "Baixe um feed NVD 2.0 JSON em uma máquina conectada e envie-o aqui (.json ou .json.gz). As consultas passam a funcionar sem acesso à internet.",
+  "settings.cve.importFeed": "Importar feed",
+  "settings.cve.importing": "Importando…",
+  "settings.cve.importResult": "{imported} importados. {loaded} CVEs agora disponíveis offline.",
+  "settings.cve.imported": "{count} CVEs importados",
   "settings.cve.apiUrl": "URL da API (opcional)",
   "settings.cve.apiUrlHint": "Em branco usa o endpoint padrão da fonte.",
   "settings.cve.apiKey": "Chave da API (opcional)",

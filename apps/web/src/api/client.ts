@@ -922,6 +922,31 @@ export function recheckCVEs(): Promise<{ checked: number; findings: number }> {
   return request<{ checked: number; findings: number }>("/cve/recheck", { method: "POST" });
 }
 
+export interface CVEImportReport {
+  total: number; // CVEs found in the uploaded feed
+  imported: number; // stored (created or updated)
+  loaded: number; // total CVEs now in the offline store
+}
+
+// Upload an NVD 2.0 JSON feed (plain or .gz) to the offline CVE store.
+export async function importCveFeed(file: File): Promise<CVEImportReport> {
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_V1}/cve/import`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    if (res.status === 401) handleUnauthorized();
+    const detail = data && typeof data.detail === "string" ? data.detail : res.statusText;
+    throw new ApiError(res.status, detail);
+  }
+  return data as CVEImportReport;
+}
+
 export interface CVESummary {
   provider: string;
   count: number;

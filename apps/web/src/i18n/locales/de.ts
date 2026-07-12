@@ -705,6 +705,16 @@ export const de: Partial<Record<TKey, string>> = {
     "Ordne erkannte Dienstversionen bekannten CVEs aus einer Schwachstellenquelle zu. Die Daten sind autoritativ aus der Quelle; die KI-Schicht erfindet keine CVE-IDs.",
   "settings.cve.enabled": "CVE-Anreicherung aktivieren",
   "settings.cve.source": "Quelle",
+  "settings.cve.sourceHint":
+    "NVD nutzt das Internet. Offline verwendet einen hochgeladenen NVD-Feed, für Air-Gapped-Installationen.",
+  "settings.cve.sourceNvd": "NVD (online)",
+  "settings.cve.sourceOffline": "Offline (hochgeladener NVD-Feed)",
+  "settings.cve.offlineIntro":
+    "Laden Sie einen NVD-2.0-JSON-Feed auf einem verbundenen Rechner herunter und hier hoch (.json oder .json.gz). Abfragen laufen dann ohne Internetzugang.",
+  "settings.cve.importFeed": "Feed importieren",
+  "settings.cve.importing": "Wird importiert…",
+  "settings.cve.importResult": "{imported} importiert. {loaded} CVEs jetzt offline verfügbar.",
+  "settings.cve.imported": "{count} CVEs importiert",
   "settings.cve.apiUrl": "API-URL (optional)",
   "settings.cve.apiUrlHint": "Leer verwendet den Standard-Endpunkt der Quelle.",
   "settings.cve.apiKey": "API-Schlüssel (optional)",

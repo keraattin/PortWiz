@@ -7,11 +7,13 @@ import {
   type SettingsConfig,
   type SettingsConfigUpdate,
   type SettingsStatus,
+  type CVEImportReport,
   type TestResult,
   type UpdateStatus,
   applyUpdate,
   checkForUpdate,
   fetchAiProviders,
+  importCveFeed,
   fetchJiraIssueTypes,
   fetchJiraPriorities,
   fetchJiraProjects,
@@ -248,6 +250,9 @@ export default function SettingsPage() {
   const [jiraResult, setJiraResult] = useState<TestResult | null>(null);
   const [netboxResult, setNetboxResult] = useState<TestResult | null>(null);
   const [cveResult, setCveResult] = useState<TestResult | null>(null);
+  const [cveFeedFile, setCveFeedFile] = useState<File | null>(null);
+  const [cveImporting, setCveImporting] = useState(false);
+  const [cveImportReport, setCveImportReport] = useState<CVEImportReport | null>(null);
   const [emailTo, setEmailTo] = useState("");
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
@@ -309,6 +314,21 @@ export default function SettingsPage() {
       toast.error(errorMessage(e));
     } finally {
       setApplyingUpdate(false);
+    }
+  }
+
+  async function onImportCveFeed() {
+    if (!cveFeedFile) return;
+    setCveImporting(true);
+    setCveImportReport(null);
+    try {
+      const report = await importCveFeed(cveFeedFile);
+      setCveImportReport(report);
+      toast.success(t("settings.cve.imported", { count: report.imported }));
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setCveImporting(false);
     }
   }
 
@@ -1136,32 +1156,68 @@ export default function SettingsPage() {
             checked={form.cve_enabled}
             onChange={(v) => set("cve_enabled", v)}
           />
-          <FormField label={t("settings.cve.source")}>
+          <FormField label={t("settings.cve.source")} hint={t("settings.cve.sourceHint")}>
             <select
               className={inputClass}
               value={form.cve_source}
               onChange={(e) => set("cve_source", e.target.value)}
             >
-              <option value="nvd">NVD</option>
+              <option value="nvd">{t("settings.cve.sourceNvd")}</option>
+              <option value="offline">{t("settings.cve.sourceOffline")}</option>
             </select>
           </FormField>
-          <FormField label={t("settings.cve.apiUrl")} hint={t("settings.cve.apiUrlHint")}>
-            <input
-              className={inputClass}
-              placeholder="https://services.nvd.nist.gov/rest/json/cves/2.0"
-              value={form.cve_api_url}
-              onChange={(e) => set("cve_api_url", e.target.value)}
-            />
-          </FormField>
-          <FormField label={t("settings.cve.apiKey")} hint={secretHint(config.cve_api_key_set, t)}>
-            <input
-              className={inputClass}
-              type="password"
-              placeholder={config.cve_api_key_set ? "••••••••" : t("settings.notSetPlaceholder")}
-              value={form.cve_api_key}
-              onChange={(e) => set("cve_api_key", e.target.value)}
-            />
-          </FormField>
+          {form.cve_source === "offline" ? (
+            <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950 p-3">
+              <p className="text-xs text-slate-400">{t("settings.cve.offlineIntro")}</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  type="file"
+                  accept=".json,.gz,.json.gz"
+                  className="text-xs text-slate-400 file:mr-2 file:rounded-md file:border-0 file:bg-slate-800 file:px-3 file:py-1 file:text-slate-200"
+                  onChange={(e) => setCveFeedFile(e.target.files?.[0] ?? null)}
+                />
+                <button
+                  type="button"
+                  className={testBtn}
+                  disabled={!cveFeedFile || cveImporting}
+                  onClick={() => void onImportCveFeed()}
+                >
+                  {cveImporting ? t("settings.cve.importing") : t("settings.cve.importFeed")}
+                </button>
+              </div>
+              {cveImportReport && (
+                <p className="text-xs text-emerald-400">
+                  {t("settings.cve.importResult", {
+                    imported: cveImportReport.imported,
+                    loaded: cveImportReport.loaded,
+                  })}
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <FormField label={t("settings.cve.apiUrl")} hint={t("settings.cve.apiUrlHint")}>
+                <input
+                  className={inputClass}
+                  placeholder="https://services.nvd.nist.gov/rest/json/cves/2.0"
+                  value={form.cve_api_url}
+                  onChange={(e) => set("cve_api_url", e.target.value)}
+                />
+              </FormField>
+              <FormField
+                label={t("settings.cve.apiKey")}
+                hint={secretHint(config.cve_api_key_set, t)}
+              >
+                <input
+                  className={inputClass}
+                  type="password"
+                  placeholder={config.cve_api_key_set ? "••••••••" : t("settings.notSetPlaceholder")}
+                  value={form.cve_api_key}
+                  onChange={(e) => set("cve_api_key", e.target.value)}
+                />
+              </FormField>
+            </>
+          )}
           <FormField label={t("settings.cve.minCvss")} hint={t("settings.cve.minCvssHint")}>
             <input
               className={inputClass}
