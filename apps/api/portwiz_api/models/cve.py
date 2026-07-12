@@ -41,3 +41,27 @@ class CVEFinding(SQLModel, table=True):
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
+
+
+class CveRecord(SQLModel, table=True):
+    """A single CVE from an imported NVD feed, stored locally so lookups work
+    offline (air-gapped installs). Keyed by CVE id; ``search_text`` is a
+    lowercased blob (description + affected vendor/product tokens) that the
+    offline source keyword-matches a discovered service against."""
+
+    __tablename__ = "cve_records"
+
+    cve_id: str = Field(sa_column=Column(String(32), primary_key=True))
+    cvss: float | None = Field(default=None, sa_column=Column(Float))
+    severity: str = Field(sa_column=Column(String(16), nullable=False))  # critical|high|...
+    summary: str = Field(default="", sa_column=Column(Text, nullable=False))
+    url: str = Field(default="", sa_column=Column(String(255), nullable=False))
+    published: dt.datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True))
+    )
+    # Lowercased description + affected vendor/product tokens, for keyword match.
+    search_text: str = Field(default="", sa_column=Column(Text, nullable=False))
+    imported_at: dt.datetime = Field(
+        default_factory=_utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )

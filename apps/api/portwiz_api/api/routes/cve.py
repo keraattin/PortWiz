@@ -4,20 +4,23 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.ai import AIProvider, get_ai_provider
 from ...core.audit import append_audit
-from ...core.cve import CVESource, NullCVESource, get_cve_source, recheck_cves
+from ...core.cve import CVESource, NullCVESource, get_cve_source, import_nvd_feed, recheck_cves
 from ...core.cve_ai import summarize_cves
 from ...core.db import get_session
-from ...models.cve import CVEFinding
+from ...models.cve import CVEFinding, CveRecord
 from ...models.user import User, UserRole
-from ...schemas.cve import CVEFindingRead, CVERecheckResult, CVESummary
+from ...schemas.cve import CVEFindingRead, CVEImportReport, CVERecheckResult, CVESummary
 from ..deps import get_current_user, require_roles
 from .ai import ai_rate_limited
+
+# NVD feeds are large; a gzipped per-year file is well under this.
+MAX_FEED_BYTES = 100 * 1024 * 1024
 
 logger = logging.getLogger("portwiz.cve")
 
@@ -49,6 +52,38 @@ async def recheck(
     )
     await session.commit()
     return CVERecheckResult(**result)
+
+
+@router.post("/import", response_model=CVEImportReport)
+async def import_feed(
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_roles(UserRole.admin)),
+    session: AsyncSession = Depends(get_session),
+) -> CVEImportReport:
+    """Upload an NVD 2.0 JSON feed (plain or .gz) into the offline CVE store, so
+    enrichment works with no outbound access. Upserts by CVE id; audited."""
+    content = await file.read()
+    if len(content) > MAX_FEED_BYTES:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File too large (max 100 MB)"
+        )
+    try:
+        result = await import_nvd_feed(session, content)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    loaded = (await session.execute(select(func.count()).select_from(CveRecord))).scalar_one()
+    await append_audit(
+        session,
+        action="cve.feed_imported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="cve",
+        target_id="*",
+        payload={"filename": file.filename, "loaded": loaded, **result},
+    )
+    await session.commit()
+    return CVEImportReport(total=result["total"], imported=result["imported"], loaded=loaded)
 
 
 @router.get("/findings", response_model=list[CVEFindingRead])

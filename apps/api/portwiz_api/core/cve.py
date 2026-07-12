@@ -9,6 +9,7 @@ prioritises what a source returns.
 
 from __future__ import annotations
 
+import datetime as dt
 import logging
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -22,6 +23,10 @@ from .db import get_session
 logger = logging.getLogger("portwiz.cve")
 
 _DEFAULT_NVD_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+
+
+def _utcnow() -> dt.datetime:
+    return dt.datetime.now(tz=dt.timezone.utc)
 
 
 @dataclass
@@ -153,12 +158,132 @@ class NvdSource:
             return False, str(exc)
 
 
-def build_cve_source(settings) -> CVESource:
-    """Return the configured CVE source, or a no-op when disabled."""
+class OfflineNvdSource:
+    """CVE lookups against a locally imported NVD feed, so enrichment works with
+    no outbound access (air-gapped installs). Matching mirrors the online keyword
+    search: a CVE matches when its stored text contains the product (and version).
+    The upstream NVD data is downloaded elsewhere and uploaded via /cve/import."""
+
+    name = "offline"
+
+    def __init__(self, session: AsyncSession, min_cvss: float = 0.0, max_results: int = 20) -> None:
+        self._session = session
+        self._min = min_cvss
+        self._max = max_results
+
+    @staticmethod
+    def _like(term: str) -> str:
+        # Escape LIKE wildcards so a product like "net_snmp" matches literally.
+        return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+    async def lookup(self, product: str, version: str | None) -> list[CVE]:
+        # Match on the product name only. NVD encodes which versions are affected
+        # in structured CPE ranges (versionStartIncluding/EndExcluding), not in
+        # free text, so a substring version filter would wrongly drop range-based
+        # CVEs. We return the product's highest-CVSS CVEs (bounded); an analyst
+        # confirms version applicability, as with the online keyword search.
+        from sqlalchemy import select
+
+        from ..models.cve import CveRecord
+
+        product = (product or "").strip().lower()
+        if not product:
+            return []
+        stmt = select(CveRecord).where(
+            CveRecord.search_text.like(f"%{self._like(product)}%", escape="\\")
+        )
+        if self._min > 0:
+            stmt = stmt.where(CveRecord.cvss.is_not(None), CveRecord.cvss >= self._min)
+        stmt = stmt.order_by(CveRecord.cvss.desc()).limit(self._max)
+        rows = (await self._session.execute(stmt)).scalars().all()
+        return [
+            CVE(
+                cve_id=r.cve_id,
+                cvss=r.cvss,
+                severity=r.severity,
+                summary=r.summary[:500],
+                url=r.url or f"https://nvd.nist.gov/vuln/detail/{r.cve_id}",
+            )
+            for r in rows
+        ]
+
+    async def verify(self) -> tuple[bool, str]:
+        from sqlalchemy import func, select
+
+        from ..models.cve import CveRecord
+
+        count = (
+            await self._session.execute(select(func.count()).select_from(CveRecord))
+        ).scalar_one()
+        if not count:
+            return False, "No offline CVE data imported yet. Upload an NVD feed file."
+        return True, f"{count} CVEs loaded from the offline feed."
+
+
+async def import_nvd_feed(session: AsyncSession, content: bytes) -> dict[str, int]:
+    """Parse an uploaded NVD 2.0 feed and upsert it into the local store (by CVE
+    id). Returns ``{"total", "imported"}``. Processed in chunks so a large feed
+    does not build one huge statement."""
+    from sqlalchemy import select
+
+    from ..models.cve import CveRecord
+    from .nvd_feed import parse_nvd_feed
+
+    records = parse_nvd_feed(content)
+    now = _utcnow()
+    imported = 0
+    chunk = 500
+    for start in range(0, len(records), chunk):
+        batch = records[start : start + chunk]
+        existing = {
+            row.cve_id: row
+            for row in (
+                await session.execute(
+                    select(CveRecord).where(CveRecord.cve_id.in_([r.cve_id for r in batch]))
+                )
+            ).scalars()
+        }
+        for r in batch:
+            row = existing.get(r.cve_id)
+            if row is None:
+                session.add(
+                    CveRecord(
+                        cve_id=r.cve_id,
+                        cvss=r.cvss,
+                        severity=r.severity,
+                        summary=r.summary,
+                        url=r.url,
+                        published=r.published,
+                        search_text=r.search_text,
+                        imported_at=now,
+                    )
+                )
+            else:
+                row.cvss = r.cvss
+                row.severity = r.severity
+                row.summary = r.summary
+                row.url = r.url
+                row.published = r.published
+                row.search_text = r.search_text
+                row.imported_at = now
+            imported += 1
+        await session.flush()
+    await session.commit()
+    return {"total": len(records), "imported": imported}
+
+
+def build_cve_source(settings, session: AsyncSession | None = None) -> CVESource:
+    """Return the configured CVE source, or a no-op when disabled.
+
+    The offline source needs a database session for its lookups; without one it
+    degrades to the null source so callers on the network-only path still work.
+    """
     if not settings.cve_enabled:
         return NullCVESource()
-    # Only NVD is implemented today; the ``cve_source`` switch reserves room for
-    # an offline feed / CIRCL behind the same interface.
+    if settings.cve_source == "offline":
+        if session is None:
+            return NullCVESource()
+        return OfflineNvdSource(session, min_cvss=settings.cve_min_cvss)
     return NvdSource(
         api_url=settings.cve_api_url,
         api_key=settings.cve_api_key,
@@ -169,7 +294,7 @@ def build_cve_source(settings) -> CVESource:
 async def get_cve_source(session: AsyncSession = Depends(get_session)) -> CVESource:
     from .app_settings import effective_settings
 
-    return build_cve_source(await effective_settings(session))
+    return build_cve_source(await effective_settings(session), session)
 
 
 async def recheck_cves(

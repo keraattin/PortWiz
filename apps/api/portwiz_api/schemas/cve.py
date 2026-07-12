@@ -32,6 +32,12 @@ class CVERecheckResult(BaseModel):
     findings: int
 
 
+class CVEImportReport(BaseModel):
+    total: int  # CVE entries found in the uploaded feed
+    imported: int  # entries stored (created or updated)
+    loaded: int  # total CVEs now in the offline store
+
+
 class CVESummary(BaseModel):
     provider: str
     count: int  # number of real findings the brief was built from

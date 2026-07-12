@@ -196,7 +196,7 @@ async def run_due_cve_recheck(
     hours = settings.cve_recheck_hours
     if not settings.cve_enabled or hours <= 0:
         return None
-    source = build_cve_source(settings)
+    source = build_cve_source(settings, session)
     if isinstance(source, NullCVESource):
         return None
 

@@ -75,7 +75,7 @@ async def test_recheck_runs_and_sets_cursor(db, monkeypatch) -> None:
     import portwiz_api.core.cve as cve_mod
     from portwiz_api.core.scheduler import _CVE_CURSOR_KEY, _get_cursor, run_due_cve_recheck
 
-    monkeypatch.setattr(cve_mod, "build_cve_source", lambda s: _FakeCVESource())
+    monkeypatch.setattr(cve_mod, "build_cve_source", lambda s, session=None: _FakeCVESource())
     await _seed_open_observation(db)
 
     async with db() as session:
@@ -101,7 +101,7 @@ async def test_recheck_not_due_within_interval(db, monkeypatch) -> None:
     import portwiz_api.core.cve as cve_mod
     from portwiz_api.core.scheduler import run_due_cve_recheck
 
-    monkeypatch.setattr(cve_mod, "build_cve_source", lambda s: _FakeCVESource())
+    monkeypatch.setattr(cve_mod, "build_cve_source", lambda s, session=None: _FakeCVESource())
     await _seed_open_observation(db)
     settings = _settings(cve_enabled=True, cve_recheck_hours=6)
 
