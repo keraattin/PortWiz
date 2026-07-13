@@ -712,6 +712,24 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.cve.importing": "İçe aktarılıyor…",
   "settings.cve.importResult": "{imported} içe aktarıldı. Çevrimdışı {loaded} CVE mevcut.",
   "settings.cve.imported": "{count} CVE içe aktarıldı",
+  "cve.howto.open": "Nasıl yapılır",
+  "cve.howto.title": "Çevrimdışı CVE: NVD feed'i içe aktarma",
+  "cve.howto.intro":
+    "Air-gapped kurulumlar için, bağlantılı bir makinede NVD verisini indirip buraya yükleyin. Aramalar internet erişimi olmadan yerel kopyaya karşı çalışır.",
+  "cve.howto.s1": "İndir",
+  "cve.howto.s1d":
+    "İnternete bağlı bir makinede NVD verisini API 2.0 JSON formatında alın (.json veya .json.gz).",
+  "cve.howto.s2": "Aktar",
+  "cve.howto.s2d":
+    "Dosyaları, politikanızın izin verdiği bir yöntemle air-gapped sunucuya taşıyın.",
+  "cve.howto.s3": "İçe aktar",
+  "cve.howto.s3d":
+    "Burada Kaynak'ı Offline yapın, her dosyayı seçip Feed'i içe aktar'a tıklayın. Kayıtlar CVE id'sine göre upsert edilir.",
+  "cve.howto.codeCap":
+    "Feed dosyası üretmenin bir yolu: NVD 2.0 API'yi sayfalayıp her yanıtı kaydedin.",
+  "cve.howto.matchTitle": "Eşleşme nasıl çalışır",
+  "cve.howto.match":
+    "Eşleşme, her CVE'nin metnine karşı ürün adıyla yapılır ve CVSS'e göre sıralanır. NVD sürüm uygunluğunu yapısal CPE aralıklarında tuttuğundan, sonuçlar sürüm-kesin bir liste değil, doğrulanacak öncelikli bir başlangıç noktasıdır.",
   "settings.cve.apiUrl": "API URL (isteğe bağlı)",
   "settings.cve.apiUrlHint": "Boş bırakılırsa kaynağın varsayılan uç noktası kullanılır.",
   "settings.cve.apiKey": "API anahtarı (isteğe bağlı)",

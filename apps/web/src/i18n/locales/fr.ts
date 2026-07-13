@@ -715,6 +715,24 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.cve.importing": "Importation…",
   "settings.cve.importResult": "{imported} importés. {loaded} CVE désormais disponibles hors ligne.",
   "settings.cve.imported": "{count} CVE importés",
+  "cve.howto.open": "Comment faire",
+  "cve.howto.title": "CVE hors ligne : importer un flux NVD",
+  "cve.howto.intro":
+    "Pour les installations air-gapped, téléchargez les données NVD sur une machine connectée et téléversez-les ici. Les recherches s'exécutent ensuite sans Internet, sur votre copie locale.",
+  "cve.howto.s1": "Télécharger",
+  "cve.howto.s1d":
+    "Sur une machine connectée à Internet, obtenez les données NVD au format API 2.0 JSON (.json ou .json.gz).",
+  "cve.howto.s2": "Transférer",
+  "cve.howto.s2d":
+    "Déplacez le(s) fichier(s) vers l'hôte air-gapped par le transfert autorisé par votre politique.",
+  "cve.howto.s3": "Importer",
+  "cve.howto.s3d":
+    "Ici, réglez la Source sur Hors ligne, choisissez chaque fichier et cliquez sur Importer le flux. Les entrées sont mises à jour par identifiant CVE.",
+  "cve.howto.codeCap":
+    "Une façon de produire des fichiers de flux : parcourir l'API NVD 2.0 et enregistrer chaque réponse.",
+  "cve.howto.matchTitle": "Comment fonctionne la correspondance",
+  "cve.howto.match":
+    "La correspondance se fait par nom de produit dans le texte de chaque CVE, classée par CVSS. NVD conserve l'applicabilité des versions dans des plages CPE structurées ; les résultats sont donc un point de départ prioritaire à confirmer, pas une liste exacte par version.",
   "settings.cve.apiUrl": "URL de l'API (facultatif)",
   "settings.cve.apiUrlHint": "Vide utilise le point de terminaison par défaut de la source.",
   "settings.cve.apiKey": "Clé API (facultatif)",

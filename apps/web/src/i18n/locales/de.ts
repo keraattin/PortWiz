@@ -715,6 +715,24 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.cve.importing": "Wird importiert…",
   "settings.cve.importResult": "{imported} importiert. {loaded} CVEs jetzt offline verfügbar.",
   "settings.cve.imported": "{count} CVEs importiert",
+  "cve.howto.open": "Anleitung",
+  "cve.howto.title": "Offline-CVE: NVD-Feed importieren",
+  "cve.howto.intro":
+    "Für Air-Gapped-Installationen: Laden Sie NVD-Daten auf einem verbundenen Rechner herunter und hier hoch. Abfragen laufen dann ohne Internet gegen die lokale Kopie.",
+  "cve.howto.s1": "Herunterladen",
+  "cve.howto.s1d":
+    "Holen Sie NVD-Daten auf einem verbundenen Rechner im API-2.0-JSON-Format (.json oder .json.gz).",
+  "cve.howto.s2": "Übertragen",
+  "cve.howto.s2d":
+    "Bringen Sie die Datei(en) mit einer von Ihrer Richtlinie erlaubten Methode auf den Air-Gapped-Host.",
+  "cve.howto.s3": "Importieren",
+  "cve.howto.s3d":
+    "Setzen Sie hier die Quelle auf Offline, wählen Sie jede Datei und klicken Sie auf Feed importieren. Einträge werden per CVE-Id aktualisiert.",
+  "cve.howto.codeCap":
+    "Ein Weg, Feed-Dateien zu erzeugen: die NVD-2.0-API durchblättern und jede Antwort speichern.",
+  "cve.howto.matchTitle": "So funktioniert das Matching",
+  "cve.howto.match":
+    "Das Matching erfolgt per Produktname gegen den Text jedes CVE, sortiert nach CVSS. NVD hält die Versionszuordnung in strukturierten CPE-Bereichen, daher sind die Ergebnisse ein priorisierter Ausgangspunkt zur Prüfung, keine versionsgenaue Liste.",
   "settings.cve.apiUrl": "API-URL (optional)",
   "settings.cve.apiUrlHint": "Leer verwendet den Standard-Endpunkt der Quelle.",
   "settings.cve.apiKey": "API-Schlüssel (optional)",

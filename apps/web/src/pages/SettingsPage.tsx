@@ -28,6 +28,7 @@ import {
   testNetbox,
   updateSettingsConfig,
 } from "../api/client";
+import CveHowToModal from "../components/CveHowToModal";
 import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
@@ -253,6 +254,7 @@ export default function SettingsPage() {
   const [cveFeedFile, setCveFeedFile] = useState<File | null>(null);
   const [cveImporting, setCveImporting] = useState(false);
   const [cveImportReport, setCveImportReport] = useState<CVEImportReport | null>(null);
+  const [cveHowToOpen, setCveHowToOpen] = useState(false);
   const [emailTo, setEmailTo] = useState("");
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
@@ -1168,7 +1170,16 @@ export default function SettingsPage() {
           </FormField>
           {form.cve_source === "offline" ? (
             <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950 p-3">
-              <p className="text-xs text-slate-400">{t("settings.cve.offlineIntro")}</p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-xs text-slate-400">{t("settings.cve.offlineIntro")}</p>
+                <button
+                  type="button"
+                  onClick={() => setCveHowToOpen(true)}
+                  className="shrink-0 whitespace-nowrap rounded-md border border-sky-800 bg-sky-950/50 px-2.5 py-1 text-xs font-medium text-sky-300 hover:bg-sky-900/50"
+                >
+                  {t("cve.howto.open")}
+                </button>
+              </div>
               <div className="flex flex-wrap items-center gap-3">
                 <input
                   type="file"
@@ -1491,6 +1502,8 @@ export default function SettingsPage() {
         </section>
         )}
       </div>
+
+      <CveHowToModal open={cveHowToOpen} onClose={() => setCveHowToOpen(false)} />
     </div>
   );
 }

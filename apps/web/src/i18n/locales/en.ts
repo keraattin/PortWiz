@@ -710,6 +710,24 @@ export const en = {
   "settings.cve.importing": "Importing…",
   "settings.cve.importResult": "Imported {imported}. {loaded} CVEs now available offline.",
   "settings.cve.imported": "Imported {count} CVEs",
+  "cve.howto.open": "How to",
+  "cve.howto.title": "Offline CVE: importing an NVD feed",
+  "cve.howto.intro":
+    "For air-gapped installs, download NVD data on a connected machine and upload it here. Lookups then run with no internet access, against your local copy.",
+  "cve.howto.s1": "Download",
+  "cve.howto.s1d":
+    "On an internet-connected machine, get NVD data in the API 2.0 JSON format (.json or .json.gz).",
+  "cve.howto.s2": "Transfer",
+  "cve.howto.s2d":
+    "Move the file(s) to the air-gapped host by whatever transfer your policy allows.",
+  "cve.howto.s3": "Import",
+  "cve.howto.s3d":
+    "Set Source to Offline here, choose each file, and click Import feed. Entries upsert by CVE id.",
+  "cve.howto.codeCap":
+    "One way to produce feed files: page through the NVD 2.0 API and save each response.",
+  "cve.howto.matchTitle": "How matching works",
+  "cve.howto.match":
+    "Matching is by product name against each CVE's text, ranked by CVSS. NVD keeps version applicability in structured CPE ranges, so results are a prioritized starting point to confirm, not a version-exact list.",
   "settings.cve.apiUrl": "API URL (optional)",
   "settings.cve.apiUrlHint": "Blank uses the source's default endpoint.",
   "settings.cve.apiKey": "API key (optional)",
