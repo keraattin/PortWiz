@@ -31,6 +31,10 @@ that requirement and takes it a step further:
   CSV/Excel, or sync bidirectionally with NetBox (IPAM) — pull hosts and VLANs in,
   and write scan-discovered hosts back. Hosts found during a scan are auto-added as
   assets; each carries owner, criticality, and data-sensitivity for scoping.
+- 🛡️ **CVE enrichment**: match a discovered service and version against known CVEs
+  from NVD (online), or, for **air-gapped** installs, an imported NVD feed served
+  entirely offline. Findings are stored per asset and port, with an optional
+  AI-written brief. See [docs/offline-cve.md](./docs/offline-cve.md).
 - 🤖 **Provider-agnostic AI**: refines weak service fingerprints during scans, plus
   an agentic assistant that proposes actions for you to confirm. Local model
   (Ollama) by default, with Claude or any OpenAI-compatible provider optional; data
@@ -137,9 +141,11 @@ and beat services wait for that. Notes:
   live dashboard, role-based UI, and admin pages (users, agents, settings).
 - **Phase 2 — in progress:** ✅ bulk CSV/Excel import (assets + VLANs),
   ✅ bidirectional NetBox/IPAM sync, ✅ Jira Cloud & Server/Data Center,
-  ✅ per-segment agent routing + stale-run requeue, ✅ integration connection tests,
-  ✅ localized (six-language) themeable UI. Next: compliance cadence templates,
-  Keycloak (AD/LDAP/SSO), Slack/Teams, SIEM/WORM forwarding.
+  ✅ per-segment agent routing + stale-run requeue + fleet coverage view,
+  ✅ compliance cadence templates, ✅ CVE enrichment (online NVD + offline feed),
+  ✅ in-app update check with one-click apply, ✅ integration connection tests,
+  ✅ localized (six-language) themeable UI. Next: Keycloak (AD/LDAP/SSO),
+  Slack/Teams, SIEM/WORM forwarding.
 - **Phase 3:** MCP/RAG AI assistant, local-only mode, Kubernetes/Helm, passive
   discovery correlation.
 
