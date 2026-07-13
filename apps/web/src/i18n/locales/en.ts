@@ -21,6 +21,7 @@ export const en = {
   // Docs (in-app guides)
   "docs.title": "Documentation",
   "docs.subtitle": "Guides for setting up and running PortWiz.",
+  "docs.openFull": "Open full guide",
   "docs.flow.inventory": "Inventory",
   "docs.flow.scan": "Scan",
   "docs.flow.detect": "Detect changes",
