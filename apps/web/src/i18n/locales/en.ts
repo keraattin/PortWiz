@@ -132,6 +132,7 @@ export const en = {
   "common.test": "Test",
   "common.close": "Close",
   "common.edit": "Edit",
+  "common.howTo": "How to",
   "common.loading": "Loading…",
   "common.noData": "No data yet",
   "common.error": "Something went wrong",

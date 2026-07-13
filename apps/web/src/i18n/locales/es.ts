@@ -133,6 +133,7 @@ export const es: Partial<Record<TKey, string>> = {
   "common.test": "Probar",
   "common.close": "Cerrar",
   "common.edit": "Editar",
+  "common.howTo": "Cómo hacerlo",
   "common.loading": "Cargando…",
   "common.noData": "Aún no hay datos",
   "common.error": "Algo salió mal",

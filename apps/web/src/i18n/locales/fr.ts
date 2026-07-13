@@ -134,6 +134,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "common.test": "Tester",
   "common.close": "Fermer",
   "common.edit": "Modifier",
+  "common.howTo": "Comment faire",
   "common.loading": "Chargement…",
   "common.noData": "Aucune donnée",
   "common.error": "Une erreur est survenue",

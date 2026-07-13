@@ -132,6 +132,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "common.test": "Test et",
   "common.close": "Kapat",
   "common.edit": "Düzenle",
+  "common.howTo": "Nasıl yapılır",
   "common.loading": "Yükleniyor…",
   "common.noData": "Henüz veri yok",
   "common.error": "Bir şeyler ters gitti",

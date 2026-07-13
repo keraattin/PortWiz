@@ -233,6 +233,7 @@ export default function AssetsPage() {
       <PageHeader
         title={t("assets.title")}
         subtitle={t("assets.subtitle")}
+        docsGuide="scanning"
         actions={
           canWrite && (
             <Button onClick={openAdd} data-tour="add-asset" className="whitespace-nowrap">

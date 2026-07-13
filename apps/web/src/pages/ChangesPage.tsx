@@ -220,6 +220,7 @@ export default function ChangesPage() {
     <div className="space-y-5">
       <PageHeader
         title={t("changes.title")}
+        docsGuide="evidence"
         actions={STATUS_FILTERS.map((f) => (
           <button
             key={f}

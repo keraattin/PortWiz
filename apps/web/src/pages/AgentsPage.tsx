@@ -121,7 +121,7 @@ export default function AgentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHeader title={t("agents.title")} subtitle={t("agents.subtitle")} />
+        <PageHeader title={t("agents.title")} subtitle={t("agents.subtitle")} docsGuide="agents" />
         {enrollButton}
       </div>
 

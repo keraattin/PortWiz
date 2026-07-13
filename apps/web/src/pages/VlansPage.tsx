@@ -233,6 +233,7 @@ export default function VlansPage() {
       <PageHeader
         title={t("vlans.title")}
         subtitle={t("vlans.subtitle")}
+        docsGuide="scanning"
         actions={
           canWrite && (
             <Button onClick={openAddVlan} data-tour="add-vlan" className="whitespace-nowrap">

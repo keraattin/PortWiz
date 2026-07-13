@@ -28,6 +28,7 @@ import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
+import DocsLink from "../components/DocsLink";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
@@ -414,11 +415,14 @@ export default function ScansPage() {
             <h2 className="text-lg font-semibold text-slate-200">{t("scans.profilesTitle")}</h2>
             <p className="text-sm text-slate-500">{t("scans.profilesSubtitle")}</p>
           </div>
-          {canWrite && (
-            <Button onClick={openAdd} data-tour="new-scan" className="whitespace-nowrap">
-              {t("scans.add")}
-            </Button>
-          )}
+          <div className="flex shrink-0 items-center gap-2">
+            <DocsLink guide="scanning" />
+            {canWrite && (
+              <Button onClick={openAdd} data-tour="new-scan" className="whitespace-nowrap">
+                {t("scans.add")}
+              </Button>
+            )}
+          </div>
         </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}

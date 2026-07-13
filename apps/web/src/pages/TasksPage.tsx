@@ -133,6 +133,7 @@ export default function TasksPage() {
     <div className="space-y-5">
       <PageHeader
         title={t("tasks.title")}
+        docsGuide="evidence"
         actions={FILTERS.map((f) => (
           <button
             key={f}

@@ -14,6 +14,7 @@ import {
 import { controlClass as inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import Button from "../components/Button";
+import DocsLink from "../components/DocsLink";
 import Pagination, { usePagination } from "../components/Pagination";
 import { useToast } from "../components/Toast";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
@@ -160,8 +161,13 @@ export default function CompliancePage() {
     <div className="space-y-8">
       {/* Scan cadence */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-slate-200">{t("compliance.cadenceTitle")}</h2>
-        <p className="text-sm text-slate-500">{t("compliance.cadenceSubtitle")}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-200">{t("compliance.cadenceTitle")}</h2>
+            <p className="text-sm text-slate-500">{t("compliance.cadenceSubtitle")}</p>
+          </div>
+          <DocsLink guide="compliance" />
+        </div>
         {loading ? (
           <p className="text-sm text-slate-500">{t("common.loading")}</p>
         ) : cadence.length === 0 ? (
