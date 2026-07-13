@@ -21,6 +21,13 @@ export const es: Partial<Record<TKey, string>> = {
   // Docs (in-app guides)
   "docs.title": "Documentación",
   "docs.subtitle": "Guías para instalar y operar PortWiz.",
+  "docs.flow.inventory": "Inventario",
+  "docs.flow.scan": "Escaneo",
+  "docs.flow.detect": "Detectar cambios",
+  "docs.flow.notify": "Tarea & notificación",
+  "docs.flow.evidence": "Evidencia",
+  "docs.arch.control": "Plano de control",
+  "docs.arch.agent": "Agente",
   "docs.gs.title": "Primeros pasos",
   "docs.gs.summary": "Qué hace PortWiz y tus primeros pasos.",
   "docs.gs.what.h": "¿Qué es PortWiz?",

@@ -21,6 +21,13 @@ export const tr: Partial<Record<TKey, string>> = {
   // Docs (in-app guides)
   "docs.title": "Dokümantasyon",
   "docs.subtitle": "PortWiz'i kurma ve çalıştırma kılavuzları.",
+  "docs.flow.inventory": "Envanter",
+  "docs.flow.scan": "Tarama",
+  "docs.flow.detect": "Değişiklik tespiti",
+  "docs.flow.notify": "Task & bildirim",
+  "docs.flow.evidence": "Kanıt",
+  "docs.arch.control": "Kontrol düzlemi",
+  "docs.arch.agent": "Agent",
   "docs.gs.title": "Başlangıç",
   "docs.gs.summary": "PortWiz ne yapar ve ilk adımların.",
   "docs.gs.what.h": "PortWiz nedir?",

@@ -21,6 +21,13 @@ export const en = {
   // Docs (in-app guides)
   "docs.title": "Documentation",
   "docs.subtitle": "Guides for setting up and running PortWiz.",
+  "docs.flow.inventory": "Inventory",
+  "docs.flow.scan": "Scan",
+  "docs.flow.detect": "Detect changes",
+  "docs.flow.notify": "Task & notify",
+  "docs.flow.evidence": "Evidence",
+  "docs.arch.control": "Control plane",
+  "docs.arch.agent": "Agent",
   "docs.gs.title": "Getting started",
   "docs.gs.summary": "What PortWiz does and your first steps.",
   "docs.gs.what.h": "What is PortWiz?",
