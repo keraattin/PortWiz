@@ -16,6 +16,42 @@ export const pt: Partial<Record<TKey, string>> = {
   "nav.admin": "Administração",
   "nav.users": "Usuários",
   "nav.settings": "Configurações",
+  "nav.docs": "Docs",
+
+  // Docs (in-app guides)
+  "docs.title": "Documentação",
+  "docs.subtitle": "Guias para instalar e operar o PortWiz.",
+  "docs.gs.title": "Primeiros passos",
+  "docs.gs.summary": "O que o PortWiz faz e seus primeiros passos.",
+  "docs.gs.what.h": "O que é o PortWiz?",
+  "docs.gs.what.p":
+    "O PortWiz monitora as portas e serviços abertos nos seus ativos de rede, detecta mudanças confirmadas filtrando o ruído da rede e produz evidências prontas para auditoria de cada mudança.",
+  "docs.gs.steps.h": "Primeiros passos",
+  "docs.gs.steps.1": "Adicione suas VLANs e ativos, um a um ou com um import em massa de CSV/Excel.",
+  "docs.gs.steps.2":
+    "Registre um agente de varredura em cada segmento de rede usando o painel de deploy guiado.",
+  "docs.gs.steps.3":
+    "Crie um perfil de varredura, escolha os alvos do seu inventário e execute-o.",
+  "docs.gs.steps.4":
+    "Revise as mudanças detectadas, abra tarefas e exporte um pacote de evidências para auditores.",
+  "docs.gs.roles.h": "Papéis",
+  "docs.gs.roles.p":
+    "Admin tem acesso total. Operator pode criar e executar varreduras, mas não gerenciar usuários. Auditor é somente leitura.",
+  "docs.gs.tip.h": "Dica",
+  "docs.gs.tip.p":
+    "O botão ? na barra superior inicia um tour interativo por todo o fluxo de trabalho.",
+  "docs.cve.title": "Enriquecimento de CVE",
+  "docs.cve.summary": "Associe serviços descobertos a CVEs conhecidas, online ou offline.",
+  "docs.cve.overview.h": "Visão geral",
+  "docs.cve.overview.p":
+    "Quando uma varredura identifica um serviço e versão, o PortWiz pode associá-lo a CVEs conhecidas e armazenar os resultados por ativo e porta. Há duas fontes, ambas diretamente do NVD.",
+  "docs.cve.online.h": "Online (NVD)",
+  "docs.cve.online.p":
+    "O padrão. O PortWiz consulta a API do NVD diretamente, mantendo-se atualizado sem manutenção. Adicione uma chave de API do NVD nas Configurações para elevar o limite de taxa. Requer acesso de saída à internet.",
+  "docs.cve.offline.h": "Offline (air-gapped)",
+  "docs.cve.checks.h": "Executar verificações",
+  "docs.cve.checks.p":
+    "Defina uma cadência de reverificação nas Configurações ou clique em Reverificar na página de CVE para consultar as portas abertas atuais sob demanda. Os resultados são listados por severidade, com um resumo de IA em linguagem simples opcional.",
 
   // Header / chrome
   "chrome.signOut": "Sair",

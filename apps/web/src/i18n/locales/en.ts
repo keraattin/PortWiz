@@ -16,6 +16,40 @@ export const en = {
   "nav.admin": "Admin",
   "nav.users": "Users",
   "nav.settings": "Settings",
+  "nav.docs": "Docs",
+
+  // Docs (in-app guides)
+  "docs.title": "Documentation",
+  "docs.subtitle": "Guides for setting up and running PortWiz.",
+  "docs.gs.title": "Getting started",
+  "docs.gs.summary": "What PortWiz does and your first steps.",
+  "docs.gs.what.h": "What is PortWiz?",
+  "docs.gs.what.p":
+    "PortWiz monitors the open ports and services on your network assets, detects confirmed changes while filtering out network noise, and produces audit-ready evidence of every change.",
+  "docs.gs.steps.h": "First steps",
+  "docs.gs.steps.1": "Add your VLANs and assets, one by one or with a bulk CSV/Excel import.",
+  "docs.gs.steps.2": "Enroll a scan agent in each network segment using the guided deploy panel.",
+  "docs.gs.steps.3": "Create a scan profile, pick its targets from your inventory, and run it.",
+  "docs.gs.steps.4":
+    "Review detected changes, open tasks, and export an evidence package for auditors.",
+  "docs.gs.roles.h": "Roles",
+  "docs.gs.roles.p":
+    "Admin has full access. Operator can create and run scans but cannot manage users. Auditor is read-only.",
+  "docs.gs.tip.h": "Tip",
+  "docs.gs.tip.p":
+    "The ? button in the top bar launches an interactive tour of the whole workflow.",
+  "docs.cve.title": "CVE enrichment",
+  "docs.cve.summary": "Match discovered services to known CVEs, online or offline.",
+  "docs.cve.overview.h": "Overview",
+  "docs.cve.overview.p":
+    "When a scan identifies a service and version, PortWiz can match it against known CVEs and store the findings per asset and port. Two sources are available, and both come straight from NVD.",
+  "docs.cve.online.h": "Online (NVD)",
+  "docs.cve.online.p":
+    "The default. PortWiz queries the NVD API directly, so it stays current with no maintenance. Add an NVD API key in Settings to raise the rate limit. Requires outbound internet access.",
+  "docs.cve.offline.h": "Offline (air-gapped)",
+  "docs.cve.checks.h": "Running checks",
+  "docs.cve.checks.p":
+    "Set a re-check cadence in Settings, or click Recheck on the CVE page to look up the current open ports on demand. Findings are listed by severity, with an optional plain-language AI brief.",
 
   // Header / chrome
   "chrome.signOut": "Sign out",

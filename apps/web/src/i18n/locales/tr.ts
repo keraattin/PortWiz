@@ -16,6 +16,40 @@ export const tr: Partial<Record<TKey, string>> = {
   "nav.admin": "Yönetim",
   "nav.users": "Kullanıcılar",
   "nav.settings": "Ayarlar",
+  "nav.docs": "Dokümanlar",
+
+  // Docs (in-app guides)
+  "docs.title": "Dokümantasyon",
+  "docs.subtitle": "PortWiz'i kurma ve çalıştırma kılavuzları.",
+  "docs.gs.title": "Başlangıç",
+  "docs.gs.summary": "PortWiz ne yapar ve ilk adımların.",
+  "docs.gs.what.h": "PortWiz nedir?",
+  "docs.gs.what.p":
+    "PortWiz, ağ varlıklarındaki açık port ve servisleri izler, ağ gürültüsünü ayıklayarak teyitli değişiklikleri tespit eder ve her değişiklik için denetime hazır kanıt üretir.",
+  "docs.gs.steps.h": "İlk adımlar",
+  "docs.gs.steps.1": "VLAN ve varlıklarını tek tek ya da toplu CSV/Excel içe aktarımıyla ekle.",
+  "docs.gs.steps.2": "Rehberli deploy paneliyle her ağ segmentine bir tarama agent'ı kaydet.",
+  "docs.gs.steps.3": "Bir tarama profili oluştur, hedeflerini envanterinden seç ve çalıştır.",
+  "docs.gs.steps.4":
+    "Tespit edilen değişiklikleri incele, task aç ve denetçiler için kanıt paketi dışa aktar.",
+  "docs.gs.roles.h": "Roller",
+  "docs.gs.roles.p":
+    "Admin tam erişime sahiptir. Operator tarama oluşturup çalıştırabilir ama kullanıcı yönetemez. Auditor yalnızca okur.",
+  "docs.gs.tip.h": "İpucu",
+  "docs.gs.tip.p":
+    "Üst çubuktaki ? butonu, tüm iş akışının interaktif turunu başlatır.",
+  "docs.cve.title": "CVE zenginleştirme",
+  "docs.cve.summary": "Keşfedilen servisleri bilinen CVE'lerle eşleştir (çevrimiçi ya da çevrimdışı).",
+  "docs.cve.overview.h": "Genel bakış",
+  "docs.cve.overview.p":
+    "Bir tarama servis ve sürüm belirlediğinde, PortWiz bunu bilinen CVE'lerle eşleştirip bulguları varlık ve port bazında saklayabilir. İki kaynak vardır ve ikisi de doğrudan NVD'den gelir.",
+  "docs.cve.online.h": "Çevrimiçi (NVD)",
+  "docs.cve.online.p":
+    "Varsayılan. PortWiz doğrudan NVD API'sini sorgular, böylece bakım gerektirmeden güncel kalır. Rate limit'i yükseltmek için Ayarlar'da bir NVD API anahtarı ekle. Dışa internet erişimi gerekir.",
+  "docs.cve.offline.h": "Çevrimdışı (air-gapped)",
+  "docs.cve.checks.h": "Kontrol çalıştırma",
+  "docs.cve.checks.p":
+    "Ayarlar'da yeniden-kontrol sıklığı belirle ya da CVE sayfasında Recheck'e tıklayarak mevcut açık portları anında sorgula. Bulgular önem derecesine göre listelenir; isteğe bağlı sade-dil AI özeti sunulur.",
 
   // Header / chrome
   "chrome.signOut": "Çıkış yap",

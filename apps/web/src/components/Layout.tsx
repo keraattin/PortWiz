@@ -67,6 +67,7 @@ const SECTIONS: Section[] = [
       { to: "/settings", labelKey: "nav.settings" },
     ],
   },
+  { labelKey: "nav.docs", icon: "docs", tabs: [{ to: "/docs", labelKey: "nav.docs" }] },
 ];
 
 function pathInTab(pathname: string, to: string): boolean {

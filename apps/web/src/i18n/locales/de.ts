@@ -16,6 +16,42 @@ export const de: Partial<Record<TKey, string>> = {
   "nav.admin": "Verwaltung",
   "nav.users": "Benutzer",
   "nav.settings": "Einstellungen",
+  "nav.docs": "Doku",
+
+  // Docs (in-app guides)
+  "docs.title": "Dokumentation",
+  "docs.subtitle": "Anleitungen zum Einrichten und Betreiben von PortWiz.",
+  "docs.gs.title": "Erste Schritte",
+  "docs.gs.summary": "Was PortWiz macht und Ihre ersten Schritte.",
+  "docs.gs.what.h": "Was ist PortWiz?",
+  "docs.gs.what.p":
+    "PortWiz überwacht die offenen Ports und Dienste Ihrer Netzwerk-Assets, erkennt bestätigte Änderungen und filtert Netzwerkrauschen heraus, und erzeugt für jede Änderung auditfähige Nachweise.",
+  "docs.gs.steps.h": "Erste Schritte",
+  "docs.gs.steps.1": "Fügen Sie Ihre VLANs und Assets einzeln oder per CSV/Excel-Massenimport hinzu.",
+  "docs.gs.steps.2":
+    "Registrieren Sie in jedem Netzwerksegment einen Scan-Agenten über das geführte Deploy-Panel.",
+  "docs.gs.steps.3":
+    "Erstellen Sie ein Scan-Profil, wählen Sie die Ziele aus Ihrem Bestand und starten Sie es.",
+  "docs.gs.steps.4":
+    "Prüfen Sie erkannte Änderungen, öffnen Sie Aufgaben und exportieren Sie ein Nachweispaket für Auditoren.",
+  "docs.gs.roles.h": "Rollen",
+  "docs.gs.roles.p":
+    "Admin hat vollen Zugriff. Operator kann Scans erstellen und ausführen, aber keine Benutzer verwalten. Auditor ist nur lesend.",
+  "docs.gs.tip.h": "Tipp",
+  "docs.gs.tip.p":
+    "Die Schaltfläche ? in der oberen Leiste startet eine interaktive Tour durch den gesamten Ablauf.",
+  "docs.cve.title": "CVE-Anreicherung",
+  "docs.cve.summary": "Erkannte Dienste bekannten CVEs zuordnen, online oder offline.",
+  "docs.cve.overview.h": "Überblick",
+  "docs.cve.overview.p":
+    "Wenn ein Scan einen Dienst und eine Version erkennt, kann PortWiz ihn bekannten CVEs zuordnen und die Funde pro Asset und Port speichern. Zwei Quellen stehen zur Verfügung, beide stammen direkt von NVD.",
+  "docs.cve.online.h": "Online (NVD)",
+  "docs.cve.online.p":
+    "Der Standard. PortWiz fragt die NVD-API direkt ab und bleibt so ohne Wartung aktuell. Hinterlegen Sie in den Einstellungen einen NVD-API-Schlüssel, um das Ratenlimit zu erhöhen. Erfordert ausgehenden Internetzugang.",
+  "docs.cve.offline.h": "Offline (Air-Gapped)",
+  "docs.cve.checks.h": "Prüfungen ausführen",
+  "docs.cve.checks.p":
+    "Legen Sie in den Einstellungen einen Prüf-Rhythmus fest oder klicken Sie auf der CVE-Seite auf Erneut prüfen, um die aktuell offenen Ports bei Bedarf abzufragen. Funde werden nach Schweregrad gelistet, mit optionaler AI-Zusammenfassung in Klartext.",
 
   // Header / chrome
   "chrome.signOut": "Abmelden",

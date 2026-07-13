@@ -6,7 +6,8 @@ export type IconKey =
   | "scanning"
   | "changes"
   | "compliance"
-  | "admin";
+  | "admin"
+  | "docs";
 
 const PATHS: Record<IconKey, React.ReactNode> = {
   dashboard: (
@@ -40,6 +41,12 @@ const PATHS: Record<IconKey, React.ReactNode> = {
     <>
       <circle cx="12" cy="12" r="3" />
       <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" />
+    </>
+  ),
+  docs: (
+    <>
+      <path d="M4 4h9l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" />
+      <path d="M13 4v5h5M8 13h6M8 17h6" />
     </>
   ),
 };

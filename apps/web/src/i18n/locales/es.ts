@@ -16,6 +16,41 @@ export const es: Partial<Record<TKey, string>> = {
   "nav.admin": "Administración",
   "nav.users": "Usuarios",
   "nav.settings": "Ajustes",
+  "nav.docs": "Docs",
+
+  // Docs (in-app guides)
+  "docs.title": "Documentación",
+  "docs.subtitle": "Guías para instalar y operar PortWiz.",
+  "docs.gs.title": "Primeros pasos",
+  "docs.gs.summary": "Qué hace PortWiz y tus primeros pasos.",
+  "docs.gs.what.h": "¿Qué es PortWiz?",
+  "docs.gs.what.p":
+    "PortWiz monitorea los puertos y servicios abiertos de tus activos de red, detecta cambios confirmados filtrando el ruido de red y produce evidencia lista para auditoría de cada cambio.",
+  "docs.gs.steps.h": "Primeros pasos",
+  "docs.gs.steps.1": "Agrega tus VLAN y activos, uno por uno o con una importación masiva CSV/Excel.",
+  "docs.gs.steps.2":
+    "Registra un agente de escaneo en cada segmento de red con el panel de despliegue guiado.",
+  "docs.gs.steps.3": "Crea un perfil de escaneo, elige sus objetivos de tu inventario y ejecútalo.",
+  "docs.gs.steps.4":
+    "Revisa los cambios detectados, abre tareas y exporta un paquete de evidencia para auditores.",
+  "docs.gs.roles.h": "Roles",
+  "docs.gs.roles.p":
+    "Admin tiene acceso total. Operator puede crear y ejecutar escaneos pero no gestionar usuarios. Auditor es de solo lectura.",
+  "docs.gs.tip.h": "Consejo",
+  "docs.gs.tip.p":
+    "El botón ? de la barra superior inicia un recorrido interactivo por todo el flujo de trabajo.",
+  "docs.cve.title": "Enriquecimiento de CVE",
+  "docs.cve.summary": "Asocia servicios descubiertos con CVE conocidas, en línea o sin conexión.",
+  "docs.cve.overview.h": "Descripción general",
+  "docs.cve.overview.p":
+    "Cuando un escaneo identifica un servicio y versión, PortWiz puede asociarlo con CVE conocidas y guardar los hallazgos por activo y puerto. Hay dos fuentes, ambas directamente de NVD.",
+  "docs.cve.online.h": "En línea (NVD)",
+  "docs.cve.online.p":
+    "La opción por defecto. PortWiz consulta la API de NVD directamente, por lo que se mantiene al día sin mantenimiento. Agrega una clave de API de NVD en Ajustes para subir el límite de tasa. Requiere acceso saliente a internet.",
+  "docs.cve.offline.h": "Sin conexión (air-gapped)",
+  "docs.cve.checks.h": "Ejecutar comprobaciones",
+  "docs.cve.checks.p":
+    "Define una cadencia de reverificación en Ajustes, o haz clic en Reverificar en la página de CVE para consultar los puertos abiertos actuales a demanda. Los hallazgos se listan por severidad, con un resumen de IA en lenguaje claro opcional.",
 
   // Header / chrome
   "chrome.signOut": "Cerrar sesión",

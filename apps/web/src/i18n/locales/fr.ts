@@ -16,6 +16,42 @@ export const fr: Partial<Record<TKey, string>> = {
   "nav.admin": "Administration",
   "nav.users": "Utilisateurs",
   "nav.settings": "Paramètres",
+  "nav.docs": "Docs",
+
+  // Docs (in-app guides)
+  "docs.title": "Documentation",
+  "docs.subtitle": "Guides pour installer et exploiter PortWiz.",
+  "docs.gs.title": "Prise en main",
+  "docs.gs.summary": "Ce que fait PortWiz et vos premières étapes.",
+  "docs.gs.what.h": "Qu'est-ce que PortWiz ?",
+  "docs.gs.what.p":
+    "PortWiz surveille les ports et services ouverts de vos actifs réseau, détecte les changements confirmés en filtrant le bruit réseau, et produit une preuve auditable de chaque changement.",
+  "docs.gs.steps.h": "Premières étapes",
+  "docs.gs.steps.1": "Ajoutez vos VLAN et actifs, un par un ou via un import CSV/Excel en masse.",
+  "docs.gs.steps.2":
+    "Enrôlez un agent d'analyse dans chaque segment réseau via le panneau de déploiement guidé.",
+  "docs.gs.steps.3":
+    "Créez un profil d'analyse, choisissez ses cibles dans votre inventaire et lancez-le.",
+  "docs.gs.steps.4":
+    "Examinez les changements détectés, ouvrez des tâches et exportez un package de preuves pour les auditeurs.",
+  "docs.gs.roles.h": "Rôles",
+  "docs.gs.roles.p":
+    "Admin a un accès complet. Operator peut créer et lancer des analyses mais pas gérer les utilisateurs. Auditor est en lecture seule.",
+  "docs.gs.tip.h": "Astuce",
+  "docs.gs.tip.p":
+    "Le bouton ? de la barre supérieure lance une visite interactive de tout le flux de travail.",
+  "docs.cve.title": "Enrichissement CVE",
+  "docs.cve.summary": "Associer les services découverts à des CVE connues, en ligne ou hors ligne.",
+  "docs.cve.overview.h": "Aperçu",
+  "docs.cve.overview.p":
+    "Lorsqu'une analyse identifie un service et une version, PortWiz peut l'associer à des CVE connues et stocker les résultats par actif et par port. Deux sources sont disponibles, toutes deux directement issues de NVD.",
+  "docs.cve.online.h": "En ligne (NVD)",
+  "docs.cve.online.p":
+    "Par défaut. PortWiz interroge directement l'API NVD, restant ainsi à jour sans maintenance. Ajoutez une clé d'API NVD dans les Paramètres pour augmenter la limite de débit. Nécessite un accès Internet sortant.",
+  "docs.cve.offline.h": "Hors ligne (air-gapped)",
+  "docs.cve.checks.h": "Lancer des vérifications",
+  "docs.cve.checks.p":
+    "Définissez une cadence de re-vérification dans les Paramètres, ou cliquez sur Revérifier sur la page CVE pour interroger les ports ouverts actuels à la demande. Les résultats sont listés par gravité, avec un résumé IA en langage clair en option.",
 
   // Header / chrome
   "chrome.signOut": "Se déconnecter",
