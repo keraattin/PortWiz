@@ -51,6 +51,62 @@ export const es: Partial<Record<TKey, string>> = {
   "docs.cve.checks.h": "Ejecutar comprobaciones",
   "docs.cve.checks.p":
     "Define una cadencia de reverificación en Ajustes, o haz clic en Reverificar en la página de CVE para consultar los puertos abiertos actuales a demanda. Los hallazgos se listan por severidad, con un resumen de IA en lenguaje claro opcional.",
+  "docs.scan.title": "Inventario & escaneo",
+  "docs.scan.summary": "Construye tu inventario y ejecuta escaneos programados.",
+  "docs.scan.inv.h": "Inventario",
+  "docs.scan.inv.p":
+    "Agrega VLAN, rangos de IP y activos a mano, o impórtalos en masa desde CSV o Excel (botón Descargar plantilla en las páginas Activos y VLAN). Cada activo lleva un propietario, criticidad y sensibilidad de datos, para que los escaneos y cambios puedan acotarse y atribuirse.",
+  "docs.scan.prof.h": "Perfiles de escaneo",
+  "docs.scan.prof.p":
+    "Un perfil de escaneo define qué se escanea. Elige objetivos de tu inventario (activos, VLAN o rangos), un conjunto de puertos, el tipo de escaneo y si detectar el servicio detrás de cada puerto abierto.",
+  "docs.scan.sched.h": "Programación",
+  "docs.scan.sched.p":
+    "Elige un periodo en lenguaje claro (cada hora, diario, semanal, mensual, trimestral) que se compila a una programación, sin escribir cron. Un perfil etiquetado con un marco puede aplicar la cadencia recomendada con un clic.",
+  "docs.scan.seg.h": "Segmentos",
+  "docs.scan.seg.p":
+    "Etiqueta un perfil con un segmento de red para que sus ejecuciones vayan al agente responsable de ese segmento. Déjalo en blanco para usar el pool por defecto (sin segmento).",
+  "docs.agents.title": "Agentes de escaneo",
+  "docs.agents.summary": "Despliega un agente por segmento y vigila la cobertura de la flota.",
+  "docs.agents.what.h": "Qué hacen los agentes",
+  "docs.agents.what.p":
+    "Los agentes son escáneres ligeros que colocas en cada segmento de red. Una ejecución de escaneo se enruta al agente cuyo segmento coincide con el perfil, así el escaneo funciona en redes separadas.",
+  "docs.agents.deploy.h": "Registrar y desplegar",
+  "docs.agents.deploy.p":
+    "Registra un agente desde Agentes y usa el panel de despliegue guiado: entrega un comando listo para ejecutar con un token de un solo uso. Si un token pudiera quedar expuesto, Rotar token emite uno nuevo e invalida el anterior de inmediato.",
+  "docs.agents.health.h": "Salud y estado",
+  "docs.agents.health.p":
+    "Cada agente envía un heartbeat. La página Agentes muestra en línea, sin conexión, nunca visto o deshabilitado, calculado a partir de la ventana en línea (el ajuste global o una anulación por agente para un segmento frágil).",
+  "docs.agents.coverage.h": "Cobertura de segmentos",
+  "docs.agents.coverage.p":
+    "El panel de cobertura marca cualquier segmento que tenga perfiles de escaneo pero ningún agente en línea, para que los escaneos programados allí no se queden bloqueados en silencio. Corrige un hueco registrando o poniendo en línea un agente en ese segmento.",
+  "docs.ev.title": "Cambios, tareas & evidencia",
+  "docs.ev.summary": "Revisa cambios confirmados y exporta evidencia de auditoría.",
+  "docs.ev.changes.h": "Cambios confirmados",
+  "docs.ev.changes.p":
+    "PortWiz compara cada escaneo y solo levanta un cambio después de que persiste en ejecuciones consecutivas, filtrando el ruido de red para no inundarte con falsos positivos. Revisa los cambios confirmados en la página Cambios con un diff antes/después.",
+  "docs.ev.tasks.h": "Tareas y seguimiento",
+  "docs.ev.tasks.p":
+    "Un cambio confirmado puede abrir una tarea en la app, enviar un correo y crear un ticket de Jira (Cloud o Server/Data Center) con tu proyecto, tipo de incidencia y asignado. El estado de la tarea y del ticket se mantiene sincronizado.",
+  "docs.ev.export.h": "Exportación de evidencia",
+  "docs.ev.export.p":
+    "Un clic agrupa el informe de escaneo, el diff del cambio, la tarea y aprobación vinculadas y la porción relevante del registro de auditoría en un paquete JSON y PDF firmado para auditores.",
+  "docs.ev.audit.h": "Integridad de auditoría",
+  "docs.ev.audit.p":
+    "Cada acción se escribe en un registro de auditoría inmutable y encadenado por hash. La página Cumplimiento puede verificar la cadena de extremo a extremo y marca cualquier registro alterado.",
+  "docs.comp.title": "Cumplimiento & integraciones",
+  "docs.comp.summary": "Sigue la cadencia de los marcos y conecta tus herramientas.",
+  "docs.comp.cadence.h": "Cadencia de marcos",
+  "docs.comp.cadence.p":
+    "Etiqueta un perfil de escaneo con un marco (PCI-DSS, HIPAA, SOC 2, ISO 27001, NIST). La página Cumplimiento muestra, por perfil, si se escaneó dentro del intervalo requerido y si su programación es lo bastante frecuente para mantener el cumplimiento.",
+  "docs.comp.asv.h": "Nota sobre ASV",
+  "docs.comp.asv.p":
+    "PCI-DSS también exige escaneos externos por un Approved Scanning Vendor (ASV); un escaneo interno de PortWiz no satisface ese requisito, y la página lo marca. Establece el origen del escaneo como externo (ASV) cuando corresponda.",
+  "docs.comp.integr.h": "Integraciones",
+  "docs.comp.integr.p":
+    "Conecta Jira, correo (SMTP), NetBox (IPAM) y un proveedor de IA en Ajustes. Cada pestaña tiene un botón Probar para confirmar la conexión antes de guardar.",
+  "docs.comp.updates.h": "Actualizaciones",
+  "docs.comp.updates.p":
+    "PortWiz busca nuevas versiones y puede notificar a los administradores. Donde hay un sidecar actualizador autoalojado desplegado, un clic en Actualizar ahora lo aplica. La comprobación se puede desactivar para instalaciones air-gapped.",
 
   // Header / chrome
   "chrome.signOut": "Cerrar sesión",

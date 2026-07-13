@@ -52,6 +52,62 @@ export const de: Partial<Record<TKey, string>> = {
   "docs.cve.checks.h": "Prüfungen ausführen",
   "docs.cve.checks.p":
     "Legen Sie in den Einstellungen einen Prüf-Rhythmus fest oder klicken Sie auf der CVE-Seite auf Erneut prüfen, um die aktuell offenen Ports bei Bedarf abzufragen. Funde werden nach Schweregrad gelistet, mit optionaler AI-Zusammenfassung in Klartext.",
+  "docs.scan.title": "Bestand & Scannen",
+  "docs.scan.summary": "Bauen Sie Ihren Bestand auf und scannen Sie nach Zeitplan.",
+  "docs.scan.inv.h": "Bestand",
+  "docs.scan.inv.p":
+    "Fügen Sie VLANs, IP-Bereiche und Assets von Hand hinzu oder importieren Sie sie per CSV oder Excel (Schaltfläche Vorlage herunterladen auf den Seiten Assets und VLANs). Jedes Asset trägt Eigentümer, Kritikalität und Datensensibilität, damit Scans und Änderungen eingegrenzt und zugeordnet werden können.",
+  "docs.scan.prof.h": "Scan-Profile",
+  "docs.scan.prof.p":
+    "Ein Scan-Profil legt fest, was gescannt wird. Wählen Sie Ziele aus Ihrem Bestand (Assets, VLANs oder Bereiche), einen Portsatz, den Scan-Typ und ob der Dienst hinter jedem offenen Port erkannt werden soll.",
+  "docs.scan.sched.h": "Zeitplanung",
+  "docs.scan.sched.p":
+    "Wählen Sie einen verständlichen Rhythmus (stündlich, täglich, wöchentlich, monatlich, vierteljährlich), der zu einem Zeitplan kompiliert wird, sodass Sie nie Cron schreiben. Ein framework-getaggtes Profil kann die empfohlene Kadenz mit einem Klick übernehmen.",
+  "docs.scan.seg.h": "Segmente",
+  "docs.scan.seg.p":
+    "Taggen Sie ein Profil mit einem Netzwerksegment, damit seine Läufe an den für dieses Segment zuständigen Agenten gehen. Leer lassen, um den Standard-Pool (ohne Segment) zu nutzen.",
+  "docs.agents.title": "Scan-Agenten",
+  "docs.agents.summary": "Setzen Sie je Segment einen Agenten ein und beobachten Sie die Flottenabdeckung.",
+  "docs.agents.what.h": "Was Agenten tun",
+  "docs.agents.what.p":
+    "Agenten sind leichtgewichtige Scanner, die Sie in jedem Netzwerksegment platzieren. Ein Scan-Lauf wird an den Agenten geleitet, dessen Segment zum Profil passt, sodass das Scannen über getrennte Netze hinweg funktioniert.",
+  "docs.agents.deploy.h": "Registrieren und bereitstellen",
+  "docs.agents.deploy.p":
+    "Registrieren Sie einen Agenten unter Agenten und nutzen Sie dann das geführte Deploy-Panel: Es liefert einen ausführbaren Befehl mit einem Einmal-Token. Falls ein Token kompromittiert sein könnte, gibt Token rotieren einen neuen aus und macht den alten sofort ungültig.",
+  "docs.agents.health.h": "Zustand und Status",
+  "docs.agents.health.p":
+    "Jeder Agent sendet einen Heartbeat. Die Agenten-Seite zeigt online, offline, nie gesehen oder deaktiviert, berechnet aus dem Online-Fenster (globale Einstellung oder Override pro Agent für ein fragiles Segment).",
+  "docs.agents.coverage.h": "Segmentabdeckung",
+  "docs.agents.coverage.p":
+    "Das Abdeckungs-Panel markiert jedes Segment, das Scan-Profile, aber keinen Online-Agenten hat, damit geplante Scans dort nicht still hängen bleiben. Beheben Sie eine Lücke, indem Sie in dem Segment einen Agenten registrieren oder online bringen.",
+  "docs.ev.title": "Änderungen, Aufgaben & Nachweise",
+  "docs.ev.summary": "Bestätigte Änderungen prüfen und Audit-Nachweise exportieren.",
+  "docs.ev.changes.h": "Bestätigte Änderungen",
+  "docs.ev.changes.p":
+    "PortWiz vergleicht jeden Scan und meldet eine Änderung erst, wenn sie über aufeinanderfolgende Läufe bestehen bleibt, und filtert Netzwerkrauschen heraus, sodass Sie nicht mit Fehlalarmen überflutet werden. Prüfen Sie bestätigte Änderungen auf der Seite Änderungen mit einem Vorher/Nachher-Diff.",
+  "docs.ev.tasks.h": "Aufgaben und Nachverfolgung",
+  "docs.ev.tasks.p":
+    "Eine bestätigte Änderung kann eine In-App-Aufgabe öffnen, eine E-Mail senden und ein Jira-Ticket (Cloud oder Server/Data Center) mit Ihrem Projekt, Vorgangstyp und Bearbeiter erstellen. Aufgaben- und Ticketstatus bleiben synchron.",
+  "docs.ev.export.h": "Nachweis-Export",
+  "docs.ev.export.p":
+    "Ein Klick bündelt den Scan-Bericht, den Änderungs-Diff, die verknüpfte Aufgabe und Freigabe sowie den relevanten Ausschnitt des Audit-Logs in ein signiertes JSON- und PDF-Paket für Auditoren.",
+  "docs.ev.audit.h": "Audit-Integrität",
+  "docs.ev.audit.p":
+    "Jede Aktion wird in ein unveränderliches, hash-verkettetes Audit-Log geschrieben. Die Compliance-Seite kann die Kette durchgängig prüfen und markiert jeden veränderten Eintrag.",
+  "docs.comp.title": "Compliance & Integrationen",
+  "docs.comp.summary": "Framework-Kadenz verfolgen und Ihre Tools verbinden.",
+  "docs.comp.cadence.h": "Framework-Kadenz",
+  "docs.comp.cadence.p":
+    "Taggen Sie ein Scan-Profil mit einem Framework (PCI-DSS, HIPAA, SOC 2, ISO 27001, NIST). Die Compliance-Seite zeigt je Profil, ob es innerhalb des erforderlichen Intervalls gescannt wurde und ob sein Zeitplan häufig genug ist, um konform zu bleiben.",
+  "docs.comp.asv.h": "ASV-Hinweis",
+  "docs.comp.asv.p":
+    "PCI-DSS erfordert zusätzlich externe Scans durch einen Approved Scanning Vendor (ASV); ein interner PortWiz-Scan erfüllt das nicht, und die Seite weist darauf hin. Setzen Sie die Scan-Quelle auf extern (ASV), wenn das zutrifft.",
+  "docs.comp.integr.h": "Integrationen",
+  "docs.comp.integr.p":
+    "Verbinden Sie Jira, E-Mail (SMTP), NetBox (IPAM) und einen AI-Anbieter in den Einstellungen. Jeder Tab hat eine Test-Schaltfläche, damit Sie die Verbindung vor dem Speichern prüfen können.",
+  "docs.comp.updates.h": "Updates",
+  "docs.comp.updates.p":
+    "PortWiz prüft auf neue Releases und kann Admins benachrichtigen. Wo ein selbst gehosteter Updater-Sidecar bereitgestellt ist, wendet ein Klick auf Jetzt aktualisieren es an. Die Prüfung lässt sich für Air-Gapped-Installationen deaktivieren.",
 
   // Header / chrome
   "chrome.signOut": "Abmelden",

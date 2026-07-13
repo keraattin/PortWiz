@@ -52,6 +52,62 @@ export const pt: Partial<Record<TKey, string>> = {
   "docs.cve.checks.h": "Executar verificações",
   "docs.cve.checks.p":
     "Defina uma cadência de reverificação nas Configurações ou clique em Reverificar na página de CVE para consultar as portas abertas atuais sob demanda. Os resultados são listados por severidade, com um resumo de IA em linguagem simples opcional.",
+  "docs.scan.title": "Inventário & varredura",
+  "docs.scan.summary": "Monte seu inventário e execute varreduras agendadas.",
+  "docs.scan.inv.h": "Inventário",
+  "docs.scan.inv.p":
+    "Adicione VLANs, faixas de IP e ativos manualmente, ou importe-os em massa de CSV ou Excel (botão Baixar modelo nas páginas Ativos e VLANs). Cada ativo carrega um dono, criticidade e sensibilidade de dados, para que varreduras e mudanças possam ser delimitadas e atribuídas.",
+  "docs.scan.prof.h": "Perfis de varredura",
+  "docs.scan.prof.p":
+    "Um perfil de varredura define o que será varrido. Escolha os alvos do seu inventário (ativos, VLANs ou faixas), um conjunto de portas, o tipo de varredura e se deve detectar o serviço por trás de cada porta aberta.",
+  "docs.scan.sched.h": "Agendamento",
+  "docs.scan.sched.p":
+    "Escolha um período em linguagem simples (horário, diário, semanal, mensal, trimestral) que é compilado para um agendamento, sem nunca escrever cron. Um perfil marcado com um framework pode aplicar a cadência recomendada com um clique.",
+  "docs.scan.seg.h": "Segmentos",
+  "docs.scan.seg.p":
+    "Marque um perfil com um segmento de rede para que suas execuções vão para o agente responsável por aquele segmento. Deixe em branco para usar o pool padrão (sem segmento).",
+  "docs.agents.title": "Agentes de varredura",
+  "docs.agents.summary": "Implante um agente por segmento e acompanhe a cobertura da frota.",
+  "docs.agents.what.h": "O que os agentes fazem",
+  "docs.agents.what.p":
+    "Agentes são scanners leves que você coloca em cada segmento de rede. Uma execução de varredura é roteada para o agente cujo segmento corresponde ao perfil, então a varredura funciona em redes separadas.",
+  "docs.agents.deploy.h": "Registrar e implantar",
+  "docs.agents.deploy.p":
+    "Registre um agente em Agentes e use o painel de deploy guiado: ele fornece um comando pronto para executar com um token de uso único. Se um token puder ser exposto, Rotacionar token emite um novo e invalida o antigo imediatamente.",
+  "docs.agents.health.h": "Saúde e status",
+  "docs.agents.health.p":
+    "Cada agente envia um heartbeat. A página Agentes mostra online, offline, nunca visto ou desativado, calculado a partir da janela online (a configuração global ou uma sobreposição por agente para um segmento frágil).",
+  "docs.agents.coverage.h": "Cobertura de segmentos",
+  "docs.agents.coverage.p":
+    "O painel de cobertura sinaliza qualquer segmento que tenha perfis de varredura mas nenhum agente online, para que varreduras agendadas ali não fiquem paradas em silêncio. Corrija uma lacuna registrando ou colocando um agente online naquele segmento.",
+  "docs.ev.title": "Mudanças, tarefas & evidências",
+  "docs.ev.summary": "Revise mudanças confirmadas e exporte evidências de auditoria.",
+  "docs.ev.changes.h": "Mudanças confirmadas",
+  "docs.ev.changes.p":
+    "O PortWiz compara cada varredura e só levanta uma mudança depois que ela persiste em execuções consecutivas, filtrando o ruído da rede para que você não seja inundado por falsos positivos. Revise mudanças confirmadas na página Mudanças com um diff antes/depois.",
+  "docs.ev.tasks.h": "Tarefas e acompanhamento",
+  "docs.ev.tasks.p":
+    "Uma mudança confirmada pode abrir uma tarefa no app, enviar um e-mail e criar um chamado no Jira (Cloud ou Server/Data Center) com seu projeto, tipo de item e responsável. O status da tarefa e do chamado permanece sincronizado.",
+  "docs.ev.export.h": "Exportação de evidências",
+  "docs.ev.export.p":
+    "Um clique agrupa o relatório de varredura, o diff da mudança, a tarefa e aprovação vinculadas e a fatia relevante do log de auditoria em um pacote JSON e PDF assinado para auditores.",
+  "docs.ev.audit.h": "Integridade da auditoria",
+  "docs.ev.audit.p":
+    "Cada ação é gravada em um log de auditoria imutável e encadeado por hash. A página Conformidade pode verificar a cadeia de ponta a ponta e sinaliza qualquer registro alterado.",
+  "docs.comp.title": "Conformidade & integrações",
+  "docs.comp.summary": "Acompanhe a cadência dos frameworks e conecte suas ferramentas.",
+  "docs.comp.cadence.h": "Cadência de frameworks",
+  "docs.comp.cadence.p":
+    "Marque um perfil de varredura com um framework (PCI-DSS, HIPAA, SOC 2, ISO 27001, NIST). A página Conformidade mostra, por perfil, se ele foi varrido dentro do intervalo exigido e se seu agendamento é frequente o suficiente para manter a conformidade.",
+  "docs.comp.asv.h": "Nota sobre ASV",
+  "docs.comp.asv.p":
+    "PCI-DSS também exige varreduras externas por um Approved Scanning Vendor (ASV); uma varredura interna do PortWiz não satisfaz esse requisito, e a página sinaliza isso. Defina a origem da varredura como externa (ASV) quando aplicável.",
+  "docs.comp.integr.h": "Integrações",
+  "docs.comp.integr.p":
+    "Conecte Jira, e-mail (SMTP), NetBox (IPAM) e um provedor de IA nas Configurações. Cada aba tem um botão Testar para confirmar a conexão antes de salvar.",
+  "docs.comp.updates.h": "Atualizações",
+  "docs.comp.updates.p":
+    "O PortWiz verifica novas versões e pode notificar administradores. Onde um sidecar atualizador auto-hospedado está implantado, um clique em Atualizar agora o aplica. A verificação pode ser desativada para instalações air-gapped.",
 
   // Header / chrome
   "chrome.signOut": "Sair",

@@ -50,6 +50,62 @@ export const tr: Partial<Record<TKey, string>> = {
   "docs.cve.checks.h": "Kontrol çalıştırma",
   "docs.cve.checks.p":
     "Ayarlar'da yeniden-kontrol sıklığı belirle ya da CVE sayfasında Recheck'e tıklayarak mevcut açık portları anında sorgula. Bulgular önem derecesine göre listelenir; isteğe bağlı sade-dil AI özeti sunulur.",
+  "docs.scan.title": "Envanter & tarama",
+  "docs.scan.summary": "Envanterini oluştur ve taramaları zamanlı çalıştır.",
+  "docs.scan.inv.h": "Envanter",
+  "docs.scan.inv.p":
+    "VLAN, IP aralığı ve varlıkları elle ekle ya da CSV/Excel'den toplu içe aktar (Assets ve VLAN sayfalarındaki Şablon indir butonunu kullan). Her varlık; taramaların ve değişikliklerin kapsanıp atfedilebilmesi için sahip, kritiklik ve veri hassasiyeti taşır.",
+  "docs.scan.prof.h": "Tarama profilleri",
+  "docs.scan.prof.p":
+    "Tarama profili neyin taranacağını tanımlar. Hedefleri envanterinden seç (varlık, VLAN veya aralık), bir port seti, tarama türü ve her açık portun arkasındaki servisin tespit edilip edilmeyeceğini belirle.",
+  "docs.scan.sched.h": "Zamanlama",
+  "docs.scan.sched.p":
+    "Bir zamanlamaya derlenen anlaşılır bir periyot seç (saatlik, günlük, haftalık, aylık, üç aylık); böylece cron yazmazsın. Framework etiketli bir profil, önerilen cadence'i tek tıkla uygulayabilir.",
+  "docs.scan.seg.h": "Segmentler",
+  "docs.scan.seg.p":
+    "Bir profili bir ağ segmentiyle etiketle ki çalışmaları o segmentten sorumlu agent'a gitsin. Varsayılan (segmentsiz) havuzu kullanmak için boş bırak.",
+  "docs.agents.title": "Tarama agent'ları",
+  "docs.agents.summary": "Her segmente bir agent kur ve filo kapsamasını izle.",
+  "docs.agents.what.h": "Agent'lar ne yapar",
+  "docs.agents.what.p":
+    "Agent'lar, her ağ segmentine yerleştirdiğin hafif tarayıcılardır. Bir tarama çalışması, segmenti profille eşleşen agent'a yönlendirilir; böylece ayrık ağlarda da tarama çalışır.",
+  "docs.agents.deploy.h": "Enroll ve deploy",
+  "docs.agents.deploy.p":
+    "Agents'tan bir agent enroll et, sonra rehberli deploy panelini kullan: tek kullanımlık token taşıyan, çalıştırmaya hazır bir komut verir. Bir token açığa çıkmış olabilirse, Token'ı yenile yeni bir tane verir ve eskisini anında geçersiz kılar.",
+  "docs.agents.health.h": "Sağlık ve durum",
+  "docs.agents.health.p":
+    "Her agent bir heartbeat gönderir. Agents sayfası; online eşiğinden (global ayar ya da kırılgan bir segment için agent-başına override) hesaplanan çevrimiçi, çevrimdışı, hiç-görülmedi veya devre-dışı durumunu gösterir.",
+  "docs.agents.coverage.h": "Segment kapsaması",
+  "docs.agents.coverage.p":
+    "Kapsama panosu, tarama profili olan ama çevrimiçi agent'ı olmayan segmentleri işaretler; böylece oradaki zamanlanmış taramalar sessizce takılmaz. Bir boşluğu, o segmente bir agent enroll ederek ya da çevrimiçi getirerek gider.",
+  "docs.ev.title": "Değişiklik, task & kanıt",
+  "docs.ev.summary": "Teyitli değişiklikleri incele ve denetim kanıtını dışa aktar.",
+  "docs.ev.changes.h": "Teyitli değişiklikler",
+  "docs.ev.changes.p":
+    "PortWiz her taramayı karşılaştırır ve bir değişikliği yalnızca ardışık çalışmalarda kalıcı olduktan sonra üretir; ağ gürültüsünü ayıklayarak seni yanlış pozitiflere boğmaz. Teyitli değişiklikleri Changes sayfasında öncesi/sonrası diff'iyle incele.",
+  "docs.ev.tasks.h": "Task ve takip",
+  "docs.ev.tasks.p":
+    "Teyitli bir değişiklik; uygulama-içi task açabilir, e-posta gönderebilir ve projen, issue türün ve atanan kişiyle bir Jira issue'su (Cloud veya Server/Data Center) oluşturabilir. Task ve issue durumu senkron kalır.",
+  "docs.ev.export.h": "Kanıt dışa aktarımı",
+  "docs.ev.export.p":
+    "Tek tık; tarama raporunu, değişiklik diff'ini, bağlı task ve onayı ve audit log'un ilgili dilimini denetçiler için imzalı JSON ve PDF paketinde birleştirir.",
+  "docs.ev.audit.h": "Audit bütünlüğü",
+  "docs.ev.audit.p":
+    "Her aksiyon, değiştirilemez hash-zincirli bir audit log'a yazılır. Compliance sayfası zinciri uçtan uca doğrulayabilir ve değiştirilmiş herhangi bir kaydı işaretler.",
+  "docs.comp.title": "Compliance & entegrasyonlar",
+  "docs.comp.summary": "Framework cadence'ini takip et ve araçlarını bağla.",
+  "docs.comp.cadence.h": "Framework cadence",
+  "docs.comp.cadence.p":
+    "Bir tarama profilini bir framework'le etiketle (PCI-DSS, HIPAA, SOC 2, ISO 27001, NIST). Compliance sayfası her profil için; gereken aralıkta taranıp taranmadığını ve zamanlamasının uyumlu kalacak kadar sık olup olmadığını gösterir.",
+  "docs.comp.asv.h": "ASV notu",
+  "docs.comp.asv.p":
+    "PCI-DSS ayrıca Onaylı Tarama Sağlayıcısı (ASV) tarafından harici tarama gerektirir; dahili bir PortWiz taraması bunu karşılamaz ve sayfa bunu işaretler. Geçerli olduğunda tarama kaynağını harici (ASV) olarak ayarla.",
+  "docs.comp.integr.h": "Entegrasyonlar",
+  "docs.comp.integr.p":
+    "Ayarlar'da Jira, e-posta (SMTP), NetBox (IPAM) ve bir AI sağlayıcısını bağla. Her sekmede, kaydetmeden önce bağlantıyı doğrulayabilmen için bir Test butonu var.",
+  "docs.comp.updates.h": "Güncellemeler",
+  "docs.comp.updates.p":
+    "PortWiz yeni sürümleri kontrol eder ve admin'lere bildirebilir. Self-hosted bir updater sidecar deploy edildiyse, tek-tık Şimdi güncelle bunu uygular. Kontrol, air-gapped kurulumlar için kapatılabilir.",
 
   // Header / chrome
   "chrome.signOut": "Çıkış yap",

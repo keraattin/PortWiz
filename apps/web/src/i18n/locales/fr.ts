@@ -52,6 +52,62 @@ export const fr: Partial<Record<TKey, string>> = {
   "docs.cve.checks.h": "Lancer des vérifications",
   "docs.cve.checks.p":
     "Définissez une cadence de re-vérification dans les Paramètres, ou cliquez sur Revérifier sur la page CVE pour interroger les ports ouverts actuels à la demande. Les résultats sont listés par gravité, avec un résumé IA en langage clair en option.",
+  "docs.scan.title": "Inventaire & analyse",
+  "docs.scan.summary": "Constituez votre inventaire et lancez des analyses planifiées.",
+  "docs.scan.inv.h": "Inventaire",
+  "docs.scan.inv.p":
+    "Ajoutez des VLAN, des plages IP et des actifs à la main, ou importez-les en masse depuis un CSV ou Excel (bouton Télécharger le modèle sur les pages Actifs et VLAN). Chaque actif porte un propriétaire, une criticité et une sensibilité des données, afin que les analyses et les changements puissent être cadrés et attribués.",
+  "docs.scan.prof.h": "Profils d'analyse",
+  "docs.scan.prof.p":
+    "Un profil d'analyse définit ce qui est analysé. Choisissez les cibles dans votre inventaire (actifs, VLAN ou plages), un ensemble de ports, le type d'analyse et s'il faut détecter le service derrière chaque port ouvert.",
+  "docs.scan.sched.h": "Planification",
+  "docs.scan.sched.p":
+    "Choisissez une fréquence en langage clair (horaire, quotidien, hebdomadaire, mensuel, trimestriel) qui se compile en une planification, sans jamais écrire de cron. Un profil associé à un cadre peut appliquer la cadence recommandée en un clic.",
+  "docs.scan.seg.h": "Segments",
+  "docs.scan.seg.p":
+    "Associez un profil à un segment réseau pour que ses exécutions aillent à l'agent responsable de ce segment. Laissez vide pour utiliser le pool par défaut (sans segment).",
+  "docs.agents.title": "Agents d'analyse",
+  "docs.agents.summary": "Déployez un agent par segment et surveillez la couverture de la flotte.",
+  "docs.agents.what.h": "Rôle des agents",
+  "docs.agents.what.p":
+    "Les agents sont de légers scanners que vous placez dans chaque segment réseau. Une exécution d'analyse est dirigée vers l'agent dont le segment correspond au profil, ce qui permet d'analyser des réseaux séparés.",
+  "docs.agents.deploy.h": "Enrôler et déployer",
+  "docs.agents.deploy.p":
+    "Enrôlez un agent depuis Agents, puis utilisez le panneau de déploiement guidé : il fournit une commande prête à l'emploi portant un jeton à usage unique. Si un jeton peut être exposé, Faire tourner le jeton en émet un nouveau et invalide immédiatement l'ancien.",
+  "docs.agents.health.h": "État et statut",
+  "docs.agents.health.p":
+    "Chaque agent envoie un battement (heartbeat). La page Agents affiche en ligne, hors ligne, jamais vu ou désactivé, calculé à partir de la fenêtre en ligne (le paramètre global, ou une surcharge par agent pour un segment fragile).",
+  "docs.agents.coverage.h": "Couverture des segments",
+  "docs.agents.coverage.p":
+    "Le panneau de couverture signale tout segment qui a des profils d'analyse mais aucun agent en ligne, afin que les analyses planifiées n'y restent pas bloquées en silence. Corrigez un manque en enrôlant ou en remettant un agent en ligne dans ce segment.",
+  "docs.ev.title": "Changements, tâches & preuves",
+  "docs.ev.summary": "Examinez les changements confirmés et exportez des preuves d'audit.",
+  "docs.ev.changes.h": "Changements confirmés",
+  "docs.ev.changes.p":
+    "PortWiz compare chaque analyse et ne signale un changement qu'après sa persistance sur des exécutions consécutives, en filtrant le bruit réseau pour ne pas vous inonder de faux positifs. Examinez les changements confirmés sur la page Changements avec un diff avant/après.",
+  "docs.ev.tasks.h": "Tâches et suivi",
+  "docs.ev.tasks.p":
+    "Un changement confirmé peut ouvrir une tâche dans l'application, envoyer un e-mail et créer un ticket Jira (Cloud ou Server/Data Center) avec votre projet, type de ticket et destinataire. Les statuts de tâche et de ticket restent synchronisés.",
+  "docs.ev.export.h": "Export des preuves",
+  "docs.ev.export.p":
+    "Un clic regroupe le rapport d'analyse, le diff du changement, la tâche et l'approbation liées, et la tranche pertinente du journal d'audit dans un package JSON et PDF signé pour les auditeurs.",
+  "docs.ev.audit.h": "Intégrité de l'audit",
+  "docs.ev.audit.p":
+    "Chaque action est écrite dans un journal d'audit immuable et chaîné par hachage. La page Conformité peut vérifier la chaîne de bout en bout et signale tout enregistrement altéré.",
+  "docs.comp.title": "Conformité & intégrations",
+  "docs.comp.summary": "Suivez la cadence des cadres et connectez vos outils.",
+  "docs.comp.cadence.h": "Cadence des cadres",
+  "docs.comp.cadence.p":
+    "Associez un profil d'analyse à un cadre (PCI-DSS, HIPAA, SOC 2, ISO 27001, NIST). La page Conformité indique, par profil, s'il a été analysé dans l'intervalle requis et si sa planification est assez fréquente pour rester conforme.",
+  "docs.comp.asv.h": "Note ASV",
+  "docs.comp.asv.p":
+    "PCI-DSS exige aussi des analyses externes par un Approved Scanning Vendor (ASV) ; une analyse interne PortWiz ne satisfait pas cette exigence, et la page le signale. Réglez la source de l'analyse sur externe (ASV) le cas échéant.",
+  "docs.comp.integr.h": "Intégrations",
+  "docs.comp.integr.p":
+    "Connectez Jira, l'e-mail (SMTP), NetBox (IPAM) et un fournisseur d'IA dans les Paramètres. Chaque onglet a un bouton Tester pour confirmer la connexion avant d'enregistrer.",
+  "docs.comp.updates.h": "Mises à jour",
+  "docs.comp.updates.p":
+    "PortWiz vérifie les nouvelles versions et peut avertir les administrateurs. Là où un sidecar de mise à jour auto-hébergé est déployé, un clic sur Mettre à jour l'applique. La vérification peut être désactivée pour les installations air-gapped.",
 
   // Header / chrome
   "chrome.signOut": "Se déconnecter",

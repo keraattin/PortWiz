@@ -50,6 +50,62 @@ export const en = {
   "docs.cve.checks.h": "Running checks",
   "docs.cve.checks.p":
     "Set a re-check cadence in Settings, or click Recheck on the CVE page to look up the current open ports on demand. Findings are listed by severity, with an optional plain-language AI brief.",
+  "docs.scan.title": "Inventory & scanning",
+  "docs.scan.summary": "Build your inventory and run scans on a schedule.",
+  "docs.scan.inv.h": "Inventory",
+  "docs.scan.inv.p":
+    "Add VLANs, IP ranges and assets by hand, or bulk-import them from CSV or Excel (use the Download template button on the Assets and VLANs pages). Each asset carries an owner, criticality and data-sensitivity so scans and changes can be scoped and attributed.",
+  "docs.scan.prof.h": "Scan profiles",
+  "docs.scan.prof.p":
+    "A scan profile defines what to scan. Pick targets from your inventory (assets, VLANs or ranges), choose a port set, the scan type and whether to detect the service behind each open port.",
+  "docs.scan.sched.h": "Scheduling",
+  "docs.scan.sched.p":
+    "Choose a plain-language period (hourly, daily, weekly, monthly, quarterly) that compiles to a schedule, so you never write cron. A framework-tagged profile can apply the recommended cadence in one click.",
+  "docs.scan.seg.h": "Segments",
+  "docs.scan.seg.p":
+    "Tag a profile with a network segment so its runs go to the agent responsible for that segment. Leave it blank to use the default (unsegmented) pool.",
+  "docs.agents.title": "Scan agents",
+  "docs.agents.summary": "Deploy an agent per segment and watch fleet coverage.",
+  "docs.agents.what.h": "What agents do",
+  "docs.agents.what.p":
+    "Agents are lightweight scanners you place in each network segment. A scan run is routed to the agent whose segment matches the profile, so scanning works across separated networks.",
+  "docs.agents.deploy.h": "Enroll and deploy",
+  "docs.agents.deploy.p":
+    "Enroll an agent from Agents, then use the guided deploy panel: it gives a ready-to-run command carrying a one-time token. If a token may be exposed, Rotate token issues a fresh one and invalidates the old immediately.",
+  "docs.agents.health.h": "Health and status",
+  "docs.agents.health.p":
+    "Each agent sends a heartbeat. The Agents page shows online, offline, never-seen or disabled, computed from the online window (the global setting, or a per-agent override for a fragile segment).",
+  "docs.agents.coverage.h": "Segment coverage",
+  "docs.agents.coverage.p":
+    "The coverage panel flags any segment that has scan profiles but no online agent, so scheduled scans there never stall silently. Fix a gap by enrolling or bringing an agent online in that segment.",
+  "docs.ev.title": "Changes, tasks & evidence",
+  "docs.ev.summary": "Review confirmed changes and export audit evidence.",
+  "docs.ev.changes.h": "Confirmed changes",
+  "docs.ev.changes.p":
+    "PortWiz compares each scan and raises a change only after it persists across consecutive runs, filtering out network noise so you are not flooded with false positives. Review confirmed changes on the Changes page with a before/after diff.",
+  "docs.ev.tasks.h": "Tasks and tracking",
+  "docs.ev.tasks.p":
+    "A confirmed change can open an in-app task, send an email, and create a Jira issue (Cloud or Server/Data Center) with your project, issue type and assignee. Task and issue status stay in sync.",
+  "docs.ev.export.h": "Evidence export",
+  "docs.ev.export.p":
+    "One click bundles the scan report, the change diff, the linked task and approval, and the relevant slice of the audit log into a signed JSON and PDF package for auditors.",
+  "docs.ev.audit.h": "Audit integrity",
+  "docs.ev.audit.p":
+    "Every action is written to an immutable, hash-chained audit log. The Compliance page can verify the chain end to end and flags any record that was altered.",
+  "docs.comp.title": "Compliance & integrations",
+  "docs.comp.summary": "Track framework cadence and connect your tools.",
+  "docs.comp.cadence.h": "Framework cadence",
+  "docs.comp.cadence.p":
+    "Tag a scan profile with a framework (PCI-DSS, HIPAA, SOC 2, ISO 27001, NIST). The Compliance page shows, per profile, whether it was scanned within the required interval and whether its schedule is frequent enough to stay compliant.",
+  "docs.comp.asv.h": "ASV note",
+  "docs.comp.asv.p":
+    "PCI-DSS also requires external scans by an Approved Scanning Vendor (ASV); an internal PortWiz scan does not satisfy that requirement, and the page flags it. Set the scan source to external (ASV) when that applies.",
+  "docs.comp.integr.h": "Integrations",
+  "docs.comp.integr.p":
+    "Connect Jira, email (SMTP), NetBox (IPAM) and an AI provider in Settings. Each tab has a Test button so you can confirm the connection before saving.",
+  "docs.comp.updates.h": "Updates",
+  "docs.comp.updates.p":
+    "PortWiz checks for new releases and can notify admins. Where a self-hosted updater sidecar is deployed, a one-click Update now applies it. The check can be disabled for air-gapped installs.",
 
   // Header / chrome
   "chrome.signOut": "Sign out",

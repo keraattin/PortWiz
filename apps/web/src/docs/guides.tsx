@@ -80,6 +80,82 @@ function CveGuide() {
   );
 }
 
+function ScanningGuide() {
+  return (
+    <div className="space-y-6">
+      <Section heading="docs.scan.inv.h">
+        <P k="docs.scan.inv.p" />
+      </Section>
+      <Section heading="docs.scan.prof.h">
+        <P k="docs.scan.prof.p" />
+      </Section>
+      <Section heading="docs.scan.sched.h">
+        <P k="docs.scan.sched.p" />
+      </Section>
+      <Section heading="docs.scan.seg.h">
+        <P k="docs.scan.seg.p" />
+      </Section>
+    </div>
+  );
+}
+
+function AgentsGuide() {
+  return (
+    <div className="space-y-6">
+      <Section heading="docs.agents.what.h">
+        <P k="docs.agents.what.p" />
+      </Section>
+      <Section heading="docs.agents.deploy.h">
+        <P k="docs.agents.deploy.p" />
+      </Section>
+      <Section heading="docs.agents.health.h">
+        <P k="docs.agents.health.p" />
+      </Section>
+      <Section heading="docs.agents.coverage.h">
+        <P k="docs.agents.coverage.p" />
+      </Section>
+    </div>
+  );
+}
+
+function EvidenceGuide() {
+  return (
+    <div className="space-y-6">
+      <Section heading="docs.ev.changes.h">
+        <P k="docs.ev.changes.p" />
+      </Section>
+      <Section heading="docs.ev.tasks.h">
+        <P k="docs.ev.tasks.p" />
+      </Section>
+      <Section heading="docs.ev.export.h">
+        <P k="docs.ev.export.p" />
+      </Section>
+      <Section heading="docs.ev.audit.h">
+        <P k="docs.ev.audit.p" />
+      </Section>
+    </div>
+  );
+}
+
+function ComplianceGuide() {
+  return (
+    <div className="space-y-6">
+      <Section heading="docs.comp.cadence.h">
+        <P k="docs.comp.cadence.p" />
+      </Section>
+      <Section heading="docs.comp.asv.h">
+        <P k="docs.comp.asv.p" />
+      </Section>
+      <Section heading="docs.comp.integr.h">
+        <P k="docs.comp.integr.p" />
+      </Section>
+      <Section heading="docs.comp.updates.h">
+        <P k="docs.comp.updates.p" />
+      </Section>
+    </div>
+  );
+}
+
 export const GUIDES: Guide[] = [
   {
     id: "getting-started",
@@ -87,6 +163,34 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.gs.summary",
     icon: "🚀",
     Body: GettingStartedGuide,
+  },
+  {
+    id: "scanning",
+    titleKey: "docs.scan.title",
+    summaryKey: "docs.scan.summary",
+    icon: "🔎",
+    Body: ScanningGuide,
+  },
+  {
+    id: "agents",
+    titleKey: "docs.agents.title",
+    summaryKey: "docs.agents.summary",
+    icon: "🛰️",
+    Body: AgentsGuide,
+  },
+  {
+    id: "evidence",
+    titleKey: "docs.ev.title",
+    summaryKey: "docs.ev.summary",
+    icon: "📦",
+    Body: EvidenceGuide,
+  },
+  {
+    id: "compliance",
+    titleKey: "docs.comp.title",
+    summaryKey: "docs.comp.summary",
+    icon: "✅",
+    Body: ComplianceGuide,
   },
   {
     id: "cve",
