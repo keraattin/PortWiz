@@ -62,7 +62,7 @@ export default function UsersPage() {
       ],
       get: (u) => (u.is_active ? "active" : "inactive"),
     },
-    { key: "created", label: t("users.col.created"), get: (u) => u.created_at },
+    { key: "created", label: t("users.col.created"), filter: "text", get: (u) => u.created_at },
   ];
   const processed = processRows(users, columns, sort, filters, search);
   const usersPage = usePagination(processed, 15);

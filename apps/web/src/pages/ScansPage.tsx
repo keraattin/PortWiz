@@ -294,8 +294,8 @@ export default function ScansPage() {
       filter: RUN_STATUSES.map((s) => ({ value: s, label: t(`runStatus.${s}` as TKey) })),
       get: (r) => r.status,
     },
-    { key: "started", label: t("scans.col.started"), get: (r) => r.started_at },
-    { key: "finished", label: t("scans.col.finished"), get: (r) => r.finished_at },
+    { key: "started", label: t("scans.col.started"), filter: "text", get: (r) => r.started_at },
+    { key: "finished", label: t("scans.col.finished"), filter: "text", get: (r) => r.finished_at },
   ];
   const processedRuns = processRows(runs, runsColumns, runsSort, runsFilters);
   const runsPage = usePagination(processedRuns, 15);

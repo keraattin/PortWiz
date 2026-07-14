@@ -72,8 +72,13 @@ export default function AgentsPage() {
       get: (a) => statusOf(a),
     },
     { key: "version", label: t("agents.col.version"), filter: "text", get: (a) => a.version ?? "" },
-    { key: "lastSeen", label: t("agents.col.lastSeen"), get: (a) => a.last_seen_at },
-    { key: "enrolledAt", label: t("agents.col.enrolledAt"), get: (a) => a.created_at },
+    { key: "lastSeen", label: t("agents.col.lastSeen"), filter: "text", get: (a) => a.last_seen_at },
+    {
+      key: "enrolledAt",
+      label: t("agents.col.enrolledAt"),
+      filter: "text",
+      get: (a) => a.created_at,
+    },
   ];
   const agentRows = processRows(agents, columns, sort, filters, search);
   const agentsPage = usePagination(agentRows, 15);
@@ -120,10 +125,12 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHeader title={t("agents.title")} subtitle={t("agents.subtitle")} docsGuide="agents" />
-        {enrollButton}
-      </div>
+      <PageHeader
+        title={t("agents.title")}
+        subtitle={t("agents.subtitle")}
+        docsGuide="agents"
+        actions={enrollButton}
+      />
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 

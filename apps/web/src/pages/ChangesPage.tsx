@@ -80,7 +80,7 @@ export default function ChangesPage() {
   const profileName = (id: string) =>
     profiles.find((p) => p.id === id)?.name ?? t("scans.deletedProfile");
   const columns: Column<ChangeEvent>[] = [
-    { key: "detected", label: t("changes.col.detected"), get: (c) => c.detected_at },
+    { key: "detected", label: t("changes.col.detected"), filter: "text", get: (c) => c.detected_at },
     { key: "host", label: t("changes.col.host"), filter: "text", get: (c) => c.ip },
     {
       key: "change",
@@ -88,7 +88,17 @@ export default function ChangesPage() {
       filter: CHANGE_TYPES.map((c) => ({ value: c, label: t(`changeType.${c}` as TKey) })),
       get: (c) => c.change_type,
     },
-    { key: "beforeAfter", label: t("changes.col.beforeAfter"), sortable: false, get: () => null },
+    {
+      key: "beforeAfter",
+      label: t("changes.col.beforeAfter"),
+      sortable: false,
+      filter: "text",
+      // Searchable/filterable by the service and version on either side.
+      get: (c) =>
+        [c.before.service, c.before.version, c.after.service, c.after.version]
+          .filter(Boolean)
+          .join(" "),
+    },
     {
       key: "severity",
       label: t("changes.col.severity"),
@@ -97,7 +107,15 @@ export default function ChangesPage() {
       get: (c) => c.severity,
       rank: SEV_RANK,
     },
-    { key: "status", label: t("changes.col.status"), get: (c) => c.status },
+    {
+      key: "status",
+      label: t("changes.col.status"),
+      filter: (["open", "acknowledged", "resolved"] as ChangeStatus[]).map((s) => ({
+        value: s,
+        label: t(`changeStatus.${s}` as TKey),
+      })),
+      get: (c) => c.status,
+    },
   ];
   const processed = processRows(changes, columns, sort, filters, search);
   const changesPage = usePagination(processed, 15);
@@ -177,12 +195,24 @@ export default function ChangesPage() {
             {t(`changeType.${c.change_type}` as TKey)}
           </span>
         </td>
-        <td className="px-4 py-2 text-xs">
-          <span className="text-slate-500">{t("changes.before")} </span>
-          <span className="text-slate-400">{describe(c.before, t)}</span>
-          <span className="px-1.5 text-slate-600">→</span>
-          <span className="text-slate-500">{t("changes.after")} </span>
-          <span className="text-slate-100">{describe(c.after, t)}</span>
+        <td className="px-4 py-2">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/60 px-2 py-1 text-slate-400">
+              <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                {t("changes.before")}
+              </span>
+              {describe(c.before, t)}
+            </span>
+            <span className="text-slate-600" aria-hidden="true">
+              →
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800 px-2 py-1 font-medium text-slate-100">
+              <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                {t("changes.after")}
+              </span>
+              {describe(c.after, t)}
+            </span>
+          </div>
         </td>
         <td className="px-4 py-2">
           <span className={`rounded-full px-2 py-0.5 text-xs ${SEVERITY_BADGE[c.severity] ?? SEVERITY_BADGE.low}`}>
