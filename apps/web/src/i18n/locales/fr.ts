@@ -779,6 +779,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "compliance.col.target": "Cible",
   "compliance.system": "système",
   "compliance.noAuditEvents": "Aucun événement d'audit.",
+  "compliance.auditTruncated": "Affichage des {shown} derniers événements sur {total}.",
 
   // Settings
   "settings.title": "Paramètres et intégrations",

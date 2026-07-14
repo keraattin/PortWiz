@@ -30,7 +30,7 @@ async def list_audit(
     target_type: str | None = None,
     target_id: str | None = None,
     actor_email: str | None = None,
-    limit: int = Query(default=50, ge=1, le=200),
+    limit: int = Query(default=50, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
     _: User = Depends(ReadDep),
     session: AsyncSession = Depends(get_session),

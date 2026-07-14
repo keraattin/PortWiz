@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   type AuditEvent,
   type ChainVerification,
@@ -11,18 +11,20 @@ import {
   listScanProfiles,
   verifyAudit,
 } from "../api/client";
-import { controlClass as inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
-import Button from "../components/Button";
 import DocsLink from "../components/DocsLink";
 import Pagination, { usePagination } from "../components/Pagination";
+import SearchInput from "../components/SearchInput";
 import { useToast } from "../components/Toast";
 import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
-const PAGE_SIZE = 50;
+// The audit log is browsed client-side (search, per-column filters, page size);
+// load the most recent events up to this cap. Older events remain in the
+// authoritative evidence export.
+const AUDIT_CAP = 1000;
 
 const CADENCE_BADGE: Record<string, string> = {
   compliant: "bg-emerald-900 text-emerald-300",
@@ -46,8 +48,6 @@ export default function CompliancePage() {
   const [chain, setChain] = useState<ChainVerification | null>(null);
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(0);
-  const [actionFilter, setActionFilter] = useState("");
   const [profiles, setProfiles] = useState<ScanProfile[]>([]);
   const [cadence, setCadence] = useState<ComplianceStatusItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +99,34 @@ export default function CompliancePage() {
     evidencePage.setPage(0);
   };
 
+  // Audit log: same searchable/filterable/paginated table as the rest of the app.
+  const { sort: auditSort, toggleSort: auditToggle } = useSort();
+  const { filters: auditFilters, setFilter: setAuditFilter } = useColumnFilters();
+  const [auditSearch, setAuditSearch] = useState("");
+  const auditColumns: Column<AuditEvent>[] = [
+    { key: "seq", label: t("compliance.col.seq"), get: (e) => e.seq },
+    { key: "time", label: t("compliance.col.time"), filter: "text", get: (e) => e.created_at },
+    {
+      key: "actor",
+      label: t("compliance.col.actor"),
+      filter: "text",
+      get: (e) => e.actor_email ?? t("compliance.system"),
+    },
+    { key: "action", label: t("compliance.col.action"), filter: "text", get: (e) => e.action },
+    {
+      key: "target",
+      label: t("compliance.col.target"),
+      filter: "text",
+      get: (e) => (e.target_type ? `${e.target_type}:${e.target_id ?? ""}` : ""),
+    },
+  ];
+  const processedAudit = processRows(events, auditColumns, auditSort, auditFilters, auditSearch);
+  const auditPage = usePagination(processedAudit, 25);
+  const onAuditFilter = (key: string, v: string) => {
+    setAuditFilter(key, v);
+    auditPage.setPage(0);
+  };
+
   async function verify() {
     setError(null);
     try {
@@ -108,17 +136,12 @@ export default function CompliancePage() {
     }
   }
 
-  async function loadAudit(toPage: number) {
+  async function loadAudit() {
     setError(null);
     try {
-      const res = await listAudit({
-        action: actionFilter || undefined,
-        limit: PAGE_SIZE,
-        offset: toPage * PAGE_SIZE,
-      });
+      const res = await listAudit({ limit: AUDIT_CAP });
       setTotal(res.total);
       setEvents(res.events);
-      setPage(toPage);
     } catch (e) {
       setError(errorMessage(e));
     }
@@ -128,7 +151,7 @@ export default function CompliancePage() {
     async function init() {
       await Promise.allSettled([
         verify(),
-        loadAudit(0),
+        loadAudit(),
         listScanProfiles()
           .then(setProfiles)
           .catch((e) => setError(errorMessage(e))),
@@ -141,11 +164,6 @@ export default function CompliancePage() {
     void init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function onFilter(e: FormEvent) {
-    e.preventDefault();
-    void loadAudit(0);
-  }
 
   async function onDownload(fn: () => Promise<void>) {
     // Surface as a toast: the evidence table is far from the only inline error
@@ -356,32 +374,34 @@ export default function CompliancePage() {
 
       {/* Audit log */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-200">{t("compliance.auditTitle")}</h2>
-          <form onSubmit={onFilter} className="flex items-center gap-2">
-            <input
-              className={inputClass}
-              placeholder={t("compliance.filterPlaceholder")}
-              value={actionFilter}
-              onChange={(e) => setActionFilter(e.target.value)}
-            />
-            <Button type="submit">{t("compliance.apply")}</Button>
-          </form>
+          <SearchInput
+            value={auditSearch}
+            onChange={(v) => {
+              setAuditSearch(v);
+              auditPage.setPage(0);
+            }}
+          />
         </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
+        {total > events.length && (
+          <p className="text-xs text-slate-500">
+            {t("compliance.auditTruncated", { shown: events.length, total })}
+          </p>
+        )}
+
         <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-900 text-slate-400">
-              <tr>
-                <th className="px-4 py-2 font-medium">{t("compliance.col.seq")}</th>
-                <th className="px-4 py-2 font-medium">{t("compliance.col.time")}</th>
-                <th className="px-4 py-2 font-medium">{t("compliance.col.actor")}</th>
-                <th className="px-4 py-2 font-medium">{t("compliance.col.action")}</th>
-                <th className="px-4 py-2 font-medium">{t("compliance.col.target")}</th>
-              </tr>
-            </thead>
+            <TableHead
+              columns={auditColumns}
+              sort={auditSort}
+              toggleSort={auditToggle}
+              filters={auditFilters}
+              setFilter={onAuditFilter}
+            />
             <tbody className="divide-y divide-slate-800">
               {loading ? (
                 <tr>
@@ -395,8 +415,14 @@ export default function CompliancePage() {
                     {t("compliance.noAuditEvents")}
                   </td>
                 </tr>
+              ) : processedAudit.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-6 text-center text-slate-500" colSpan={5}>
+                    {t("common.noData")}
+                  </td>
+                </tr>
               ) : (
-                events.map((e) => (
+                auditPage.slice.map((e) => (
                   <tr key={e.seq} className="bg-slate-950">
                     <td className="px-4 py-2 font-mono text-slate-500">{e.seq}</td>
                     <td className="px-4 py-2 text-xs text-slate-400">
@@ -417,10 +443,12 @@ export default function CompliancePage() {
         </div>
 
         <Pagination
-          page={page}
-          pageCount={Math.max(1, Math.ceil(total / PAGE_SIZE))}
-          total={total}
-          onPage={(p) => loadAudit(p)}
+          page={auditPage.page}
+          pageCount={auditPage.pageCount}
+          total={auditPage.total}
+          onPage={auditPage.setPage}
+          pageSize={auditPage.pageSize}
+          onPageSize={auditPage.setPageSize}
         />
       </section>
     </div>

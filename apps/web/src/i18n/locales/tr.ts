@@ -775,6 +775,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "compliance.col.target": "Hedef",
   "compliance.system": "sistem",
   "compliance.noAuditEvents": "Denetim olayı yok.",
+  "compliance.auditTruncated": "{total} olaydan en son {shown} tanesi gösteriliyor.",
 
   // Settings
   "settings.title": "Ayarlar ve entegrasyonlar",

@@ -778,6 +778,7 @@ export const es: Partial<Record<TKey, string>> = {
   "compliance.col.target": "Objetivo",
   "compliance.system": "sistema",
   "compliance.noAuditEvents": "Sin eventos de auditoría.",
+  "compliance.auditTruncated": "Mostrando los {shown} eventos más recientes de {total}.",
 
   // Settings
   "settings.title": "Ajustes e integraciones",

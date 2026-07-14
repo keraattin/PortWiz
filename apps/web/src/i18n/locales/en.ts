@@ -773,6 +773,7 @@ export const en = {
   "compliance.col.target": "Target",
   "compliance.system": "system",
   "compliance.noAuditEvents": "No audit events.",
+  "compliance.auditTruncated": "Showing the latest {shown} of {total} events.",
 
   // Settings
   "settings.title": "Settings & integrations",
