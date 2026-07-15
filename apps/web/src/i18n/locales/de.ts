@@ -348,6 +348,8 @@ export const de: Partial<Record<TKey, string>> = {
   "assets.deleted": "Asset gelöscht",
   "assets.confirmDelete": "Dieses Asset löschen?",
   "assets.empty": "Noch keine Assets.",
+  "assets.emptyBody":
+    "Fügen Sie Assets von Hand hinzu oder importieren Sie sie aus CSV oder Excel und erstellen Sie dann einen Scan zur Überwachung.",
   "assets.addFirst": "Erstes Asset hinzufügen",
   "assets.orImport": "oder importieren Sie unten eine CSV-/Excel-Datei.",
   "assets.col.ip": "IP",
@@ -408,6 +410,8 @@ export const de: Partial<Record<TKey, string>> = {
   "vlans.deleted": "VLAN gelöscht",
   "vlans.confirmDelete": "Dieses VLAN löschen?",
   "vlans.empty": "Noch keine VLANs.",
+  "vlans.emptyBody":
+    "Fügen Sie Ihre Netzwerk-VLANs hinzu und dann IP-Bereiche und Assets, damit Scans wissen, wo sie suchen sollen.",
   "vlans.addFirst": "Erstes VLAN hinzufügen",
   "vlans.bulkImport": "Massenimport",
   "vlans.bulkImportHint": 'CSV oder .xlsx mit einer Spalte "name". Optional: tag, description.',
@@ -706,6 +710,8 @@ export const de: Partial<Record<TKey, string>> = {
   "scans.confirmDelete": "Dieses Scan-Profil löschen?",
   "scans.queued": "Scan für {name} eingereiht",
   "scans.empty": "Noch keine Scan-Profile.",
+  "scans.emptyBody":
+    "Erstellen Sie ein Scan-Profil: Ziele aus dem Bestand wählen und einen Zeitplan festlegen, und PortWiz überwacht sie auf Änderungen.",
   "scans.createFirst": "Erstellen Sie Ihren ersten Scan",
   "scans.col.name": "Name",
   "scans.col.targets": "Ziele",

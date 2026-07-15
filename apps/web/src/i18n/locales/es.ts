@@ -347,6 +347,8 @@ export const es: Partial<Record<TKey, string>> = {
   "assets.deleted": "Activo eliminado",
   "assets.confirmDelete": "¿Eliminar este activo?",
   "assets.empty": "Aún no hay activos.",
+  "assets.emptyBody":
+    "Añade activos a mano o impórtalos desde CSV o Excel, luego crea un escaneo para monitorearlos.",
   "assets.addFirst": "Añade tu primer activo",
   "assets.orImport": "o importa un archivo CSV/Excel a continuación.",
   "assets.col.ip": "IP",
@@ -407,6 +409,8 @@ export const es: Partial<Record<TKey, string>> = {
   "vlans.deleted": "VLAN eliminada",
   "vlans.confirmDelete": "¿Eliminar esta VLAN?",
   "vlans.empty": "Aún no hay VLAN.",
+  "vlans.emptyBody":
+    "Añade tus VLAN de red y luego rangos de IP y activos para que los escaneos sepan dónde buscar.",
   "vlans.addFirst": "Añade tu primera VLAN",
   "vlans.bulkImport": "Importación masiva",
   "vlans.bulkImportHint": 'CSV o .xlsx con una columna "name". Opcional: tag, description.',
@@ -705,6 +709,8 @@ export const es: Partial<Record<TKey, string>> = {
   "scans.confirmDelete": "¿Eliminar este perfil de escaneo?",
   "scans.queued": "Escaneo en cola para {name}",
   "scans.empty": "Aún no hay perfiles de escaneo.",
+  "scans.emptyBody":
+    "Crea un perfil de escaneo: elige objetivos de tu inventario y define una programación, y PortWiz monitorea cambios.",
   "scans.createFirst": "Crea tu primer escaneo",
   "scans.col.name": "Nombre",
   "scans.col.targets": "Objetivos",

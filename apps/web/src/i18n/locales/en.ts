@@ -346,6 +346,8 @@ export const en = {
   "assets.deleted": "Asset deleted",
   "assets.confirmDelete": "Delete this asset?",
   "assets.empty": "No assets yet.",
+  "assets.emptyBody":
+    "Add your assets by hand or bulk-import them from CSV or Excel, then create a scan to monitor them.",
   "assets.addFirst": "Add your first asset",
   "assets.orImport": "or import a CSV/Excel file below.",
   "assets.col.ip": "IP",
@@ -403,6 +405,8 @@ export const en = {
   "vlans.deleted": "VLAN deleted",
   "vlans.confirmDelete": "Delete this VLAN?",
   "vlans.empty": "No VLANs yet.",
+  "vlans.emptyBody":
+    "Add your network VLANs, then add IP ranges and assets to them so scans know where to look.",
   "vlans.addFirst": "Add your first VLAN",
   "vlans.bulkImport": "Bulk import",
   "vlans.bulkImportHint": 'CSV or .xlsx with a "name" column. Optional: tag, description.',
@@ -700,6 +704,8 @@ export const en = {
   "scans.confirmDelete": "Delete this scan profile?",
   "scans.queued": "Scan queued for {name}",
   "scans.empty": "No scan profiles yet.",
+  "scans.emptyBody":
+    "Create a scan profile: pick targets from your inventory and choose a schedule, and PortWiz monitors them for changes.",
   "scans.createFirst": "Create your first scan",
   "scans.col.name": "Name",
   "scans.col.targets": "Targets",

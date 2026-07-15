@@ -29,6 +29,7 @@ import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import DocsLink from "../components/DocsLink";
+import EmptyState from "../components/EmptyState";
 import FormField from "../components/FormField";
 import Modal from "../components/Modal";
 import Pagination, { usePagination } from "../components/Pagination";
@@ -427,6 +428,15 @@ export default function ScansPage() {
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
+        {!loading && profiles.length === 0 ? (
+          <EmptyState
+            icon="🔎"
+            title={t("scans.empty")}
+            body={t("scans.emptyBody")}
+            action={canWrite && <Button onClick={openAdd}>{t("scans.add")}</Button>}
+          />
+        ) : (
+          <>
         <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
             <TableHead
@@ -442,23 +452,6 @@ export default function ScansPage() {
                 <tr>
                   <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
                     {t("common.loading")}
-                  </td>
-                </tr>
-              ) : profiles.length === 0 ? (
-                <tr>
-                  <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
-                    {t("scans.empty")}
-                    {canWrite && (
-                      <>
-                        {" "}
-                        <button
-                          onClick={openAdd}
-                          className="font-medium text-emerald-400 hover:text-emerald-300"
-                        >
-                          {t("scans.createFirst")}
-                        </button>
-                      </>
-                    )}
                   </td>
                 </tr>
               ) : processedProfiles.length === 0 ? (
@@ -519,6 +512,8 @@ export default function ScansPage() {
           pageSize={profilesPage.pageSize}
           onPageSize={profilesPage.setPageSize}
         />
+          </>
+        )}
       </section>
 
       <section className="space-y-4">

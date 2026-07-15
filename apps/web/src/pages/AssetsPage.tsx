@@ -23,6 +23,7 @@ import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
+import EmptyState from "../components/EmptyState";
 import FormField from "../components/FormField";
 import InfoCallout from "../components/InfoCallout";
 import Modal from "../components/Modal";
@@ -382,6 +383,15 @@ export default function AssetsPage() {
       </section>
       )}
 
+      {!loading && assets.length === 0 ? (
+        <EmptyState
+          icon="🗂️"
+          title={t("assets.empty")}
+          body={t("assets.emptyBody")}
+          action={canWrite && <Button onClick={openAdd}>{t("assets.add")}</Button>}
+        />
+      ) : (
+        <>
       <div className="flex justify-end">
         <SearchInput value={search} onChange={setSearch} />
       </div>
@@ -401,24 +411,6 @@ export default function AssetsPage() {
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={7}>
                   {t("common.loading")}
-                </td>
-              </tr>
-            ) : assets.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
-                  {t("assets.empty")}
-                  {canWrite && (
-                    <>
-                      {" "}
-                      <button
-                        onClick={openAdd}
-                        className="font-medium text-emerald-400 hover:text-emerald-300"
-                      >
-                        {t("assets.addFirst")}
-                      </button>{" "}
-                      {t("assets.orImport")}
-                    </>
-                  )}
                 </td>
               </tr>
             ) : processed.length === 0 ? (
@@ -464,6 +456,8 @@ export default function AssetsPage() {
         pageSize={assetsPage.pageSize}
         onPageSize={assetsPage.setPageSize}
       />
+        </>
+      )}
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t("assets.add")}>
         <form onSubmit={onCreate} className="space-y-3">

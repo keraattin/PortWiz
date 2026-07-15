@@ -348,6 +348,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "assets.deleted": "Actif supprimé",
   "assets.confirmDelete": "Supprimer cet actif ?",
   "assets.empty": "Aucun actif pour le moment.",
+  "assets.emptyBody":
+    "Ajoutez des actifs à la main ou importez-les depuis un CSV ou Excel, puis créez une analyse pour les surveiller.",
   "assets.addFirst": "Ajoutez votre premier actif",
   "assets.orImport": "ou importez un fichier CSV/Excel ci-dessous.",
   "assets.col.ip": "IP",
@@ -408,6 +410,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "vlans.deleted": "VLAN supprimé",
   "vlans.confirmDelete": "Supprimer ce VLAN ?",
   "vlans.empty": "Aucun VLAN pour le moment.",
+  "vlans.emptyBody":
+    "Ajoutez vos VLAN réseau, puis des plages IP et des actifs pour que les analyses sachent où chercher.",
   "vlans.addFirst": "Ajoutez votre premier VLAN",
   "vlans.bulkImport": "Import en masse",
   "vlans.bulkImportHint": 'CSV ou .xlsx avec une colonne "name". Optionnel : tag, description.',
@@ -706,6 +710,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "scans.confirmDelete": "Supprimer ce profil d'analyse ?",
   "scans.queued": "Analyse mise en file pour {name}",
   "scans.empty": "Aucun profil d'analyse pour le moment.",
+  "scans.emptyBody":
+    "Créez un profil d'analyse : choisissez des cibles dans votre inventaire et définissez une planification, et PortWiz surveille les changements.",
   "scans.createFirst": "Créez votre première analyse",
   "scans.col.name": "Nom",
   "scans.col.targets": "Cibles",

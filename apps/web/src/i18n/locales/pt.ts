@@ -348,6 +348,8 @@ export const pt: Partial<Record<TKey, string>> = {
   "assets.deleted": "Ativo excluído",
   "assets.confirmDelete": "Excluir este ativo?",
   "assets.empty": "Ainda sem ativos.",
+  "assets.emptyBody":
+    "Adicione ativos manualmente ou importe-os de CSV ou Excel e crie uma varredura para monitorá-los.",
   "assets.addFirst": "Adicione seu primeiro ativo",
   "assets.orImport": "ou importe um arquivo CSV/Excel abaixo.",
   "assets.col.ip": "IP",
@@ -408,6 +410,8 @@ export const pt: Partial<Record<TKey, string>> = {
   "vlans.deleted": "VLAN excluída",
   "vlans.confirmDelete": "Excluir esta VLAN?",
   "vlans.empty": "Ainda sem VLANs.",
+  "vlans.emptyBody":
+    "Adicione suas VLANs de rede e depois faixas de IP e ativos para que as varreduras saibam onde procurar.",
   "vlans.addFirst": "Adicione sua primeira VLAN",
   "vlans.bulkImport": "Importação em massa",
   "vlans.bulkImportHint": 'CSV ou .xlsx com uma coluna "name". Opcional: tag, description.',
@@ -706,6 +710,8 @@ export const pt: Partial<Record<TKey, string>> = {
   "scans.confirmDelete": "Excluir este perfil de varredura?",
   "scans.queued": "Varredura enfileirada para {name}",
   "scans.empty": "Ainda sem perfis de varredura.",
+  "scans.emptyBody":
+    "Crie um perfil de varredura: escolha alvos do inventário e defina um agendamento, e o PortWiz monitora mudanças.",
   "scans.createFirst": "Crie sua primeira varredura",
   "scans.col.name": "Nome",
   "scans.col.targets": "Alvos",

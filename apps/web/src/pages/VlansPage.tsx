@@ -19,6 +19,7 @@ import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
+import EmptyState from "../components/EmptyState";
 import FormField from "../components/FormField";
 import InfoCallout from "../components/InfoCallout";
 import Modal from "../components/Modal";
@@ -354,6 +355,15 @@ export default function VlansPage() {
         </section>
       )}
 
+      {!loading && vlans.length === 0 ? (
+        <EmptyState
+          icon="🌐"
+          title={t("vlans.empty")}
+          body={t("vlans.emptyBody")}
+          action={canWrite && <Button onClick={openAddVlan}>{t("vlans.add")}</Button>}
+        />
+      ) : (
+        <>
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full text-left text-sm">
           <TableHead
@@ -369,23 +379,6 @@ export default function VlansPage() {
               <tr>
                 <td className="px-4 py-3 text-slate-500" colSpan={4}>
                   {t("common.loading")}
-                </td>
-              </tr>
-            ) : vlans.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
-                  {t("vlans.empty")}
-                  {canWrite && (
-                    <>
-                      {" "}
-                      <button
-                        onClick={openAddVlan}
-                        className="font-medium text-emerald-400 hover:text-emerald-300"
-                      >
-                        {t("vlans.addFirst")}
-                      </button>
-                    </>
-                  )}
                 </td>
               </tr>
             ) : vlanRows.length === 0 ? (
@@ -424,6 +417,8 @@ export default function VlansPage() {
         pageSize={vlansPage.pageSize}
         onPageSize={vlansPage.setPageSize}
       />
+        </>
+      )}
 
       <div className="flex items-start justify-between gap-3 pt-2">
         <div>

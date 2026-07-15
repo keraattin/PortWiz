@@ -346,6 +346,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "assets.deleted": "Varlık silindi",
   "assets.confirmDelete": "Bu varlık silinsin mi?",
   "assets.empty": "Henüz varlık yok.",
+  "assets.emptyBody":
+    "Varlıklarını elle ekle ya da CSV/Excel'den toplu içe aktar, sonra izlemek için bir tarama oluştur.",
   "assets.addFirst": "İlk varlığını ekle",
   "assets.orImport": "veya aşağıdan bir CSV/Excel dosyası içe aktar.",
   "assets.col.ip": "IP",
@@ -406,6 +408,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "vlans.deleted": "VLAN silindi",
   "vlans.confirmDelete": "Bu VLAN silinsin mi?",
   "vlans.empty": "Henüz VLAN yok.",
+  "vlans.emptyBody":
+    "Ağ VLAN'larını ekle, sonra taramaların nereye bakacağını bilmesi için onlara IP aralıkları ve varlıklar ekle.",
   "vlans.addFirst": "İlk VLAN'ını ekle",
   "vlans.bulkImport": "Toplu içe aktarma",
   "vlans.bulkImportHint": '"name" sütunu olan CSV veya .xlsx. İsteğe bağlı: tag, description.',
@@ -702,6 +706,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "scans.confirmDelete": "Bu tarama profili silinsin mi?",
   "scans.queued": "{name} için tarama kuyruğa alındı",
   "scans.empty": "Henüz tarama profili yok.",
+  "scans.emptyBody":
+    "Bir tarama profili oluştur: hedefleri envanterinden seç ve bir zamanlama belirle; PortWiz onları değişikliklere karşı izlesin.",
   "scans.createFirst": "İlk taramanı oluştur",
   "scans.col.name": "Ad",
   "scans.col.targets": "Hedefler",
