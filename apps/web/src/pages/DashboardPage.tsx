@@ -1,14 +1,19 @@
 import { type ReactNode, Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  type ChangeEvent,
   type DashboardCharts as Charts,
   type DashboardStats,
+  type ScanRun,
   type UpdateStatus,
   applyUpdate,
   fetchCharts,
   fetchHealth,
   fetchStats,
   fetchUpdateStatus,
+  listChanges,
+  listScanProfiles,
+  listScanRuns,
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useErrorMessage } from "../i18n/useErrorMessage";
@@ -49,10 +54,22 @@ interface Step {
   note?: TKey;
 }
 
+function QuickAction({ to, label }: { to: string; label: string }) {
+  return (
+    <Link
+      to={to}
+      className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"
+    >
+      {label}
+    </Link>
+  );
+}
+
 export default function DashboardPage() {
   const { t, lang } = useI18n();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const canWrite = user?.role === "admin" || user?.role === "operator";
   const errorMessage = useErrorMessage();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [charts, setCharts] = useState<Charts | null>(null);
@@ -60,6 +77,9 @@ export default function DashboardPage() {
   const [update, setUpdate] = useState<UpdateStatus | null>(null);
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [recentChanges, setRecentChanges] = useState<ChangeEvent[]>([]);
+  const [recentRuns, setRecentRuns] = useState<ScanRun[]>([]);
+  const [profileNames, setProfileNames] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   function startUpdate() {
@@ -81,6 +101,22 @@ export default function DashboardPage() {
     fetchCharts()
       .then(setCharts)
       .catch((e) => setError(errorMessage(e)));
+    // Recent-activity widgets are best-effort; never block the dashboard on them.
+    listChanges()
+      .then((cs) =>
+        setRecentChanges(
+          [...cs].sort((a, b) => b.detected_at.localeCompare(a.detected_at)).slice(0, 5),
+        ),
+      )
+      .catch(() => {});
+    listScanRuns()
+      .then((rs) =>
+        setRecentRuns([...rs].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 5)),
+      )
+      .catch(() => {});
+    listScanProfiles()
+      .then((ps) => setProfileNames(Object.fromEntries(ps.map((p) => [p.id, p.name]))))
+      .catch(() => {});
     if (isAdmin) {
       fetchUpdateStatus()
         .then(setUpdate)
@@ -182,6 +218,14 @@ export default function DashboardPage() {
         </span>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {canWrite && <QuickAction to="/scans" label={`+ ${t("nav.scans")}`} />}
+        {canWrite && <QuickAction to="/assets" label={`+ ${t("nav.assets")}`} />}
+        {isAdmin && <QuickAction to="/agents/new" label={`+ ${t("agents.enroll")}`} />}
+        <QuickAction to="/changes" label={t("nav.changes")} />
+        <QuickAction to="/compliance" label={t("nav.compliance")} />
+      </div>
+
       {error && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-red-900 bg-red-950/40 p-4 text-sm text-red-300">
           <span>{error}</span>
@@ -259,6 +303,71 @@ export default function DashboardPage() {
             ))}
           </div>
         </Link>
+      )}
+
+      {stats && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <section className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-medium text-slate-300">{t("dashboard.recentChanges")}</h2>
+              <Link to="/changes" className="text-xs text-sky-400 hover:text-sky-300">
+                {t("dashboard.viewAll")}
+              </Link>
+            </div>
+            {recentChanges.length === 0 ? (
+              <p className="text-sm text-slate-500">{t("dashboard.noRecentChanges")}</p>
+            ) : (
+              <ul className="space-y-2">
+                {recentChanges.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-sm">
+                      <span className="font-mono text-slate-200">
+                        {c.ip}:{c.port}
+                      </span>{" "}
+                      <span className="text-slate-500">
+                        {t(`changeType.${c.change_type}` as TKey)}
+                      </span>
+                    </span>
+                    <span
+                      className="shrink-0 text-xs text-slate-500"
+                      title={absoluteTime(c.detected_at)}
+                    >
+                      {timeAgo(c.detected_at, lang)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-medium text-slate-300">{t("dashboard.recentScans")}</h2>
+              <Link to="/scans" className="text-xs text-sky-400 hover:text-sky-300">
+                {t("dashboard.viewAll")}
+              </Link>
+            </div>
+            {recentRuns.length === 0 ? (
+              <p className="text-sm text-slate-500">{t("dashboard.noRecentScans")}</p>
+            ) : (
+              <ul className="space-y-2">
+                {recentRuns.map((r) => (
+                  <li key={r.id} className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-sm text-slate-300">
+                      {r.scan_profile_id
+                        ? (profileNames[r.scan_profile_id] ?? t("scans.deletedProfile"))
+                        : t("scans.adhoc")}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2 text-xs text-slate-500">
+                      <span>{t(`runStatus.${r.status}` as TKey)}</span>
+                      <span title={absoluteTime(r.created_at)}>{timeAgo(r.created_at, lang)}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
       )}
 
       {charts && (
