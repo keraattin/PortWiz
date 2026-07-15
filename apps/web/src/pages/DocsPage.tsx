@@ -1,15 +1,22 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import SearchInput from "../components/SearchInput";
-import { GUIDES } from "../docs/guides";
+import { GUIDES, sectionAnchor } from "../docs/guides";
 import { useI18n } from "../i18n/I18nContext";
 
 export default function DocsPage() {
   const { t } = useI18n();
   const { guideId } = useParams();
+  const { hash } = useLocation();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+
+  // Scroll to the anchored section on a table-of-contents click or a deep link.
+  useEffect(() => {
+    if (!hash) return;
+    document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [hash, guideId]);
 
   // A specific guide when the URL names one; otherwise the overview grid.
   const active = guideId ? GUIDES.find((g) => g.id === guideId) : null;
@@ -56,6 +63,24 @@ export default function DocsPage() {
           {active && Body ? (
             <>
               <h2 className="mb-5 text-xl font-semibold text-slate-100">{t(active.titleKey)}</h2>
+              {active.toc && active.toc.length > 1 && (
+                <nav className="mb-5 rounded-lg border border-slate-800 bg-slate-950 p-3">
+                  <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
+                    {t("docs.contents")}
+                  </p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {active.toc.map((h) => (
+                      <a
+                        key={h}
+                        href={`#${sectionAnchor(h)}`}
+                        className="text-xs text-sky-400 hover:text-sky-300"
+                      >
+                        {t(h)}
+                      </a>
+                    ))}
+                  </div>
+                </nav>
+              )}
               <Body />
             </>
           ) : (

@@ -8,19 +8,28 @@ import { useI18n } from "../i18n/I18nContext";
 
 // A Docs guide: shown in the sidebar list and rendered as a page body. Add a new
 // guide by appending to GUIDES and adding its i18n keys; the page and nav pick
-// it up automatically.
+// it up automatically. `toc` lists the section heading keys, in order, for the
+// in-guide table of contents.
 export interface Guide {
   id: string;
   titleKey: TKey;
   summaryKey: TKey;
   icon: string;
   Body: () => ReactNode;
+  toc?: TKey[];
+}
+
+// A stable anchor for a section heading key, e.g. "docs.agents.coverage.h" ->
+// "coverage". Shared by the section element id and the table-of-contents links.
+export function sectionAnchor(headingKey: TKey): string {
+  const parts = headingKey.split(".");
+  return parts[parts.length - 2] ?? headingKey;
 }
 
 function Section({ heading, children }: { heading: TKey; children: ReactNode }) {
   const { t } = useI18n();
   return (
-    <section className="space-y-2">
+    <section id={sectionAnchor(heading)} className="scroll-mt-4 space-y-2">
       <h3 className="text-base font-semibold text-slate-100">{t(heading)}</h3>
       <div className="space-y-2 text-sm leading-relaxed text-slate-300">{children}</div>
     </section>
@@ -506,6 +515,7 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.gs.summary",
     icon: "🚀",
     Body: GettingStartedGuide,
+    toc: ["docs.gs.what.h", "docs.gs.steps.h", "docs.gs.roles.h", "docs.gs.tip.h"],
   },
   {
     id: "scanning",
@@ -513,6 +523,7 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.scan.summary",
     icon: "🔎",
     Body: ScanningGuide,
+    toc: ["docs.scan.inv.h", "docs.scan.prof.h", "docs.scan.sched.h", "docs.scan.seg.h"],
   },
   {
     id: "agents",
@@ -520,6 +531,12 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.agents.summary",
     icon: "🛰️",
     Body: AgentsGuide,
+    toc: [
+      "docs.agents.what.h",
+      "docs.agents.deploy.h",
+      "docs.agents.health.h",
+      "docs.agents.coverage.h",
+    ],
   },
   {
     id: "evidence",
@@ -527,6 +544,7 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.ev.summary",
     icon: "📦",
     Body: EvidenceGuide,
+    toc: ["docs.ev.changes.h", "docs.ev.tasks.h", "docs.ev.export.h", "docs.ev.audit.h"],
   },
   {
     id: "compliance",
@@ -534,6 +552,12 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.comp.summary",
     icon: "✅",
     Body: ComplianceGuide,
+    toc: [
+      "docs.comp.cadence.h",
+      "docs.comp.asv.h",
+      "docs.comp.integr.h",
+      "docs.comp.updates.h",
+    ],
   },
   {
     id: "cve",
@@ -541,6 +565,7 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.cve.summary",
     icon: "🛡️",
     Body: CveGuide,
+    toc: ["docs.cve.overview.h", "docs.cve.online.h", "docs.cve.offline.h", "docs.cve.checks.h"],
   },
   {
     id: "integrations",
@@ -548,6 +573,13 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.int.summary",
     icon: "🔌",
     Body: IntegrationsGuide,
+    toc: [
+      "docs.int.where.h",
+      "docs.int.jira.h",
+      "docs.int.email.h",
+      "docs.int.netbox.h",
+      "docs.int.ai.h",
+    ],
   },
   {
     id: "roles",
@@ -555,6 +587,7 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.roles.summary",
     icon: "🔑",
     Body: RolesGuide,
+    toc: ["docs.roles.three.h", "docs.roles.sod.h"],
   },
   {
     id: "troubleshooting",
@@ -562,5 +595,12 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.ts.summary",
     icon: "🛠️",
     Body: TroubleshootingGuide,
+    toc: [
+      "docs.ts.scan.h",
+      "docs.ts.agent.h",
+      "docs.ts.cve.h",
+      "docs.ts.integr.h",
+      "docs.ts.update.h",
+    ],
   },
 ];

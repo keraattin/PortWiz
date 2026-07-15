@@ -23,6 +23,7 @@ export const es: Partial<Record<TKey, string>> = {
   "docs.subtitle": "Guías para instalar y operar PortWiz.",
   "docs.openFull": "Abrir guía completa",
   "docs.seeAlso": "Véase también",
+  "docs.contents": "Contenido",
   "docs.flow.inventory": "Inventario",
   "docs.flow.scan": "Escaneo",
   "docs.flow.detect": "Detectar cambios",

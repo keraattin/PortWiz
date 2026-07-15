@@ -23,6 +23,7 @@ export const en = {
   "docs.subtitle": "Guides for setting up and running PortWiz.",
   "docs.openFull": "Open full guide",
   "docs.seeAlso": "See also",
+  "docs.contents": "Contents",
   "docs.flow.inventory": "Inventory",
   "docs.flow.scan": "Scan",
   "docs.flow.detect": "Detect changes",
