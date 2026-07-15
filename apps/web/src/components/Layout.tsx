@@ -113,6 +113,12 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:border focus:border-slate-700 focus:bg-slate-800 focus:px-3 focus:py-2 focus:text-sm focus:text-slate-100"
+      >
+        {t("chrome.skipToContent")}
+      </a>
       <aside
         className={`flex shrink-0 flex-col border-r border-slate-800 bg-slate-900 transition-[width] duration-200 ${
           collapsed ? "w-16" : "w-60"
@@ -219,7 +225,7 @@ export default function Layout() {
             {t("chrome.signOut")}
           </button>
         </header>
-        <main className="flex-1 px-8 py-8">
+        <main id="main-content" className="flex-1 px-8 py-8">
           <Outlet />
         </main>
       </div>

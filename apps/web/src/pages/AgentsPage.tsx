@@ -240,6 +240,14 @@ export default function AgentsPage() {
                       <tr
                         key={a.id}
                         onClick={() => navigate(`/agents/${a.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            navigate(`/agents/${a.id}`);
+                          }
+                        }}
+                        tabIndex={0}
+                        aria-label={a.name}
                         className="cursor-pointer bg-slate-950 hover:bg-slate-900"
                       >
                         <td className="px-4 py-2 text-slate-100">{a.name}</td>

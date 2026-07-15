@@ -179,6 +179,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "chrome.switchToDark": "Koyu temaya geç",
   "chrome.language": "Dil",
   "chrome.toggleMenu": "Menüyü aç/kapat",
+  "chrome.skipToContent": "İçeriğe atla",
 
   // Common actions / labels
   "common.add": "Ekle",

@@ -179,6 +179,7 @@ export const en = {
   "chrome.switchToDark": "Switch to dark mode",
   "chrome.language": "Language",
   "chrome.toggleMenu": "Toggle menu",
+  "chrome.skipToContent": "Skip to content",
 
   // Common actions / labels
   "common.add": "Add",

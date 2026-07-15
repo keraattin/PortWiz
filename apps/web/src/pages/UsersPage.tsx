@@ -208,6 +208,18 @@ export default function UsersPage() {
                 <tr
                   key={u.id}
                   onClick={() => openEdit(u)}
+                  onKeyDown={
+                    isAdmin
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openEdit(u);
+                          }
+                        }
+                      : undefined
+                  }
+                  tabIndex={isAdmin ? 0 : undefined}
+                  aria-label={isAdmin ? u.email : undefined}
                   className={`bg-slate-950 ${isAdmin ? "cursor-pointer hover:bg-slate-900" : ""}`}
                 >
                   <td className="px-4 py-2 text-slate-100">
