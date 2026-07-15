@@ -1,21 +1,35 @@
+import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import { useAuth } from "./auth/AuthContext";
-import LoginPage from "./pages/LoginPage";
-import DashboardPage from "./pages/DashboardPage";
-import AssetsPage from "./pages/AssetsPage";
-import VlansPage from "./pages/VlansPage";
-import ScansPage from "./pages/ScansPage";
-import ChangesPage from "./pages/ChangesPage";
-import CVEPage from "./pages/CVEPage";
-import CompliancePage from "./pages/CompliancePage";
-import TasksPage from "./pages/TasksPage";
-import SettingsPage from "./pages/SettingsPage";
-import AgentsPage from "./pages/AgentsPage";
-import AgentEnrollPage from "./pages/AgentEnrollPage";
-import AgentDetailPage from "./pages/AgentDetailPage";
-import UsersPage from "./pages/UsersPage";
-import DocsPage from "./pages/DocsPage";
+import { useI18n } from "./i18n/I18nContext";
+
+// Route components are code-split so the initial bundle stays small: each page
+// (and its heavy imports) loads only when first visited.
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const AssetsPage = lazy(() => import("./pages/AssetsPage"));
+const VlansPage = lazy(() => import("./pages/VlansPage"));
+const ScansPage = lazy(() => import("./pages/ScansPage"));
+const ChangesPage = lazy(() => import("./pages/ChangesPage"));
+const CVEPage = lazy(() => import("./pages/CVEPage"));
+const CompliancePage = lazy(() => import("./pages/CompliancePage"));
+const TasksPage = lazy(() => import("./pages/TasksPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const AgentsPage = lazy(() => import("./pages/AgentsPage"));
+const AgentEnrollPage = lazy(() => import("./pages/AgentEnrollPage"));
+const AgentDetailPage = lazy(() => import("./pages/AgentDetailPage"));
+const UsersPage = lazy(() => import("./pages/UsersPage"));
+const DocsPage = lazy(() => import("./pages/DocsPage"));
+
+function PageLoader() {
+  const { t } = useI18n();
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center text-sm text-slate-500">
+      {t("common.loading")}
+    </div>
+  );
+}
 
 function ProtectedLayout() {
   const { token, loading } = useAuth();
@@ -34,27 +48,29 @@ function ProtectedLayout() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route element={<ProtectedLayout />}>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/assets" element={<AssetsPage />} />
-        <Route path="/vlans" element={<VlansPage />} />
-        <Route path="/scans" element={<ScansPage />} />
-        <Route path="/agents" element={<AgentsPage />} />
-        <Route path="/agents/new" element={<AgentEnrollPage />} />
-        <Route path="/agents/:id" element={<AgentDetailPage />} />
-        <Route path="/changes" element={<ChangesPage />} />
-        <Route path="/tasks" element={<TasksPage />} />
-        <Route path="/cve" element={<CVEPage />} />
-        <Route path="/compliance" element={<CompliancePage />} />
-        <Route path="/users" element={<UsersPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/docs" element={<DocsPage />} />
-        <Route path="/docs/:guideId" element={<DocsPage />} />
-        <Route path="/help" element={<Navigate to="/docs" replace />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<ProtectedLayout />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/assets" element={<AssetsPage />} />
+          <Route path="/vlans" element={<VlansPage />} />
+          <Route path="/scans" element={<ScansPage />} />
+          <Route path="/agents" element={<AgentsPage />} />
+          <Route path="/agents/new" element={<AgentEnrollPage />} />
+          <Route path="/agents/:id" element={<AgentDetailPage />} />
+          <Route path="/changes" element={<ChangesPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/cve" element={<CVEPage />} />
+          <Route path="/compliance" element={<CompliancePage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/docs/:guideId" element={<DocsPage />} />
+          <Route path="/help" element={<Navigate to="/docs" replace />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }

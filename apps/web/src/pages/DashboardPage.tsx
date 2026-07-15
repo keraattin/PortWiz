@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   type DashboardCharts as Charts,
@@ -12,7 +12,9 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useErrorMessage } from "../i18n/useErrorMessage";
-import DashboardCharts from "../components/DashboardCharts";
+// The charts pull in a charting library; load it after the dashboard shell so
+// the metrics and status paint immediately.
+const DashboardCharts = lazy(() => import("../components/DashboardCharts"));
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 import { absoluteTime, timeAgo } from "../i18n/relativeTime";
@@ -259,7 +261,11 @@ export default function DashboardPage() {
         </Link>
       )}
 
-      {charts && <DashboardCharts data={charts} />}
+      {charts && (
+        <Suspense fallback={null}>
+          <DashboardCharts data={charts} />
+        </Suspense>
+      )}
 
       <section data-tour="getting-started" className="space-y-3">
         <h2 className="text-lg font-semibold text-slate-200">{t("dashboard.gettingStarted")}</h2>
