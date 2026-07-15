@@ -134,14 +134,18 @@ export default function CVEPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHeader title={t("cve.title")} subtitle={t("cve.subtitle")} docsGuide="cve" />
-        {canWrite && (
-          <Button onClick={() => void onRecheck()} disabled={rechecking || !configured}>
-            {rechecking ? t("cve.rechecking") : t("cve.recheck")}
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title={t("cve.title")}
+        subtitle={t("cve.subtitle")}
+        docsGuide="cve"
+        actions={
+          canWrite && (
+            <Button onClick={() => void onRecheck()} disabled={rechecking || !configured}>
+              {rechecking ? t("cve.rechecking") : t("cve.recheck")}
+            </Button>
+          )
+        }
+      />
 
       {!configured && (
         <p className="rounded-xl border border-amber-800 bg-amber-950/40 p-4 text-sm text-amber-300">

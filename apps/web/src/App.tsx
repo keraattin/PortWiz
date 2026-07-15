@@ -12,7 +12,7 @@ const AssetsPage = lazy(() => import("./pages/AssetsPage"));
 const VlansPage = lazy(() => import("./pages/VlansPage"));
 const ScansPage = lazy(() => import("./pages/ScansPage"));
 const ChangesPage = lazy(() => import("./pages/ChangesPage"));
-const CVEPage = lazy(() => import("./pages/CVEPage"));
+const CVEPage = lazy(() => import("./pages/CvePage"));
 const CompliancePage = lazy(() => import("./pages/CompliancePage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
