@@ -22,6 +22,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "docs.title": "Documentation",
   "docs.subtitle": "Guides pour installer et exploiter PortWiz.",
   "docs.openFull": "Ouvrir le guide complet",
+  "docs.seeAlso": "Voir aussi",
   "docs.flow.inventory": "Inventaire",
   "docs.flow.scan": "Analyse",
   "docs.flow.detect": "Détecter les changements",
@@ -29,6 +30,62 @@ export const fr: Partial<Record<TKey, string>> = {
   "docs.flow.evidence": "Preuve",
   "docs.arch.control": "Plan de contrôle",
   "docs.arch.agent": "Agent",
+  "docs.life.profile": "Profil",
+  "docs.life.agent": "L'agent récupère",
+  "docs.life.result": "Résultat ingéré",
+  "docs.pkg.scan": "Rapport d'analyse",
+  "docs.pkg.diff": "Diff du changement",
+  "docs.pkg.task": "Tâche & approbation",
+  "docs.pkg.audit": "Extrait du journal d'audit",
+  "docs.pkg.out": "JSON + PDF signés",
+  "docs.hash.event": "Événement",
+  "docs.hash.note":
+    "Chaque événement porte le hachage de l'événement précédent ; modifier un enregistrement casse la chaîne et est détecté.",
+  "docs.timeline.start": "Début de l'intervalle",
+  "docs.timeline.scans": "Analyses",
+  "docs.timeline.due": "Échéance",
+  "docs.int.title": "Intégrations",
+  "docs.int.summary": "Connectez Jira, l'e-mail, NetBox et l'IA.",
+  "docs.int.where.h": "Où configurer",
+  "docs.int.where.p":
+    "Toutes les intégrations sont dans les Paramètres, chacune sur son onglet avec un bouton Tester pour confirmer la connexion avant d'enregistrer. Rien n'est envoyé tant qu'une connexion n'est pas configurée.",
+  "docs.int.jira.h": "Jira",
+  "docs.int.jira.p":
+    "Jira Cloud ou Server/Data Center. Définissez l'URL, l'authentification, le projet, le type de ticket et le destinataire. Un changement confirmé ouvre automatiquement un ticket et garde son statut synchronisé. La correspondance gravité-priorité et les champs personnalisés sont pris en charge.",
+  "docs.int.email.h": "E-mail (SMTP)",
+  "docs.int.email.p":
+    "Pointez vers votre serveur de messagerie et ajoutez des destinataires ; une notification est envoyée à chaque changement confirmé. Aucun e-mail n'est envoyé tant que des destinataires ne sont pas configurés.",
+  "docs.int.netbox.h": "NetBox (IPAM)",
+  "docs.int.netbox.p":
+    "Importez les VLAN et les hôtes de NetBox dans votre inventaire, et renvoyez les hôtes découverts lors des analyses. Une synchronisation bidirectionnelle aligne PortWiz et votre source de vérité.",
+  "docs.int.ai.h": "Fournisseur d'IA",
+  "docs.int.ai.p":
+    "Un modèle Ollama local par défaut, ou Claude ou tout fournisseur compatible OpenAI. L'IA affine les empreintes de service faibles et rédige des résumés de CVE en langage clair ; avec un modèle local, les données ne quittent jamais votre réseau.",
+  "docs.roles.title": "Rôles & permissions",
+  "docs.roles.summary": "Qui peut faire quoi.",
+  "docs.roles.three.h": "Les trois rôles",
+  "docs.roles.three.p":
+    "Admin a un accès complet, y compris utilisateurs et paramètres. Operator peut créer et lancer des analyses et gérer l'inventaire et les changements, mais pas les utilisateurs. Auditor est en lecture seule, y compris le journal d'audit.",
+  "docs.roles.sod.h": "Séparation des tâches",
+  "docs.roles.sod.p":
+    "Les auditeurs peuvent lire le journal d'audit, pas les opérateurs, ce qui répond aux exigences de séparation des tâches des cadres de conformité.",
+  "docs.ts.title": "Dépannage",
+  "docs.ts.summary": "Problèmes courants et leurs solutions.",
+  "docs.ts.scan.h": "Une analyse ne se lance pas",
+  "docs.ts.scan.p":
+    "Une exécution en attente a besoin d'un agent en ligne dans le segment du profil. Vérifiez le panneau de couverture des agents et assurez-vous que le profil a une planification ou que vous l'avez déclenché manuellement.",
+  "docs.ts.agent.h": "Un agent apparaît hors ligne",
+  "docs.ts.agent.p":
+    "L'agent n'a pas envoyé de battement dans sa fenêtre en ligne. Vérifiez que le conteneur de l'agent tourne et peut joindre l'API ; faites tourner le jeton et redéployez si nécessaire.",
+  "docs.ts.cve.h": "Aucun résultat CVE n'apparaît",
+  "docs.ts.cve.p":
+    "Activez l'enrichissement CVE dans les Paramètres et lancez une revérification. Les installations air-gapped nécessitent un flux NVD importé. Les résultats n'apparaissent que pour les services qui indiquent une version.",
+  "docs.ts.integr.h": "L'e-mail ou Jira ne fonctionne pas",
+  "docs.ts.integr.p":
+    "Utilisez le bouton Tester sur l'onglet Paramètres de l'intégration ; il indique l'erreur de connexion exacte pour corriger l'URL, les identifiants ou les destinataires.",
+  "docs.ts.update.h": "La bannière de mise à jour apparaît en développement",
+  "docs.ts.update.p":
+    "Les builds de développement indiquent une version de repli, donc la vérification peut annoncer une mise à jour disponible. Les images de production portent la vraie version. C'est attendu, pas une erreur.",
   "docs.gs.title": "Prise en main",
   "docs.gs.summary": "Ce que fait PortWiz et vos premières étapes.",
   "docs.gs.what.h": "Qu'est-ce que PortWiz ?",
@@ -136,6 +193,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "common.close": "Fermer",
   "common.edit": "Modifier",
   "common.howTo": "Comment faire",
+  "common.copy": "Copier",
+  "common.copied": "Copié",
   "common.loading": "Chargement…",
   "common.noData": "Aucune donnée",
   "common.error": "Une erreur est survenue",

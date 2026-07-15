@@ -1,3 +1,4 @@
+import CopyCode from "./docs/CopyCode";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -51,9 +52,7 @@ export default function CveHowToBody() {
 
       <div>
         <p className="mb-1 text-xs text-slate-400">{t("cve.howto.codeCap")}</p>
-        <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs text-slate-300">
-          <code>{FEED_CMD}</code>
-        </pre>
+        <CopyCode code={FEED_CMD} />
       </div>
 
       <div className="rounded-lg border border-slate-800 bg-slate-900 p-3 text-xs leading-relaxed text-slate-400">

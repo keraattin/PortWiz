@@ -22,6 +22,7 @@ export const en = {
   "docs.title": "Documentation",
   "docs.subtitle": "Guides for setting up and running PortWiz.",
   "docs.openFull": "Open full guide",
+  "docs.seeAlso": "See also",
   "docs.flow.inventory": "Inventory",
   "docs.flow.scan": "Scan",
   "docs.flow.detect": "Detect changes",
@@ -29,6 +30,62 @@ export const en = {
   "docs.flow.evidence": "Evidence",
   "docs.arch.control": "Control plane",
   "docs.arch.agent": "Agent",
+  "docs.life.profile": "Profile",
+  "docs.life.agent": "Agent claims",
+  "docs.life.result": "Result ingested",
+  "docs.pkg.scan": "Scan report",
+  "docs.pkg.diff": "Change diff",
+  "docs.pkg.task": "Task & approval",
+  "docs.pkg.audit": "Audit-log slice",
+  "docs.pkg.out": "Signed JSON + PDF",
+  "docs.hash.event": "Event",
+  "docs.hash.note":
+    "Each event carries the previous event's hash, so altering any record breaks the chain and is detected.",
+  "docs.timeline.start": "Interval start",
+  "docs.timeline.scans": "Scans",
+  "docs.timeline.due": "Due",
+  "docs.int.title": "Integrations",
+  "docs.int.summary": "Connect Jira, email, NetBox and AI.",
+  "docs.int.where.h": "Where to configure",
+  "docs.int.where.p":
+    "All integrations live in Settings, each on its own tab with a Test button so you can confirm the connection before saving. Nothing is sent until a connection is configured.",
+  "docs.int.jira.h": "Jira",
+  "docs.int.jira.p":
+    "Jira Cloud or Server/Data Center. Set the URL, authentication, project, issue type and assignee. A confirmed change opens an issue automatically and keeps its status in sync. Optional severity-to-priority mapping and custom fields are supported.",
+  "docs.int.email.h": "Email (SMTP)",
+  "docs.int.email.p":
+    "Point at your mail server and add recipients; a notification is sent on each confirmed change. No email is sent until recipients are configured.",
+  "docs.int.netbox.h": "NetBox (IPAM)",
+  "docs.int.netbox.p":
+    "Pull VLANs and hosts from NetBox into your inventory, and push scan-discovered hosts back. A two-way sync keeps PortWiz and your source of truth aligned.",
+  "docs.int.ai.h": "AI provider",
+  "docs.int.ai.p":
+    "A local Ollama model by default, or Claude or any OpenAI-compatible provider. AI refines weak service fingerprints and writes plain-language CVE briefs; with a local model, data never leaves your network.",
+  "docs.roles.title": "Roles & permissions",
+  "docs.roles.summary": "Who can do what.",
+  "docs.roles.three.h": "The three roles",
+  "docs.roles.three.p":
+    "Admin has full access, including users and settings. Operator can create and run scans and manage inventory and changes, but not users. Auditor is read-only, including the audit log.",
+  "docs.roles.sod.h": "Separation of duties",
+  "docs.roles.sod.p":
+    "Auditors can read the audit log while operators cannot, which supports separation-of-duties requirements in compliance frameworks.",
+  "docs.ts.title": "Troubleshooting",
+  "docs.ts.summary": "Common issues and how to fix them.",
+  "docs.ts.scan.h": "A scan is not running",
+  "docs.ts.scan.p":
+    "A pending run needs an online agent in the profile's segment. Check the Agents coverage panel, and make sure the profile has a schedule or that you triggered it manually.",
+  "docs.ts.agent.h": "An agent shows offline",
+  "docs.ts.agent.p":
+    "The agent has not sent a heartbeat within its online window. Check that the agent container is running and can reach the API; rotate the token and redeploy if needed.",
+  "docs.ts.cve.h": "No CVE findings appear",
+  "docs.ts.cve.p":
+    "Enable CVE enrichment in Settings and run a re-check. Air-gapped installs need an imported NVD feed. Findings only appear for services that report a version.",
+  "docs.ts.integr.h": "Email or Jira is not working",
+  "docs.ts.integr.p":
+    "Use the Test button on the integration's Settings tab; it reports the exact connection error so you can fix the URL, credentials or recipients.",
+  "docs.ts.update.h": "The update banner shows in development",
+  "docs.ts.update.p":
+    "Development builds report a fallback version, so the check may say an update is available. Production images carry the real release version. This is expected, not an error.",
   "docs.gs.title": "Getting started",
   "docs.gs.summary": "What PortWiz does and your first steps.",
   "docs.gs.what.h": "What is PortWiz?",
@@ -134,6 +191,8 @@ export const en = {
   "common.close": "Close",
   "common.edit": "Edit",
   "common.howTo": "How to",
+  "common.copy": "Copy",
+  "common.copied": "Copied",
   "common.loading": "Loading…",
   "common.noData": "No data yet",
   "common.error": "Something went wrong",

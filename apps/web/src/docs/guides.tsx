@@ -1,5 +1,8 @@
 import { Fragment, type ReactNode } from "react";
 import CveHowToBody from "../components/CveHowToBody";
+import RoleMatrix from "../components/RoleMatrix";
+import Callout from "../components/docs/Callout";
+import SeeAlso from "../components/docs/SeeAlso";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -139,6 +142,94 @@ const CADENCE_LEGEND: { cls: string; label: TKey }[] = [
   { cls: "bg-slate-700 text-slate-400", label: "cadence.never" },
 ];
 
+// Anatomy of an evidence package: the inputs on the left combine into one signed
+// bundle on the right.
+function DocPackage() {
+  const { t } = useI18n();
+  const parts: { icon: string; label: TKey }[] = [
+    { icon: "📄", label: "docs.pkg.scan" },
+    { icon: "🔀", label: "docs.pkg.diff" },
+    { icon: "✅", label: "docs.pkg.task" },
+    { icon: "🔗", label: "docs.pkg.audit" },
+  ];
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:flex-row sm:justify-center">
+      <div className="grid gap-2">
+        {parts.map((p) => (
+          <div
+            key={p.label}
+            className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300"
+          >
+            <span aria-hidden="true">{p.icon}</span>
+            {t(p.label)}
+          </div>
+        ))}
+      </div>
+      <Arrow />
+      <div className="rounded-lg border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-center text-sm font-medium text-emerald-200">
+        📦 {t("docs.pkg.out")}
+      </div>
+    </div>
+  );
+}
+
+// The hash chain: each event carries the previous event's hash, so any edit
+// breaks the chain and is detectable.
+function DocHashChain() {
+  const { t } = useI18n();
+  const hashes = ["a1b2", "c3d4", "e5f6"];
+  return (
+    <div>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        {hashes.map((h, i) => (
+          <Fragment key={h}>
+            <div className="flex-1 rounded-lg border border-slate-800 bg-slate-950 p-3">
+              <div className="text-xs font-medium text-slate-200">
+                {t("docs.hash.event")} #{i + 1}
+              </div>
+              <div className="mt-1 font-mono text-[11px] text-slate-500">
+                prev_hash: {i === 0 ? "—" : `${hashes[i - 1]}…`}
+              </div>
+              <div className="font-mono text-[11px] text-emerald-400">hash: {h}…</div>
+            </div>
+            {i < hashes.length - 1 && (
+              <span className="self-center text-slate-600" aria-hidden="true">
+                🔗
+              </span>
+            )}
+          </Fragment>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-slate-500">{t("docs.hash.note")}</p>
+    </div>
+  );
+}
+
+// A required-interval timeline: green scan marks along the window, a red due
+// marker at the end.
+function DocTimeline() {
+  const { t } = useI18n();
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+      <div className="relative h-2 rounded-full bg-slate-800">
+        {[10, 40, 70].map((pct) => (
+          <span
+            key={pct}
+            style={{ left: `${pct}%` }}
+            className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500"
+          />
+        ))}
+        <span className="absolute right-0 top-1/2 h-4 w-0.5 -translate-y-1/2 bg-red-500" />
+      </div>
+      <div className="mt-2 flex justify-between text-[11px]">
+        <span className="text-slate-500">{t("docs.timeline.start")}</span>
+        <span className="text-emerald-400">{t("docs.timeline.scans")}</span>
+        <span className="text-red-400">{t("docs.timeline.due")}</span>
+      </div>
+    </div>
+  );
+}
+
 function GettingStartedGuide() {
   return (
     <div className="space-y-6">
@@ -162,8 +253,16 @@ function GettingStartedGuide() {
         <P k="docs.gs.roles.p" />
       </Section>
       <Section heading="docs.gs.tip.h">
-        <P k="docs.gs.tip.p" />
+        <Callout variant="tip">
+          <P k="docs.gs.tip.p" />
+        </Callout>
       </Section>
+      <SeeAlso
+        items={[
+          { id: "scanning", title: "docs.scan.title" },
+          { id: "agents", title: "docs.agents.title" },
+        ]}
+      />
     </div>
   );
 }
@@ -183,6 +282,12 @@ function CveGuide() {
       <Section heading="docs.cve.checks.h">
         <P k="docs.cve.checks.p" />
       </Section>
+      <SeeAlso
+        items={[
+          { id: "scanning", title: "docs.scan.title" },
+          { id: "compliance", title: "docs.comp.title" },
+        ]}
+      />
     </div>
   );
 }
@@ -190,6 +295,15 @@ function CveGuide() {
 function ScanningGuide() {
   return (
     <div className="space-y-6">
+      <DocFlow
+        steps={[
+          { icon: "🗂️", label: "docs.life.profile" },
+          { icon: "🛰️", label: "docs.life.agent" },
+          { icon: "🔎", label: "docs.flow.scan" },
+          { icon: "📥", label: "docs.life.result" },
+          { icon: "🔀", label: "docs.flow.detect" },
+        ]}
+      />
       <Section heading="docs.scan.inv.h">
         <P k="docs.scan.inv.p" />
       </Section>
@@ -210,6 +324,12 @@ function ScanningGuide() {
       <Section heading="docs.scan.seg.h">
         <P k="docs.scan.seg.p" />
       </Section>
+      <SeeAlso
+        items={[
+          { id: "agents", title: "docs.agents.title" },
+          { id: "evidence", title: "docs.ev.title" },
+        ]}
+      />
     </div>
   );
 }
@@ -229,8 +349,16 @@ function AgentsGuide() {
         <DocLegend items={AGENT_STATUS_LEGEND} />
       </Section>
       <Section heading="docs.agents.coverage.h">
-        <P k="docs.agents.coverage.p" />
+        <Callout variant="warning">
+          <P k="docs.agents.coverage.p" />
+        </Callout>
       </Section>
+      <SeeAlso
+        items={[
+          { id: "scanning", title: "docs.scan.title" },
+          { id: "getting-started", title: "docs.gs.title" },
+        ]}
+      />
     </div>
   );
 }
@@ -254,10 +382,18 @@ function EvidenceGuide() {
       </Section>
       <Section heading="docs.ev.export.h">
         <P k="docs.ev.export.p" />
+        <DocPackage />
       </Section>
       <Section heading="docs.ev.audit.h">
         <P k="docs.ev.audit.p" />
+        <DocHashChain />
       </Section>
+      <SeeAlso
+        items={[
+          { id: "compliance", title: "docs.comp.title" },
+          { id: "scanning", title: "docs.scan.title" },
+        ]}
+      />
     </div>
   );
 }
@@ -267,10 +403,13 @@ function ComplianceGuide() {
     <div className="space-y-6">
       <Section heading="docs.comp.cadence.h">
         <P k="docs.comp.cadence.p" />
+        <DocTimeline />
         <DocLegend items={CADENCE_LEGEND} />
       </Section>
       <Section heading="docs.comp.asv.h">
-        <P k="docs.comp.asv.p" />
+        <Callout variant="warning">
+          <P k="docs.comp.asv.p" />
+        </Callout>
       </Section>
       <Section heading="docs.comp.integr.h">
         <P k="docs.comp.integr.p" />
@@ -278,6 +417,84 @@ function ComplianceGuide() {
       <Section heading="docs.comp.updates.h">
         <P k="docs.comp.updates.p" />
       </Section>
+      <SeeAlso
+        items={[
+          { id: "evidence", title: "docs.ev.title" },
+          { id: "cve", title: "docs.cve.title" },
+        ]}
+      />
+    </div>
+  );
+}
+
+function IntegrationsGuide() {
+  return (
+    <div className="space-y-6">
+      <Section heading="docs.int.where.h">
+        <P k="docs.int.where.p" />
+      </Section>
+      <Section heading="docs.int.jira.h">
+        <P k="docs.int.jira.p" />
+      </Section>
+      <Section heading="docs.int.email.h">
+        <P k="docs.int.email.p" />
+      </Section>
+      <Section heading="docs.int.netbox.h">
+        <P k="docs.int.netbox.p" />
+      </Section>
+      <Section heading="docs.int.ai.h">
+        <P k="docs.int.ai.p" />
+      </Section>
+      <SeeAlso
+        items={[
+          { id: "evidence", title: "docs.ev.title" },
+          { id: "cve", title: "docs.cve.title" },
+        ]}
+      />
+    </div>
+  );
+}
+
+function RolesGuide() {
+  return (
+    <div className="space-y-6">
+      <Section heading="docs.roles.three.h">
+        <P k="docs.roles.three.p" />
+        <RoleMatrix />
+      </Section>
+      <Section heading="docs.roles.sod.h">
+        <Callout variant="note">
+          <P k="docs.roles.sod.p" />
+        </Callout>
+      </Section>
+    </div>
+  );
+}
+
+function TroubleshootingGuide() {
+  return (
+    <div className="space-y-6">
+      <Section heading="docs.ts.scan.h">
+        <P k="docs.ts.scan.p" />
+      </Section>
+      <Section heading="docs.ts.agent.h">
+        <P k="docs.ts.agent.p" />
+      </Section>
+      <Section heading="docs.ts.cve.h">
+        <P k="docs.ts.cve.p" />
+      </Section>
+      <Section heading="docs.ts.integr.h">
+        <P k="docs.ts.integr.p" />
+      </Section>
+      <Section heading="docs.ts.update.h">
+        <P k="docs.ts.update.p" />
+      </Section>
+      <SeeAlso
+        items={[
+          { id: "agents", title: "docs.agents.title" },
+          { id: "integrations", title: "docs.int.title" },
+        ]}
+      />
     </div>
   );
 }
@@ -324,5 +541,26 @@ export const GUIDES: Guide[] = [
     summaryKey: "docs.cve.summary",
     icon: "🛡️",
     Body: CveGuide,
+  },
+  {
+    id: "integrations",
+    titleKey: "docs.int.title",
+    summaryKey: "docs.int.summary",
+    icon: "🔌",
+    Body: IntegrationsGuide,
+  },
+  {
+    id: "roles",
+    titleKey: "docs.roles.title",
+    summaryKey: "docs.roles.summary",
+    icon: "🔑",
+    Body: RolesGuide,
+  },
+  {
+    id: "troubleshooting",
+    titleKey: "docs.ts.title",
+    summaryKey: "docs.ts.summary",
+    icon: "🛠️",
+    Body: TroubleshootingGuide,
   },
 ];

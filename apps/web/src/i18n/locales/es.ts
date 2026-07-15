@@ -22,6 +22,7 @@ export const es: Partial<Record<TKey, string>> = {
   "docs.title": "Documentación",
   "docs.subtitle": "Guías para instalar y operar PortWiz.",
   "docs.openFull": "Abrir guía completa",
+  "docs.seeAlso": "Véase también",
   "docs.flow.inventory": "Inventario",
   "docs.flow.scan": "Escaneo",
   "docs.flow.detect": "Detectar cambios",
@@ -29,6 +30,62 @@ export const es: Partial<Record<TKey, string>> = {
   "docs.flow.evidence": "Evidencia",
   "docs.arch.control": "Plano de control",
   "docs.arch.agent": "Agente",
+  "docs.life.profile": "Perfil",
+  "docs.life.agent": "El agente toma",
+  "docs.life.result": "Resultado ingerido",
+  "docs.pkg.scan": "Informe de escaneo",
+  "docs.pkg.diff": "Diff del cambio",
+  "docs.pkg.task": "Tarea & aprobación",
+  "docs.pkg.audit": "Porción del registro de auditoría",
+  "docs.pkg.out": "JSON + PDF firmados",
+  "docs.hash.event": "Evento",
+  "docs.hash.note":
+    "Cada evento lleva el hash del evento anterior, así que alterar cualquier registro rompe la cadena y se detecta.",
+  "docs.timeline.start": "Inicio del intervalo",
+  "docs.timeline.scans": "Escaneos",
+  "docs.timeline.due": "Vencimiento",
+  "docs.int.title": "Integraciones",
+  "docs.int.summary": "Conecta Jira, correo, NetBox e IA.",
+  "docs.int.where.h": "Dónde configurar",
+  "docs.int.where.p":
+    "Todas las integraciones están en Ajustes, cada una en su pestaña con un botón Probar para confirmar la conexión antes de guardar. No se envía nada hasta que una conexión esté configurada.",
+  "docs.int.jira.h": "Jira",
+  "docs.int.jira.p":
+    "Jira Cloud o Server/Data Center. Define la URL, la autenticación, el proyecto, el tipo de incidencia y el asignado. Un cambio confirmado abre una incidencia automáticamente y mantiene su estado sincronizado. Se admiten el mapeo de severidad a prioridad y campos personalizados.",
+  "docs.int.email.h": "Correo (SMTP)",
+  "docs.int.email.p":
+    "Apunta a tu servidor de correo y añade destinatarios; se envía una notificación en cada cambio confirmado. No se envía correo hasta que se configuren destinatarios.",
+  "docs.int.netbox.h": "NetBox (IPAM)",
+  "docs.int.netbox.p":
+    "Trae VLAN y hosts de NetBox a tu inventario, y devuelve los hosts descubiertos en los escaneos. Una sincronización bidireccional mantiene alineados PortWiz y tu fuente de verdad.",
+  "docs.int.ai.h": "Proveedor de IA",
+  "docs.int.ai.p":
+    "Un modelo Ollama local por defecto, o Claude o cualquier proveedor compatible con OpenAI. La IA refina huellas de servicio débiles y escribe resúmenes de CVE en lenguaje claro; con un modelo local, los datos nunca salen de tu red.",
+  "docs.roles.title": "Roles & permisos",
+  "docs.roles.summary": "Quién puede hacer qué.",
+  "docs.roles.three.h": "Los tres roles",
+  "docs.roles.three.p":
+    "Admin tiene acceso total, incluidos usuarios y ajustes. Operator puede crear y ejecutar escaneos y gestionar inventario y cambios, pero no usuarios. Auditor es de solo lectura, incluido el registro de auditoría.",
+  "docs.roles.sod.h": "Segregación de funciones",
+  "docs.roles.sod.p":
+    "Los auditores pueden leer el registro de auditoría mientras que los operadores no, lo que respalda los requisitos de segregación de funciones de los marcos de cumplimiento.",
+  "docs.ts.title": "Solución de problemas",
+  "docs.ts.summary": "Problemas comunes y cómo resolverlos.",
+  "docs.ts.scan.h": "Un escaneo no se ejecuta",
+  "docs.ts.scan.p":
+    "Una ejecución pendiente necesita un agente en línea en el segmento del perfil. Revisa el panel de cobertura de Agentes y asegúrate de que el perfil tenga una programación o de que lo activaste manualmente.",
+  "docs.ts.agent.h": "Un agente aparece sin conexión",
+  "docs.ts.agent.p":
+    "El agente no ha enviado un heartbeat dentro de su ventana en línea. Comprueba que el contenedor del agente esté en ejecución y pueda alcanzar la API; rota el token y vuelve a desplegar si es necesario.",
+  "docs.ts.cve.h": "No aparecen hallazgos de CVE",
+  "docs.ts.cve.p":
+    "Activa el enriquecimiento de CVE en Ajustes y ejecuta una reverificación. Las instalaciones air-gapped necesitan un feed NVD importado. Los hallazgos solo aparecen para servicios que informan una versión.",
+  "docs.ts.integr.h": "El correo o Jira no funciona",
+  "docs.ts.integr.p":
+    "Usa el botón Probar en la pestaña de Ajustes de la integración; informa el error de conexión exacto para que corrijas la URL, las credenciales o los destinatarios.",
+  "docs.ts.update.h": "El aviso de actualización aparece en desarrollo",
+  "docs.ts.update.p":
+    "Las compilaciones de desarrollo informan una versión de reserva, por lo que la comprobación puede indicar una actualización disponible. Las imágenes de producción llevan la versión real. Esto es esperado, no un error.",
   "docs.gs.title": "Primeros pasos",
   "docs.gs.summary": "Qué hace PortWiz y tus primeros pasos.",
   "docs.gs.what.h": "¿Qué es PortWiz?",
@@ -135,6 +192,8 @@ export const es: Partial<Record<TKey, string>> = {
   "common.close": "Cerrar",
   "common.edit": "Editar",
   "common.howTo": "Cómo hacerlo",
+  "common.copy": "Copiar",
+  "common.copied": "Copiado",
   "common.loading": "Cargando…",
   "common.noData": "Aún no hay datos",
   "common.error": "Algo salió mal",

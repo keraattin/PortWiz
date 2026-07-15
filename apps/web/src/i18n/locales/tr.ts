@@ -22,6 +22,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "docs.title": "Dokümantasyon",
   "docs.subtitle": "PortWiz'i kurma ve çalıştırma kılavuzları.",
   "docs.openFull": "Tam kılavuzu aç",
+  "docs.seeAlso": "Ayrıca bakın",
   "docs.flow.inventory": "Envanter",
   "docs.flow.scan": "Tarama",
   "docs.flow.detect": "Değişiklik tespiti",
@@ -29,6 +30,62 @@ export const tr: Partial<Record<TKey, string>> = {
   "docs.flow.evidence": "Kanıt",
   "docs.arch.control": "Kontrol düzlemi",
   "docs.arch.agent": "Agent",
+  "docs.life.profile": "Profil",
+  "docs.life.agent": "Agent alır",
+  "docs.life.result": "Sonuç işlenir",
+  "docs.pkg.scan": "Tarama raporu",
+  "docs.pkg.diff": "Değişiklik diff'i",
+  "docs.pkg.task": "Task & onay",
+  "docs.pkg.audit": "Audit-log dilimi",
+  "docs.pkg.out": "İmzalı JSON + PDF",
+  "docs.hash.event": "Olay",
+  "docs.hash.note":
+    "Her olay bir önceki olayın hash'ini taşır; bir kaydı değiştirmek zinciri kırar ve tespit edilir.",
+  "docs.timeline.start": "Aralık başı",
+  "docs.timeline.scans": "Taramalar",
+  "docs.timeline.due": "Son tarih",
+  "docs.int.title": "Entegrasyonlar",
+  "docs.int.summary": "Jira, e-posta, NetBox ve AI'yi bağla.",
+  "docs.int.where.h": "Nereden yapılandırılır",
+  "docs.int.where.p":
+    "Tüm entegrasyonlar Ayarlar'da, her biri kendi sekmesinde ve bir Test butonuyla; kaydetmeden önce bağlantıyı doğrulayabilirsin. Bir bağlantı yapılandırılana kadar hiçbir şey gönderilmez.",
+  "docs.int.jira.h": "Jira",
+  "docs.int.jira.p":
+    "Jira Cloud ya da Server/Data Center. URL, kimlik doğrulama, proje, issue türü ve atanacak kişiyi belirle. Teyitli bir değişiklik otomatik issue açar ve durumunu senkron tutar. İsteğe bağlı önem-öncelik eşlemesi ve custom field'lar desteklenir.",
+  "docs.int.email.h": "E-posta (SMTP)",
+  "docs.int.email.p":
+    "Mail sunucunu göster ve alıcı ekle; her teyitli değişiklikte bildirim gönderilir. Alıcı yapılandırılana kadar e-posta gönderilmez.",
+  "docs.int.netbox.h": "NetBox (IPAM)",
+  "docs.int.netbox.p":
+    "NetBox'tan VLAN ve host'ları envanterine çek, taramada keşfedilen host'ları geri gönder. İki yönlü senkron, PortWiz ile kaynağını hizalı tutar.",
+  "docs.int.ai.h": "AI sağlayıcı",
+  "docs.int.ai.p":
+    "Varsayılan yerel Ollama modeli ya da Claude veya OpenAI-uyumlu herhangi bir sağlayıcı. AI, zayıf servis parmak izlerini iyileştirir ve sade-dil CVE özetleri yazar; yerel modelle veri ağından çıkmaz.",
+  "docs.roles.title": "Roller & izinler",
+  "docs.roles.summary": "Kim ne yapabilir.",
+  "docs.roles.three.h": "Üç rol",
+  "docs.roles.three.p":
+    "Admin, kullanıcılar ve ayarlar dahil tam erişime sahiptir. Operator tarama oluşturup çalıştırabilir ve envanter/değişiklikleri yönetebilir ama kullanıcı yönetemez. Auditor, audit log dahil yalnızca okur.",
+  "docs.roles.sod.h": "Görevlerin ayrılığı",
+  "docs.roles.sod.p":
+    "Auditor'lar audit log'u okuyabilir, Operator'lar okuyamaz; bu, compliance çerçevelerindeki görev-ayrılığı gereksinimlerini destekler.",
+  "docs.ts.title": "Sorun giderme",
+  "docs.ts.summary": "Sık karşılaşılan sorunlar ve çözümleri.",
+  "docs.ts.scan.h": "Tarama çalışmıyor",
+  "docs.ts.scan.p":
+    "Bekleyen bir çalışma, profilin segmentinde çevrimiçi bir agent ister. Agents kapsama panosunu kontrol et ve profilin bir zamanlaması olduğundan ya da elle tetiklediğinden emin ol.",
+  "docs.ts.agent.h": "Agent çevrimdışı görünüyor",
+  "docs.ts.agent.p":
+    "Agent, online penceresi içinde heartbeat göndermemiş. Agent konteynerinin çalıştığını ve API'ye ulaşabildiğini kontrol et; gerekirse token'ı yenileyip yeniden deploy et.",
+  "docs.ts.cve.h": "CVE bulgusu görünmüyor",
+  "docs.ts.cve.p":
+    "Ayarlar'da CVE zenginleştirmeyi aç ve yeniden-kontrol çalıştır. Air-gapped kurulumlar içe aktarılmış bir NVD feed'i ister. Bulgular yalnızca sürüm bildiren servisler için görünür.",
+  "docs.ts.integr.h": "E-posta ya da Jira çalışmıyor",
+  "docs.ts.integr.p":
+    "Entegrasyonun Ayarlar sekmesindeki Test butonunu kullan; tam bağlantı hatasını bildirir, böylece URL, kimlik bilgileri ya da alıcıları düzeltebilirsin.",
+  "docs.ts.update.h": "Güncelleme banner'ı geliştirmede çıkıyor",
+  "docs.ts.update.p":
+    "Geliştirme derlemeleri bir fallback sürüm bildirir, bu yüzden kontrol 'güncelleme var' diyebilir. Prod imajları gerçek sürümü taşır. Bu beklenen bir durumdur, hata değil.",
   "docs.gs.title": "Başlangıç",
   "docs.gs.summary": "PortWiz ne yapar ve ilk adımların.",
   "docs.gs.what.h": "PortWiz nedir?",
@@ -134,6 +191,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "common.close": "Kapat",
   "common.edit": "Düzenle",
   "common.howTo": "Nasıl yapılır",
+  "common.copy": "Kopyala",
+  "common.copied": "Kopyalandı",
   "common.loading": "Yükleniyor…",
   "common.noData": "Henüz veri yok",
   "common.error": "Bir şeyler ters gitti",
