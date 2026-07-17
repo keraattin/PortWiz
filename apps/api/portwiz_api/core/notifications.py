@@ -9,6 +9,7 @@ and side-effect free.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from email.message import EmailMessage
 from typing import Any, Protocol
 
@@ -132,20 +133,49 @@ def build_notifier(settings) -> Notifier:
     )
 
 
-def build_notifiers(settings) -> list[Notifier]:
-    """Every notification channel that is currently enabled and configured.
+@dataclass
+class Channel:
+    """A configured delivery channel plus its own delivery rules: notify only at
+    or above ``min_severity`` and only for ``scan_profiles`` (empty = all)."""
+
+    notifier: Notifier
+    min_severity: str
+    scan_profiles: list[str]
+
+
+def build_channels(settings) -> list[Channel]:
+    """Every notification channel that is currently enabled and configured, each
+    paired with its per-channel delivery rules.
 
     Email is included only when recipients exist (an SMTP host with no
     recipients has nowhere to send); Slack/Teams each need their webhook URL.
     """
-    out: list[Notifier] = []
+    out: list[Channel] = []
     email = build_notifier(settings)
     if not isinstance(email, NullNotifier) and settings.notification_recipients:
-        out.append(email)
+        out.append(
+            Channel(
+                email,
+                settings.email_min_severity,
+                list(settings.email_scan_profiles),
+            )
+        )
     if settings.slack_enabled and settings.slack_webhook_url:
-        out.append(SlackNotifier(settings.slack_webhook_url))
+        out.append(
+            Channel(
+                SlackNotifier(settings.slack_webhook_url),
+                settings.slack_min_severity,
+                list(settings.slack_scan_profiles),
+            )
+        )
     if settings.teams_enabled and settings.teams_webhook_url:
-        out.append(TeamsNotifier(settings.teams_webhook_url))
+        out.append(
+            Channel(
+                TeamsNotifier(settings.teams_webhook_url),
+                settings.teams_min_severity,
+                list(settings.teams_scan_profiles),
+            )
+        )
     return out
 
 
@@ -166,31 +196,42 @@ def build_change_email(summaries: list[dict[str, Any]]) -> tuple[str, str]:
     return subject, "\n".join(lines)
 
 
-async def notify_changes(summaries: list[dict[str, Any]], settings) -> int:
-    """Fan out a confirmed-change summary to every configured channel.
+async def notify_changes(
+    summaries: list[dict[str, Any]], settings, scan_profile_id: str | None = None
+) -> int:
+    """Fan out a confirmed-change summary to every configured channel, applying
+    each channel's own delivery rules (min severity and scan-profile scope).
 
-    Each channel is best-effort: a failing one is logged and skipped, never
-    raised, so a broken webhook can't suppress the other channels (or fail the
-    ingest that triggered it). Returns the number of channels that accepted it.
+    ``scan_profile_id`` is the profile whose run produced the changes (all
+    summaries in one call share it); a channel scoped to specific profiles is
+    skipped when it does not list this one. Each channel is best-effort: a
+    failing one is logged and skipped, never raised, so a broken webhook can't
+    suppress the others (or fail the ingest that triggered it). Returns the
+    number of channels that accepted the message.
     """
     if not summaries:
         return 0
-    minimum = getattr(settings, "notify_min_severity", "low")
-    summaries = [s for s in summaries if meets_min_severity(s["severity"], minimum)]
-    if not summaries:
+    channels = build_channels(settings)
+    if not channels:
         return 0
-    notifiers = build_notifiers(settings)
-    if not notifiers:
-        return 0
-    subject, body = build_change_email(summaries)
     recipients = list(settings.notification_recipients)
+    pid = str(scan_profile_id) if scan_profile_id is not None else None
     dispatched = 0
-    for notifier in notifiers:
+    for ch in channels:
+        # Profile scope: an empty list means "all profiles"; otherwise this
+        # change's profile must be listed (an unprofiled/ad-hoc run never
+        # matches a channel that filters by profile).
+        if ch.scan_profiles and (pid is None or pid not in ch.scan_profiles):
+            continue
+        selected = [s for s in summaries if meets_min_severity(s["severity"], ch.min_severity)]
+        if not selected:
+            continue
+        subject, body = build_change_email(selected)
         try:
-            await notifier.send(subject, body, recipients)
+            await ch.notifier.send(subject, body, recipients)
             dispatched += 1
         except Exception as exc:  # noqa: BLE001
             logger.warning(
-                "change notification via %s failed: %s", type(notifier).__name__, exc
+                "change notification via %s failed: %s", type(ch.notifier).__name__, exc
             )
     return dispatched

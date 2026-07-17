@@ -109,12 +109,17 @@ class SettingsConfig(BaseModel):
     smtp_use_tls: bool
     smtp_password_set: bool
     notification_recipients: list[str]
-    notify_min_severity: str
+    email_min_severity: str
+    email_scan_profiles: list[str]
 
     slack_enabled: bool
     slack_webhook_set: bool
+    slack_min_severity: str
+    slack_scan_profiles: list[str]
     teams_enabled: bool
     teams_webhook_set: bool
+    teams_min_severity: str
+    teams_scan_profiles: list[str]
 
     jira_enabled: bool
     jira_deployment: str
@@ -175,12 +180,17 @@ class SettingsConfigUpdate(BaseModel):
     smtp_password: str | None = None
     smtp_use_tls: bool | None = None
     notification_recipients: list[str] | None = None
-    notify_min_severity: str | None = None
+    email_min_severity: str | None = None
+    email_scan_profiles: list[str] | None = None
 
     slack_enabled: bool | None = None
     slack_webhook_url: str | None = None
+    slack_min_severity: str | None = None
+    slack_scan_profiles: list[str] | None = None
     teams_enabled: bool | None = None
     teams_webhook_url: str | None = None
+    teams_min_severity: str | None = None
+    teams_scan_profiles: list[str] | None = None
 
     jira_enabled: bool | None = None
     jira_deployment: str | None = None

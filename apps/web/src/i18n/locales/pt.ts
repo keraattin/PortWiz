@@ -875,12 +875,13 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.section.ai": "IA",
   "settings.section.email": "Notificações",
   "settings.section.chat": "Slack / Teams",
-  "settings.delivery.title": "Regras de entrega",
-  "settings.delivery.intro":
-    "Estas regras aplicam-se a todos os canais abaixo: e-mail, Slack e Teams.",
-  "settings.delivery.minSeverity": "Severidade mínima",
-  "settings.delivery.minSeverityHint":
-    "Apenas alterações nesta severidade ou acima são enviadas; a opção mais baixa notifica tudo.",
+  "settings.rules.minSeverity": "Severidade mínima",
+  "settings.rules.minSeverityHint":
+    "Este canal envia apenas alterações nesta severidade ou acima.",
+  "settings.rules.profiles": "Perfis de varredura",
+  "settings.rules.profilesHint":
+    "Este canal envia apenas alterações dos perfis selecionados. Não selecione nenhum para todos os perfis.",
+  "settings.rules.noProfiles": "Ainda não há perfis de varredura.",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
   "settings.section.cve": "CVE",

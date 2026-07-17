@@ -40,12 +40,17 @@ EDITABLE_KEYS: list[str] = [
     "smtp_password",
     "smtp_use_tls",
     "notification_recipients",
-    "notify_min_severity",
+    "email_min_severity",
+    "email_scan_profiles",
     # Chat webhooks (Slack / Teams)
     "slack_enabled",
     "slack_webhook_url",
+    "slack_min_severity",
+    "slack_scan_profiles",
     "teams_enabled",
     "teams_webhook_url",
+    "teams_min_severity",
+    "teams_scan_profiles",
     # Jira
     "jira_enabled",
     "jira_deployment",

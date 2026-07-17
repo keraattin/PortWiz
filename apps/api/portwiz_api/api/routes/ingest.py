@@ -249,7 +249,11 @@ async def ingest_scan_results(
             notify_ok = prof is None or prof.notify_enabled
         if notify_ok:
             try:
-                await notify_changes(change_summaries, eff)
+                await notify_changes(
+                    change_summaries, eff, scan_profile_id=str(run.scan_profile_id)
+                    if run.scan_profile_id is not None
+                    else None,
+                )
             except Exception as exc:  # noqa: BLE001
                 logger.warning("change notification failed: %s", exc)
 

@@ -5,10 +5,11 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from portwiz_api.core.notifications import (
+    Channel,
     SlackNotifier,
     TeamsNotifier,
     build_change_email,
-    build_notifiers,
+    build_channels,
     meets_min_severity,
     notify_changes,
 )
@@ -33,14 +34,27 @@ def _settings(**overrides):
         smtp_username=None,
         smtp_password=None,
         notification_recipients=[],
-        notify_min_severity="low",
+        email_min_severity="low",
+        email_scan_profiles=[],
         slack_enabled=False,
         slack_webhook_url=None,
+        slack_min_severity="low",
+        slack_scan_profiles=[],
         teams_enabled=False,
         teams_webhook_url=None,
+        teams_min_severity="low",
+        teams_scan_profiles=[],
     )
     base.update(overrides)
     return SimpleNamespace(**base)
+
+
+class _Recorder:
+    def __init__(self) -> None:
+        self.bodies: list[str] = []
+
+    async def send(self, subject: str, body: str, recipients: list[str]) -> None:
+        self.bodies.append(body)
 
 
 def test_build_change_email_singular() -> None:
@@ -64,17 +78,24 @@ def test_teams_payload_is_message_card() -> None:
     assert payload["@type"] == "MessageCard"
     assert payload["title"] == "Subj"
     assert payload["summary"] == "Subj"
-    # Single newlines become blank lines so each item renders on its own line.
     assert "line1\n\nline2" in payload["text"]
 
 
-def test_build_notifiers_selects_configured_channels() -> None:
-    assert build_notifiers(_settings()) == []
+def test_meets_min_severity_ordering() -> None:
+    assert meets_min_severity("high", "low")
+    assert meets_min_severity("medium", "medium")
+    assert not meets_min_severity("low", "medium")
+    assert not meets_min_severity("medium", "high")
+    assert meets_min_severity("critical", "high")
+
+
+def test_build_channels_selects_configured_channels() -> None:
+    assert build_channels(_settings()) == []
 
     # SMTP host but no recipients: nothing to send, so email is skipped.
-    assert build_notifiers(_settings(notifications_enabled=True, smtp_host="mail")) == []
+    assert build_channels(_settings(notifications_enabled=True, smtp_host="mail")) == []
 
-    everything = build_notifiers(
+    channels = build_channels(
         _settings(
             notifications_enabled=True,
             smtp_host="mail",
@@ -85,13 +106,27 @@ def test_build_notifiers_selects_configured_channels() -> None:
             teams_webhook_url="https://teams.test/x",
         )
     )
-    kinds = {type(n).__name__ for n in everything}
+    kinds = {type(c.notifier).__name__ for c in channels}
     assert kinds == {"EmailNotifier", "SlackNotifier", "TeamsNotifier"}
 
 
+def test_build_channels_carries_per_channel_rules() -> None:
+    channels = build_channels(
+        _settings(
+            slack_enabled=True,
+            slack_webhook_url="https://hooks.slack.test/x",
+            slack_min_severity="high",
+            slack_scan_profiles=["p1", "p2"],
+        )
+    )
+    assert len(channels) == 1
+    assert channels[0].min_severity == "high"
+    assert channels[0].scan_profiles == ["p1", "p2"]
+
+
 def test_webhook_enabled_without_url_is_skipped() -> None:
-    assert build_notifiers(_settings(slack_enabled=True)) == []
-    assert build_notifiers(_settings(teams_enabled=True)) == []
+    assert build_channels(_settings(slack_enabled=True)) == []
+    assert build_channels(_settings(teams_enabled=True)) == []
 
 
 async def test_notify_changes_no_channels_returns_zero() -> None:
@@ -106,62 +141,59 @@ async def test_notify_changes_empty_summaries_returns_zero() -> None:
 async def test_notify_changes_is_best_effort(monkeypatch) -> None:
     """A failing channel is logged and skipped, never raised, and does not
     prevent the remaining channels from receiving the message."""
-    sent: list[str] = []
+    recorder = _Recorder()
 
     class Boom:
         async def send(self, subject, body, recipients) -> None:
             raise RuntimeError("webhook 500")
 
-    class Recorder:
-        async def send(self, subject, body, recipients) -> None:
-            sent.append(subject)
-
+    channels = [Channel(Boom(), "low", []), Channel(recorder, "low", [])]
     monkeypatch.setattr(
-        "portwiz_api.core.notifications.build_notifiers",
-        lambda settings: [Boom(), Recorder()],
+        "portwiz_api.core.notifications.build_channels", lambda settings: channels
     )
     dispatched = await notify_changes([_CHANGE], _settings())
-    assert dispatched == 1  # only Recorder succeeded
-    assert len(sent) == 1
+    assert dispatched == 1  # only the recorder succeeded
+    assert len(recorder.bodies) == 1
 
 
-def test_meets_min_severity_ordering() -> None:
-    assert meets_min_severity("high", "low")
-    assert meets_min_severity("medium", "medium")
-    assert not meets_min_severity("low", "medium")
-    assert not meets_min_severity("medium", "high")
-    assert meets_min_severity("critical", "high")
-
-
-async def test_notify_changes_drops_everything_below_threshold(monkeypatch) -> None:
-    calls: list[str] = []
-
-    class Recorder:
-        async def send(self, subject, body, recipients) -> None:
-            calls.append(body)
-
+async def test_notify_changes_applies_per_channel_severity(monkeypatch) -> None:
+    """Each channel filters by its own min severity, independently."""
+    email, slack = _Recorder(), _Recorder()
+    channels = [Channel(email, "low", []), Channel(slack, "high", [])]
     monkeypatch.setattr(
-        "portwiz_api.core.notifications.build_notifiers", lambda settings: [Recorder()]
-    )
-    low = {**_CHANGE, "severity": "low"}
-    medium = {**_CHANGE, "severity": "medium"}
-    dispatched = await notify_changes([low, medium], _settings(notify_min_severity="high"))
-    assert dispatched == 0
-    assert calls == []  # no channel touched when nothing clears the bar
-
-
-async def test_notify_changes_keeps_only_at_or_above_threshold(monkeypatch) -> None:
-    bodies: list[str] = []
-
-    class Recorder:
-        async def send(self, subject, body, recipients) -> None:
-            bodies.append(body)
-
-    monkeypatch.setattr(
-        "portwiz_api.core.notifications.build_notifiers", lambda settings: [Recorder()]
+        "portwiz_api.core.notifications.build_channels", lambda settings: channels
     )
     low = {**_CHANGE, "severity": "low", "port": 21}
     high = {**_CHANGE, "severity": "high", "port": 443}
-    dispatched = await notify_changes([low, high], _settings(notify_min_severity="medium"))
+    dispatched = await notify_changes([low, high], _settings())
+    assert dispatched == 2
+    assert ":21/" in email.bodies[0] and ":443/" in email.bodies[0]  # low channel: both
+    assert ":443/" in slack.bodies[0] and ":21/" not in slack.bodies[0]  # high: only high
+
+
+async def test_notify_changes_respects_channel_profile_scope(monkeypatch) -> None:
+    """A channel scoped to specific profiles ignores changes from others."""
+    recorder = _Recorder()
+    channels = [Channel(recorder, "low", ["profile-a"])]
+    monkeypatch.setattr(
+        "portwiz_api.core.notifications.build_channels", lambda settings: channels
+    )
+    # A different profile is skipped entirely.
+    assert await notify_changes([_CHANGE], _settings(), scan_profile_id="profile-b") == 0
+    assert recorder.bodies == []
+    # The scoped profile fires.
+    assert await notify_changes([_CHANGE], _settings(), scan_profile_id="profile-a") == 1
+    assert len(recorder.bodies) == 1
+
+
+async def test_unprofiled_run_skips_profile_scoped_channels(monkeypatch) -> None:
+    """An ad-hoc run (no profile) does not match a channel that filters by
+    profile, but does reach an unscoped channel."""
+    scoped, unscoped = _Recorder(), _Recorder()
+    channels = [Channel(scoped, "low", ["profile-a"]), Channel(unscoped, "low", [])]
+    monkeypatch.setattr(
+        "portwiz_api.core.notifications.build_channels", lambda settings: channels
+    )
+    dispatched = await notify_changes([_CHANGE], _settings(), scan_profile_id=None)
     assert dispatched == 1
-    assert ":443/" in bodies[0] and ":21/" not in bodies[0]
+    assert scoped.bodies == [] and len(unscoped.bodies) == 1

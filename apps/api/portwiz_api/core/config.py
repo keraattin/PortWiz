@@ -124,16 +124,22 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     smtp_use_tls: bool = False
     notification_recipients: list[str] = []
-    # Global delivery rule: only changes at/above this severity notify. "low"
-    # (the default) notifies everything, preserving pre-threshold behaviour.
-    notify_min_severity: str = "low"  # low | medium | high
+    # Per-channel delivery rules: a channel only fires at or above its own
+    # min severity, and only for the listed scan profiles (empty = all). "low"
+    # notifies every severity, preserving pre-threshold behaviour.
+    email_min_severity: str = "low"  # low | medium | high
+    email_scan_profiles: list[str] = []  # scan-profile UUIDs; empty = all
 
     # Chat webhooks (Slack / Microsoft Teams). Each fires on confirmed changes,
     # independently of email, when enabled and its incoming-webhook URL is set.
     slack_enabled: bool = False
     slack_webhook_url: str | None = None
+    slack_min_severity: str = "low"
+    slack_scan_profiles: list[str] = []
     teams_enabled: bool = False
     teams_webhook_url: str | None = None
+    teams_min_severity: str = "low"
+    teams_scan_profiles: list[str] = []
 
     # Jira integration (issue tracker). Disabled unless fully configured.
     jira_enabled: bool = False

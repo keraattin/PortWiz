@@ -62,7 +62,7 @@ async def _ingest_with_fake_change(client, admin_headers, monkeypatch, notify: b
     async def _fake_detect(session, run):
         return [_FAKE_CHANGE]
 
-    async def _fake_notify(summaries, settings):
+    async def _fake_notify(summaries, settings, scan_profile_id=None):
         sent.append(summaries)
         return len(summaries)
 

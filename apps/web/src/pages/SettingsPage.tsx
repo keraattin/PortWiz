@@ -4,6 +4,7 @@ import {
   type AiProviderInfo,
   type JiraProject,
   type JiraUser,
+  type ScanProfile,
   type SettingsConfig,
   type SettingsConfigUpdate,
   type SettingsStatus,
@@ -12,6 +13,7 @@ import {
   type UpdateStatus,
   applyUpdate,
   checkForUpdate,
+  listScanProfiles,
   fetchAiProviders,
   importCveFeed,
   fetchJiraIssueTypes,
@@ -86,11 +88,16 @@ interface FormState {
   smtp_password: string;
   smtp_use_tls: boolean;
   notification_recipients: string;
-  notify_min_severity: string;
+  email_min_severity: string;
+  email_scan_profiles: string[];
   slack_enabled: boolean;
   slack_webhook_url: string;
+  slack_min_severity: string;
+  slack_scan_profiles: string[];
   teams_enabled: boolean;
   teams_webhook_url: string;
+  teams_min_severity: string;
+  teams_scan_profiles: string[];
   jira_enabled: boolean;
   jira_deployment: string;
   jira_url: string;
@@ -145,11 +152,16 @@ function fromConfig(c: SettingsConfig): FormState {
     smtp_password: "",
     smtp_use_tls: c.smtp_use_tls,
     notification_recipients: c.notification_recipients.join(", "),
-    notify_min_severity: c.notify_min_severity,
+    email_min_severity: c.email_min_severity,
+    email_scan_profiles: c.email_scan_profiles,
     slack_enabled: c.slack_enabled,
     slack_webhook_url: "",
+    slack_min_severity: c.slack_min_severity,
+    slack_scan_profiles: c.slack_scan_profiles,
     teams_enabled: c.teams_enabled,
     teams_webhook_url: "",
+    teams_min_severity: c.teams_min_severity,
+    teams_scan_profiles: c.teams_scan_profiles,
     jira_enabled: c.jira_enabled,
     jira_deployment: c.jira_deployment || "cloud",
     jira_url: c.jira_url ?? "",
@@ -189,6 +201,58 @@ function fromConfig(c: SettingsConfig): FormState {
 
 function secretHint(isSet: boolean, t: Translate): string {
   return isSet ? t("settings.secretSet") : t("settings.secretNotSet");
+}
+
+// Per-channel delivery rules: a minimum severity and a scan-profile scope.
+// Shared by the email, Slack, and Teams sections.
+function ChannelRules({
+  t,
+  profiles,
+  severity,
+  onSeverity,
+  selected,
+  onToggle,
+}: {
+  t: Translate;
+  profiles: ScanProfile[];
+  severity: string;
+  onSeverity: (v: string) => void;
+  selected: string[];
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <>
+      <FormField label={t("settings.rules.minSeverity")} hint={t("settings.rules.minSeverityHint")}>
+        <select
+          className={inputClass}
+          value={severity}
+          onChange={(e) => onSeverity(e.target.value)}
+        >
+          <option value="low">{t("severity.low")}</option>
+          <option value="medium">{t("severity.medium")}</option>
+          <option value="high">{t("severity.high")}</option>
+        </select>
+      </FormField>
+      <FormField label={t("settings.rules.profiles")} hint={t("settings.rules.profilesHint")}>
+        {profiles.length === 0 ? (
+          <p className="text-sm text-slate-500">{t("settings.rules.noProfiles")}</p>
+        ) : (
+          <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950 p-2">
+            {profiles.map((p) => (
+              <label key={p.id} className="flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={selected.includes(p.id)}
+                  onChange={() => onToggle(p.id)}
+                />
+                {p.name}
+              </label>
+            ))}
+          </div>
+        )}
+      </FormField>
+    </>
+  );
 }
 
 function Toggle({
@@ -240,6 +304,7 @@ export default function SettingsPage() {
 
   const [config, setConfig] = useState<SettingsConfig | null>(null);
   const [status, setStatus] = useState<SettingsStatus | null>(null);
+  const [scanProfiles, setScanProfiles] = useState<ScanProfile[]>([]);
   const [form, setForm] = useState<FormState | null>(null);
   const [providers, setProviders] = useState<AiProviderInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -287,15 +352,17 @@ export default function SettingsPage() {
     setError(null);
     try {
       if (isAdmin) {
-        const [c, p, s] = await Promise.all([
+        const [c, p, s, profs] = await Promise.all([
           fetchSettingsConfig(),
           fetchAiProviders(),
           fetchSettings(),
+          listScanProfiles(),
         ]);
         setConfig(c);
         setForm(fromConfig(c));
         setProviders(p);
         setStatus(s);
+        setScanProfiles(profs);
         fetchUpdateStatus()
           .then(setUpdateStatus)
           .catch(() => {
@@ -370,6 +437,21 @@ export default function SettingsPage() {
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => (f ? { ...f, [key]: value } : f));
+  }
+
+  // Toggle a scan-profile id in one of the channel scope arrays.
+  function toggleProfile(
+    key: "email_scan_profiles" | "slack_scan_profiles" | "teams_scan_profiles",
+    id: string,
+  ) {
+    setForm((f) =>
+      f
+        ? {
+            ...f,
+            [key]: f[key].includes(id) ? f[key].filter((x) => x !== id) : [...f[key], id],
+          }
+        : f,
+    );
   }
 
   // Jira pickers fetch from the live instance; they need the connection saved
@@ -693,36 +775,6 @@ export default function SettingsPage() {
         {activeTab === "email" && (
         <div className="space-y-6">
           <section className={cardClass}>
-            <h3 className="font-medium text-slate-100">{t("settings.delivery.title")}</h3>
-            <p className="text-sm text-slate-400">{t("settings.delivery.intro")}</p>
-            <FormField
-              label={t("settings.delivery.minSeverity")}
-              hint={t("settings.delivery.minSeverityHint")}
-            >
-              <select
-                className={inputClass}
-                value={form.notify_min_severity}
-                onChange={(e) => set("notify_min_severity", e.target.value)}
-              >
-                <option value="low">{t("severity.low")}</option>
-                <option value="medium">{t("severity.medium")}</option>
-                <option value="high">{t("severity.high")}</option>
-              </select>
-            </FormField>
-            <div>
-              <button
-                className={primaryBtn}
-                disabled={saving === "delivery"}
-                onClick={() =>
-                  save("delivery", { notify_min_severity: form.notify_min_severity })
-                }
-              >
-                {saving === "delivery" ? t("common.saving") : t("common.save")}
-              </button>
-            </div>
-          </section>
-
-          <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.email.title")}</h3>
           {status && (
             <ConnectionBanner
@@ -786,6 +838,14 @@ export default function SettingsPage() {
               onChange={(e) => set("notification_recipients", e.target.value)}
             />
           </FormField>
+          <ChannelRules
+            t={t}
+            profiles={scanProfiles}
+            severity={form.email_min_severity}
+            onSeverity={(v) => set("email_min_severity", v)}
+            selected={form.email_scan_profiles}
+            onToggle={(id) => toggleProfile("email_scan_profiles", id)}
+          />
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
@@ -799,6 +859,8 @@ export default function SettingsPage() {
                   smtp_username: form.smtp_username,
                   smtp_password: form.smtp_password,
                   smtp_use_tls: form.smtp_use_tls,
+                  email_min_severity: form.email_min_severity,
+                  email_scan_profiles: form.email_scan_profiles,
                   notification_recipients: form.notification_recipients
                     .split(",")
                     .map((s) => s.trim())
@@ -858,6 +920,14 @@ export default function SettingsPage() {
                 onChange={(e) => set("slack_webhook_url", e.target.value)}
               />
             </FormField>
+            <ChannelRules
+              t={t}
+              profiles={scanProfiles}
+              severity={form.slack_min_severity}
+              onSeverity={(v) => set("slack_min_severity", v)}
+              selected={form.slack_scan_profiles}
+              onToggle={(id) => toggleProfile("slack_scan_profiles", id)}
+            />
             <div className="flex flex-wrap items-center gap-3">
               <button
                 className={primaryBtn}
@@ -866,6 +936,8 @@ export default function SettingsPage() {
                   save("slack", {
                     slack_enabled: form.slack_enabled,
                     slack_webhook_url: form.slack_webhook_url,
+                    slack_min_severity: form.slack_min_severity,
+                    slack_scan_profiles: form.slack_scan_profiles,
                   })
                 }
               >
@@ -907,6 +979,14 @@ export default function SettingsPage() {
                 onChange={(e) => set("teams_webhook_url", e.target.value)}
               />
             </FormField>
+            <ChannelRules
+              t={t}
+              profiles={scanProfiles}
+              severity={form.teams_min_severity}
+              onSeverity={(v) => set("teams_min_severity", v)}
+              selected={form.teams_scan_profiles}
+              onToggle={(id) => toggleProfile("teams_scan_profiles", id)}
+            />
             <div className="flex flex-wrap items-center gap-3">
               <button
                 className={primaryBtn}
@@ -915,6 +995,8 @@ export default function SettingsPage() {
                   save("teams", {
                     teams_enabled: form.teams_enabled,
                     teams_webhook_url: form.teams_webhook_url,
+                    teams_min_severity: form.teams_min_severity,
+                    teams_scan_profiles: form.teams_scan_profiles,
                   })
                 }
               >
