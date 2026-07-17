@@ -28,7 +28,7 @@ that requirement and takes it a step further:
   VLAN/segment; `naabu` + `nmap-service-probes`. Runs are routed per segment, and
   a run an agent claims but never finishes is automatically requeued.
 - 🗂️ **Inventory at scale**: manage assets and VLANs by hand, bulk-import from
-  CSV/Excel, or sync bidirectionally with NetBox (IPAM) — pull hosts and VLANs in,
+  CSV/Excel, or sync bidirectionally with NetBox (IPAM): pull hosts and VLANs in,
   and write scan-discovered hosts back. Hosts found during a scan are auto-added as
   assets; each carries owner, criticality, and data-sensitivity for scoping.
 - 🛡️ **CVE enrichment**: match a discovered service and version against known CVEs
@@ -84,8 +84,8 @@ docker compose up --build
 The first admin user is seeded from the `PORTWIZ_FIRST_ADMIN_*` values in `.env`.
 
 For production, set `PORTWIZ_ENCRYPTION_KEY` (see `.env.example` for the one-line
-generator) to encrypt stored integration secrets — API keys, tokens, and the SMTP
-password — at rest. Keep the key stable: rotating or losing it makes existing
+generator) to encrypt stored integration secrets (API keys, tokens, and the SMTP
+password) at rest. Keep the key stable: rotating or losing it makes existing
 secrets unreadable.
 
 ## Production deployment
@@ -108,7 +108,7 @@ and beat services wait for that. Notes:
 
 - **TLS:** the web service listens on plain HTTP. Put your own TLS terminator
   (reverse proxy, load balancer, or nginx with certificates) in front of it
-  before exposing PortWiz to a real network — agents send their bearer token to
+  before exposing PortWiz to a real network: agents send their bearer token to
   the API, so that traffic must be encrypted.
 - **Secrets:** set `PORTWIZ_SECRET_KEY` and `PORTWIZ_ENCRYPTION_KEY` to fresh
   random values, and use a strong `POSTGRES_PASSWORD` (kept in sync with
@@ -136,10 +136,10 @@ and beat services wait for that. Notes:
 
 ## Roadmap
 
-- **Phase 1 (MVP) — done:** asset/VLAN/IP management → scanning → flapping-aware
+- **Phase 1 (MVP), done:** asset/VLAN/IP management → scanning → flapping-aware
   diff → audit + evidence export → task/Jira/email + scheduling → AI v0, plus a
   live dashboard, role-based UI, and admin pages (users, agents, settings).
-- **Phase 2 — in progress:** ✅ bulk CSV/Excel import (assets + VLANs),
+- **Phase 2, in progress:** ✅ bulk CSV/Excel import (assets + VLANs),
   ✅ bidirectional NetBox/IPAM sync, ✅ Jira Cloud & Server/Data Center,
   ✅ per-segment agent routing + stale-run requeue + fleet coverage view,
   ✅ compliance cadence templates, ✅ CVE enrichment (online NVD + offline feed),

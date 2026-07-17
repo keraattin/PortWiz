@@ -51,5 +51,5 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B"]
 # B008: FastAPI's Depends()/Query() defaults are the framework idiom.
 # UP017: datetime.timezone.utc is kept for clarity over the datetime.UTC alias.
-# UP042: keep explicit (str, enum.Enum) — StrEnum changes str(member) semantics.
+# UP042: keep explicit (str, enum.Enum); StrEnum changes str(member) semantics.
 ignore = ["B008", "UP017", "UP042"]

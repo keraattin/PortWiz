@@ -104,7 +104,7 @@ class SlackNotifier(_WebhookNotifier):
 
 
 class TeamsNotifier(_WebhookNotifier):
-    """Posts a MessageCard to a Microsoft Teams incoming webhook — the format the
+    """Posts a MessageCard to a Microsoft Teams incoming webhook, the format the
     connector accepts. Blank lines separate list items so each renders on its
     own line."""
 

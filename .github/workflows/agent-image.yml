@@ -3,7 +3,7 @@
 #   ghcr.io/<owner>/portwiz-agent:latest        (default branch)
 #   ghcr.io/<owner>/portwiz-agent:<version>     (on v* tags)
 # The package inherits the repo's visibility; make it public for `docker pull`
-# without auth. Uses the built-in GITHUB_TOKEN — no extra secrets to configure.
+# without auth. Uses the built-in GITHUB_TOKEN, no extra secrets to configure.
 name: agent-image
 
 on:

@@ -1565,7 +1565,7 @@ export default function SettingsPage() {
           <p className="text-xs text-slate-500">{t("settings.system.updateCheckHint")}</p>
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="text-slate-400">
-              {t("update.current", { version: updateStatus?.current ?? "—" })}
+              {t("update.current", { version: updateStatus?.current ?? "-" })}
             </span>
             {updateStatus?.update_available ? (
               <span className="text-emerald-400">

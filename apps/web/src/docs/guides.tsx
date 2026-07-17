@@ -197,7 +197,7 @@ function DocHashChain() {
                 {t("docs.hash.event")} #{i + 1}
               </div>
               <div className="mt-1 font-mono text-[11px] text-slate-500">
-                prev_hash: {i === 0 ? "—" : `${hashes[i - 1]}…`}
+                prev_hash: {i === 0 ? "-" : `${hashes[i - 1]}…`}
               </div>
               <div className="font-mono text-[11px] text-emerald-400">hash: {h}…</div>
             </div>
