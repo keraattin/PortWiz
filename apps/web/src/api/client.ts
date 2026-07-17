@@ -808,6 +808,10 @@ export interface SettingsStatus {
   smtp_port: number;
   smtp_from: string;
   email_recipients: string[];
+  slack_enabled: boolean;
+  slack_configured: boolean;
+  teams_enabled: boolean;
+  teams_configured: boolean;
   jira_enabled: boolean;
   jira_deployment: string;
   jira_url: string | null;
@@ -843,6 +847,14 @@ export function testEmail(recipient?: string): Promise<TestResult> {
     method: "POST",
     body: JSON.stringify({ recipient: recipient || null }),
   });
+}
+
+export function testSlack(): Promise<TestResult> {
+  return request<TestResult>("/settings/test/slack", { method: "POST" });
+}
+
+export function testTeams(): Promise<TestResult> {
+  return request<TestResult>("/settings/test/teams", { method: "POST" });
 }
 
 export function testJira(): Promise<TestResult> {
@@ -1003,6 +1015,10 @@ export interface SettingsConfig {
   smtp_use_tls: boolean;
   smtp_password_set: boolean;
   notification_recipients: string[];
+  slack_enabled: boolean;
+  slack_webhook_set: boolean;
+  teams_enabled: boolean;
+  teams_webhook_set: boolean;
   jira_enabled: boolean;
   jira_deployment: string;
   jira_url: string | null;
@@ -1056,6 +1072,10 @@ export type SettingsConfigUpdate = Partial<{
   smtp_password: string;
   smtp_use_tls: boolean;
   notification_recipients: string[];
+  slack_enabled: boolean;
+  slack_webhook_url: string;
+  teams_enabled: boolean;
+  teams_webhook_url: string;
   jira_enabled: boolean;
   jira_deployment: string;
   jira_url: string;

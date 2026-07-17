@@ -866,6 +866,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.testConnection": "Bağlantıyı test et",
   "settings.section.ai": "Yapay Zekâ",
   "settings.section.email": "E-posta",
+  "settings.section.chat": "Slack / Teams",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
   "settings.section.cve": "CVE",
@@ -978,6 +979,18 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.email.testRecipient": "Test alıcısı (isteğe bağlı)",
   "settings.email.sendTest": "Test gönder",
   "settings.email.sending": "Gönderiliyor…",
+  "settings.chat.intro":
+    "Onaylı bir değişiklik algılandığında bir Slack veya Microsoft Teams kanalına mesaj gönderin. Bildirmek istediğiniz her kanal için bir gelen webhook URL'si yapıştırın.",
+  "settings.slack.title": "Slack",
+  "settings.slack.enabled": "Slack etkin",
+  "settings.slack.webhook": "Webhook URL'si",
+  "settings.slack.webhookHint":
+    "Slack'te: Apps → Incoming Webhooks → bir kanala ekleyin, sonra URL'yi buraya yapıştırın.",
+  "settings.teams.title": "Microsoft Teams",
+  "settings.teams.enabled": "Teams etkin",
+  "settings.teams.webhook": "Webhook URL'si",
+  "settings.teams.webhookHint":
+    "Bir Teams kanalında: Connectors → Incoming Webhook → Create, sonra URL'yi buraya yapıştırın.",
   "settings.jira.title": "Jira",
   "settings.jira.enabled": "Jira etkin",
   "settings.jira.url": "URL",

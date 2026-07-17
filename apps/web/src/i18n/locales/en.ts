@@ -864,6 +864,7 @@ export const en = {
   "settings.testConnection": "Test connection",
   "settings.section.ai": "AI",
   "settings.section.email": "Email",
+  "settings.section.chat": "Slack / Teams",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
   "settings.section.cve": "CVE",
@@ -976,6 +977,18 @@ export const en = {
   "settings.email.testRecipient": "Test recipient (optional)",
   "settings.email.sendTest": "Send test",
   "settings.email.sending": "Sending…",
+  "settings.chat.intro":
+    "Post a message to a Slack or Microsoft Teams channel whenever a confirmed change is detected. Paste an incoming webhook URL for each channel you want to notify.",
+  "settings.slack.title": "Slack",
+  "settings.slack.enabled": "Slack enabled",
+  "settings.slack.webhook": "Webhook URL",
+  "settings.slack.webhookHint":
+    "In Slack: Apps → Incoming Webhooks → Add to a channel, then paste the URL here.",
+  "settings.teams.title": "Microsoft Teams",
+  "settings.teams.enabled": "Teams enabled",
+  "settings.teams.webhook": "Webhook URL",
+  "settings.teams.webhookHint":
+    "In a Teams channel: Connectors → Incoming Webhook → Create, then paste the URL here.",
   "settings.jira.title": "Jira",
   "settings.jira.enabled": "Jira enabled",
   "settings.jira.url": "URL",

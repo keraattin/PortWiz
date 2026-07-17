@@ -23,6 +23,8 @@ import {
   searchJiraUsers,
   testAi,
   testEmail,
+  testSlack,
+  testTeams,
   testJira,
   testCve,
   testNetbox,
@@ -84,6 +86,10 @@ interface FormState {
   smtp_password: string;
   smtp_use_tls: boolean;
   notification_recipients: string;
+  slack_enabled: boolean;
+  slack_webhook_url: string;
+  teams_enabled: boolean;
+  teams_webhook_url: string;
   jira_enabled: boolean;
   jira_deployment: string;
   jira_url: string;
@@ -138,6 +144,10 @@ function fromConfig(c: SettingsConfig): FormState {
     smtp_password: "",
     smtp_use_tls: c.smtp_use_tls,
     notification_recipients: c.notification_recipients.join(", "),
+    slack_enabled: c.slack_enabled,
+    slack_webhook_url: "",
+    teams_enabled: c.teams_enabled,
+    teams_webhook_url: "",
     jira_enabled: c.jira_enabled,
     jira_deployment: c.jira_deployment || "cloud",
     jira_url: c.jira_url ?? "",
@@ -235,7 +245,7 @@ export default function SettingsPage() {
   const [testing, setTesting] = useState<string | null>(null);
   // Allow deep-linking to a tab, e.g. /settings?tab=system from the update banner.
   const [searchParams] = useSearchParams();
-  const TABS = ["ai", "email", "jira", "netbox", "cve", "system"] as const;
+  const TABS = ["ai", "email", "chat", "jira", "netbox", "cve", "system"] as const;
   const requestedTab = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>(
     (TABS as readonly string[]).includes(requestedTab ?? "")
@@ -248,6 +258,8 @@ export default function SettingsPage() {
 
   const [aiResult, setAiResult] = useState<TestResult | null>(null);
   const [emailResult, setEmailResult] = useState<TestResult | null>(null);
+  const [slackResult, setSlackResult] = useState<TestResult | null>(null);
+  const [teamsResult, setTeamsResult] = useState<TestResult | null>(null);
   const [jiraResult, setJiraResult] = useState<TestResult | null>(null);
   const [netboxResult, setNetboxResult] = useState<TestResult | null>(null);
   const [cveResult, setCveResult] = useState<TestResult | null>(null);
@@ -522,7 +534,7 @@ export default function SettingsPage() {
       <PageHeader title={t("settings.title")} subtitle={t("settings.adminSubtitle")} />
 
       <div data-tour="settings-tabs" className="flex flex-wrap gap-1 border-b border-slate-800">
-        {(["ai", "email", "jira", "netbox", "cve", "system"] as const).map((tab) => (
+        {(["ai", "email", "chat", "jira", "netbox", "cve", "system"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -779,6 +791,112 @@ export default function SettingsPage() {
           </div>
           <TestRow result={emailResult} />
         </section>
+        )}
+
+        {activeTab === "chat" && (
+        <div className="space-y-6">
+          <InfoCallout>
+            <p className="text-slate-400">{t("settings.chat.intro")}</p>
+          </InfoCallout>
+
+          <section className={cardClass}>
+            <h3 className="font-medium text-slate-100">{t("settings.slack.title")}</h3>
+            {status && (
+              <ConnectionBanner
+                ok={status.slack_configured}
+                label={t(status.slack_configured ? "settings.conn.connected" : "settings.conn.notConfigured")}
+              />
+            )}
+            <Toggle
+              label={t("settings.slack.enabled")}
+              checked={form.slack_enabled}
+              onChange={(v) => set("slack_enabled", v)}
+            />
+            <FormField
+              label={t("settings.slack.webhook")}
+              hint={config.slack_webhook_set ? secretHint(true, t) : t("settings.slack.webhookHint")}
+            >
+              <input
+                className={inputClass}
+                type="password"
+                placeholder={config.slack_webhook_set ? "••••••••" : "https://hooks.slack.com/services/…"}
+                value={form.slack_webhook_url}
+                onChange={(e) => set("slack_webhook_url", e.target.value)}
+              />
+            </FormField>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                className={primaryBtn}
+                disabled={saving === "slack"}
+                onClick={() =>
+                  save("slack", {
+                    slack_enabled: form.slack_enabled,
+                    slack_webhook_url: form.slack_webhook_url,
+                  })
+                }
+              >
+                {saving === "slack" ? t("common.saving") : t("common.save")}
+              </button>
+              <button
+                className={testBtn}
+                disabled={testing === "slack"}
+                onClick={() => runTest("slack", testSlack, setSlackResult)}
+              >
+                {testing === "slack" ? t("settings.testing") : t("settings.testConnection")}
+              </button>
+            </div>
+            <TestRow result={slackResult} />
+          </section>
+
+          <section className={cardClass}>
+            <h3 className="font-medium text-slate-100">{t("settings.teams.title")}</h3>
+            {status && (
+              <ConnectionBanner
+                ok={status.teams_configured}
+                label={t(status.teams_configured ? "settings.conn.connected" : "settings.conn.notConfigured")}
+              />
+            )}
+            <Toggle
+              label={t("settings.teams.enabled")}
+              checked={form.teams_enabled}
+              onChange={(v) => set("teams_enabled", v)}
+            />
+            <FormField
+              label={t("settings.teams.webhook")}
+              hint={config.teams_webhook_set ? secretHint(true, t) : t("settings.teams.webhookHint")}
+            >
+              <input
+                className={inputClass}
+                type="password"
+                placeholder={config.teams_webhook_set ? "••••••••" : "https://outlook.office.com/webhook/…"}
+                value={form.teams_webhook_url}
+                onChange={(e) => set("teams_webhook_url", e.target.value)}
+              />
+            </FormField>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                className={primaryBtn}
+                disabled={saving === "teams"}
+                onClick={() =>
+                  save("teams", {
+                    teams_enabled: form.teams_enabled,
+                    teams_webhook_url: form.teams_webhook_url,
+                  })
+                }
+              >
+                {saving === "teams" ? t("common.saving") : t("common.save")}
+              </button>
+              <button
+                className={testBtn}
+                disabled={testing === "teams"}
+                onClick={() => runTest("teams", testTeams, setTeamsResult)}
+              >
+                {testing === "teams" ? t("settings.testing") : t("settings.testConnection")}
+              </button>
+            </div>
+            <TestRow result={teamsResult} />
+          </section>
+        </div>
         )}
 
         {activeTab === "jira" && (

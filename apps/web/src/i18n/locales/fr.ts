@@ -871,6 +871,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.testConnection": "Tester la connexion",
   "settings.section.ai": "IA",
   "settings.section.email": "E-mail",
+  "settings.section.chat": "Slack / Teams",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
   "settings.section.cve": "CVE",
@@ -984,6 +985,18 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.email.testRecipient": "Destinataire de test (optionnel)",
   "settings.email.sendTest": "Envoyer un test",
   "settings.email.sending": "Envoi…",
+  "settings.chat.intro":
+    "Publiez un message dans un canal Slack ou Microsoft Teams dès qu'un changement confirmé est détecté. Collez une URL de webhook entrant pour chaque canal à notifier.",
+  "settings.slack.title": "Slack",
+  "settings.slack.enabled": "Slack activé",
+  "settings.slack.webhook": "URL du webhook",
+  "settings.slack.webhookHint":
+    "Dans Slack : Apps → Incoming Webhooks → ajouter à un canal, puis collez l'URL ici.",
+  "settings.teams.title": "Microsoft Teams",
+  "settings.teams.enabled": "Teams activé",
+  "settings.teams.webhook": "URL du webhook",
+  "settings.teams.webhookHint":
+    "Dans un canal Teams : Connecteurs → Incoming Webhook → Créer, puis collez l'URL ici.",
   "settings.jira.title": "Jira",
   "settings.jira.enabled": "Jira activé",
   "settings.jira.url": "URL",
