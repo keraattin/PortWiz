@@ -34,7 +34,7 @@ from ...core.inventory_source import (
     get_inventory_source,
 )
 from ...core.issue_tracker import IssueTracker, get_issue_tracker, link_changes_to_tracker
-from ...core.notifications import build_notifier, notify_changes
+from ...core.notifications import notify_changes
 from ...models.agent import Agent
 from ...models.asset import Asset, Criticality
 from ...models.scan import Observation, ScanProfile, ScanRun, ScanRunStatus
@@ -238,12 +238,12 @@ async def ingest_scan_results(
 
     eff = await effective_settings(session)
 
-    # Best-effort notification: never fail ingest if email delivery fails.
+    # Best-effort notification across every configured channel (email + chat
+    # webhooks). notify_changes is best-effort per channel; this guard only
+    # covers an unexpected failure building the channel list.
     if change_summaries:
         try:
-            await notify_changes(
-                change_summaries, eff.notification_recipients, build_notifier(eff)
-            )
+            await notify_changes(change_summaries, eff)
         except Exception as exc:  # noqa: BLE001
             logger.warning("change notification failed: %s", exc)
 

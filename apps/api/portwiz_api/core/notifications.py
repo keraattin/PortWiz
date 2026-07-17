@@ -66,6 +66,49 @@ class EmailNotifier:
         )
 
 
+class _WebhookNotifier:
+    """Base for chat notifiers that POST a JSON payload to an incoming webhook.
+    ``recipients`` is part of the :class:`Notifier` protocol but has no meaning
+    for a webhook (the target is the URL) so it is ignored."""
+
+    def __init__(self, webhook_url: str) -> None:
+        self._url = webhook_url
+
+    def _payload(self, subject: str, body: str) -> dict[str, Any]:
+        raise NotImplementedError
+
+    async def send(self, subject: str, body: str, recipients: list[str]) -> None:
+        import httpx  # imported lazily
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(self._url, json=self._payload(subject, body))
+            resp.raise_for_status()
+
+
+class SlackNotifier(_WebhookNotifier):
+    """Posts to a Slack incoming webhook. Slack mrkdwn renders ``*bold*`` and
+    keeps newlines, so the plain-text summary maps over directly."""
+
+    def _payload(self, subject: str, body: str) -> dict[str, Any]:
+        return {"text": f"*{subject}*\n{body}"}
+
+
+class TeamsNotifier(_WebhookNotifier):
+    """Posts a MessageCard to a Microsoft Teams incoming webhook — the format the
+    connector accepts. Blank lines separate list items so each renders on its
+    own line."""
+
+    def _payload(self, subject: str, body: str) -> dict[str, Any]:
+        return {
+            "@type": "MessageCard",
+            "@context": "https://schema.org/extensions",
+            "summary": subject,
+            "themeColor": "0076D7",
+            "title": subject,
+            "text": body.replace("\n", "\n\n"),
+        }
+
+
 def build_notifier(settings) -> Notifier:
     if not settings.notifications_enabled or not settings.smtp_host:
         return NullNotifier()
@@ -77,6 +120,23 @@ def build_notifier(settings) -> Notifier:
         username=settings.smtp_username,
         password=settings.smtp_password,
     )
+
+
+def build_notifiers(settings) -> list[Notifier]:
+    """Every notification channel that is currently enabled and configured.
+
+    Email is included only when recipients exist (an SMTP host with no
+    recipients has nowhere to send); Slack/Teams each need their webhook URL.
+    """
+    out: list[Notifier] = []
+    email = build_notifier(settings)
+    if not isinstance(email, NullNotifier) and settings.notification_recipients:
+        out.append(email)
+    if settings.slack_enabled and settings.slack_webhook_url:
+        out.append(SlackNotifier(settings.slack_webhook_url))
+    if settings.teams_enabled and settings.teams_webhook_url:
+        out.append(TeamsNotifier(settings.teams_webhook_url))
+    return out
 
 
 async def get_notifier(session: AsyncSession = Depends(get_session)) -> Notifier:
@@ -96,14 +156,27 @@ def build_change_email(summaries: list[dict[str, Any]]) -> tuple[str, str]:
     return subject, "\n".join(lines)
 
 
-async def notify_changes(
-    summaries: list[dict[str, Any]],
-    recipients: list[str],
-    notifier: Notifier,
-) -> bool:
-    """Send a change-summary email. Returns True if an email was dispatched."""
-    if not summaries or not recipients:
-        return False
+async def notify_changes(summaries: list[dict[str, Any]], settings) -> int:
+    """Fan out a confirmed-change summary to every configured channel.
+
+    Each channel is best-effort: a failing one is logged and skipped, never
+    raised, so a broken webhook can't suppress the other channels (or fail the
+    ingest that triggered it). Returns the number of channels that accepted it.
+    """
+    if not summaries:
+        return 0
+    notifiers = build_notifiers(settings)
+    if not notifiers:
+        return 0
     subject, body = build_change_email(summaries)
-    await notifier.send(subject, body, recipients)
-    return True
+    recipients = list(settings.notification_recipients)
+    dispatched = 0
+    for notifier in notifiers:
+        try:
+            await notifier.send(subject, body, recipients)
+            dispatched += 1
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "change notification via %s failed: %s", type(notifier).__name__, exc
+            )
+    return dispatched

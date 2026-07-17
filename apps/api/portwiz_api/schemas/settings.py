@@ -26,6 +26,12 @@ class SettingsStatus(BaseModel):
     smtp_from: str
     email_recipients: list[str]
 
+    # Chat webhooks (Slack / Teams)
+    slack_enabled: bool
+    slack_configured: bool
+    teams_enabled: bool
+    teams_configured: bool
+
     # Jira
     jira_enabled: bool
     jira_deployment: str
@@ -104,6 +110,11 @@ class SettingsConfig(BaseModel):
     smtp_password_set: bool
     notification_recipients: list[str]
 
+    slack_enabled: bool
+    slack_webhook_set: bool
+    teams_enabled: bool
+    teams_webhook_set: bool
+
     jira_enabled: bool
     jira_deployment: str
     jira_url: str | None
@@ -163,6 +174,11 @@ class SettingsConfigUpdate(BaseModel):
     smtp_password: str | None = None
     smtp_use_tls: bool | None = None
     notification_recipients: list[str] | None = None
+
+    slack_enabled: bool | None = None
+    slack_webhook_url: str | None = None
+    teams_enabled: bool | None = None
+    teams_webhook_url: str | None = None
 
     jira_enabled: bool | None = None
     jira_deployment: str | None = None

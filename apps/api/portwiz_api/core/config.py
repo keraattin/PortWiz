@@ -125,6 +125,13 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = False
     notification_recipients: list[str] = []
 
+    # Chat webhooks (Slack / Microsoft Teams). Each fires on confirmed changes,
+    # independently of email, when enabled and its incoming-webhook URL is set.
+    slack_enabled: bool = False
+    slack_webhook_url: str | None = None
+    teams_enabled: bool = False
+    teams_webhook_url: str | None = None
+
     # Jira integration (issue tracker). Disabled unless fully configured.
     jira_enabled: bool = False
     jira_deployment: str = "cloud"  # cloud | server (Server/Data Center, on-prem)

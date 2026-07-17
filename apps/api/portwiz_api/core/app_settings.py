@@ -40,6 +40,11 @@ EDITABLE_KEYS: list[str] = [
     "smtp_password",
     "smtp_use_tls",
     "notification_recipients",
+    # Chat webhooks (Slack / Teams)
+    "slack_enabled",
+    "slack_webhook_url",
+    "teams_enabled",
+    "teams_webhook_url",
     # Jira
     "jira_enabled",
     "jira_deployment",
@@ -90,6 +95,8 @@ SECRET_KEYS: frozenset[str] = frozenset(
         "anthropic_api_key",
         "compat_api_key",
         "smtp_password",
+        "slack_webhook_url",
+        "teams_webhook_url",
         "jira_api_token",
         "netbox_token",
         "cve_api_key",
