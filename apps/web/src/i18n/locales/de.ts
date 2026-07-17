@@ -877,7 +877,7 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.section.chat": "Slack / Teams",
   "settings.delivery.title": "Zustellregeln",
   "settings.delivery.intro":
-    "Diese Regeln gelten für alle Kanäle unten — E-Mail, Slack und Teams.",
+    "Diese Regeln gelten für alle Kanäle unten: E-Mail, Slack und Teams.",
   "settings.delivery.minSeverity": "Mindestschweregrad",
   "settings.delivery.minSeverityHint":
     "Nur Änderungen mit diesem Schweregrad oder höher werden gesendet; die niedrigste Option benachrichtigt über alles.",

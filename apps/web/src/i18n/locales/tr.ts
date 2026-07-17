@@ -872,7 +872,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.section.chat": "Slack / Teams",
   "settings.delivery.title": "Teslim kuralları",
   "settings.delivery.intro":
-    "Bu kurallar aşağıdaki tüm kanallar için geçerlidir — e-posta, Slack ve Teams.",
+    "Bu kurallar aşağıdaki tüm kanallar için geçerlidir: e-posta, Slack ve Teams.",
   "settings.delivery.minSeverity": "Minimum şiddet",
   "settings.delivery.minSeverityHint":
     "Yalnızca bu şiddet ve üzerindeki değişiklikler gönderilir; en düşük seçenek her şeyi bildirir.",

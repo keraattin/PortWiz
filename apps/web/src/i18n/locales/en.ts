@@ -870,7 +870,7 @@ export const en = {
   "settings.section.chat": "Slack / Teams",
   "settings.delivery.title": "Delivery rules",
   "settings.delivery.intro":
-    "These rules apply to every channel below — email, Slack and Teams.",
+    "These rules apply to every channel below: email, Slack and Teams.",
   "settings.delivery.minSeverity": "Minimum severity",
   "settings.delivery.minSeverityHint":
     "Only changes at or above this severity are sent; the lowest option notifies everything.",
