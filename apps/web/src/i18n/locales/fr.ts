@@ -789,6 +789,9 @@ export const fr: Partial<Record<TKey, string>> = {
   "scans.f.scanTypeHint":
     "connect est la valeur par défaut sûre ; syn est plus rapide mais nécessite des privilèges raw-socket.",
   "scans.f.serviceDetection": "Détection de service (identifier le logiciel derrière chaque port ouvert)",
+  "scans.f.notifyEnabled": "Envoyer des notifications pour ce profil",
+  "scans.f.notifyEnabledHint":
+    "Désactivé, les changements confirmés de ce profil sont enregistrés mais aucune alerte n'est envoyée.",
   "scans.resultsTitle": "Résultats de l'analyse {id} ({count} ports ouverts)",
   "scans.col.host": "Hôte",
   "scans.col.port": "Port",

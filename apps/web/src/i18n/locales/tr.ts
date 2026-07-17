@@ -785,6 +785,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "scans.f.scanTypeHint":
     "connect güvenli varsayılandır; syn daha hızlıdır ama ham soket ayrıcalığı gerektirir.",
   "scans.f.serviceDetection": "Servis tespiti (her açık portun arkasındaki yazılımı belirle)",
+  "scans.f.notifyEnabled": "Bu profil için bildirim gönder",
+  "scans.f.notifyEnabledHint":
+    "Kapalıyken bu profilin onaylı değişiklikleri kaydedilir ama bildirim gönderilmez.",
   "scans.resultsTitle": "{id} çalışmasının sonuçları ({count} açık port)",
   "scans.col.host": "Ana makine",
   "scans.col.port": "Port",

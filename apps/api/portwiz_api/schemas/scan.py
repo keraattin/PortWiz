@@ -48,6 +48,7 @@ class ScanProfileCreate(BaseModel):
     compliance_framework: ComplianceFramework | None = None
     cron: str | None = Field(default=None, max_length=64)
     enabled: bool = True
+    notify_enabled: bool = True
 
     @field_validator("targets")
     @classmethod
@@ -72,6 +73,7 @@ class ScanProfileUpdate(BaseModel):
     compliance_framework: ComplianceFramework | None = None
     cron: str | None = Field(default=None, max_length=64)
     enabled: bool | None = None
+    notify_enabled: bool | None = None
 
     @field_validator("targets")
     @classmethod
@@ -100,6 +102,7 @@ class ScanProfileRead(BaseModel):
     cron: str | None
     last_scheduled_at: dt.datetime | None
     enabled: bool
+    notify_enabled: bool
     created_by: uuid.UUID | None
     created_at: dt.datetime
     updated_at: dt.datetime

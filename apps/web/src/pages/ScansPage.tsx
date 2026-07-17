@@ -189,6 +189,7 @@ export default function ScansPage() {
   const [cron, setCron] = useState("");
   const [scanType, setScanType] = useState<ScanType>("connect");
   const [serviceDetection, setServiceDetection] = useState(true);
+  const [notifyEnabled, setNotifyEnabled] = useState(true);
   // Framework cadence catalog: maps a framework to its required interval and a
   // recommended schedule the form can apply in one click.
   const [templates, setTemplates] = useState<FrameworkTemplate[]>([]);
@@ -320,6 +321,7 @@ export default function ScansPage() {
     setCron("");
     setScanType(scanDefaults.scanType);
     setServiceDetection(scanDefaults.serviceDetection);
+    setNotifyEnabled(true);
     setAddOpen(true);
   }
 
@@ -339,6 +341,7 @@ export default function ScansPage() {
     setCron(sch.cron);
     setScanType(p.scan_type);
     setServiceDetection(p.service_detection);
+    setNotifyEnabled(p.notify_enabled);
     setAddOpen(true);
   }
 
@@ -355,6 +358,7 @@ export default function ScansPage() {
       segment: segment || null,
       compliance_framework: framework || null,
       cron: effectiveCron || null,
+      notify_enabled: notifyEnabled,
     };
     try {
       if (editingId) {
@@ -799,6 +803,15 @@ export default function ScansPage() {
             />
             {t("scans.f.serviceDetection")}
           </label>
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={notifyEnabled}
+              onChange={(e) => setNotifyEnabled(e.target.checked)}
+            />
+            {t("scans.f.notifyEnabled")}
+          </label>
+          <p className="-mt-1 text-xs text-slate-500">{t("scans.f.notifyEnabledHint")}</p>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
             <Button type="submit">{editingId ? t("scans.editTitle") : t("scans.addTitle")}</Button>

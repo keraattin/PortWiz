@@ -419,6 +419,7 @@ export interface ScanProfile {
   compliance_framework: ComplianceFramework | null;
   cron: string | null;
   enabled: boolean;
+  notify_enabled: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -463,6 +464,7 @@ export interface ScanProfileInput {
   segment?: string | null;
   compliance_framework?: ComplianceFramework | null;
   cron?: string | null;
+  notify_enabled?: boolean;
 }
 
 export function listScanProfiles(): Promise<ScanProfile[]> {

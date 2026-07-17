@@ -239,13 +239,19 @@ async def ingest_scan_results(
     eff = await effective_settings(session)
 
     # Best-effort notification across every configured channel (email + chat
-    # webhooks). notify_changes is best-effort per channel; this guard only
+    # webhooks). A profile can opt out of notifications while still recording
+    # its changes. notify_changes is best-effort per channel; this guard only
     # covers an unexpected failure building the channel list.
     if change_summaries:
-        try:
-            await notify_changes(change_summaries, eff)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("change notification failed: %s", exc)
+        notify_ok = True
+        if run.scan_profile_id is not None:
+            prof = await session.get(ScanProfile, run.scan_profile_id)
+            notify_ok = prof is None or prof.notify_enabled
+        if notify_ok:
+            try:
+                await notify_changes(change_summaries, eff)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("change notification failed: %s", exc)
 
     # Best-effort NetBox writeback of just-discovered hosts, when enabled. The
     # manual push button stays the primary path; this is the opt-in automatic one.

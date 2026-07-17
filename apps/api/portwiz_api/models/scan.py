@@ -93,6 +93,10 @@ class ScanProfile(SQLModel, table=True):
         default=None, sa_column=Column(DateTime(timezone=True))
     )
     enabled: bool = Field(default=True, nullable=False)
+    # When false, confirmed changes from this profile's runs are still recorded
+    # but do not trigger notifications (email / Slack / Teams). The DB default
+    # (see migration 0019) backfills existing profiles to true.
+    notify_enabled: bool = Field(default=True, nullable=False)
     created_by: uuid.UUID | None = Field(default=None, foreign_key="users.id")
     created_at: dt.datetime = Field(
         default_factory=_utcnow,

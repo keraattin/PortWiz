@@ -783,6 +783,9 @@ export const en = {
   "scans.f.scanTypeHint":
     "connect is the safe default; syn is faster but needs raw-socket privileges.",
   "scans.f.serviceDetection": "Service detection (identify the software behind each open port)",
+  "scans.f.notifyEnabled": "Send notifications for this profile",
+  "scans.f.notifyEnabledHint":
+    "When off, this profile's confirmed changes are recorded but no alerts are sent.",
   "scans.resultsTitle": "Results for run {id} ({count} open ports)",
   "scans.col.host": "Host",
   "scans.col.port": "Port",
