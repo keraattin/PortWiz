@@ -9,6 +9,7 @@ from portwiz_api.core.notifications import (
     TeamsNotifier,
     build_change_email,
     build_notifiers,
+    meets_min_severity,
     notify_changes,
 )
 
@@ -32,6 +33,7 @@ def _settings(**overrides):
         smtp_username=None,
         smtp_password=None,
         notification_recipients=[],
+        notify_min_severity="low",
         slack_enabled=False,
         slack_webhook_url=None,
         teams_enabled=False,
@@ -121,3 +123,45 @@ async def test_notify_changes_is_best_effort(monkeypatch) -> None:
     dispatched = await notify_changes([_CHANGE], _settings())
     assert dispatched == 1  # only Recorder succeeded
     assert len(sent) == 1
+
+
+def test_meets_min_severity_ordering() -> None:
+    assert meets_min_severity("high", "low")
+    assert meets_min_severity("medium", "medium")
+    assert not meets_min_severity("low", "medium")
+    assert not meets_min_severity("medium", "high")
+    assert meets_min_severity("critical", "high")
+
+
+async def test_notify_changes_drops_everything_below_threshold(monkeypatch) -> None:
+    calls: list[str] = []
+
+    class Recorder:
+        async def send(self, subject, body, recipients) -> None:
+            calls.append(body)
+
+    monkeypatch.setattr(
+        "portwiz_api.core.notifications.build_notifiers", lambda settings: [Recorder()]
+    )
+    low = {**_CHANGE, "severity": "low"}
+    medium = {**_CHANGE, "severity": "medium"}
+    dispatched = await notify_changes([low, medium], _settings(notify_min_severity="high"))
+    assert dispatched == 0
+    assert calls == []  # no channel touched when nothing clears the bar
+
+
+async def test_notify_changes_keeps_only_at_or_above_threshold(monkeypatch) -> None:
+    bodies: list[str] = []
+
+    class Recorder:
+        async def send(self, subject, body, recipients) -> None:
+            bodies.append(body)
+
+    monkeypatch.setattr(
+        "portwiz_api.core.notifications.build_notifiers", lambda settings: [Recorder()]
+    )
+    low = {**_CHANGE, "severity": "low", "port": 21}
+    high = {**_CHANGE, "severity": "high", "port": 443}
+    dispatched = await notify_changes([low, high], _settings(notify_min_severity="medium"))
+    assert dispatched == 1
+    assert ":443/" in bodies[0] and ":21/" not in bodies[0]

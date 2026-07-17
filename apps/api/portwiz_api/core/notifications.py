@@ -19,6 +19,16 @@ from .db import get_session
 
 logger = logging.getLogger("portwiz.notifications")
 
+# Ordering for the global "minimum severity to notify" rule. Change events only
+# ever carry low/medium/high; critical is included so a future higher tier still
+# clears every threshold.
+_SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+
+
+def meets_min_severity(severity: str, minimum: str) -> bool:
+    """True when ``severity`` is at or above the configured ``minimum``."""
+    return _SEVERITY_RANK.get(severity, 1) >= _SEVERITY_RANK.get(minimum, 1)
+
 
 class Notifier(Protocol):
     async def send(self, subject: str, body: str, recipients: list[str]) -> None: ...
@@ -163,6 +173,10 @@ async def notify_changes(summaries: list[dict[str, Any]], settings) -> int:
     raised, so a broken webhook can't suppress the other channels (or fail the
     ingest that triggered it). Returns the number of channels that accepted it.
     """
+    if not summaries:
+        return 0
+    minimum = getattr(settings, "notify_min_severity", "low")
+    summaries = [s for s in summaries if meets_min_severity(s["severity"], minimum)]
     if not summaries:
         return 0
     notifiers = build_notifiers(settings)

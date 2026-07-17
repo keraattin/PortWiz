@@ -1015,6 +1015,7 @@ export interface SettingsConfig {
   smtp_use_tls: boolean;
   smtp_password_set: boolean;
   notification_recipients: string[];
+  notify_min_severity: string;
   slack_enabled: boolean;
   slack_webhook_set: boolean;
   teams_enabled: boolean;
@@ -1072,6 +1073,7 @@ export type SettingsConfigUpdate = Partial<{
   smtp_password: string;
   smtp_use_tls: boolean;
   notification_recipients: string[];
+  notify_min_severity: string;
   slack_enabled: boolean;
   slack_webhook_url: string;
   teams_enabled: boolean;

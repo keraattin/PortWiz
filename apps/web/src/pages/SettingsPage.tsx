@@ -86,6 +86,7 @@ interface FormState {
   smtp_password: string;
   smtp_use_tls: boolean;
   notification_recipients: string;
+  notify_min_severity: string;
   slack_enabled: boolean;
   slack_webhook_url: string;
   teams_enabled: boolean;
@@ -144,6 +145,7 @@ function fromConfig(c: SettingsConfig): FormState {
     smtp_password: "",
     smtp_use_tls: c.smtp_use_tls,
     notification_recipients: c.notification_recipients.join(", "),
+    notify_min_severity: c.notify_min_severity,
     slack_enabled: c.slack_enabled,
     slack_webhook_url: "",
     teams_enabled: c.teams_enabled,
@@ -689,7 +691,38 @@ export default function SettingsPage() {
         )}
 
         {activeTab === "email" && (
-        <section className={cardClass}>
+        <div className="space-y-6">
+          <section className={cardClass}>
+            <h3 className="font-medium text-slate-100">{t("settings.delivery.title")}</h3>
+            <p className="text-sm text-slate-400">{t("settings.delivery.intro")}</p>
+            <FormField
+              label={t("settings.delivery.minSeverity")}
+              hint={t("settings.delivery.minSeverityHint")}
+            >
+              <select
+                className={inputClass}
+                value={form.notify_min_severity}
+                onChange={(e) => set("notify_min_severity", e.target.value)}
+              >
+                <option value="low">{t("severity.low")}</option>
+                <option value="medium">{t("severity.medium")}</option>
+                <option value="high">{t("severity.high")}</option>
+              </select>
+            </FormField>
+            <div>
+              <button
+                className={primaryBtn}
+                disabled={saving === "delivery"}
+                onClick={() =>
+                  save("delivery", { notify_min_severity: form.notify_min_severity })
+                }
+              >
+                {saving === "delivery" ? t("common.saving") : t("common.save")}
+              </button>
+            </div>
+          </section>
+
+          <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.email.title")}</h3>
           {status && (
             <ConnectionBanner
@@ -790,7 +823,8 @@ export default function SettingsPage() {
             </button>
           </div>
           <TestRow result={emailResult} />
-        </section>
+          </section>
+        </div>
         )}
 
         {activeTab === "chat" && (

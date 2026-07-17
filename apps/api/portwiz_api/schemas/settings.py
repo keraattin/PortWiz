@@ -109,6 +109,7 @@ class SettingsConfig(BaseModel):
     smtp_use_tls: bool
     smtp_password_set: bool
     notification_recipients: list[str]
+    notify_min_severity: str
 
     slack_enabled: bool
     slack_webhook_set: bool
@@ -174,6 +175,7 @@ class SettingsConfigUpdate(BaseModel):
     smtp_password: str | None = None
     smtp_use_tls: bool | None = None
     notification_recipients: list[str] | None = None
+    notify_min_severity: str | None = None
 
     slack_enabled: bool | None = None
     slack_webhook_url: str | None = None

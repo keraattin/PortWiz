@@ -870,8 +870,14 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.testing": "Test en cours…",
   "settings.testConnection": "Tester la connexion",
   "settings.section.ai": "IA",
-  "settings.section.email": "E-mail",
+  "settings.section.email": "Notifications",
   "settings.section.chat": "Slack / Teams",
+  "settings.delivery.title": "Règles de distribution",
+  "settings.delivery.intro":
+    "Ces règles s'appliquent à tous les canaux ci-dessous — e-mail, Slack et Teams.",
+  "settings.delivery.minSeverity": "Gravité minimale",
+  "settings.delivery.minSeverityHint":
+    "Seuls les changements de cette gravité ou supérieure sont envoyés ; l'option la plus basse notifie tout.",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
   "settings.section.cve": "CVE",

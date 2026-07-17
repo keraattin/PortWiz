@@ -68,6 +68,7 @@ def _config_from(s: Settings) -> SettingsConfig:
         smtp_use_tls=s.smtp_use_tls,
         smtp_password_set=bool(s.smtp_password),
         notification_recipients=list(s.notification_recipients),
+        notify_min_severity=s.notify_min_severity,
         slack_enabled=s.slack_enabled,
         slack_webhook_set=bool(s.slack_webhook_url),
         teams_enabled=s.teams_enabled,

@@ -124,6 +124,9 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     smtp_use_tls: bool = False
     notification_recipients: list[str] = []
+    # Global delivery rule: only changes at/above this severity notify. "low"
+    # (the default) notifies everything, preserving pre-threshold behaviour.
+    notify_min_severity: str = "low"  # low | medium | high
 
     # Chat webhooks (Slack / Microsoft Teams). Each fires on confirmed changes,
     # independently of email, when enabled and its incoming-webhook URL is set.
