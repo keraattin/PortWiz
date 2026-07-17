@@ -90,6 +90,10 @@ interface FormState {
   notification_recipients: string;
   email_min_severity: string;
   email_scan_profiles: string[];
+  notify_mode: string;
+  notify_quiet_hours_enabled: boolean;
+  notify_quiet_start: string;
+  notify_quiet_end: string;
   slack_enabled: boolean;
   slack_webhook_url: string;
   slack_min_severity: string;
@@ -154,6 +158,10 @@ function fromConfig(c: SettingsConfig): FormState {
     notification_recipients: c.notification_recipients.join(", "),
     email_min_severity: c.email_min_severity,
     email_scan_profiles: c.email_scan_profiles,
+    notify_mode: c.notify_mode,
+    notify_quiet_hours_enabled: c.notify_quiet_hours_enabled,
+    notify_quiet_start: c.notify_quiet_start,
+    notify_quiet_end: c.notify_quiet_end,
     slack_enabled: c.slack_enabled,
     slack_webhook_url: "",
     slack_min_severity: c.slack_min_severity,
@@ -774,6 +782,64 @@ export default function SettingsPage() {
 
         {activeTab === "email" && (
         <div className="space-y-6">
+          <section className={cardClass}>
+            <h3 className="font-medium text-slate-100">{t("settings.timing.title")}</h3>
+            <p className="text-sm text-slate-400">{t("settings.timing.intro")}</p>
+            <FormField label={t("settings.timing.mode")} hint={t("settings.timing.modeHint")}>
+              <select
+                className={inputClass}
+                value={form.notify_mode}
+                onChange={(e) => set("notify_mode", e.target.value)}
+              >
+                <option value="immediate">{t("settings.timing.modeImmediate")}</option>
+                <option value="hourly">{t("settings.timing.modeHourly")}</option>
+                <option value="daily">{t("settings.timing.modeDaily")}</option>
+              </select>
+            </FormField>
+            <Toggle
+              label={t("settings.timing.quietHours")}
+              checked={form.notify_quiet_hours_enabled}
+              onChange={(v) => set("notify_quiet_hours_enabled", v)}
+            />
+            {form.notify_quiet_hours_enabled && (
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label={t("settings.timing.start")}>
+                  <input
+                    className={inputClass}
+                    type="time"
+                    value={form.notify_quiet_start}
+                    onChange={(e) => set("notify_quiet_start", e.target.value)}
+                  />
+                </FormField>
+                <FormField label={t("settings.timing.end")}>
+                  <input
+                    className={inputClass}
+                    type="time"
+                    value={form.notify_quiet_end}
+                    onChange={(e) => set("notify_quiet_end", e.target.value)}
+                  />
+                </FormField>
+              </div>
+            )}
+            <p className="text-xs text-slate-500">{t("settings.timing.quietHint")}</p>
+            <div>
+              <button
+                className={primaryBtn}
+                disabled={saving === "timing"}
+                onClick={() =>
+                  save("timing", {
+                    notify_mode: form.notify_mode,
+                    notify_quiet_hours_enabled: form.notify_quiet_hours_enabled,
+                    notify_quiet_start: form.notify_quiet_start,
+                    notify_quiet_end: form.notify_quiet_end,
+                  })
+                }
+              >
+                {saving === "timing" ? t("common.saving") : t("common.save")}
+              </button>
+            </div>
+          </section>
+
           <section className={cardClass}>
           <h3 className="font-medium text-slate-100">{t("settings.email.title")}</h3>
           {status && (

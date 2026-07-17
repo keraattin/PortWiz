@@ -129,6 +129,13 @@ class Settings(BaseSettings):
     # notifies every severity, preserving pre-threshold behaviour.
     email_min_severity: str = "low"  # low | medium | high
     email_scan_profiles: list[str] = []  # scan-profile UUIDs; empty = all
+    # Delivery timing (applies to all channels). immediate sends on ingest;
+    # hourly/daily batch pending changes into a periodic digest. Quiet hours
+    # hold notifications until the window passes (times are HH:MM, UTC).
+    notify_mode: str = "immediate"  # immediate | hourly | daily
+    notify_quiet_hours_enabled: bool = False
+    notify_quiet_start: str = "22:00"
+    notify_quiet_end: str = "07:00"
 
     # Chat webhooks (Slack / Microsoft Teams). Each fires on confirmed changes,
     # independently of email, when enabled and its incoming-webhook URL is set.

@@ -111,6 +111,10 @@ class SettingsConfig(BaseModel):
     notification_recipients: list[str]
     email_min_severity: str
     email_scan_profiles: list[str]
+    notify_mode: str
+    notify_quiet_hours_enabled: bool
+    notify_quiet_start: str
+    notify_quiet_end: str
 
     slack_enabled: bool
     slack_webhook_set: bool
@@ -182,6 +186,10 @@ class SettingsConfigUpdate(BaseModel):
     notification_recipients: list[str] | None = None
     email_min_severity: str | None = None
     email_scan_profiles: list[str] | None = None
+    notify_mode: str | None = None
+    notify_quiet_hours_enabled: bool | None = None
+    notify_quiet_start: str | None = None
+    notify_quiet_end: str | None = None
 
     slack_enabled: bool | None = None
     slack_webhook_url: str | None = None

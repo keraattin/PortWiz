@@ -877,6 +877,19 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.rules.profilesHint":
     "Bu kanal yalnızca seçili profillerin değişikliklerini gönderir. Hiçbiri seçilmezse tüm profiller.",
   "settings.rules.noProfiles": "Henüz tarama profili yok.",
+  "settings.timing.title": "Teslimat zamanlaması",
+  "settings.timing.intro": "Tüm kanallar için geçerlidir.",
+  "settings.timing.mode": "Sıklık",
+  "settings.timing.modeHint":
+    "Anında, algılanan her değişikliği gönderir; özetler değişiklikleri tek periyodik mesajda toplar.",
+  "settings.timing.modeImmediate": "Anında",
+  "settings.timing.modeHourly": "Saatlik özet",
+  "settings.timing.modeDaily": "Günlük özet",
+  "settings.timing.quietHours": "Sessiz saatler",
+  "settings.timing.quietHint":
+    "Bu aralıktaki (UTC) bildirimler bekletilir ve aralık geçince gönderilir.",
+  "settings.timing.start": "Başlangıç",
+  "settings.timing.end": "Bitiş",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
   "settings.section.cve": "CVE",

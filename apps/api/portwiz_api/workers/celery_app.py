@@ -94,6 +94,31 @@ def recheck_cves_due() -> dict[str, int] | None:
     return asyncio.run(_run())
 
 
+@celery_app.task(name="portwiz.flush_notifications_due")
+def flush_notifications_due() -> int | None:
+    """Beat tick: send deferred change notifications (digest batches and
+    quiet-hours holds) once they are due. Immediate, non-quiet notifications go
+    out on ingest, so this only handles what was held back."""
+    import asyncio
+
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from ..core.app_settings import effective_settings
+    from ..core.scheduler import flush_due_notifications
+
+    async def _run() -> int | None:
+        engine = create_async_engine(settings.database_url)
+        maker = async_sessionmaker(engine, expire_on_commit=False)
+        try:
+            async with maker() as session:
+                eff = await effective_settings(session)
+                return await flush_due_notifications(session, eff)
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(_run())
+
+
 celery_app.conf.beat_schedule = {
     "schedule-due-scans": {
         "task": "portwiz.schedule_due_scans",
@@ -102,5 +127,9 @@ celery_app.conf.beat_schedule = {
     "recheck-cves-due": {
         "task": "portwiz.recheck_cves_due",
         "schedule": 600.0,  # poll every 10 min; cve_recheck_hours sets the cadence
+    },
+    "flush-notifications-due": {
+        "task": "portwiz.flush_notifications_due",
+        "schedule": 300.0,  # poll every 5 min; notify_mode/quiet hours set timing
     },
 }

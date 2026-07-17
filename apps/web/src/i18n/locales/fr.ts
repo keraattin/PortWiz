@@ -882,6 +882,19 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.rules.profilesHint":
     "Ce canal n'envoie que les changements des profils sélectionnés. N'en sélectionner aucun pour tous les profils.",
   "settings.rules.noProfiles": "Aucun profil de scan pour l'instant.",
+  "settings.timing.title": "Calendrier de distribution",
+  "settings.timing.intro": "S'applique à tous les canaux.",
+  "settings.timing.mode": "Fréquence",
+  "settings.timing.modeHint":
+    "Immédiat envoie à chaque changement détecté ; les résumés regroupent les changements en un message périodique.",
+  "settings.timing.modeImmediate": "Immédiat",
+  "settings.timing.modeHourly": "Résumé horaire",
+  "settings.timing.modeDaily": "Résumé quotidien",
+  "settings.timing.quietHours": "Heures silencieuses",
+  "settings.timing.quietHint":
+    "Les notifications pendant cette fenêtre (UTC) sont retenues puis envoyées ensuite.",
+  "settings.timing.start": "Début",
+  "settings.timing.end": "Fin",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
   "settings.section.cve": "CVE",

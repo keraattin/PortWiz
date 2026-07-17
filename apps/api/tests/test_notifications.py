@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 from types import SimpleNamespace
 
 from portwiz_api.core.notifications import (
@@ -10,6 +11,7 @@ from portwiz_api.core.notifications import (
     TeamsNotifier,
     build_change_email,
     build_channels,
+    in_quiet_hours,
     meets_min_severity,
     notify_changes,
 )
@@ -20,6 +22,7 @@ _CHANGE = {
     "port": 443,
     "protocol": "tcp",
     "severity": "high",
+    "scan_profile_id": None,
 }
 
 
@@ -36,6 +39,10 @@ def _settings(**overrides):
         notification_recipients=[],
         email_min_severity="low",
         email_scan_profiles=[],
+        notify_mode="immediate",
+        notify_quiet_hours_enabled=False,
+        notify_quiet_start="22:00",
+        notify_quiet_end="07:00",
         slack_enabled=False,
         slack_webhook_url=None,
         slack_min_severity="low",
@@ -172,28 +179,61 @@ async def test_notify_changes_applies_per_channel_severity(monkeypatch) -> None:
 
 
 async def test_notify_changes_respects_channel_profile_scope(monkeypatch) -> None:
-    """A channel scoped to specific profiles ignores changes from others."""
+    """A channel scoped to specific profiles ignores changes from others, using
+    each summary's own scan_profile_id."""
     recorder = _Recorder()
     channels = [Channel(recorder, "low", ["profile-a"])]
     monkeypatch.setattr(
         "portwiz_api.core.notifications.build_channels", lambda settings: channels
     )
     # A different profile is skipped entirely.
-    assert await notify_changes([_CHANGE], _settings(), scan_profile_id="profile-b") == 0
+    assert await notify_changes([{**_CHANGE, "scan_profile_id": "profile-b"}], _settings()) == 0
     assert recorder.bodies == []
     # The scoped profile fires.
-    assert await notify_changes([_CHANGE], _settings(), scan_profile_id="profile-a") == 1
+    assert await notify_changes([{**_CHANGE, "scan_profile_id": "profile-a"}], _settings()) == 1
     assert len(recorder.bodies) == 1
 
 
-async def test_unprofiled_run_skips_profile_scoped_channels(monkeypatch) -> None:
-    """An ad-hoc run (no profile) does not match a channel that filters by
-    profile, but does reach an unscoped channel."""
+async def test_notify_changes_mixed_profiles_in_one_digest(monkeypatch) -> None:
+    """One call spanning profiles: a scoped channel takes only its profile's
+    changes; an unscoped channel takes all of them."""
     scoped, unscoped = _Recorder(), _Recorder()
     channels = [Channel(scoped, "low", ["profile-a"]), Channel(unscoped, "low", [])]
     monkeypatch.setattr(
         "portwiz_api.core.notifications.build_channels", lambda settings: channels
     )
-    dispatched = await notify_changes([_CHANGE], _settings(), scan_profile_id=None)
-    assert dispatched == 1
-    assert scoped.bodies == [] and len(unscoped.bodies) == 1
+    a = {**_CHANGE, "scan_profile_id": "profile-a", "port": 22}
+    b = {**_CHANGE, "scan_profile_id": "profile-b", "port": 443}
+    dispatched = await notify_changes([a, b], _settings())
+    assert dispatched == 2
+    assert ":22/" in scoped.bodies[0] and ":443/" not in scoped.bodies[0]  # only its own
+    assert ":22/" in unscoped.bodies[0] and ":443/" in unscoped.bodies[0]  # both
+
+
+def test_in_quiet_hours_disabled_is_never_quiet() -> None:
+    now = dt.datetime(2026, 1, 1, 23, 0, tzinfo=dt.timezone.utc)
+    assert not in_quiet_hours(now, _settings())
+
+
+def test_in_quiet_hours_overnight_window() -> None:
+    s = _settings(
+        notify_quiet_hours_enabled=True, notify_quiet_start="22:00", notify_quiet_end="07:00"
+    )
+    assert in_quiet_hours(dt.datetime(2026, 1, 1, 23, 0, tzinfo=dt.timezone.utc), s)
+    assert in_quiet_hours(dt.datetime(2026, 1, 1, 3, 0, tzinfo=dt.timezone.utc), s)
+    assert not in_quiet_hours(dt.datetime(2026, 1, 1, 12, 0, tzinfo=dt.timezone.utc), s)
+
+
+def test_in_quiet_hours_daytime_window() -> None:
+    s = _settings(
+        notify_quiet_hours_enabled=True, notify_quiet_start="09:00", notify_quiet_end="17:00"
+    )
+    assert in_quiet_hours(dt.datetime(2026, 1, 1, 12, 0, tzinfo=dt.timezone.utc), s)
+    assert not in_quiet_hours(dt.datetime(2026, 1, 1, 20, 0, tzinfo=dt.timezone.utc), s)
+
+
+def test_in_quiet_hours_malformed_window_is_not_quiet() -> None:
+    s = _settings(
+        notify_quiet_hours_enabled=True, notify_quiet_start="", notify_quiet_end="07:00"
+    )
+    assert not in_quiet_hours(dt.datetime(2026, 1, 1, 3, 0, tzinfo=dt.timezone.utc), s)

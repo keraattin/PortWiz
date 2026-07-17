@@ -1019,6 +1019,10 @@ export interface SettingsConfig {
   notification_recipients: string[];
   email_min_severity: string;
   email_scan_profiles: string[];
+  notify_mode: string;
+  notify_quiet_hours_enabled: boolean;
+  notify_quiet_start: string;
+  notify_quiet_end: string;
   slack_enabled: boolean;
   slack_webhook_set: boolean;
   slack_min_severity: string;
@@ -1082,6 +1086,10 @@ export type SettingsConfigUpdate = Partial<{
   notification_recipients: string[];
   email_min_severity: string;
   email_scan_profiles: string[];
+  notify_mode: string;
+  notify_quiet_hours_enabled: boolean;
+  notify_quiet_start: string;
+  notify_quiet_end: string;
   slack_enabled: boolean;
   slack_webhook_url: string;
   slack_min_severity: string;

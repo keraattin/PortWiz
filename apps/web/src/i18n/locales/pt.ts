@@ -882,6 +882,19 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.rules.profilesHint":
     "Este canal envia apenas alterações dos perfis selecionados. Não selecione nenhum para todos os perfis.",
   "settings.rules.noProfiles": "Ainda não há perfis de varredura.",
+  "settings.timing.title": "Agendamento de entrega",
+  "settings.timing.intro": "Aplica-se a todos os canais.",
+  "settings.timing.mode": "Frequência",
+  "settings.timing.modeHint":
+    "Imediato envia a cada alteração detectada; os resumos agrupam as alterações em uma mensagem periódica.",
+  "settings.timing.modeImmediate": "Imediato",
+  "settings.timing.modeHourly": "Resumo por hora",
+  "settings.timing.modeDaily": "Resumo diário",
+  "settings.timing.quietHours": "Horário silencioso",
+  "settings.timing.quietHint":
+    "As notificações nesta janela (UTC) são retidas e enviadas depois.",
+  "settings.timing.start": "Início",
+  "settings.timing.end": "Fim",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
   "settings.section.cve": "CVE",

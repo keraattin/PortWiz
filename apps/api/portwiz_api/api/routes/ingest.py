@@ -34,7 +34,7 @@ from ...core.inventory_source import (
     get_inventory_source,
 )
 from ...core.issue_tracker import IssueTracker, get_issue_tracker, link_changes_to_tracker
-from ...core.notifications import notify_changes
+from ...core.notifications import in_quiet_hours, notify_changes
 from ...models.agent import Agent
 from ...models.asset import Asset, Criticality
 from ...models.scan import Observation, ScanProfile, ScanRun, ScanRunStatus
@@ -209,6 +209,7 @@ async def ingest_scan_results(
     # Flush observations so change detection can read them, then run it.
     await session.flush()
     changes = await detect_changes(session, run)
+    profile_id = str(run.scan_profile_id) if run.scan_profile_id is not None else None
     change_summaries = [
         {
             "change_type": c.change_type,
@@ -216,9 +217,31 @@ async def ingest_scan_results(
             "port": c.port,
             "protocol": c.protocol,
             "severity": c.severity,
+            "scan_profile_id": profile_id,
         }
         for c in changes
     ]
+
+    eff = await effective_settings(session)
+
+    # Decide how the just-detected changes reach notifications. Immediate mode
+    # (outside quiet hours) sends now and marks them processed; hourly/daily
+    # digests and quiet-hours holds leave notified_at NULL for the scheduler to
+    # flush later. A profile that opted out records its changes but is marked
+    # processed so nothing is ever sent for them.
+    send_now = False
+    if changes:
+        profile_opted_out = False
+        if run.scan_profile_id is not None:
+            prof = await session.get(ScanProfile, run.scan_profile_id)
+            profile_opted_out = prof is not None and not prof.notify_enabled
+        if profile_opted_out:
+            for c in changes:
+                c.notified_at = received_at
+        elif eff.notify_mode == "immediate" and not in_quiet_hours(received_at, eff):
+            for c in changes:
+                c.notified_at = received_at
+            send_now = True
 
     await append_audit(
         session,
@@ -236,26 +259,14 @@ async def ingest_scan_results(
     )
     await session.commit()
 
-    eff = await effective_settings(session)
-
-    # Best-effort notification across every configured channel (email + chat
-    # webhooks). A profile can opt out of notifications while still recording
-    # its changes. notify_changes is best-effort per channel; this guard only
-    # covers an unexpected failure building the channel list.
-    if change_summaries:
-        notify_ok = True
-        if run.scan_profile_id is not None:
-            prof = await session.get(ScanProfile, run.scan_profile_id)
-            notify_ok = prof is None or prof.notify_enabled
-        if notify_ok:
-            try:
-                await notify_changes(
-                    change_summaries, eff, scan_profile_id=str(run.scan_profile_id)
-                    if run.scan_profile_id is not None
-                    else None,
-                )
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("change notification failed: %s", exc)
+    # Immediate, non-quiet notifications go out now; everything else was left
+    # pending above for the scheduler's digest/quiet-hours flush. Best-effort:
+    # never fail ingest on a bad webhook.
+    if send_now:
+        try:
+            await notify_changes(change_summaries, eff)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("change notification failed: %s", exc)
 
     # Best-effort NetBox writeback of just-discovered hosts, when enabled. The
     # manual push button stays the primary path; this is the opt-in automatic one.

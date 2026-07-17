@@ -14,13 +14,15 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.app_setting import AppSetting
+from ..models.change import ChangeEvent
 from ..models.scan import Observation, ScanProfile, ScanRun, ScanRunStatus, ScanSource
 from .audit import append_audit
 
-# Internal state cursor: when the last automatic CVE re-check ran. Stored in
-# app_settings (not an EDITABLE_KEYS entry), so it is scheduler state, never
-# user-settable, and effective_settings ignores it.
+# Internal state cursors: stored in app_settings (not EDITABLE_KEYS entries), so
+# they are scheduler state, never user-settable, and effective_settings ignores
+# them. One tracks the last automatic CVE re-check, the other the last digest.
 _CVE_CURSOR_KEY = "cve_last_recheck_at"
+_DIGEST_CURSOR_KEY = "notify_last_digest_at"
 
 
 def _utcnow() -> dt.datetime:
@@ -221,6 +223,67 @@ async def run_due_cve_recheck(
     )
     await session.commit()
     return result
+
+
+async def flush_due_notifications(
+    session: AsyncSession,
+    settings,
+    now: dt.datetime | None = None,
+) -> int | None:
+    """Send deferred change notifications that are now due.
+
+    Pending changes are ``ChangeEvent`` rows with ``notified_at IS NULL``. They
+    accumulate when ``notify_mode`` is hourly/daily (batched into a digest) or
+    when a change lands during quiet hours (held). Immediate mode only defers for
+    quiet hours, so it flushes as soon as the window passes; hourly/daily pace
+    via a global cursor. The cursor is claimed (and rows marked) before sending
+    so an overlapping tick never double-sends. Returns the number of changes
+    flushed, or ``None`` when nothing was due.
+    """
+    from .notifications import in_quiet_hours, notify_changes
+
+    now = _utcnow() if now is None else _aware(now)
+    if in_quiet_hours(now, settings):
+        return None
+
+    rows = (
+        (
+            await session.execute(
+                select(ChangeEvent).where(ChangeEvent.notified_at.is_(None))
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if not rows:
+        return None
+
+    if settings.notify_mode in ("hourly", "daily"):
+        interval = dt.timedelta(hours=1 if settings.notify_mode == "hourly" else 24)
+        last = await _get_cursor(session, _DIGEST_CURSOR_KEY)
+        if last is not None and now - last < interval:
+            return None
+
+    # Claim the slot and mark the batch processed before sending, so a later
+    # tick sees an empty queue rather than re-sending. Delivery is best-effort.
+    await _set_cursor(session, _DIGEST_CURSOR_KEY, now)
+    for c in rows:
+        c.notified_at = now
+    await session.commit()
+
+    summaries = [
+        {
+            "change_type": c.change_type,
+            "ip": c.ip,
+            "port": c.port,
+            "protocol": c.protocol,
+            "severity": c.severity,
+            "scan_profile_id": str(c.scan_profile_id) if c.scan_profile_id else None,
+        }
+        for c in rows
+    ]
+    await notify_changes(summaries, settings)
+    return len(rows)
 
 
 async def prune_observations(

@@ -8,6 +8,7 @@ and side-effect free.
 
 from __future__ import annotations
 
+import datetime as dt
 import logging
 from dataclasses import dataclass
 from email.message import EmailMessage
@@ -29,6 +30,34 @@ _SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3, "critical": 4}
 def meets_min_severity(severity: str, minimum: str) -> bool:
     """True when ``severity`` is at or above the configured ``minimum``."""
     return _SEVERITY_RANK.get(severity, 1) >= _SEVERITY_RANK.get(minimum, 1)
+
+
+def _parse_hhmm(value: str) -> dt.time | None:
+    try:
+        hh, mm = value.strip().split(":")
+        return dt.time(int(hh), int(mm))
+    except (ValueError, AttributeError):
+        return None
+
+
+def in_quiet_hours(now: dt.datetime, settings) -> bool:
+    """True when ``now`` (UTC) falls inside the configured quiet-hours window.
+
+    Windows that wrap past midnight (start later than end) are handled. A blank,
+    malformed, or zero-length window counts as "not quiet".
+    """
+    if not settings.notify_quiet_hours_enabled:
+        return False
+    start = _parse_hhmm(settings.notify_quiet_start)
+    end = _parse_hhmm(settings.notify_quiet_end)
+    if start is None or end is None or start == end:
+        return False
+    cur = now.hour * 60 + now.minute
+    s = start.hour * 60 + start.minute
+    e = end.hour * 60 + end.minute
+    if s < e:
+        return s <= cur < e
+    return cur >= s or cur < e
 
 
 class Notifier(Protocol):
@@ -196,18 +225,16 @@ def build_change_email(summaries: list[dict[str, Any]]) -> tuple[str, str]:
     return subject, "\n".join(lines)
 
 
-async def notify_changes(
-    summaries: list[dict[str, Any]], settings, scan_profile_id: str | None = None
-) -> int:
-    """Fan out a confirmed-change summary to every configured channel, applying
+async def notify_changes(summaries: list[dict[str, Any]], settings) -> int:
+    """Fan out confirmed-change summaries to every configured channel, applying
     each channel's own delivery rules (min severity and scan-profile scope).
 
-    ``scan_profile_id`` is the profile whose run produced the changes (all
-    summaries in one call share it); a channel scoped to specific profiles is
-    skipped when it does not list this one. Each channel is best-effort: a
-    failing one is logged and skipped, never raised, so a broken webhook can't
-    suppress the others (or fail the ingest that triggered it). Returns the
-    number of channels that accepted the message.
+    Each summary carries its own ``scan_profile_id`` so one call may span several
+    profiles (as a digest does); a channel scoped to specific profiles only
+    receives the changes it lists. Each channel is best-effort: a failing one is
+    logged and skipped, never raised, so a broken webhook can't suppress the
+    others (or fail the ingest that triggered it). Returns the number of
+    channels that accepted a message.
     """
     if not summaries:
         return 0
@@ -215,15 +242,16 @@ async def notify_changes(
     if not channels:
         return 0
     recipients = list(settings.notification_recipients)
-    pid = str(scan_profile_id) if scan_profile_id is not None else None
     dispatched = 0
     for ch in channels:
-        # Profile scope: an empty list means "all profiles"; otherwise this
-        # change's profile must be listed (an unprofiled/ad-hoc run never
-        # matches a channel that filters by profile).
-        if ch.scan_profiles and (pid is None or pid not in ch.scan_profiles):
-            continue
-        selected = [s for s in summaries if meets_min_severity(s["severity"], ch.min_severity)]
+        # Per change: severity must clear the channel's bar, and (when the
+        # channel filters by profile) the change's profile must be listed.
+        selected = [
+            s
+            for s in summaries
+            if meets_min_severity(s["severity"], ch.min_severity)
+            and (not ch.scan_profiles or s.get("scan_profile_id") in ch.scan_profiles)
+        ]
         if not selected:
             continue
         subject, body = build_change_email(selected)

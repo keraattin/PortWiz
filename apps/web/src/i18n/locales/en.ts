@@ -875,6 +875,19 @@ export const en = {
   "settings.rules.profilesHint":
     "This channel only sends changes from the selected profiles. Select none for all profiles.",
   "settings.rules.noProfiles": "No scan profiles yet.",
+  "settings.timing.title": "Delivery timing",
+  "settings.timing.intro": "Applies to all channels.",
+  "settings.timing.mode": "Frequency",
+  "settings.timing.modeHint":
+    "Immediate sends on each detected change; digests batch changes into one periodic message.",
+  "settings.timing.modeImmediate": "Immediate",
+  "settings.timing.modeHourly": "Hourly digest",
+  "settings.timing.modeDaily": "Daily digest",
+  "settings.timing.quietHours": "Quiet hours",
+  "settings.timing.quietHint":
+    "Notifications during this window (UTC) are held and sent once it passes.",
+  "settings.timing.start": "Start",
+  "settings.timing.end": "End",
   "settings.section.jira": "Jira",
   "settings.section.netbox": "NetBox",
   "settings.section.cve": "CVE",

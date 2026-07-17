@@ -42,6 +42,10 @@ EDITABLE_KEYS: list[str] = [
     "notification_recipients",
     "email_min_severity",
     "email_scan_profiles",
+    "notify_mode",
+    "notify_quiet_hours_enabled",
+    "notify_quiet_start",
+    "notify_quiet_end",
     # Chat webhooks (Slack / Teams)
     "slack_enabled",
     "slack_webhook_url",

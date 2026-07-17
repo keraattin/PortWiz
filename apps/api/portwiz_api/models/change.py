@@ -83,3 +83,9 @@ class ChangeEvent(SQLModel, table=True):
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
+    # When this change was processed for notification (sent, batched into a
+    # digest, or deliberately suppressed). NULL means it is still pending, so the
+    # digest flush picks it up. Indexed for the "pending" query.
+    notified_at: dt.datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), index=True)
+    )
