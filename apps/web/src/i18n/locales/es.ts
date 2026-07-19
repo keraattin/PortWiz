@@ -62,6 +62,38 @@ export const es: Partial<Record<TKey, string>> = {
   "docs.int.ai.h": "Proveedor de IA",
   "docs.int.ai.p":
     "Un modelo Ollama local por defecto, o Claude o cualquier proveedor compatible con OpenAI. La IA refina huellas de servicio débiles y escribe resúmenes de CVE en lenguaje claro; con un modelo local, los datos nunca salen de tu red.",
+  "docs.notif.title": "Notificaciones",
+  "docs.notif.summary":
+    "Envía cambios confirmados a correo, Slack y Teams, con reglas por canal y resúmenes.",
+  "docs.notif.flow.rules": "Aplicar reglas",
+  "docs.notif.flow.channels": "Enviar a los canales",
+  "docs.notif.overview.h": "Cómo funcionan las notificaciones",
+  "docs.notif.overview.p":
+    "Cuando un escaneo confirma un cambio, PortWiz lo envía a cada canal configurado que coincide con tus reglas. La entrega es best-effort y por canal: un webhook averiado nunca bloquea a los demás ni hace fallar el ingest del escaneo.",
+  "docs.notif.channels.h": "Canales",
+  "docs.notif.channels.p":
+    "Configura los canales en Ajustes, Notificaciones. Cada uno es independiente, así que puedes activar cualquier combinación.",
+  "docs.notif.channels.email":
+    "Correo: define el host SMTP y los destinatarios. Consulta la guía de Integraciones para los detalles de SMTP.",
+  "docs.notif.channels.slack":
+    "Slack: en Slack, añade un Incoming Webhook a un canal y pega su URL.",
+  "docs.notif.channels.teams":
+    "Teams: en un canal de Teams, añade un conector Incoming Webhook y pega su URL.",
+  "docs.notif.channels.test":
+    "Usa Enviar prueba en cada canal para confirmar la entrega antes de confiar en él.",
+  "docs.notif.rules.h": "Reglas por canal",
+  "docs.notif.rules.p":
+    "Cada canal tiene su propia severidad mínima, así que puedes enviar todo por correo pero solo los cambios de severidad alta a Slack.",
+  "docs.notif.rules.scope":
+    "Cada canal también puede limitarse a perfiles de escaneo específicos. Deja la lista de perfiles vacía para recibir cambios de todos.",
+  "docs.notif.optout.h": "Desactivación por perfil",
+  "docs.notif.optout.p":
+    "Un perfil de escaneo puede desactivar las notificaciones por completo mientras sigue registrando sus cambios, para escaneos ruidosos o de bajo valor. Configúralo en el perfil de escaneo, en Escaneos.",
+  "docs.notif.timing.h": "Horario y resúmenes",
+  "docs.notif.timing.p":
+    "El horario de entrega se aplica a todos los canales. Inmediato envía en cada cambio detectado; por hora o diario agrupa los cambios en un resumen para reducir el ruido.",
+  "docs.notif.timing.quiet":
+    "Las horas de silencio retienen las notificaciones durante una ventana que definas (UTC); lo retenido se envía en cuanto pasa la ventana.",
   "docs.roles.title": "Roles & permisos",
   "docs.roles.summary": "Quién puede hacer qué.",
   "docs.roles.three.h": "Los tres roles",

@@ -62,6 +62,38 @@ export const pt: Partial<Record<TKey, string>> = {
   "docs.int.ai.h": "Provedor de IA",
   "docs.int.ai.p":
     "Um modelo Ollama local por padrão, ou Claude ou qualquer provedor compatível com OpenAI. A IA refina impressões digitais fracas de serviços e escreve resumos de CVE em linguagem simples; com um modelo local, os dados nunca saem da sua rede.",
+  "docs.notif.title": "Notificações",
+  "docs.notif.summary":
+    "Envie alterações confirmadas para e-mail, Slack e Teams, com regras por canal e resumos.",
+  "docs.notif.flow.rules": "Aplicar regras",
+  "docs.notif.flow.channels": "Enviar aos canais",
+  "docs.notif.overview.h": "Como funcionam as notificações",
+  "docs.notif.overview.p":
+    "Quando um scan confirma uma alteração, o PortWiz a envia para cada canal configurado que corresponde às suas regras. A entrega é best-effort e por canal: um webhook com defeito nunca bloqueia os outros nem faz falhar o ingest do scan.",
+  "docs.notif.channels.h": "Canais",
+  "docs.notif.channels.p":
+    "Configure os canais em Configurações, Notificações. Cada um é independente, então você pode ativar qualquer combinação.",
+  "docs.notif.channels.email":
+    "E-mail: defina o host SMTP e os destinatários. Veja o guia de Integrações para detalhes de SMTP.",
+  "docs.notif.channels.slack":
+    "Slack: no Slack, adicione um Incoming Webhook a um canal e cole a URL.",
+  "docs.notif.channels.teams":
+    "Teams: em um canal do Teams, adicione um conector Incoming Webhook e cole a URL.",
+  "docs.notif.channels.test":
+    "Use Enviar teste em cada canal para confirmar a entrega antes de confiar nele.",
+  "docs.notif.rules.h": "Regras por canal",
+  "docs.notif.rules.p":
+    "Cada canal tem sua própria severidade mínima, então você pode enviar tudo por e-mail mas apenas alterações de alta severidade para o Slack.",
+  "docs.notif.rules.scope":
+    "Cada canal também pode ser limitado a perfis de varredura específicos. Deixe a lista de perfis vazia para receber alterações de todos.",
+  "docs.notif.optout.h": "Desativação por perfil",
+  "docs.notif.optout.p":
+    "Um perfil de varredura pode desativar as notificações totalmente enquanto ainda registra suas alterações, para varreduras ruidosas ou de baixo valor. Configure isso no perfil de varredura, em Varreduras.",
+  "docs.notif.timing.h": "Horário e resumos",
+  "docs.notif.timing.p":
+    "O horário de entrega aplica-se a todos os canais. Imediato envia a cada alteração detectada; por hora ou diário agrupa as alterações em um resumo para reduzir o ruído.",
+  "docs.notif.timing.quiet":
+    "O horário silencioso retém as notificações durante uma janela que você define (UTC); o que for retido é enviado assim que a janela passar.",
   "docs.roles.title": "Papéis & permissões",
   "docs.roles.summary": "Quem pode fazer o quê.",
   "docs.roles.three.h": "Os três papéis",

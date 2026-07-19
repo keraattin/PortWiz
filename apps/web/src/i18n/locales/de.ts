@@ -62,6 +62,38 @@ export const de: Partial<Record<TKey, string>> = {
   "docs.int.ai.h": "AI-Anbieter",
   "docs.int.ai.p":
     "Standardmäßig ein lokales Ollama-Modell, oder Claude bzw. ein beliebiger OpenAI-kompatibler Anbieter. Die AI verbessert schwache Dienst-Fingerabdrücke und schreibt CVE-Zusammenfassungen in Klartext; mit einem lokalen Modell verlassen die Daten Ihr Netzwerk nie.",
+  "docs.notif.title": "Benachrichtigungen",
+  "docs.notif.summary":
+    "Bestätigte Änderungen an E-Mail, Slack und Teams senden, mit Regeln pro Kanal und Zusammenfassungen.",
+  "docs.notif.flow.rules": "Regeln anwenden",
+  "docs.notif.flow.channels": "An Kanäle senden",
+  "docs.notif.overview.h": "So funktionieren Benachrichtigungen",
+  "docs.notif.overview.p":
+    "Wenn ein Scan eine Änderung bestätigt, sendet PortWiz sie an jeden konfigurierten Kanal, der Ihren Regeln entspricht. Die Zustellung ist best-effort und pro Kanal: ein defekter Webhook blockiert die anderen nicht und lässt den Scan-Ingest nicht fehlschlagen.",
+  "docs.notif.channels.h": "Kanäle",
+  "docs.notif.channels.p":
+    "Kanäle unter Einstellungen, Benachrichtigungen konfigurieren. Jeder ist unabhängig, sodass Sie jede Kombination aktivieren können.",
+  "docs.notif.channels.email":
+    "E-Mail: SMTP-Host und Empfänger festlegen. SMTP-Details siehe Integrationen-Anleitung.",
+  "docs.notif.channels.slack":
+    "Slack: in Slack einen Incoming Webhook zu einem Kanal hinzufügen, dann die URL einfügen.",
+  "docs.notif.channels.teams":
+    "Teams: in einem Teams-Kanal einen Incoming-Webhook-Connector hinzufügen, dann die URL einfügen.",
+  "docs.notif.channels.test":
+    "Nutzen Sie Test senden auf jedem Kanal, um die Zustellung zu prüfen, bevor Sie sich darauf verlassen.",
+  "docs.notif.rules.h": "Regeln pro Kanal",
+  "docs.notif.rules.p":
+    "Jeder Kanal hat seinen eigenen Mindestschweregrad, sodass Sie alles per E-Mail senden können, aber nur Änderungen hoher Schwere an Slack.",
+  "docs.notif.rules.scope":
+    "Jeder Kanal kann außerdem auf bestimmte Scan-Profile beschränkt werden. Lassen Sie die Profilliste leer, um Änderungen von allen zu erhalten.",
+  "docs.notif.optout.h": "Deaktivierung pro Profil",
+  "docs.notif.optout.p":
+    "Ein Scan-Profil kann Benachrichtigungen ganz abschalten und dabei seine Änderungen weiter aufzeichnen, für laute oder wenig relevante Scans. Legen Sie das am Scan-Profil unter Scans fest.",
+  "docs.notif.timing.h": "Zeitpunkt und Zusammenfassungen",
+  "docs.notif.timing.p":
+    "Der Zustellzeitpunkt gilt für alle Kanäle. Sofort sendet bei jeder erkannten Änderung; stündlich oder täglich bündelt Änderungen in einer Zusammenfassung, um Rauschen zu reduzieren.",
+  "docs.notif.timing.quiet":
+    "Ruhezeiten halten Benachrichtigungen in einem von Ihnen festgelegten Zeitfenster (UTC) zurück; Zurückgehaltenes wird gesendet, sobald das Fenster vorbei ist.",
   "docs.roles.title": "Rollen & Berechtigungen",
   "docs.roles.summary": "Wer was darf.",
   "docs.roles.three.h": "Die drei Rollen",

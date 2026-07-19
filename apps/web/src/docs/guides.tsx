@@ -151,6 +151,13 @@ const CADENCE_LEGEND: { cls: string; label: TKey }[] = [
   { cls: "bg-slate-700 text-slate-400", label: "cadence.never" },
 ];
 
+// Change severities, high to low, as the notification min-severity rule sees them.
+const SEVERITY_LEGEND: { cls: string; label: TKey }[] = [
+  { cls: "bg-red-900 text-red-300", label: "severity.high" },
+  { cls: "bg-amber-900 text-amber-300", label: "severity.medium" },
+  { cls: "bg-slate-700 text-slate-400", label: "severity.low" },
+];
+
 // Anatomy of an evidence package: the inputs on the left combine into one signed
 // bundle on the right.
 function DocPackage() {
@@ -456,8 +463,58 @@ function IntegrationsGuide() {
       </Section>
       <SeeAlso
         items={[
+          { id: "notifications", title: "docs.notif.title" },
           { id: "evidence", title: "docs.ev.title" },
-          { id: "cve", title: "docs.cve.title" },
+        ]}
+      />
+    </div>
+  );
+}
+
+function NotificationsGuide() {
+  return (
+    <div className="space-y-6">
+      <DocFlow
+        steps={[
+          { icon: "🔀", label: "docs.flow.detect" },
+          { icon: "🎚️", label: "docs.notif.flow.rules" },
+          { icon: "📨", label: "docs.notif.flow.channels" },
+        ]}
+      />
+      <Section heading="docs.notif.overview.h">
+        <P k="docs.notif.overview.p" />
+      </Section>
+      <Section heading="docs.notif.channels.h">
+        <P k="docs.notif.channels.p" />
+        <Steps
+          items={[
+            "docs.notif.channels.email",
+            "docs.notif.channels.slack",
+            "docs.notif.channels.teams",
+          ]}
+        />
+        <Callout variant="tip">
+          <P k="docs.notif.channels.test" />
+        </Callout>
+      </Section>
+      <Section heading="docs.notif.rules.h">
+        <P k="docs.notif.rules.p" />
+        <DocLegend items={SEVERITY_LEGEND} />
+        <P k="docs.notif.rules.scope" />
+      </Section>
+      <Section heading="docs.notif.optout.h">
+        <P k="docs.notif.optout.p" />
+      </Section>
+      <Section heading="docs.notif.timing.h">
+        <P k="docs.notif.timing.p" />
+        <Callout variant="note">
+          <P k="docs.notif.timing.quiet" />
+        </Callout>
+      </Section>
+      <SeeAlso
+        items={[
+          { id: "integrations", title: "docs.int.title" },
+          { id: "evidence", title: "docs.ev.title" },
         ]}
       />
     </div>
@@ -579,6 +636,20 @@ export const GUIDES: Guide[] = [
       "docs.int.email.h",
       "docs.int.netbox.h",
       "docs.int.ai.h",
+    ],
+  },
+  {
+    id: "notifications",
+    titleKey: "docs.notif.title",
+    summaryKey: "docs.notif.summary",
+    icon: "📨",
+    Body: NotificationsGuide,
+    toc: [
+      "docs.notif.overview.h",
+      "docs.notif.channels.h",
+      "docs.notif.rules.h",
+      "docs.notif.optout.h",
+      "docs.notif.timing.h",
     ],
   },
   {

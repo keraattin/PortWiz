@@ -62,6 +62,38 @@ export const tr: Partial<Record<TKey, string>> = {
   "docs.int.ai.h": "AI sağlayıcı",
   "docs.int.ai.p":
     "Varsayılan yerel Ollama modeli ya da Claude veya OpenAI-uyumlu herhangi bir sağlayıcı. AI, zayıf servis parmak izlerini iyileştirir ve sade-dil CVE özetleri yazar; yerel modelle veri ağından çıkmaz.",
+  "docs.notif.title": "Bildirimler",
+  "docs.notif.summary":
+    "Onaylı değişiklikleri e-posta, Slack ve Teams'e gönderin; kanal-bazlı kurallar ve özetlerle.",
+  "docs.notif.flow.rules": "Kuralları uygula",
+  "docs.notif.flow.channels": "Kanallara gönder",
+  "docs.notif.overview.h": "Bildirimler nasıl çalışır",
+  "docs.notif.overview.p":
+    "Bir tarama değişikliği onayladığında, PortWiz onu kurallarınıza uyan her yapılandırılmış kanala gönderir. Teslimat best-effort ve kanal başınadır: bozuk bir webhook diğerlerini engellemez veya tarama ingest'ini düşürmez.",
+  "docs.notif.channels.h": "Kanallar",
+  "docs.notif.channels.p":
+    "Kanalları Ayarlar, Bildirimler altında yapılandırın. Her biri bağımsızdır, istediğiniz kombinasyonu etkinleştirebilirsiniz.",
+  "docs.notif.channels.email":
+    "E-posta: SMTP sunucusunu ve alıcıları ayarlayın. SMTP ayrıntıları için Entegrasyonlar kılavuzuna bakın.",
+  "docs.notif.channels.slack":
+    "Slack: Slack'te bir kanala Incoming Webhook ekleyin, sonra URL'sini yapıştırın.",
+  "docs.notif.channels.teams":
+    "Teams: bir Teams kanalında Incoming Webhook connector'ı ekleyin, sonra URL'sini yapıştırın.",
+  "docs.notif.channels.test":
+    "Güvenmeden önce her kanalda Test gönder ile teslimatı doğrulayın.",
+  "docs.notif.rules.h": "Kanal-bazlı kurallar",
+  "docs.notif.rules.p":
+    "Her kanalın kendi minimum şiddeti vardır; böylece her şeyi e-postaya, ama yalnızca yüksek şiddetli değişiklikleri Slack'e gönderebilirsiniz.",
+  "docs.notif.rules.scope":
+    "Her kanal ayrıca belirli tarama profilleriyle sınırlandırılabilir. Hepsinden değişiklik almak için profil listesini boş bırakın.",
+  "docs.notif.optout.h": "Profil-bazlı devre dışı",
+  "docs.notif.optout.p":
+    "Bir tarama profili, gürültülü veya düşük değerli taramalar için, değişikliklerini kaydetmeye devam ederken bildirimleri tamamen kapatabilir. Bunu Taramalar altında tarama profilinde ayarlayın.",
+  "docs.notif.timing.h": "Zamanlama ve özetler",
+  "docs.notif.timing.p":
+    "Teslimat zamanlaması tüm kanallar için geçerlidir. Anında, algılanan her değişiklikte gönderir; saatlik veya günlük, gürültüyü azaltmak için değişiklikleri tek özette toplar.",
+  "docs.notif.timing.quiet":
+    "Sessiz saatler, belirlediğiniz bir aralıkta (UTC) bildirimleri bekletir; bekletilenler aralık geçince gönderilir.",
   "docs.roles.title": "Roller & izinler",
   "docs.roles.summary": "Kim ne yapabilir.",
   "docs.roles.three.h": "Üç rol",

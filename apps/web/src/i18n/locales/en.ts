@@ -62,6 +62,38 @@ export const en = {
   "docs.int.ai.h": "AI provider",
   "docs.int.ai.p":
     "A local Ollama model by default, or Claude or any OpenAI-compatible provider. AI refines weak service fingerprints and writes plain-language CVE briefs; with a local model, data never leaves your network.",
+  "docs.notif.title": "Notifications",
+  "docs.notif.summary":
+    "Send confirmed changes to email, Slack, and Teams, with per-channel rules and digests.",
+  "docs.notif.flow.rules": "Apply rules",
+  "docs.notif.flow.channels": "Send to channels",
+  "docs.notif.overview.h": "How notifications work",
+  "docs.notif.overview.p":
+    "When a scan confirms a change, PortWiz sends it to every configured channel that matches your rules. Delivery is best-effort and per channel: one broken webhook never blocks the others or fails the scan ingest.",
+  "docs.notif.channels.h": "Channels",
+  "docs.notif.channels.p":
+    "Configure channels under Settings, Notifications. Each is independent, so you can enable any combination.",
+  "docs.notif.channels.email":
+    "Email: set the SMTP host and recipients. See the Integrations guide for SMTP details.",
+  "docs.notif.channels.slack":
+    "Slack: in Slack, add an Incoming Webhook to a channel, then paste its URL.",
+  "docs.notif.channels.teams":
+    "Teams: in a Teams channel, add an Incoming Webhook connector, then paste its URL.",
+  "docs.notif.channels.test":
+    "Use Send test on each channel to confirm delivery before you rely on it.",
+  "docs.notif.rules.h": "Per-channel rules",
+  "docs.notif.rules.p":
+    "Each channel has its own minimum severity, so you can send everything to email but only high-severity changes to Slack.",
+  "docs.notif.rules.scope":
+    "Each channel can also be scoped to specific scan profiles. Leave the profile list empty to receive changes from all of them.",
+  "docs.notif.optout.h": "Per-profile opt-out",
+  "docs.notif.optout.p":
+    "A scan profile can turn notifications off entirely while still recording its changes, for noisy or low-value scans. Set it on the scan profile, under Scans.",
+  "docs.notif.timing.h": "Timing and digests",
+  "docs.notif.timing.p":
+    "Delivery timing applies to all channels. Immediate sends on each detected change; hourly or daily batches changes into one digest to cut noise.",
+  "docs.notif.timing.quiet":
+    "Quiet hours hold notifications during a window you set (UTC); anything held goes out once the window passes.",
   "docs.roles.title": "Roles & permissions",
   "docs.roles.summary": "Who can do what.",
   "docs.roles.three.h": "The three roles",
