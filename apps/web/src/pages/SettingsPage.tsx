@@ -38,6 +38,7 @@ import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import FormField from "../components/FormField";
 import InfoCallout from "../components/InfoCallout";
+import DocsLink from "../components/DocsLink";
 import PageHeader from "../components/PageHeader";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
@@ -782,6 +783,9 @@ export default function SettingsPage() {
 
         {activeTab === "email" && (
         <div className="space-y-6">
+          <div className="flex justify-end">
+            <DocsLink guide="notifications" />
+          </div>
           <section className={cardClass}>
             <h3 className="font-medium text-slate-100">{t("settings.timing.title")}</h3>
             <p className="text-sm text-slate-400">{t("settings.timing.intro")}</p>
@@ -957,6 +961,9 @@ export default function SettingsPage() {
 
         {activeTab === "chat" && (
         <div className="space-y-6">
+          <div className="flex justify-end">
+            <DocsLink guide="notifications" />
+          </div>
           <InfoCallout>
             <p className="text-slate-400">{t("settings.chat.intro")}</p>
           </InfoCallout>
