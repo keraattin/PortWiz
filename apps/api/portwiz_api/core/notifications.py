@@ -1,9 +1,9 @@
 """Notifications.
 
-A small provider-agnostic notifier abstraction. Email (SMTP) is the only
-backend today; Slack/Teams can implement the same interface later. Config and
-the aiosmtplib dependency are imported lazily so importing this module is cheap
-and side-effect free.
+A small provider-agnostic notifier abstraction with email (SMTP), Slack, and
+Microsoft Teams backends behind a shared interface, dispatched per channel with
+its own delivery rules. Optional dependencies (aiosmtplib, httpx) are imported
+lazily so importing this module is cheap and side-effect free.
 """
 
 from __future__ import annotations

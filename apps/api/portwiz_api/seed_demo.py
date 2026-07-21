@@ -324,4 +324,13 @@ async def seed_demo(session_maker=None) -> None:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    # Demo data (hardcoded agents/assets/scans) is a local-exploration tool and
+    # must never populate a real deployment.
+    from .core.config import get_settings
+
+    if get_settings().environment == "production":
+        raise SystemExit(
+            "Refusing to seed demo data in a production environment; "
+            "this tool is for local exploration only."
+        )
     asyncio.run(seed_demo())

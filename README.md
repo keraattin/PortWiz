@@ -39,9 +39,11 @@ that requirement and takes it a step further:
   an agentic assistant that proposes actions for you to confirm. Local model
   (Ollama) by default, with Claude or any OpenAI-compatible provider optional; data
   never leaves the network.
-- 🔗 **Workflow integrations**: in-app tasks, email, and Jira (Cloud or
+- 🔗 **Workflow integrations**: in-app tasks, and notifications via email, Slack,
+  and Microsoft Teams with per-channel rules (minimum severity, scan-profile
+  scope) and immediate or digested delivery with quiet hours. Plus Jira (Cloud or
   Server/Data Center, bidirectional) with configurable project, issue type,
-  assignee and labels. A settings page tests each connection. Phase 2: Slack/Teams, AD/SSO.
+  assignee and labels. A settings page tests each connection. Phase 2: AD/SSO.
 - 🌍 **Built for non-experts**: a collapsible left sidebar, light/dark themes, six
   UI languages, searchable/filterable/paginated tables, and scan setup that picks
   targets from your inventory and schedules by plain-language period (no cron).
@@ -144,8 +146,9 @@ and beat services wait for that. Notes:
   ✅ per-segment agent routing + stale-run requeue + fleet coverage view,
   ✅ compliance cadence templates, ✅ CVE enrichment (online NVD + offline feed),
   ✅ in-app update check with one-click apply, ✅ integration connection tests,
+  ✅ Slack/Teams notifications with per-channel rules, digests and quiet hours,
   ✅ localized (six-language) themeable UI. Next: Keycloak (AD/LDAP/SSO),
-  Slack/Teams, SIEM/WORM forwarding.
+  SIEM/WORM forwarding.
 - **Phase 3:** MCP/RAG AI assistant, local-only mode, Kubernetes/Helm, passive
   discovery correlation.
 
