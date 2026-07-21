@@ -12,7 +12,10 @@ settings = get_settings()
 
 engine = create_async_engine(
     settings.database_url,
-    echo=settings.debug,
+    # Never echo SQL (statements + bound parameters) in production, even if debug
+    # was left on; that would leak data into logs. Access logs come from uvicorn,
+    # not this flag, so nothing observability-related is lost.
+    echo=settings.debug and settings.environment != "production",
     pool_pre_ping=True,
     future=True,
 )

@@ -201,9 +201,10 @@ def check_production_secrets(settings: Settings) -> None:
     """Refuse to run production with unset or placeholder security secrets.
 
     In non-production environments this is a no-op (the dev defaults are fine for
-    localhost). In production, a missing or still-placeholder ``secret_key`` or
-    ``encryption_key`` is a hard startup error rather than a silent fail-open to
-    weak signing / plaintext-at-rest.
+    localhost). In production, a missing or still-placeholder ``secret_key``,
+    ``encryption_key``, seeded admin password, or database password is a hard
+    startup error rather than a silent fail-open to weak signing /
+    plaintext-at-rest / a guessable admin account.
     """
     if settings.environment != "production":
         return
@@ -219,6 +220,17 @@ def check_production_secrets(settings: Settings) -> None:
         )
         if _placeholder(value)
     ]
+    # A seeded admin password left at the example value creates a publicly-known
+    # admin account. Only checked when set: an unset value simply skips seeding.
+    if settings.first_admin_password and _placeholder(settings.first_admin_password):
+        missing.append("PORTWIZ_FIRST_ADMIN_PASSWORD")
+    # The database password is embedded in the URL; catch both the example
+    # placeholder and the dev-default credentials.
+    if any(
+        m in settings.database_url.lower()
+        for m in (*_PLACEHOLDER_MARKERS, "portwiz:portwiz@")
+    ):
+        missing.append("PORTWIZ_DATABASE_URL (database password)")
     if missing:
         raise RuntimeError(
             "Refusing to start in production with a missing or placeholder "
