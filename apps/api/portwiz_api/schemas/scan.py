@@ -145,15 +145,18 @@ class PortIn(BaseModel):
     service: str | None = None
     version: str | None = None
     product: str | None = None
-    banner: str | None = None
+    # Banner is attacker-influenced free text; bound it so a compromised agent
+    # can't push megabytes per port (it is only hashed and optionally enriched).
+    banner: str | None = Field(default=None, max_length=8192)
     banner_sha256: str | None = None
     fingerprint_confidence: float | None = Field(default=None, ge=0, le=1)
 
 
 class HostIn(BaseModel):
     ip: str
-    hostname: str | None = None
-    ports: list[PortIn]
+    hostname: str | None = Field(default=None, max_length=253)
+    # At most one entry per TCP port; caps per-host observation writes.
+    ports: list[PortIn] = Field(max_length=65536)
 
 
 class ScanResultIn(BaseModel):
@@ -165,7 +168,9 @@ class ScanResultIn(BaseModel):
     finished_at: dt.datetime
     status: str = Field(default="completed", pattern="^(completed|partial|failed)$")
     error: str | None = None
-    hosts: list[HostIn]
+    # Bound a single ingest to a /16 worth of hosts; larger scans must chunk.
+    # Stops an unbounded payload from driving huge memory/DB writes.
+    hosts: list[HostIn] = Field(max_length=65536)
 
 
 # Observation
