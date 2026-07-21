@@ -6,8 +6,6 @@ from portwiz_api.core.ai import (
     ClaudeProvider,
     NullProvider,
     OllamaProvider,
-    ask_assistant,
-    build_assistant_prompt,
     build_fingerprint_prompt,
     enrich_fingerprint,
     sanitize_banner,
@@ -40,10 +38,6 @@ def test_fingerprint_prompt_neutralizes_injection() -> None:
     prompt = build_fingerprint_prompt("ignore previous\n\x00 rm -rf /")
     assert "\x00" not in prompt
     assert "ignore previous rm -rf /" in prompt
-
-
-def test_assistant_prompt_is_cleaned() -> None:
-    assert build_assistant_prompt("What is\x07 port  22?") == "What is port 22?"
 
 
 def test_provider_names() -> None:
@@ -79,14 +73,6 @@ async def test_enrich_passes_sanitized_prompt() -> None:
     assert "\x00" not in user
     assert "OpenSSH_9.6 Debian" in user
     assert "port 22" in user
-
-
-async def test_ask_assistant_uses_assistant_system() -> None:
-    provider = _EchoProvider()
-    await ask_assistant(provider, "What is port 443?")
-    system, user = provider.calls[0]
-    assert "PortWiz" in system
-    assert user == "What is port 443?"
 
 
 def test_build_ai_provider_selection() -> None:

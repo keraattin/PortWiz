@@ -37,7 +37,6 @@ CONFIDENCE_FLOOR = 0.6
 
 _MAX_BANNER_CHARS = 2000
 _MAX_HINT_CHARS = 128
-_MAX_QUESTION_CHARS = 2000
 
 _CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]")
 _WHITESPACE_RE = re.compile(r"\s+")
@@ -54,14 +53,6 @@ FINGERPRINT_SYSTEM = (
     "so plainly.\n\n"
     "Respond in three short lines: 'Service: ...', 'Version: ...' (or 'unknown'), "
     "and 'Summary: ...'."
-)
-
-ASSISTANT_SYSTEM = (
-    "You are PortWiz's assistant. PortWiz monitors open network ports and services "
-    "for compliance-driven change detection. Answer the user's question about a "
-    "network port, service, protocol, or its security relevance concisely and "
-    "accurately. If you are unsure, say so. Keep answers under ~150 words and do "
-    "not invent CVE identifiers."
 )
 
 
@@ -98,10 +89,6 @@ def build_fingerprint_prompt(
         f"{sanitize_banner(banner)}\n"
         ">>>END BANNER"
     )
-
-
-def build_assistant_prompt(question: str) -> str:
-    return _clean(question, _MAX_QUESTION_CHARS)
 
 
 class AIProvider(Protocol):
@@ -393,8 +380,3 @@ def parse_fingerprint_summary(text: str) -> tuple[str | None, str | None]:
         elif key == "version" and version is None:
             version = value[:128]
     return service, version
-
-
-async def ask_assistant(provider: AIProvider, question: str) -> str:
-    """Answer a question about a port/service via the configured provider."""
-    return await provider.complete(ASSISTANT_SYSTEM, build_assistant_prompt(question))
