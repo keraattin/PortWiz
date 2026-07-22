@@ -47,10 +47,21 @@ app = FastAPI(
     openapi_url="/openapi.json" if _docs_enabled else None,
 )
 
+# A wildcard origin combined with credentials is a security footgun (and browsers
+# reject it anyway), so if someone sets "*" we serve CORS without credentials
+# rather than fail the deploy. The standard same-origin bundled deploy uses an
+# explicit list (or none) and keeps full credentialed CORS, so it is unaffected.
+_cors_credentials = "*" not in settings.cors_origins
+if not _cors_credentials:
+    logger.warning(
+        'CORS_ORIGINS contains a wildcard ("*"); disabling credentialed CORS. '
+        "List explicit origins to allow credentials."
+    )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_credentials=_cors_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
