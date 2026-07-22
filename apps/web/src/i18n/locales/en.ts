@@ -94,6 +94,25 @@ export const en = {
     "Delivery timing applies to all channels. Immediate sends on each detected change; hourly or daily batches changes into one digest to cut noise.",
   "docs.notif.timing.quiet":
     "Quiet hours hold notifications during a window you set (UTC); anything held goes out once the window passes.",
+  "docs.install.title": "Installation",
+  "docs.install.summary":
+    "Install and run each component with Docker or natively, and deploy scan agents.",
+  "docs.install.overview.h": "What runs where",
+  "docs.install.overview.p":
+    "PortWiz is a control plane (API, background worker and scheduler, web UI, database, and broker) on one host, plus a scan agent in each network segment. You can run it all with Docker, or each component natively.",
+  "docs.install.docker.h": "With Docker (recommended)",
+  "docs.install.docker.p":
+    "From the deploy folder, copy the example environment file and start the stack. This is the least moving parts.",
+  "docs.install.docker.prod":
+    "For production, use the hardened single-origin compose file instead:",
+  "docs.install.native.h": "Without Docker (native)",
+  "docs.install.native.p":
+    "Run the components directly. A practical middle ground is to keep the database and broker in Docker and run the app natively.",
+  "docs.install.native.note":
+    "The database must be PostgreSQL with the TimescaleDB extension. See the installation reference in the repository for the full environment-variable list.",
+  "docs.install.agents.h": "Deploying scan agents",
+  "docs.install.agents.p":
+    "Agents run one per network segment. Enroll an agent under Agents to get a one-time token, then run it with Docker (the deploy panel gives you the exact command) or the native binary.",
   "docs.roles.title": "Roles & permissions",
   "docs.roles.summary": "Who can do what.",
   "docs.roles.three.h": "The three roles",

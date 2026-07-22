@@ -94,6 +94,25 @@ export const fr: Partial<Record<TKey, string>> = {
     "Le calendrier de distribution s'applique à tous les canaux. Immédiat envoie à chaque changement détecté ; horaire ou quotidien regroupe les changements en un résumé pour réduire le bruit.",
   "docs.notif.timing.quiet":
     "Les heures silencieuses retiennent les notifications pendant une fenêtre que vous définissez (UTC) ; tout ce qui est retenu part une fois la fenêtre passée.",
+  "docs.install.title": "Installation",
+  "docs.install.summary":
+    "Installez et lancez chaque composant avec Docker ou en natif, et déployez des agents de scan.",
+  "docs.install.overview.h": "Ce qui tourne où",
+  "docs.install.overview.p":
+    "PortWiz est un plan de contrôle (API, worker et planificateur en arrière-plan, interface web, base de données et broker) sur un hôte, plus un agent de scan dans chaque segment réseau. Vous pouvez tout lancer avec Docker, ou chaque composant en natif.",
+  "docs.install.docker.h": "Avec Docker (recommandé)",
+  "docs.install.docker.p":
+    "Depuis le dossier deploy, copiez le fichier d'environnement d'exemple et démarrez la stack. C'est le moins de pièces mobiles.",
+  "docs.install.docker.prod":
+    "Pour la production, utilisez plutôt le fichier compose renforcé à origine unique :",
+  "docs.install.native.h": "Sans Docker (natif)",
+  "docs.install.native.p":
+    "Lancez les composants directement. Un bon compromis est de garder la base de données et le broker dans Docker et de lancer l'application en natif.",
+  "docs.install.native.note":
+    "La base de données doit être PostgreSQL avec l'extension TimescaleDB. Voir la référence d'installation dans le dépôt pour la liste complète des variables d'environnement.",
+  "docs.install.agents.h": "Déployer les agents de scan",
+  "docs.install.agents.p":
+    "Les agents tournent à raison d'un par segment réseau. Enregistrez un agent sous Agents pour obtenir un jeton à usage unique, puis lancez-le avec Docker (le panneau de déploiement donne la commande exacte) ou le binaire natif.",
   "docs.roles.title": "Rôles & permissions",
   "docs.roles.summary": "Qui peut faire quoi.",
   "docs.roles.three.h": "Les trois rôles",

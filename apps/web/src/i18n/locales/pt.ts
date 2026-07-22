@@ -94,6 +94,25 @@ export const pt: Partial<Record<TKey, string>> = {
     "O horário de entrega aplica-se a todos os canais. Imediato envia a cada alteração detectada; por hora ou diário agrupa as alterações em um resumo para reduzir o ruído.",
   "docs.notif.timing.quiet":
     "O horário silencioso retém as notificações durante uma janela que você define (UTC); o que for retido é enviado assim que a janela passar.",
+  "docs.install.title": "Instalação",
+  "docs.install.summary":
+    "Instale e execute cada componente com Docker ou nativamente, e implante agentes de varredura.",
+  "docs.install.overview.h": "O que roda onde",
+  "docs.install.overview.p":
+    "O PortWiz é um plano de controle (API, worker e agendador em segundo plano, interface web, banco de dados e broker) em um host, mais um agente de varredura em cada segmento de rede. Você pode executar tudo com Docker ou cada componente nativamente.",
+  "docs.install.docker.h": "Com Docker (recomendado)",
+  "docs.install.docker.p":
+    "Na pasta deploy, copie o arquivo de ambiente de exemplo e inicie a stack. São as menores partes móveis.",
+  "docs.install.docker.prod":
+    "Para produção, use o arquivo compose reforçado de origem única:",
+  "docs.install.native.h": "Sem Docker (nativo)",
+  "docs.install.native.p":
+    "Execute os componentes diretamente. Um meio-termo prático é manter o banco de dados e o broker no Docker e executar o app nativamente.",
+  "docs.install.native.note":
+    "O banco de dados deve ser PostgreSQL com a extensão TimescaleDB. Veja a referência de instalação no repositório para a lista completa de variáveis de ambiente.",
+  "docs.install.agents.h": "Implantando agentes de varredura",
+  "docs.install.agents.p":
+    "Os agentes rodam um por segmento de rede. Registre um agente em Agents para obter um token de uso único e execute-o com Docker (o painel de implantação dá o comando exato) ou o binário nativo.",
   "docs.roles.title": "Papéis & permissões",
   "docs.roles.summary": "Quem pode fazer o quê.",
   "docs.roles.three.h": "Os três papéis",

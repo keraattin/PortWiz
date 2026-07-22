@@ -2,6 +2,7 @@ import { Fragment, type ReactNode } from "react";
 import CveHowToBody from "../components/CveHowToBody";
 import RoleMatrix from "../components/RoleMatrix";
 import Callout from "../components/docs/Callout";
+import CopyCode from "../components/docs/CopyCode";
 import SeeAlso from "../components/docs/SeeAlso";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -521,6 +522,70 @@ function NotificationsGuide() {
   );
 }
 
+const INSTALL_DOCKER_DEV = `cd deploy
+cp .env.example .env
+docker compose up --build`;
+
+const INSTALL_DOCKER_PROD = `cd deploy
+cp .env.prod.example .env.prod
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`;
+
+const INSTALL_NATIVE = `# API (Python 3.11+), from apps/api
+pip install -e .
+alembic upgrade head
+uvicorn portwiz_api.main:app --host 0.0.0.0 --port 8000
+
+# Worker + beat (from apps/api, same env)
+celery -A portwiz_api.workers.celery_app.celery_app worker --loglevel=info
+celery -A portwiz_api.workers.celery_app.celery_app beat --loglevel=info --schedule=./celerybeat-schedule
+
+# Web (Node 22), from apps/web
+npm ci
+VITE_API_BASE_URL=http://localhost:8000 npm run dev -- --host 0.0.0.0
+
+# Scan agent (Go 1.23), from apps/agent
+go build -trimpath -o portwiz-agent ./cmd/agent
+PORTWIZ_API_URL=http://localhost:8000 PORTWIZ_AGENT_TOKEN=<token> ./portwiz-agent run`;
+
+const INSTALL_AGENT_RUN = `docker run -d --name portwiz-agent --restart unless-stopped \\
+  -e PORTWIZ_API_URL=https://portwiz.example.com \\
+  -e PORTWIZ_AGENT_TOKEN=<token> \\
+  ghcr.io/<your-org>/portwiz-agent`;
+
+function InstallationGuide() {
+  return (
+    <div className="space-y-6">
+      <Section heading="docs.install.overview.h">
+        <P k="docs.install.overview.p" />
+        <DocArch />
+      </Section>
+      <Section heading="docs.install.docker.h">
+        <P k="docs.install.docker.p" />
+        <CopyCode code={INSTALL_DOCKER_DEV} />
+        <P k="docs.install.docker.prod" />
+        <CopyCode code={INSTALL_DOCKER_PROD} />
+      </Section>
+      <Section heading="docs.install.native.h">
+        <P k="docs.install.native.p" />
+        <CopyCode code={INSTALL_NATIVE} />
+        <Callout variant="note">
+          <P k="docs.install.native.note" />
+        </Callout>
+      </Section>
+      <Section heading="docs.install.agents.h">
+        <P k="docs.install.agents.p" />
+        <CopyCode code={INSTALL_AGENT_RUN} />
+      </Section>
+      <SeeAlso
+        items={[
+          { id: "agents", title: "docs.agents.title" },
+          { id: "notifications", title: "docs.notif.title" },
+        ]}
+      />
+    </div>
+  );
+}
+
 function RolesGuide() {
   return (
     <div className="space-y-6">
@@ -573,6 +638,19 @@ export const GUIDES: Guide[] = [
     icon: "🚀",
     Body: GettingStartedGuide,
     toc: ["docs.gs.what.h", "docs.gs.steps.h", "docs.gs.roles.h", "docs.gs.tip.h"],
+  },
+  {
+    id: "installation",
+    titleKey: "docs.install.title",
+    summaryKey: "docs.install.summary",
+    icon: "⚙️",
+    Body: InstallationGuide,
+    toc: [
+      "docs.install.overview.h",
+      "docs.install.docker.h",
+      "docs.install.native.h",
+      "docs.install.agents.h",
+    ],
   },
   {
     id: "scanning",

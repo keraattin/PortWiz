@@ -94,6 +94,25 @@ export const de: Partial<Record<TKey, string>> = {
     "Der Zustellzeitpunkt gilt für alle Kanäle. Sofort sendet bei jeder erkannten Änderung; stündlich oder täglich bündelt Änderungen in einer Zusammenfassung, um Rauschen zu reduzieren.",
   "docs.notif.timing.quiet":
     "Ruhezeiten halten Benachrichtigungen in einem von Ihnen festgelegten Zeitfenster (UTC) zurück; Zurückgehaltenes wird gesendet, sobald das Fenster vorbei ist.",
+  "docs.install.title": "Installation",
+  "docs.install.summary":
+    "Jede Komponente mit Docker oder nativ ausführen und Scan-Agenten bereitstellen.",
+  "docs.install.overview.h": "Was läuft wo",
+  "docs.install.overview.p":
+    "PortWiz besteht aus einer Control Plane (API, Hintergrund-Worker und Scheduler, Web-UI, Datenbank und Broker) auf einem Host sowie einem Scan-Agenten in jedem Netzwerksegment. Du kannst alles mit Docker oder jede Komponente nativ ausführen.",
+  "docs.install.docker.h": "Mit Docker (empfohlen)",
+  "docs.install.docker.p":
+    "Kopiere im deploy-Ordner die Beispiel-Env-Datei und starte den Stack. Das sind die wenigsten beweglichen Teile.",
+  "docs.install.docker.prod":
+    "Verwende für die Produktion stattdessen die gehärtete Single-Origin-Compose-Datei:",
+  "docs.install.native.h": "Ohne Docker (nativ)",
+  "docs.install.native.p":
+    "Führe die Komponenten direkt aus. Ein praktischer Mittelweg ist, Datenbank und Broker in Docker zu behalten und die App nativ auszuführen.",
+  "docs.install.native.note":
+    "Die Datenbank muss PostgreSQL mit der TimescaleDB-Erweiterung sein. Die vollständige Liste der Umgebungsvariablen findest du in der Installationsreferenz im Repository.",
+  "docs.install.agents.h": "Scan-Agenten bereitstellen",
+  "docs.install.agents.p":
+    "Agenten laufen einer pro Netzwerksegment. Registriere einen Agenten unter Agents für ein Einmal-Token und führe ihn dann mit Docker (das Deploy-Panel liefert den genauen Befehl) oder der nativen Binärdatei aus.",
   "docs.roles.title": "Rollen & Berechtigungen",
   "docs.roles.summary": "Wer was darf.",
   "docs.roles.three.h": "Die drei Rollen",

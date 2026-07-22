@@ -71,7 +71,8 @@ that requirement and takes it a step further:
 
 ## Quick start (development)
 
-> Requires: Docker + Docker Compose.
+> Requires: Docker + Docker Compose. For a full component-by-component install
+> guide (Docker **and** without Docker), see [docs/installation.md](docs/installation.md).
 
 ```bash
 cd deploy
@@ -124,6 +125,43 @@ and beat services wait for that. Notes:
   authentication.
 - **Local AI (optional):** add `--profile ai` to start Ollama and set
   `PORTWIZ_AI_PROVIDER=ollama`.
+
+## Running without Docker (native)
+
+You can run each component directly on the host instead of in containers. A
+practical middle ground is to run just the database and broker with Docker
+(`cd deploy && docker compose up db valkey`) and the app components natively.
+
+> The database must be PostgreSQL **with the TimescaleDB extension** (observations
+> use a hypertable); a stock `postgres` fails the migrations.
+
+Point the shared settings at localhost (`PORTWIZ_DATABASE_URL=postgresql+asyncpg://portwiz:portwiz@localhost:5432/portwiz`,
+`PORTWIZ_CELERY_BROKER_URL=redis://localhost:6379/0`,
+`PORTWIZ_CELERY_RESULT_BACKEND=redis://localhost:6379/1`, plus a
+`PORTWIZ_SECRET_KEY` and the `PORTWIZ_FIRST_ADMIN_*` values), then:
+
+```bash
+# API (Python 3.11+), from apps/api:
+python -m venv .venv && . .venv/bin/activate     # PowerShell: .venv\Scripts\Activate.ps1
+pip install -e .
+alembic upgrade head
+uvicorn portwiz_api.main:app --host 0.0.0.0 --port 8000
+
+# Worker and beat (from apps/api, same env):
+celery -A portwiz_api.workers.celery_app.celery_app worker --loglevel=info
+celery -A portwiz_api.workers.celery_app.celery_app beat --loglevel=info --schedule=./celerybeat-schedule
+
+# Web (Node 22), from apps/web:
+npm ci
+VITE_API_BASE_URL=http://localhost:8000 npm run dev -- --host 0.0.0.0   # or: VITE_API_BASE_URL="" npm run build
+
+# Scan agent (Go 1.23), from apps/agent; enroll in the UI first to get a token:
+go build -trimpath -o portwiz-agent ./cmd/agent
+PORTWIZ_API_URL=http://localhost:8000 PORTWIZ_AGENT_TOKEN=<token> ./portwiz-agent run
+```
+
+See **[docs/installation.md](docs/installation.md)** for the full component-by-component
+guide (Docker and native), the environment-variable reference, and agent deployment.
 
 ## Repository layout
 

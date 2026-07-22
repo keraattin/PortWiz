@@ -94,6 +94,25 @@ export const tr: Partial<Record<TKey, string>> = {
     "Teslimat zamanlaması tüm kanallar için geçerlidir. Anında, algılanan her değişiklikte gönderir; saatlik veya günlük, gürültüyü azaltmak için değişiklikleri tek özette toplar.",
   "docs.notif.timing.quiet":
     "Sessiz saatler, belirlediğiniz bir aralıkta (UTC) bildirimleri bekletir; bekletilenler aralık geçince gönderilir.",
+  "docs.install.title": "Kurulum",
+  "docs.install.summary":
+    "Her bileşeni Docker'la veya native çalıştır ve tarama ajanlarını dağıt.",
+  "docs.install.overview.h": "Ne nerede çalışır",
+  "docs.install.overview.p":
+    "PortWiz, tek bir sunucuda bir control plane (API, arka plan worker ve zamanlayıcı, web arayüzü, veritabanı ve broker) ile her ağ segmentinde bir tarama ajanından oluşur. Hepsini Docker'la veya her bileşeni native çalıştırabilirsin.",
+  "docs.install.docker.h": "Docker ile (önerilen)",
+  "docs.install.docker.p":
+    "deploy klasöründen örnek env dosyasını kopyala ve stack'i başlat. En az hareketli parça budur.",
+  "docs.install.docker.prod":
+    "Production için sertleştirilmiş tek-origin compose dosyasını kullan:",
+  "docs.install.native.h": "Docker olmadan (native)",
+  "docs.install.native.p":
+    "Bileşenleri doğrudan çalıştır. Pratik bir orta yol: veritabanı ile broker'ı Docker'da tutup uygulamayı native çalıştırmak.",
+  "docs.install.native.note":
+    "Veritabanı, TimescaleDB uzantılı PostgreSQL olmalı. Tam ortam değişkeni listesi için depodaki kurulum referansına bak.",
+  "docs.install.agents.h": "Tarama ajanlarını dağıtma",
+  "docs.install.agents.p":
+    "Ajanlar her ağ segmentinde birer tane çalışır. Agents altında bir ajan enroll edip tek seferlik token al, sonra Docker (deploy paneli tam komutu verir) veya native binary ile çalıştır.",
   "docs.roles.title": "Roller & izinler",
   "docs.roles.summary": "Kim ne yapabilir.",
   "docs.roles.three.h": "Üç rol",

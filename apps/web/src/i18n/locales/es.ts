@@ -94,6 +94,25 @@ export const es: Partial<Record<TKey, string>> = {
     "El horario de entrega se aplica a todos los canales. Inmediato envía en cada cambio detectado; por hora o diario agrupa los cambios en un resumen para reducir el ruido.",
   "docs.notif.timing.quiet":
     "Las horas de silencio retienen las notificaciones durante una ventana que definas (UTC); lo retenido se envía en cuanto pasa la ventana.",
+  "docs.install.title": "Instalación",
+  "docs.install.summary":
+    "Instala y ejecuta cada componente con Docker o de forma nativa, y despliega agentes de escaneo.",
+  "docs.install.overview.h": "Qué se ejecuta dónde",
+  "docs.install.overview.p":
+    "PortWiz es un plano de control (API, worker y planificador en segundo plano, interfaz web, base de datos y broker) en un host, más un agente de escaneo en cada segmento de red. Puedes ejecutarlo todo con Docker o cada componente de forma nativa.",
+  "docs.install.docker.h": "Con Docker (recomendado)",
+  "docs.install.docker.p":
+    "Desde la carpeta deploy, copia el archivo de entorno de ejemplo e inicia la stack. Son las mínimas piezas móviles.",
+  "docs.install.docker.prod":
+    "Para producción, usa en su lugar el archivo compose reforzado de origen único:",
+  "docs.install.native.h": "Sin Docker (nativo)",
+  "docs.install.native.p":
+    "Ejecuta los componentes directamente. Un término medio práctico es mantener la base de datos y el broker en Docker y ejecutar la app de forma nativa.",
+  "docs.install.native.note":
+    "La base de datos debe ser PostgreSQL con la extensión TimescaleDB. Consulta la referencia de instalación en el repositorio para la lista completa de variables de entorno.",
+  "docs.install.agents.h": "Desplegando agentes de escaneo",
+  "docs.install.agents.p":
+    "Los agentes se ejecutan uno por segmento de red. Registra un agente en Agents para obtener un token de un solo uso y ejecútalo con Docker (el panel de despliegue da el comando exacto) o el binario nativo.",
   "docs.roles.title": "Roles & permisos",
   "docs.roles.summary": "Quién puede hacer qué.",
   "docs.roles.three.h": "Los tres roles",
