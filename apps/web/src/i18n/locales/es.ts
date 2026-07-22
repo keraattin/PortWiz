@@ -113,6 +113,20 @@ export const es: Partial<Record<TKey, string>> = {
   "docs.install.agents.h": "Desplegando agentes de escaneo",
   "docs.install.agents.p":
     "Los agentes se ejecutan uno por segmento de red. Registra un agente en Agents para obtener un token de un solo uso y ejecútalo con Docker (el panel de despliegue da el comando exacto) o el binario nativo.",
+  "docs.install.specs.h": "Requisitos del sistema",
+  "docs.install.specs.p":
+    "El dimensionamiento escala con cuánto monitoreas y si ejecutas IA local. La tabla es para todo el plano de control en un host, sin IA local.",
+  "docs.install.specs.tierMin": "Mínimo",
+  "docs.install.specs.tierRec": "Recomendado",
+  "docs.install.specs.tierHigh": "Cómodo",
+  "docs.install.specs.rowHosts": "Hosts monitoreados",
+  "docs.install.specs.rowCpu": "CPU",
+  "docs.install.specs.rowRam": "RAM",
+  "docs.install.specs.rowDisk": "Disco (SSD)",
+  "docs.install.specs.agents":
+    "Cada agente de escaneo es independiente y diminuto: alrededor de 1 vCPU y 0,5 a 1 GB de RAM; el escaneo depende de la red.",
+  "docs.install.specs.ai":
+    "La IA local (Ollama) es el principal factor de memoria adicional: añade varios GB de RAM para un modelo pequeño, más para los grandes (una GPU es opcional). La IA en la nube o sin IA no necesita nada de esto.",
   "docs.roles.title": "Roles & permisos",
   "docs.roles.summary": "Quién puede hacer qué.",
   "docs.roles.three.h": "Los tres roles",

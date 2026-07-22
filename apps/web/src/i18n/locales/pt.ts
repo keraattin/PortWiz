@@ -113,6 +113,20 @@ export const pt: Partial<Record<TKey, string>> = {
   "docs.install.agents.h": "Implantando agentes de varredura",
   "docs.install.agents.p":
     "Os agentes rodam um por segmento de rede. Registre um agente em Agents para obter um token de uso único e execute-o com Docker (o painel de implantação dá o comando exato) ou o binário nativo.",
+  "docs.install.specs.h": "Requisitos de sistema",
+  "docs.install.specs.p":
+    "O dimensionamento escala com quanto você monitora e se executa IA local. A tabela é para todo o plano de controle em um host, sem IA local.",
+  "docs.install.specs.tierMin": "Mínimo",
+  "docs.install.specs.tierRec": "Recomendado",
+  "docs.install.specs.tierHigh": "Confortável",
+  "docs.install.specs.rowHosts": "Hosts monitorados",
+  "docs.install.specs.rowCpu": "CPU",
+  "docs.install.specs.rowRam": "RAM",
+  "docs.install.specs.rowDisk": "Disco (SSD)",
+  "docs.install.specs.agents":
+    "Cada agente de varredura é separado e minúsculo: cerca de 1 vCPU e 0,5 a 1 GB de RAM; a varredura depende da rede.",
+  "docs.install.specs.ai":
+    "A IA local (Ollama) é o principal fator de memória extra: adicione vários GB de RAM para um modelo pequeno, mais para os maiores (uma GPU é opcional). IA na nuvem ou sem IA não precisa disso.",
   "docs.roles.title": "Papéis & permissões",
   "docs.roles.summary": "Quem pode fazer o quê.",
   "docs.roles.three.h": "Os três papéis",

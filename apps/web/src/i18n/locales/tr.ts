@@ -113,6 +113,20 @@ export const tr: Partial<Record<TKey, string>> = {
   "docs.install.agents.h": "Tarama ajanlarını dağıtma",
   "docs.install.agents.p":
     "Ajanlar her ağ segmentinde birer tane çalışır. Agents altında bir ajan enroll edip tek seferlik token al, sonra Docker (deploy paneli tam komutu verir) veya native binary ile çalıştır.",
+  "docs.install.specs.h": "Sistem gereksinimleri",
+  "docs.install.specs.p":
+    "Boyutlandırma, ne kadar izlediğine ve local AI çalıştırıp çalıştırmadığına göre ölçeklenir. Tablo, local AI olmadan, tek host'taki tüm control plane içindir.",
+  "docs.install.specs.tierMin": "Minimum",
+  "docs.install.specs.tierRec": "Önerilen",
+  "docs.install.specs.tierHigh": "Rahat",
+  "docs.install.specs.rowHosts": "İzlenen host",
+  "docs.install.specs.rowCpu": "CPU",
+  "docs.install.specs.rowRam": "RAM",
+  "docs.install.specs.rowDisk": "Disk (SSD)",
+  "docs.install.specs.agents":
+    "Her tarama ajanı ayrı ve minik: yaklaşık 1 vCPU ve 0.5 ila 1 GB RAM; tarama ağ-bağımlıdır.",
+  "docs.install.specs.ai":
+    "Local AI (Ollama) ana ek bellek sürücüsüdür: küçük bir model için birkaç GB RAM ekle, büyükler için daha fazla (GPU opsiyonel). Cloud AI veya AI'sız hiç gerekmez.",
   "docs.roles.title": "Roller & izinler",
   "docs.roles.summary": "Kim ne yapabilir.",
   "docs.roles.three.h": "Üç rol",

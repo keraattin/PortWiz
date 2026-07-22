@@ -20,6 +20,36 @@ You can run everything with **Docker** (recommended, the least moving parts) or
 
 ---
 
+## System requirements
+
+Sizing is driven by how much you monitor (number of hosts and open ports, how
+often you scan, and how long you keep history) and whether you run **local AI**.
+The tiers below are for the **whole control plane on one host** (database,
+broker, API, worker, beat, and web), **without** local AI.
+
+| Resource | Minimum | Recommended | Comfortable |
+|---|---|---|---|
+| Hosts monitored | up to ~500 | ~500 to 5,000 | 5,000+ |
+| CPU | 2 vCPU | 4 vCPU | 8+ vCPU |
+| RAM | 4 GB | 8 GB | 16 GB+ |
+| Disk (SSD) | 20 GB | 100 GB | 200 GB+ |
+
+- **Scan agents** are separate and tiny: about **1 vCPU and 0.5 to 1 GB RAM**
+  each. Scanning is network-bound, not CPU-bound, so an agent runs comfortably on
+  a small VM or container. Deploy one per network segment.
+- **Local AI (Ollama)** is the main extra memory (and optionally GPU) driver. Add
+  roughly **4 to 8 GB RAM** for a small (about 3B-parameter) model, more for
+  larger ones; a GPU is optional but much faster. If you use a cloud provider
+  (Claude or any OpenAI-compatible API) or no AI, you do not need this.
+- **Disk** grows mainly from the observations table (hosts x open ports x scan
+  frequency x retention). Use SSD, and tune how long raw observations are kept
+  with `retention_observation_days` (or the Settings UI). Back up the database
+  volume for durability.
+- These are practical guidelines, not hard limits. Start at Recommended if
+  unsure; scale CPU/RAM/disk up as your estate and scan frequency grow.
+
+---
+
 ## Option A: Docker (recommended)
 
 Requires Docker and Docker Compose. All compose files live in `deploy/`.

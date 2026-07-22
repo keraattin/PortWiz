@@ -552,12 +552,70 @@ const INSTALL_AGENT_RUN = `docker run -d --name portwiz-agent --restart unless-s
   -e PORTWIZ_AGENT_TOKEN=<token> \\
   ghcr.io/<your-org>/portwiz-agent`;
 
+// Sizing tiers for the control plane, as a small responsive table.
+function SpecTable() {
+  const { t } = useI18n();
+  const tiers: TKey[] = [
+    "docs.install.specs.tierMin",
+    "docs.install.specs.tierRec",
+    "docs.install.specs.tierHigh",
+  ];
+  const rows: { label: TKey; vals: string[] }[] = [
+    { label: "docs.install.specs.rowHosts", vals: ["≤ 500", "500-5,000", "5,000+"] },
+    { label: "docs.install.specs.rowCpu", vals: ["2 vCPU", "4 vCPU", "8+ vCPU"] },
+    { label: "docs.install.specs.rowRam", vals: ["4 GB", "8 GB", "16 GB+"] },
+    { label: "docs.install.specs.rowDisk", vals: ["20 GB", "100 GB", "200 GB+"] },
+  ];
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-xs">
+        <thead>
+          <tr>
+            <th className="border-b border-slate-800 p-2 text-left" aria-hidden="true" />
+            {tiers.map((k) => (
+              <th
+                key={k}
+                className="border-b border-slate-800 p-2 text-left font-medium text-slate-200"
+              >
+                {t(k)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.label}>
+              <th
+                scope="row"
+                className="border-b border-slate-800 p-2 text-left font-normal text-slate-400"
+              >
+                {t(r.label)}
+              </th>
+              {r.vals.map((v, i) => (
+                <td key={i} className="border-b border-slate-800 p-2 text-slate-300">
+                  {v}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function InstallationGuide() {
   return (
     <div className="space-y-6">
       <Section heading="docs.install.overview.h">
         <P k="docs.install.overview.p" />
         <DocArch />
+      </Section>
+      <Section heading="docs.install.specs.h">
+        <P k="docs.install.specs.p" />
+        <SpecTable />
+        <P k="docs.install.specs.agents" />
+        <P k="docs.install.specs.ai" />
       </Section>
       <Section heading="docs.install.docker.h">
         <P k="docs.install.docker.p" />
@@ -647,6 +705,7 @@ export const GUIDES: Guide[] = [
     Body: InstallationGuide,
     toc: [
       "docs.install.overview.h",
+      "docs.install.specs.h",
       "docs.install.docker.h",
       "docs.install.native.h",
       "docs.install.agents.h",

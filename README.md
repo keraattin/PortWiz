@@ -69,6 +69,24 @@ that requirement and takes it a step further:
 └────────────┘  └────────────┘  └─────────────────────┘
 ```
 
+## System requirements
+
+For the whole control plane on one host (database, broker, API, worker, beat,
+web), **without** local AI. Sizing scales with hosts monitored, scan frequency,
+and retention.
+
+| Resource | Minimum | Recommended | Comfortable |
+|---|---|---|---|
+| Hosts monitored | up to ~500 | ~500 to 5,000 | 5,000+ |
+| CPU | 2 vCPU | 4 vCPU | 8+ vCPU |
+| RAM | 4 GB | 8 GB | 16 GB+ |
+| Disk (SSD) | 20 GB | 100 GB | 200 GB+ |
+
+Scan agents are separate and tiny (~1 vCPU, 0.5-1 GB RAM each; network-bound).
+Local AI (Ollama) adds ~4-8 GB RAM for a small model (GPU optional); cloud AI or
+no AI needs none. See [docs/installation.md](docs/installation.md#system-requirements)
+for details.
+
 ## Quick start (development)
 
 > Requires: Docker + Docker Compose. For a full component-by-component install

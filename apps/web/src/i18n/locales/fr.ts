@@ -113,6 +113,20 @@ export const fr: Partial<Record<TKey, string>> = {
   "docs.install.agents.h": "Déployer les agents de scan",
   "docs.install.agents.p":
     "Les agents tournent à raison d'un par segment réseau. Enregistrez un agent sous Agents pour obtenir un jeton à usage unique, puis lancez-le avec Docker (le panneau de déploiement donne la commande exacte) ou le binaire natif.",
+  "docs.install.specs.h": "Configuration requise",
+  "docs.install.specs.p":
+    "Le dimensionnement dépend de ce que vous surveillez et de l'utilisation d'une IA locale. Le tableau concerne tout le plan de contrôle sur un hôte, sans IA locale.",
+  "docs.install.specs.tierMin": "Minimum",
+  "docs.install.specs.tierRec": "Recommandé",
+  "docs.install.specs.tierHigh": "Confortable",
+  "docs.install.specs.rowHosts": "Hôtes surveillés",
+  "docs.install.specs.rowCpu": "CPU",
+  "docs.install.specs.rowRam": "RAM",
+  "docs.install.specs.rowDisk": "Disque (SSD)",
+  "docs.install.specs.agents":
+    "Chaque agent de scan est séparé et minuscule : environ 1 vCPU et 0,5 à 1 Go de RAM ; le scan dépend du réseau.",
+  "docs.install.specs.ai":
+    "L'IA locale (Ollama) est le principal facteur de mémoire supplémentaire : ajoutez plusieurs Go de RAM pour un petit modèle, davantage pour les plus grands (un GPU est optionnel). Une IA cloud ou aucune IA n'en a pas besoin.",
   "docs.roles.title": "Rôles & permissions",
   "docs.roles.summary": "Qui peut faire quoi.",
   "docs.roles.three.h": "Les trois rôles",

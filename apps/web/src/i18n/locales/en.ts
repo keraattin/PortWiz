@@ -113,6 +113,20 @@ export const en = {
   "docs.install.agents.h": "Deploying scan agents",
   "docs.install.agents.p":
     "Agents run one per network segment. Enroll an agent under Agents to get a one-time token, then run it with Docker (the deploy panel gives you the exact command) or the native binary.",
+  "docs.install.specs.h": "System requirements",
+  "docs.install.specs.p":
+    "Sizing scales with how much you monitor and whether you run local AI. The table is for the whole control plane on one host, without local AI.",
+  "docs.install.specs.tierMin": "Minimum",
+  "docs.install.specs.tierRec": "Recommended",
+  "docs.install.specs.tierHigh": "Comfortable",
+  "docs.install.specs.rowHosts": "Hosts monitored",
+  "docs.install.specs.rowCpu": "CPU",
+  "docs.install.specs.rowRam": "RAM",
+  "docs.install.specs.rowDisk": "Disk (SSD)",
+  "docs.install.specs.agents":
+    "Each scan agent is separate and tiny: about 1 vCPU and 0.5 to 1 GB of RAM, and scanning is network-bound.",
+  "docs.install.specs.ai":
+    "Local AI (Ollama) is the main extra memory driver: add several GB of RAM for a small model, more for larger ones (a GPU is optional). Cloud AI or no AI needs none.",
   "docs.roles.title": "Roles & permissions",
   "docs.roles.summary": "Who can do what.",
   "docs.roles.three.h": "The three roles",

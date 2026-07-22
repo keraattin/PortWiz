@@ -113,6 +113,20 @@ export const de: Partial<Record<TKey, string>> = {
   "docs.install.agents.h": "Scan-Agenten bereitstellen",
   "docs.install.agents.p":
     "Agenten laufen einer pro Netzwerksegment. Registriere einen Agenten unter Agents für ein Einmal-Token und führe ihn dann mit Docker (das Deploy-Panel liefert den genauen Befehl) oder der nativen Binärdatei aus.",
+  "docs.install.specs.h": "Systemanforderungen",
+  "docs.install.specs.p":
+    "Die Dimensionierung skaliert damit, wie viel du überwachst und ob du lokale KI betreibst. Die Tabelle gilt für die gesamte Control Plane auf einem Host, ohne lokale KI.",
+  "docs.install.specs.tierMin": "Minimum",
+  "docs.install.specs.tierRec": "Empfohlen",
+  "docs.install.specs.tierHigh": "Komfortabel",
+  "docs.install.specs.rowHosts": "Überwachte Hosts",
+  "docs.install.specs.rowCpu": "CPU",
+  "docs.install.specs.rowRam": "RAM",
+  "docs.install.specs.rowDisk": "Disk (SSD)",
+  "docs.install.specs.agents":
+    "Jeder Scan-Agent ist separat und winzig: etwa 1 vCPU und 0,5 bis 1 GB RAM; das Scannen ist netzwerkgebunden.",
+  "docs.install.specs.ai":
+    "Lokale KI (Ollama) ist der wichtigste zusätzliche Speicherfaktor: mehrere GB RAM für ein kleines Modell, mehr für größere (eine GPU ist optional). Cloud-KI oder keine KI braucht davon nichts.",
   "docs.roles.title": "Rollen & Berechtigungen",
   "docs.roles.summary": "Wer was darf.",
   "docs.roles.three.h": "Die drei Rollen",
