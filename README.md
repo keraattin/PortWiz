@@ -14,9 +14,42 @@ _Not just a port scanner. It produces audit-ready **evidence of change**._
 
 ## What is PortWiz?
 
-PCI-DSS, ISO 27001, SOC 2, HIPAA and NIST audits require **periodic monitoring of
-open ports/services and detection of changes** on network assets. PortWiz covers
-that requirement and takes it a step further:
+PortWiz is a self-hosted platform that continuously watches **which ports and
+services are exposed** across your network and turns every change into
+**audit-ready evidence**. It answers the recurring question that raw port
+scanners handle badly: what is open right now, what changed since last time, and
+can you prove it to an auditor?
+
+Frameworks like PCI-DSS, ISO 27001, SOC 2, HIPAA and NIST all require periodic
+monitoring of open ports and services and detection of change on your assets.
+Doing that by hand is noisy (scanners flap), hard to attribute (who changed what,
+and when), and leaves no defensible record. PortWiz closes that gap end to end:
+
+1. **Inventory** your assets and network segments (by hand, CSV/Excel import, or
+   NetBox sync).
+2. **Scan** each segment with a lightweight agent placed inside it, on a schedule
+   you set in plain language.
+3. **Detect change** with a flapping-aware engine that only reports a change once
+   it is confirmed across several runs, so network noise never becomes a false
+   alarm.
+4. **Act**: every confirmed change opens a follow-up task, fires notifications
+   (email, Slack, Teams) under rules you choose, and is recorded in an immutable,
+   hash-chained audit log.
+5. **Prove it**: export a one-click evidence package (scan report, change diff,
+   the linked task and approval, and the relevant audit-log slice) as signed JSON
+   or PDF.
+
+Along the way an optional AI layer (a local model by default, so **data never
+leaves your network**) sharpens weak service fingerprints and acts as an
+assistant that proposes changes for you to confirm, and discovered services are
+matched against known CVEs (online NVD, or a fully offline feed for air-gapped
+installs).
+
+It is built so that someone who is **not** a security specialist can deploy it
+(one interactive installer) and run it (guided setup, six UI languages), while
+staying self-hosted and Apache-2.0 open source.
+
+### Highlights
 
 - 🔁 **Flapping-aware change detection**: a confirmation-based diff engine that
   separates real changes from network noise. No false positives.
