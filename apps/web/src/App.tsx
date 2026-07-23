@@ -11,6 +11,7 @@ const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const AssetsPage = lazy(() => import("./pages/AssetsPage"));
 const VlansPage = lazy(() => import("./pages/VlansPage"));
 const ScansPage = lazy(() => import("./pages/ScansPage"));
+const PortsPage = lazy(() => import("./pages/PortsPage"));
 const ChangesPage = lazy(() => import("./pages/ChangesPage"));
 const CVEPage = lazy(() => import("./pages/CVEPage"));
 const CompliancePage = lazy(() => import("./pages/CompliancePage"));
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/agents" element={<AgentsPage />} />
           <Route path="/agents/new" element={<AgentEnrollPage />} />
           <Route path="/agents/:id" element={<AgentDetailPage />} />
+          <Route path="/ports" element={<PortsPage />} />
           <Route path="/changes" element={<ChangesPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/cve" element={<CVEPage />} />

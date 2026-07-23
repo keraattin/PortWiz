@@ -41,6 +41,7 @@ const SECTIONS: Section[] = [
     icon: "scanning",
     tabs: [
       { to: "/scans", labelKey: "nav.scans" },
+      { to: "/ports", labelKey: "nav.ports" },
       { to: "/agents", labelKey: "nav.agents", roles: ["admin", "auditor"] },
     ],
   },

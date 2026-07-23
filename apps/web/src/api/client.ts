@@ -642,6 +642,37 @@ export function updateChangeStatus(
   });
 }
 
+// Current open-port state: which hosts expose which ports right now (from the
+// confirmed change-detection state, not the change events).
+export interface OpenPort {
+  ip: string;
+  port: number;
+  protocol: string;
+  service: string | null;
+  version: string | null;
+  last_seen_open_at: string | null;
+  asset_id: string | null;
+  hostname: string | null;
+  criticality: string | null;
+}
+
+export function listOpenPorts(params?: {
+  ip?: string;
+  port?: number;
+  protocol?: string;
+  service?: string;
+  asset_id?: string;
+}): Promise<OpenPort[]> {
+  const q = new URLSearchParams();
+  if (params?.ip) q.set("ip", params.ip);
+  if (params?.port != null) q.set("port", String(params.port));
+  if (params?.protocol) q.set("protocol", params.protocol);
+  if (params?.service) q.set("service", params.service);
+  if (params?.asset_id) q.set("asset_id", params.asset_id);
+  const qs = q.toString();
+  return request<OpenPort[]>(`/ports${qs ? `?${qs}` : ""}`);
+}
+
 // Audit log
 export interface AuditEvent {
   seq: number;
