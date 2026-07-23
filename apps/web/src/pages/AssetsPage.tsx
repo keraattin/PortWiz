@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   type Asset,
   type AssetImportReport,
@@ -422,7 +423,11 @@ export default function AssetsPage() {
             ) : (
               assetsPage.slice.map((a) => (
                 <tr key={a.id} className="bg-slate-950">
-                  <td className="px-4 py-2 font-mono text-slate-100">{a.ip}</td>
+                  <td className="px-4 py-2 font-mono">
+                    <Link to={`/assets/${a.id}`} className="text-emerald-400 hover:text-emerald-300">
+                      {a.ip}
+                    </Link>
+                  </td>
                   <td className="px-4 py-2 text-slate-300">{a.hostname ?? "-"}</td>
                   <td className="px-4 py-2 text-slate-300">{vlanName(a.vlan_id)}</td>
                   <td className="px-4 py-2 text-slate-300">{ownerEmail(a.owner_id)}</td>

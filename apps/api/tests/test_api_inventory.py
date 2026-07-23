@@ -49,6 +49,30 @@ async def test_vlan_and_asset_crud(client, admin_headers) -> None:
     assert resp.status_code == 204
 
 
+async def test_get_single_asset(client, admin_headers) -> None:
+    import uuid
+
+    created = (
+        await client.post(
+            "/api/v1/assets",
+            json={"ip": "10.0.0.7", "hostname": "host7", "description": "edge box"},
+            headers=admin_headers,
+        )
+    ).json()
+
+    resp = await client.get(f"/api/v1/assets/{created['id']}", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["ip"] == "10.0.0.7"
+    assert body["hostname"] == "host7"
+    assert body["description"] == "edge box"
+    assert body["discovered"] is False
+
+    # Unknown id is a clean 404, not a 500.
+    missing = await client.get(f"/api/v1/assets/{uuid.uuid4()}", headers=admin_headers)
+    assert missing.status_code == 404
+
+
 async def test_asset_rejects_invalid_ip(client, admin_headers) -> None:
     resp = await client.post(
         "/api/v1/assets", json={"ip": "not-an-ip"}, headers=admin_headers

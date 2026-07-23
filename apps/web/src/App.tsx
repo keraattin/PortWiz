@@ -9,6 +9,7 @@ import { useI18n } from "./i18n/I18nContext";
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const AssetsPage = lazy(() => import("./pages/AssetsPage"));
+const AssetDetailPage = lazy(() => import("./pages/AssetDetailPage"));
 const VlansPage = lazy(() => import("./pages/VlansPage"));
 const ScansPage = lazy(() => import("./pages/ScansPage"));
 const PortsPage = lazy(() => import("./pages/PortsPage"));
@@ -55,6 +56,7 @@ export default function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/assets" element={<AssetsPage />} />
+          <Route path="/assets/:id" element={<AssetDetailPage />} />
           <Route path="/vlans" element={<VlansPage />} />
           <Route path="/scans" element={<ScansPage />} />
           <Route path="/agents" element={<AgentsPage />} />

@@ -87,6 +87,7 @@ export interface Asset {
   criticality: Criticality;
   data_sensitivity: DataSensitivity;
   description: string | null;
+  discovered: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -249,6 +250,10 @@ export interface AssetInput {
 export function listAssets(params?: { vlan_id?: string }): Promise<Asset[]> {
   const query = params?.vlan_id ? `?vlan_id=${params.vlan_id}` : "";
   return request<Asset[]>(`/assets${query}`);
+}
+
+export function getAsset(id: string): Promise<Asset> {
+  return request<Asset>(`/assets/${id}`);
 }
 
 export function createAsset(payload: AssetInput): Promise<Asset> {
