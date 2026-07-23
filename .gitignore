@@ -58,3 +58,6 @@ Thumbs.db
 postgres-data/
 valkey-data/
 ollama-data/
+
+# Generated per-host by deploy/deploy-native.sh
+deploy/systemd/

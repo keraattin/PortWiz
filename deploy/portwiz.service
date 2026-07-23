@@ -1,6 +1,6 @@
-# PortWiz control plane as a systemd service.
+# PortWiz control plane as a systemd service (Docker deployments).
 #
-# Install (after a first ./deploy.sh <tier> from /opt/portwiz/deploy):
+# Install (after a first ./deploy.sh docker from /opt/portwiz/deploy):
 #   sudo cp portwiz.service /etc/systemd/system/portwiz.service
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now portwiz
@@ -8,6 +8,8 @@
 # Assumes the repo lives at /opt/portwiz. Adjust WorkingDirectory / paths if not.
 # The stack also has restart: unless-stopped, so containers already come back on
 # reboot; this unit adds one-command lifecycle (systemctl start/stop/status).
+# For native (non-Docker) installs, deploy-native.sh writes per-process units
+# instead (portwiz-api/worker/beat.service).
 [Unit]
 Description=PortWiz control plane
 Requires=docker.service

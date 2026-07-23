@@ -215,54 +215,73 @@ For a one-shot test scan without enrolling:
 
 ---
 
-## Running as a service (Ubuntu)
+## Installing on Ubuntu (interactive)
 
 A sensible home for a self-hosted install is `/opt/portwiz` (the standard place
-for add-on application software). The persistent data lives in Docker named
+for add-on application software). With Docker, the persistent data lives in named
 volumes (`postgres-data`, `valkey-data`), not in that directory, so back up the
 volumes for durability.
 
-### Choose a tier
+### One command, guided
 
-The `deploy/deploy.sh` helper brings the production stack up at one of three
-tiers, so you can match the deployment to the host:
-
-| Tier | Services | Use it when |
-|---|---|---|
-| `min` | core: db, valkey, api, worker, beat, web | Smallest host; cloud AI or no AI; you update manually |
-| `med` | core + one-click updater | You want in-UI "Update now" |
-| `full` | core + updater + local AI (Ollama) | Fully self-contained, no external AI; needs extra RAM |
+The `deploy/deploy.sh` script asks how you want to run PortWiz and what to
+include, so you do not have to remember compose flags:
 
 ```bash
 cd /opt/portwiz/deploy
-cp .env.prod.example .env.prod     # then edit: strong secrets, DB password, admin, SMTP
-bash deploy.sh min                 # or: med | full   (default: min)
+bash deploy.sh
 ```
 
-The script builds images locally by default; run `BUILD=0 bash deploy.sh <tier>`
-to use prebuilt registry images (set `PORTWIZ_API_IMAGE` / `PORTWIZ_WEB_IMAGE`).
-It records the chosen tier in `deploy/.env.deploy` so the service unit below
-brings the same set of services back up.
+It first asks **Docker** (recommended, simplest) or **native**. Skip the prompt
+with `bash deploy.sh docker` or `bash deploy.sh native`.
 
-The `updater` (med/full) pulls new images, so it is most useful with registry
-images; with local builds you update via `git pull` and re-running the script.
-The `full` tier prints the command to pull an Ollama model after start.
+### Docker
 
-### systemd unit
-
-Every container already has `restart: unless-stopped`, so the stack comes back
-after a reboot on its own. For one-command lifecycle (`systemctl start/stop/status
-portwiz`), install the bundled unit:
+`deploy-docker.sh` (run by `deploy.sh docker`) brings up the core stack
+(database, broker, API, worker, scheduler, web) and then asks which optional
+add-ons to include: the **one-click updater** and **local AI (Ollama)**.
 
 ```bash
-cd /opt/portwiz/deploy
+bash deploy.sh docker                    # interactive add-on choice
+bash deploy.sh docker --core             # core only, no prompts
+bash deploy.sh docker --updater --ai     # core + both add-ons
+BUILD=0 bash deploy.sh docker --updater  # use prebuilt registry images
+```
+
+On first run it copies `.env.prod.example` to `.env.prod` and asks you to fill in
+secrets. It records your choices in `deploy/.env.deploy` so the systemd unit
+brings the same set of services back up. The updater is most useful with registry
+images (`PORTWIZ_API_IMAGE` / `PORTWIZ_WEB_IMAGE`); the AI add-on prints the
+command to pull an Ollama model.
+
+Containers already have `restart: unless-stopped` (they survive reboots); the
+bundled unit adds one-command lifecycle (`systemctl start/stop/status portwiz`):
+
+```bash
 sudo cp portwiz.service /etc/systemd/system/portwiz.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now portwiz
 ```
 
-The unit reads `deploy/.env.deploy`, so it starts whatever tier you deployed.
 Adjust the paths in the unit if the repo is not at `/opt/portwiz`.
+
+### Native
+
+`deploy-native.sh` (run by `deploy.sh native`) checks prerequisites, sets up the
+API (virtualenv, dependencies, migrations), builds the web UI and agent when
+their toolchains are present, and writes systemd units for the app processes to
+`deploy/systemd/`:
+
+```bash
+bash deploy.sh native
+sudo cp systemd/portwiz-*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now portwiz-api portwiz-worker portwiz-beat
+```
+
+It expects the database (PostgreSQL + TimescaleDB) and broker (Valkey/Redis) to
+be reachable at the URLs in `apps/api/.env`. The easy way to provide them is to
+run just those two with Docker (`docker compose up -d db valkey` from `deploy/`).
 
 ## Deploying scan agents (per segment)
 

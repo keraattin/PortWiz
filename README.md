@@ -124,10 +124,11 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
 - Web UI: http://localhost:8080  (change `WEB_PORT` in `.env.prod`)
 
-On an Ubuntu server, `deploy/deploy.sh min|med|full` brings the stack up at a
-chosen tier (`min` core only, `med` adds the one-click updater, `full` adds local
-AI), and `deploy/portwiz.service` runs it as a systemd service. See
-[docs/installation.md](docs/installation.md#running-as-a-service-ubuntu).
+On an Ubuntu server, `deploy/deploy.sh` is an interactive installer: it asks
+Docker or native, and for Docker which optional add-ons to include (one-click
+updater, local AI), then brings the stack up. `deploy/portwiz.service` runs it as
+a systemd service. See
+[docs/installation.md](docs/installation.md#installing-on-ubuntu-interactive).
 
 The API applies database migrations on boot before it turns healthy; the worker
 and beat services wait for that. Notes:
