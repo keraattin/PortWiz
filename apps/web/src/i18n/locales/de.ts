@@ -367,6 +367,7 @@ export const de: Partial<Record<TKey, string>> = {
   "dashboard.metric.openChanges": "Offene Änderungen",
   "dashboard.metric.openTasks": "Offene Aufgaben",
   "dashboard.metric.pendingRuns": "Ausstehende Scans",
+  "dashboard.metric.openPorts": "Offene Ports",
   "dashboard.agentHealth": "Agent-Zustand",
   "dashboard.recentChanges": "Letzte Änderungen",
   "dashboard.recentScans": "Letzte Scans",
@@ -396,6 +397,8 @@ export const de: Partial<Record<TKey, string>> = {
   "trends.complianceStatus": "Compliance-Status",
   "trends.runsByStatus": "Scans nach Status",
   "trends.changesByType": "Änderungen nach Typ",
+  "trends.topOpenPorts": "Meistexponierte Ports",
+  "trends.topOpenPortsHint": "Anzahl der Hosts, die jeden Port offen haben, absteigend.",
 
   // Login
   "login.tagline": "Überwachung von Port- und Dienständerungen",

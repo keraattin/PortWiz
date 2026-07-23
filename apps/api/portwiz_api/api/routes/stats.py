@@ -19,7 +19,7 @@ from ...core.db import get_session
 from ...core.fleet import DISABLED, NEVER, OFFLINE, ONLINE, agent_status
 from ...models.agent import Agent
 from ...models.asset import VLAN, Asset, Criticality
-from ...models.change import ChangeEvent
+from ...models.change import ChangeEvent, PortState
 from ...models.scan import ScanRun, ScanRunStatus
 from ...models.task import Task
 from ...models.user import User
@@ -65,6 +65,24 @@ async def get_stats(
     open_tasks = await count(Task, Task.status.in_(["open", "in_progress"]))
     pending_runs = await count(ScanRun, ScanRun.status == "pending")
 
+    # Current open-port state (distinct across scan profiles).
+    open_ports_subq = (
+        select(PortState.ip, PortState.port, PortState.protocol)
+        .where(PortState.confirmed_state == "open")
+        .distinct()
+        .subquery()
+    )
+    open_ports = (
+        await session.execute(select(func.count()).select_from(open_ports_subq))
+    ).scalar_one()
+    hosts_with_open_ports = (
+        await session.execute(
+            select(func.count(func.distinct(PortState.ip))).where(
+                PortState.confirmed_state == "open"
+            )
+        )
+    ).scalar_one()
+
     agents = (await session.execute(select(Agent))).scalars().all()
     now = dt.datetime.now(tz=dt.timezone.utc)
     # Honour the admin-tunable online cut-off (and per-agent overrides) so the
@@ -94,6 +112,8 @@ async def get_stats(
         open_changes=open_changes,
         open_tasks=open_tasks,
         pending_runs=pending_runs,
+        open_ports=open_ports,
+        hosts_with_open_ports=hosts_with_open_ports,
         last_scan_at=last_scan_at,
     )
 
@@ -140,10 +160,24 @@ async def get_charts(
     for item in compliance:
         compliance_counts[item["status"]] = compliance_counts.get(item["status"], 0) + 1
 
+    # Most-exposed ports: how many hosts have each port open, top few.
+    open_port_rows = (
+        await session.execute(
+            select(PortState.port, func.count(func.distinct(PortState.ip)))
+            .where(PortState.confirmed_state == "open")
+            .group_by(PortState.port)
+        )
+    ).all()
+    top_open_ports = [
+        Slice(name=str(port), value=hosts)
+        for port, hosts in sorted(open_port_rows, key=lambda r: r[1], reverse=True)[:8]
+    ]
+
     return DashboardCharts(
         changes_by_day=changes_by_day,
         changes_by_type=_slices(await grouped(ChangeEvent.change_type), _CHANGE_TYPES),
         assets_by_criticality=_slices(await grouped(Asset.criticality), _CRITICALITIES),
         runs_by_status=_slices(await grouped(ScanRun.status), _RUN_STATUSES),
         compliance_by_status=_slices(compliance_counts, _COMPLIANCE_STATUSES),
+        top_open_ports=top_open_ports,
     )

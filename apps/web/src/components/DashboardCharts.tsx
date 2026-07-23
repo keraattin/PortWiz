@@ -218,6 +218,14 @@ export default function DashboardCharts({ data }: { data: Charts }) {
         <ChartCard title={t("trends.changesByType")} empty={total(data.changes_by_type) === 0}>
           <CountBars data={data.changes_by_type} />
         </ChartCard>
+
+        <ChartCard
+          title={t("trends.topOpenPorts")}
+          hint={t("trends.topOpenPortsHint")}
+          empty={total(data.top_open_ports) === 0}
+        >
+          <CountBars data={data.top_open_ports} />
+        </ChartCard>
       </div>
     </section>
   );

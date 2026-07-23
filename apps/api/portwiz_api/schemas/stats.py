@@ -18,6 +18,8 @@ class DashboardStats(BaseModel):
     open_changes: int
     open_tasks: int
     pending_runs: int
+    open_ports: int
+    hosts_with_open_ports: int
     last_scan_at: dt.datetime | None
 
 
@@ -37,3 +39,4 @@ class DashboardCharts(BaseModel):
     assets_by_criticality: list[Slice]
     runs_by_status: list[Slice]
     compliance_by_status: list[Slice]
+    top_open_ports: list[Slice]

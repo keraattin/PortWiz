@@ -23,6 +23,8 @@ async def test_stats_empty(client, admin_headers) -> None:
         "open_changes": 0,
         "open_tasks": 0,
         "pending_runs": 0,
+        "open_ports": 0,
+        "hosts_with_open_ports": 0,
         "last_scan_at": None,
     }
 
@@ -143,3 +145,38 @@ async def test_charts_assets_by_criticality(client, admin_headers) -> None:
     by_crit = {s["name"]: s["value"] for s in body["assets_by_criticality"]}
     assert by_crit["high"] == 2
     assert sum(s["value"] for s in body["assets_by_criticality"]) == 2
+
+
+async def test_stats_open_ports(client, admin_headers, db) -> None:
+    import datetime as dt
+
+    from portwiz_api.models.change import PortState
+    from portwiz_api.models.scan import ScanProfile, ScanSource
+
+    now = dt.datetime.now(dt.timezone.utc)
+    async with db() as s:
+        prof = ScanProfile(
+            name="p", targets=["10.0.0.9"], ports="22,443",
+            scan_source=ScanSource.internal_unauthenticated,
+        )
+        s.add(prof)
+        await s.flush()
+        for ip in ("10.0.0.9", "10.0.0.10"):
+            s.add(PortState(
+                scan_profile_id=prof.id, ip=ip, port=443, protocol="tcp",
+                confirmed_state="open", last_seen_open_at=now,
+            ))
+        s.add(PortState(
+            scan_profile_id=prof.id, ip="10.0.0.9", port=22, protocol="tcp",
+            confirmed_state="closed",
+        ))
+        await s.commit()
+
+    stats = (await client.get("/api/v1/stats", headers=admin_headers)).json()
+    assert stats["open_ports"] == 2  # (10.0.0.9,443) and (10.0.0.10,443)
+    assert stats["hosts_with_open_ports"] == 2
+
+    charts = (await client.get("/api/v1/stats/charts", headers=admin_headers)).json()
+    top = {s["name"]: s["value"] for s in charts["top_open_ports"]}
+    assert top.get("443") == 2  # two hosts expose 443
+    assert "22" not in top  # closed port is not counted

@@ -365,6 +365,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "dashboard.metric.openChanges": "Açık değişiklikler",
   "dashboard.metric.openTasks": "Açık görevler",
   "dashboard.metric.pendingRuns": "Bekleyen taramalar",
+  "dashboard.metric.openPorts": "Açık portlar",
   "dashboard.agentHealth": "Ajan sağlığı",
   "dashboard.recentChanges": "Son değişiklikler",
   "dashboard.recentScans": "Son taramalar",
@@ -394,6 +395,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "trends.complianceStatus": "Uyumluluk durumu",
   "trends.runsByStatus": "Duruma göre taramalar",
   "trends.changesByType": "Türe göre değişiklikler",
+  "trends.topOpenPorts": "En çok açık portlar",
+  "trends.topOpenPortsHint": "Her portu açık tutan sunucu sayısı, çoktan aza.",
 
   // Login
   "login.tagline": "Port ve servis değişiklik izleme",

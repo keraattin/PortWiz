@@ -248,7 +248,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
         <Metric to="/assets" label={t("dashboard.metric.assets")} value={stats?.assets ?? "…"} />
         <Metric to="/vlans" label={t("dashboard.metric.vlans")} value={stats?.vlans ?? "…"} />
         <Metric
@@ -273,6 +273,12 @@ export default function DashboardPage() {
           to="/scans"
           label={t("dashboard.metric.pendingRuns")}
           value={stats?.pending_runs ?? "…"}
+        />
+        <Metric
+          to="/ports"
+          label={t("dashboard.metric.openPorts")}
+          value={stats?.open_ports ?? "…"}
+          accent={stats && stats.open_ports > 0 ? "text-sky-400" : undefined}
         />
       </div>
 

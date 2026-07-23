@@ -127,6 +127,8 @@ export interface DashboardStats {
   open_changes: number;
   open_tasks: number;
   pending_runs: number;
+  open_ports: number;
+  hosts_with_open_ports: number;
   last_scan_at: string | null;
 }
 
@@ -150,6 +152,7 @@ export interface DashboardCharts {
   assets_by_criticality: ChartSlice[];
   runs_by_status: ChartSlice[];
   compliance_by_status: ChartSlice[];
+  top_open_ports: ChartSlice[];
 }
 
 export function fetchCharts(): Promise<DashboardCharts> {

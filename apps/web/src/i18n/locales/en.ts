@@ -365,6 +365,7 @@ export const en = {
   "dashboard.metric.openChanges": "Open changes",
   "dashboard.metric.openTasks": "Open tasks",
   "dashboard.metric.pendingRuns": "Pending runs",
+  "dashboard.metric.openPorts": "Open ports",
   "dashboard.agentHealth": "Agent health",
   "dashboard.recentChanges": "Recent changes",
   "dashboard.recentScans": "Recent scans",
@@ -394,6 +395,8 @@ export const en = {
   "trends.complianceStatus": "Compliance status",
   "trends.runsByStatus": "Scan runs by status",
   "trends.changesByType": "Changes by type",
+  "trends.topOpenPorts": "Most exposed ports",
+  "trends.topOpenPortsHint": "Number of hosts exposing each port, highest first.",
 
   // Login
   "login.tagline": "Port & service change monitoring",
