@@ -1,0 +1,28 @@
+# PortWiz control plane as a systemd service.
+#
+# Install (after a first ./deploy.sh <tier> from /opt/portwiz/deploy):
+#   sudo cp portwiz.service /etc/systemd/system/portwiz.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now portwiz
+#
+# Assumes the repo lives at /opt/portwiz. Adjust WorkingDirectory / paths if not.
+# The stack also has restart: unless-stopped, so containers already come back on
+# reboot; this unit adds one-command lifecycle (systemctl start/stop/status).
+[Unit]
+Description=PortWiz control plane
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/portwiz/deploy
+# Reuses the tier chosen by deploy.sh (COMPOSE_PROFILES). A missing file is fine.
+EnvironmentFile=-/opt/portwiz/deploy/.env.deploy
+ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml --env-file .env.prod down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

@@ -215,6 +215,55 @@ For a one-shot test scan without enrolling:
 
 ---
 
+## Running as a service (Ubuntu)
+
+A sensible home for a self-hosted install is `/opt/portwiz` (the standard place
+for add-on application software). The persistent data lives in Docker named
+volumes (`postgres-data`, `valkey-data`), not in that directory, so back up the
+volumes for durability.
+
+### Choose a tier
+
+The `deploy/deploy.sh` helper brings the production stack up at one of three
+tiers, so you can match the deployment to the host:
+
+| Tier | Services | Use it when |
+|---|---|---|
+| `min` | core: db, valkey, api, worker, beat, web | Smallest host; cloud AI or no AI; you update manually |
+| `med` | core + one-click updater | You want in-UI "Update now" |
+| `full` | core + updater + local AI (Ollama) | Fully self-contained, no external AI; needs extra RAM |
+
+```bash
+cd /opt/portwiz/deploy
+cp .env.prod.example .env.prod     # then edit: strong secrets, DB password, admin, SMTP
+bash deploy.sh min                 # or: med | full   (default: min)
+```
+
+The script builds images locally by default; run `BUILD=0 bash deploy.sh <tier>`
+to use prebuilt registry images (set `PORTWIZ_API_IMAGE` / `PORTWIZ_WEB_IMAGE`).
+It records the chosen tier in `deploy/.env.deploy` so the service unit below
+brings the same set of services back up.
+
+The `updater` (med/full) pulls new images, so it is most useful with registry
+images; with local builds you update via `git pull` and re-running the script.
+The `full` tier prints the command to pull an Ollama model after start.
+
+### systemd unit
+
+Every container already has `restart: unless-stopped`, so the stack comes back
+after a reboot on its own. For one-command lifecycle (`systemctl start/stop/status
+portwiz`), install the bundled unit:
+
+```bash
+cd /opt/portwiz/deploy
+sudo cp portwiz.service /etc/systemd/system/portwiz.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now portwiz
+```
+
+The unit reads `deploy/.env.deploy`, so it starts whatever tier you deployed.
+Adjust the paths in the unit if the repo is not at `/opt/portwiz`.
+
 ## Deploying scan agents (per segment)
 
 Agents live in each network segment, not in the control-plane compose file. The
