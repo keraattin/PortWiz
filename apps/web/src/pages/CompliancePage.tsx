@@ -41,6 +41,41 @@ const FRAMEWORK_LABEL: Record<string, string> = {
   nist: "NIST",
 };
 
+// A few audit actions read better with a hand-written phrase than the generic
+// code-to-words fallback below.
+const ACTION_LABELS: Record<string, string> = {
+  "auth.login.success": "Login success",
+  "auth.login.failed": "Login failed",
+  "user.seeded_admin": "Initial admin created",
+  "asset.pushed": "Assets pushed to inventory",
+  "scan_run.ingested": "Scan results ingested",
+  "task.jira_linked": "Task linked to Jira",
+  "task.jira_synced": "Task synced to Jira",
+};
+
+// Words that must keep their canonical casing when a code is humanised.
+const ACTION_ACRONYMS: Record<string, string> = {
+  cve: "CVE",
+  ip: "IP",
+  vlan: "VLAN",
+  jira: "Jira",
+};
+
+// Turn a machine action code like "auth.login.success" into a readable label
+// ("Login success"). Everything stays derivable from the code, so a new action
+// added on the server still renders sensibly without a frontend change.
+function humanizeAction(action: string): string {
+  const preset = ACTION_LABELS[action];
+  if (preset) return preset;
+  const words = action.replace(/[._]/g, " ").split(" ").filter(Boolean);
+  return words
+    .map((w, i) => {
+      if (ACTION_ACRONYMS[w]) return ACTION_ACRONYMS[w];
+      return i === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+    })
+    .join(" ");
+}
+
 export default function CompliancePage() {
   const { t } = useI18n();
   const errorMessage = useErrorMessage();
@@ -112,7 +147,7 @@ export default function CompliancePage() {
       filter: "text",
       get: (e) => e.actor_email ?? t("compliance.system"),
     },
-    { key: "action", label: t("compliance.col.action"), filter: "text", get: (e) => e.action },
+    { key: "action", label: t("compliance.col.action"), filter: "text", get: (e) => humanizeAction(e.action) },
     {
       key: "target",
       label: t("compliance.col.target"),
@@ -431,7 +466,9 @@ export default function CompliancePage() {
                     <td className="px-4 py-2 text-slate-300">
                       {e.actor_email ?? t("compliance.system")}
                     </td>
-                    <td className="px-4 py-2 font-medium text-slate-100">{e.action}</td>
+                    <td className="px-4 py-2 font-medium text-slate-100" title={e.action}>
+                      {humanizeAction(e.action)}
+                    </td>
                     <td className="px-4 py-2 text-xs text-slate-400">
                       {e.target_type ? `${e.target_type}:${(e.target_id ?? "").slice(0, 8)}` : "-"}
                     </td>
