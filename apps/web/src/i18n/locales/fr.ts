@@ -21,6 +21,9 @@ export const fr: Partial<Record<TKey, string>> = {
   "ports.col.version": "Version",
   "ports.col.seen": "Vu ouvert (dernier)",
   "ports.noHostname": "(pas de nom d'hôte)",
+  "ports.expandAll": "Tout développer",
+  "ports.collapseAll": "Tout réduire",
+  "ports.openCount": "{count} ouvert(s)",
   "ports.empty": "Aucun port ouvert pour l'instant",
   "ports.emptyBody":
     "Dès qu'une analyse confirme des ports ouverts, ils apparaissent ici. Lancez une analyse depuis la page Analyses.",

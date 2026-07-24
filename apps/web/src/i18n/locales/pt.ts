@@ -21,6 +21,9 @@ export const pt: Partial<Record<TKey, string>> = {
   "ports.col.version": "Versão",
   "ports.col.seen": "Visto aberto por último",
   "ports.noHostname": "(sem hostname)",
+  "ports.expandAll": "Expandir tudo",
+  "ports.collapseAll": "Recolher tudo",
+  "ports.openCount": "{count} aberta(s)",
   "ports.empty": "Ainda não há portas abertas",
   "ports.emptyBody":
     "Quando uma varredura confirmar portas abertas, elas aparecem aqui. Inicie uma varredura na página Varreduras.",

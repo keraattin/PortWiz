@@ -21,6 +21,9 @@ export const es: Partial<Record<TKey, string>> = {
   "ports.col.version": "Versión",
   "ports.col.seen": "Visto abierto por última vez",
   "ports.noHostname": "(sin hostname)",
+  "ports.expandAll": "Expandir todo",
+  "ports.collapseAll": "Contraer todo",
+  "ports.openCount": "{count} abierto(s)",
   "ports.empty": "Aún no hay puertos abiertos",
   "ports.emptyBody":
     "Cuando un escaneo confirme puertos abiertos, aparecerán aquí. Inicia un escaneo desde la página Escaneos.",

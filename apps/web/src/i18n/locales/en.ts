@@ -21,6 +21,9 @@ export const en = {
   "ports.col.version": "Version",
   "ports.col.seen": "Last seen open",
   "ports.noHostname": "(no hostname)",
+  "ports.expandAll": "Expand all",
+  "ports.collapseAll": "Collapse all",
+  "ports.openCount": "{count} open",
   "ports.empty": "No open ports yet",
   "ports.emptyBody":
     "Once a scan confirms open ports, they appear here. Run a scan from the Scans page.",

@@ -21,6 +21,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "ports.col.version": "Sürüm",
   "ports.col.seen": "Son açık görülme",
   "ports.noHostname": "(hostname yok)",
+  "ports.expandAll": "Tümünü genişlet",
+  "ports.collapseAll": "Tümünü daralt",
+  "ports.openCount": "{count} açık",
   "ports.empty": "Henüz açık port yok",
   "ports.emptyBody":
     "Bir tarama açık portları teyit ettiğinde burada görünür. Scans sayfasından bir tarama başlat.",
