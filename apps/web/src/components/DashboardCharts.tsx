@@ -43,12 +43,6 @@ const CRIT_COLORS: Record<string, string> = {
   high: "#f59e0b",
   critical: "#ef4444",
 };
-const COMPLIANCE_COLORS: Record<string, string> = {
-  compliant: "#10b981",
-  due_soon: "#f59e0b",
-  overdue: "#ef4444",
-  never: "#64748b",
-};
 
 function prettify(name: string): string {
   return name.replace(/_/g, " ");
@@ -205,10 +199,6 @@ export default function DashboardCharts({ data }: { data: Charts }) {
           empty={total(data.assets_by_criticality) === 0}
         >
           <Donut data={data.assets_by_criticality} colors={CRIT_COLORS} />
-        </ChartCard>
-
-        <ChartCard title={t("trends.complianceStatus")} empty={total(data.compliance_by_status) === 0}>
-          <Donut data={data.compliance_by_status} colors={COMPLIANCE_COLORS} />
         </ChartCard>
 
         <ChartCard title={t("trends.runsByStatus")} empty={total(data.runs_by_status) === 0}>
