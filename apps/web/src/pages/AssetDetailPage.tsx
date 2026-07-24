@@ -2,12 +2,14 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   type Asset,
+  type CVEFinding,
   type Criticality,
   type CurrentUser,
   type DataSensitivity,
   type OpenPort,
   type Vlan,
   deleteAsset,
+  fetchCVEFindings,
   getAsset,
   listOpenPorts,
   listUsers,
@@ -33,6 +35,14 @@ const CRIT_BADGE: Record<Criticality, string> = {
   critical: "bg-red-900 text-red-300",
 };
 
+const SEV_BADGE: Record<string, string> = {
+  critical: "bg-red-900 text-red-300",
+  high: "bg-orange-900 text-orange-200",
+  medium: "bg-amber-900 text-amber-300",
+  low: "bg-slate-700 text-slate-300",
+  unknown: "bg-slate-700 text-slate-400",
+};
+
 export default function AssetDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
@@ -46,6 +56,7 @@ export default function AssetDetailPage() {
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [users, setUsers] = useState<CurrentUser[]>([]);
   const [ports, setPorts] = useState<OpenPort[]>([]);
+  const [cves, setCves] = useState<CVEFinding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,16 +72,20 @@ export default function AssetDetailPage() {
   async function load() {
     setLoading(true);
     try {
-      const [a, v, u, p] = await Promise.all([
-        getAsset(id),
+      // The asset loads first so its IP can key the CVE lookup, then the rest
+      // fans out in parallel.
+      const a = await getAsset(id);
+      const [v, u, p, c] = await Promise.all([
         listVlans(),
         listUsers(),
         listOpenPorts({ asset_id: id }),
+        fetchCVEFindings({ ip: a.ip }),
       ]);
       setAsset(a);
       setVlans(v);
       setUsers(u);
       setPorts(p);
+      setCves(c);
       setIp(a.ip);
       setHostname(a.hostname ?? "");
       setVlanId(a.vlan_id ?? "");
@@ -155,92 +170,24 @@ export default function AssetDetailPage() {
     <div className="space-y-6">
       {back}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-mono text-2xl font-semibold text-slate-100">{asset.ip}</h1>
-        <span className={`rounded-full px-2 py-0.5 text-xs ${CRIT_BADGE[asset.criticality]}`}>
-          {t(`crit.${asset.criticality}` as TKey)}
-        </span>
-        {asset.hostname && <span className="text-slate-400">{asset.hostname}</span>}
-      </div>
-
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-        <p className="mb-3 text-sm font-medium text-slate-300">{t("assetDetail.details")}</p>
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
-          {(
-            [
-              ["assets.col.hostname", asset.hostname ?? "-"],
-              ["assets.col.vlan", vlanName(asset.vlan_id)],
-              ["assets.col.owner", ownerEmail(asset.owner_id)],
-              ["assets.col.sensitivity", asset.data_sensitivity.toUpperCase()],
-              [
-                "assetDetail.source",
-                asset.discovered ? t("assetDetail.discovered") : t("assetDetail.manual"),
-              ],
-              ["assetDetail.created", new Date(asset.created_at).toLocaleString()],
-              ["assetDetail.updated", new Date(asset.updated_at).toLocaleString()],
-            ] as [TKey, string][]
-          ).map(([label, value]) => (
-            <div key={label} className="flex justify-between gap-4 border-b border-slate-800/60 py-1">
-              <dt className="text-slate-500">{t(label)}</dt>
-              <dd className="text-right text-slate-200">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        {asset.description && (
-          <p className="mt-3 whitespace-pre-line border-t border-slate-800 pt-3 text-sm text-slate-300">
-            {asset.description}
-          </p>
-        )}
-      </div>
-
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-        <div className="mb-1 flex items-center justify-between gap-3">
-          <p className="text-sm font-medium text-slate-300">{t("assetDetail.openPorts")}</p>
-          <Link to="/ports" className="text-xs text-emerald-400 hover:text-emerald-300">
-            {t("dashboard.viewAll")}
-          </Link>
+      <div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-mono text-2xl font-semibold text-slate-100">{asset.ip}</h1>
+          <span className={`rounded-full px-2 py-0.5 text-xs ${CRIT_BADGE[asset.criticality]}`}>
+            {t(`crit.${asset.criticality}` as TKey)}
+          </span>
+          {asset.hostname && <span className="text-slate-400">{asset.hostname}</span>}
         </div>
-        <p className="mb-3 text-xs text-slate-600">{t("assetDetail.openPortsHint")}</p>
-        {ports.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-600">{t("assetDetail.noOpenPorts")}</p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-800">
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-4 py-2 font-medium">{t("ports.col.port")}</th>
-                  <th className="px-4 py-2 font-medium">{t("ports.col.protocol")}</th>
-                  <th className="px-4 py-2 font-medium">{t("ports.col.service")}</th>
-                  <th className="px-4 py-2 font-medium">{t("ports.col.version")}</th>
-                  <th className="px-4 py-2 font-medium">{t("ports.col.seen")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {ports
-                  .slice()
-                  .sort((a, b) => a.port - b.port || a.protocol.localeCompare(b.protocol))
-                  .map((p) => (
-                    <tr key={`${p.port}-${p.protocol}`} className="bg-slate-950">
-                      <td className="px-4 py-2 font-mono text-slate-100">{p.port}</td>
-                      <td className="px-4 py-2 uppercase text-slate-400">{p.protocol}</td>
-                      <td className="px-4 py-2 text-slate-300">
-                        {p.service || <span className="text-slate-600">-</span>}
-                      </td>
-                      <td className="px-4 py-2 text-slate-400">
-                        {p.version || <span className="text-slate-600">-</span>}
-                      </td>
-                      <td className="px-4 py-2 text-xs text-slate-500">
-                        {p.last_seen_open_at ? new Date(p.last_seen_open_at).toLocaleString() : "-"}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <p className="mt-1 text-xs text-slate-500">
+          {asset.discovered ? t("assetDetail.discovered") : t("assetDetail.manual")}
+          {" · "}
+          {t("assetDetail.created")}: {new Date(asset.created_at).toLocaleString()}
+          {" · "}
+          {t("assetDetail.updated")}: {new Date(asset.updated_at).toLocaleString()}
+        </p>
       </div>
 
-      {canWrite && (
+      {canWrite ? (
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
           <form onSubmit={onSave} className="space-y-3">
             <p className="text-sm font-medium text-slate-300">{t("assetDetail.editTitle")}</p>
@@ -332,7 +279,127 @@ export default function AssetDetailPage() {
             </button>
           </div>
         </div>
+      ) : (
+        <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+          <p className="mb-3 text-sm font-medium text-slate-300">{t("assetDetail.details")}</p>
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
+            {(
+              [
+                ["assets.col.hostname", asset.hostname ?? "-"],
+                ["assets.col.vlan", vlanName(asset.vlan_id)],
+                ["assets.col.owner", ownerEmail(asset.owner_id)],
+                ["assets.col.sensitivity", asset.data_sensitivity.toUpperCase()],
+              ] as [TKey, string][]
+            ).map(([label, value]) => (
+              <div key={label} className="flex justify-between gap-4 border-b border-slate-800/60 py-1">
+                <dt className="text-slate-500">{t(label)}</dt>
+                <dd className="text-right text-slate-200">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {asset.description && (
+            <p className="mt-3 whitespace-pre-line border-t border-slate-800 pt-3 text-sm text-slate-300">
+              {asset.description}
+            </p>
+          )}
+        </div>
       )}
+
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-slate-300">{t("assetDetail.openPorts")}</p>
+          <Link to="/ports" className="text-xs text-emerald-400 hover:text-emerald-300">
+            {t("dashboard.viewAll")}
+          </Link>
+        </div>
+        <p className="mb-3 text-xs text-slate-600">{t("assetDetail.openPortsHint")}</p>
+        {ports.length === 0 ? (
+          <p className="py-6 text-center text-sm text-slate-600">{t("assetDetail.noOpenPorts")}</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-slate-800">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-4 py-2 font-medium">{t("ports.col.port")}</th>
+                  <th className="px-4 py-2 font-medium">{t("ports.col.protocol")}</th>
+                  <th className="px-4 py-2 font-medium">{t("ports.col.service")}</th>
+                  <th className="px-4 py-2 font-medium">{t("ports.col.version")}</th>
+                  <th className="px-4 py-2 font-medium">{t("ports.col.seen")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {ports
+                  .slice()
+                  .sort((a, b) => a.port - b.port || a.protocol.localeCompare(b.protocol))
+                  .map((p) => (
+                    <tr key={`${p.port}-${p.protocol}`} className="bg-slate-950">
+                      <td className="px-4 py-2 font-mono text-slate-100">{p.port}</td>
+                      <td className="px-4 py-2 uppercase text-slate-400">{p.protocol}</td>
+                      <td className="px-4 py-2 text-slate-300">
+                        {p.service || <span className="text-slate-600">-</span>}
+                      </td>
+                      <td className="px-4 py-2 text-slate-400">
+                        {p.version || <span className="text-slate-600">-</span>}
+                      </td>
+                      <td className="px-4 py-2 text-xs text-slate-500">
+                        {p.last_seen_open_at ? new Date(p.last_seen_open_at).toLocaleString() : "-"}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+        <p className="text-sm font-medium text-slate-300">{t("assetDetail.vulns")}</p>
+        <p className="mb-3 text-xs text-slate-600">{t("assetDetail.vulnsHint")}</p>
+        {cves.length === 0 ? (
+          <p className="py-6 text-center text-sm text-slate-600">{t("assetDetail.noVulns")}</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-slate-800">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-4 py-2 font-medium">{t("ports.col.port")}</th>
+                  <th className="px-4 py-2 font-medium">{t("cve.col.cve")}</th>
+                  <th className="px-4 py-2 font-medium">{t("cve.col.cvss")}</th>
+                  <th className="px-4 py-2 font-medium">{t("cve.col.severity")}</th>
+                  <th className="px-4 py-2 font-medium">{t("cve.col.summary")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {cves
+                  .slice()
+                  .sort((a, b) => (b.cvss ?? 0) - (a.cvss ?? 0))
+                  .map((c) => (
+                    <tr key={c.id} className="bg-slate-950">
+                      <td className="px-4 py-2 font-mono text-slate-300">{c.port}</td>
+                      <td className="px-4 py-2">
+                        <a
+                          href={c.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-mono text-emerald-400 hover:text-emerald-300"
+                        >
+                          {c.cve_id}
+                        </a>
+                      </td>
+                      <td className="px-4 py-2 text-slate-300">{c.cvss ?? "-"}</td>
+                      <td className="px-4 py-2">
+                        <span className={`rounded-full px-2 py-0.5 text-xs ${SEV_BADGE[c.severity] ?? ""}`}>
+                          {c.severity}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-slate-400">{c.summary}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
