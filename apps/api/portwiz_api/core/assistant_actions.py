@@ -164,6 +164,58 @@ async def _asset_create(session: AsyncSession, args: dict[str, Any]) -> BuiltAct
     return summary, {"method": "POST", "path": "/assets", "body": body}
 
 
+async def _find_asset_by_ip(session: AsyncSession, ip: str) -> Asset:
+    row = (
+        await session.execute(select(Asset).where(Asset.ip == ip))
+    ).scalars().first()
+    if row is None:
+        raise ActionError(f"Asset '{ip}' not found.")
+    return row
+
+
+async def _asset_update(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    """Patch an existing asset, resolved by its current IP. Only the fields the
+    model actually supplied are sent, so untouched attributes are never cleared."""
+    ip = _req_str(args, "ip")
+    asset = await _find_asset_by_ip(session, ip)
+    body: dict[str, Any] = {}
+    summary: dict[str, Any] = {"ip": ip}
+
+    new_ip = _opt_str(args, "new_ip")
+    if new_ip:
+        body["ip"] = new_ip
+        summary["new_ip"] = new_ip
+    hostname = _opt_str(args, "hostname")
+    if hostname:
+        body["hostname"] = hostname
+        summary["hostname"] = hostname
+    vlan_name = _opt_str(args, "vlan_name")
+    if vlan_name:
+        body["vlan_id"] = await _vlan_id_by_name(session, vlan_name)
+        summary["vlan"] = vlan_name
+    owner_email = _opt_str(args, "owner_email")
+    if owner_email:
+        body["owner_id"] = await _user_id_by_email(session, owner_email)
+        summary["owner"] = owner_email
+    criticality = _enum(args, "criticality", _CRITICALITIES, None)
+    if criticality:
+        body["criticality"] = criticality
+        summary["criticality"] = criticality
+    sensitivity = _enum(args, "data_sensitivity", _SENSITIVITIES, None)
+    if sensitivity:
+        body["data_sensitivity"] = sensitivity
+        summary["data_sensitivity"] = sensitivity
+    description = _opt_str(args, "description")
+    if description:
+        body["description"] = description
+        summary["description"] = description
+
+    if not body:
+        raise ActionError("Nothing to update: provide at least one field to change.")
+
+    return summary, {"method": "PATCH", "path": f"/assets/{asset.id}", "body": body}
+
+
 async def _scanprofile_create(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
     name = _req_str(args, "name")
     raw_targets = args.get("targets")
@@ -344,6 +396,16 @@ CATALOG: list[ActionSpec] = [
         _asset_create,
     ),
     ActionSpec(
+        "asset.update",
+        WRITE_ROLES,
+        "Update an existing asset, found by its current IP. Send only the fields to change.",
+        "ip (required, the asset's current IP), new_ip (optional, to change the "
+        "address), hostname (optional), vlan_name (optional), owner_email "
+        "(optional), criticality (low|medium|high|critical, optional), "
+        "data_sensitivity (none|pii|cde|ephi, optional), description (optional)",
+        _asset_update,
+    ),
+    ActionSpec(
         "scanprofile.create",
         WRITE_ROLES,
         "Create a scan profile.",
@@ -424,6 +486,17 @@ async def build_snapshot(session: AsyncSession) -> str:
         return (await session.execute(query)).scalar_one()
 
     n_assets = await count(Asset)
+    asset_rows = (
+        await session.execute(
+            select(Asset.ip, Asset.hostname, Asset.criticality).order_by(Asset.ip).limit(15)
+        )
+    ).all()
+    asset_labels = [
+        ip
+        + (f" ({hostname})" if hostname else "")
+        + f" [{getattr(crit, 'value', crit)}]"
+        for ip, hostname, crit in asset_rows
+    ]
     vlan_names = (
         await session.execute(select(VLAN.name).order_by(VLAN.name).limit(20))
     ).scalars().all()
@@ -471,7 +544,7 @@ async def build_snapshot(session: AsyncSession) -> str:
     ]
     return "\n".join(
         [
-            f"Assets: {n_assets}",
+            f"Assets ({n_assets}): {', '.join(asset_labels) or 'none'}",
             f"VLANs ({len(vlan_names)}): {', '.join(vlan_names) or 'none'}",
             f"Scan profiles ({len(profile_names)}): {', '.join(profile_names) or 'none'}",
             f"Agents ({len(agent_labels)}): {', '.join(agent_labels) or 'none'}",

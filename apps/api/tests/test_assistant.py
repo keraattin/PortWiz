@@ -25,6 +25,7 @@ def test_actions_for_role() -> None:
     assert "scan.run" in operator
     assert "change.acknowledge" in operator
     assert "task.update_status" in operator
+    assert "asset.update" in operator
     assert "agent.enroll" not in operator  # admin-only
 
     admin = {a.name for a in actions_for_role("admin")}
@@ -117,7 +118,10 @@ async def test_run_chat_action_without_reply_defaults_to_summary(db) -> None:
 
     # Model proposes a valid action but no prose; the reply falls back to the
     # action summary so the user always sees a description.
-    text = '{"reply": "", "action": {"name": "vlan.create", "args": {"name": "NetA", "vlan_tag": 5}}}'
+    text = (
+        '{"reply": "", "action": {"name": "vlan.create", '
+        '"args": {"name": "NetA", "vlan_tag": 5}}}'
+    )
     msgs = [{"role": "user", "content": "add vlan NetA"}]
     async with db() as session:
         reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
@@ -198,6 +202,64 @@ async def test_run_chat_change_not_found(db) -> None:
         reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
     assert action is None
     assert "no change found" in reply.lower()
+
+
+async def test_run_chat_asset_update(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+    from portwiz_api.models.asset import Asset, Criticality
+
+    async with db() as session:
+        session.add(Asset(ip="10.0.0.42", hostname="web-01", criticality=Criticality.low))
+        await session.commit()
+
+    # Change only the criticality; hostname must be left untouched (not cleared).
+    text = (
+        '{"reply": "Raising it.", "action": {"name": "asset.update", '
+        '"args": {"ip": "10.0.0.42", "criticality": "critical"}}}'
+    )
+    msgs = [{"role": "user", "content": "mark 10.0.0.42 as critical"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["name"] == "asset.update"
+    assert action["request"]["method"] == "PATCH"
+    assert action["request"]["path"].startswith("/assets/")
+    assert action["request"]["body"] == {"criticality": "critical"}
+    assert action["summary"]["ip"] == "10.0.0.42"
+
+
+async def test_run_chat_asset_update_not_found(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+
+    text = (
+        '{"reply": "Updating.", "action": {"name": "asset.update", '
+        '"args": {"ip": "203.0.113.9", "hostname": "ghost"}}}'
+    )
+    msgs = [{"role": "user", "content": "rename 203.0.113.9"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is None
+    assert "not found" in reply.lower()
+
+
+async def test_run_chat_asset_update_needs_a_field(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+    from portwiz_api.models.asset import Asset
+
+    async with db() as session:
+        session.add(Asset(ip="10.0.0.43"))
+        await session.commit()
+
+    # Only the lookup IP, nothing to change: the action is rejected with a hint.
+    text = (
+        '{"reply": "OK.", "action": {"name": "asset.update", '
+        '"args": {"ip": "10.0.0.43"}}}'
+    )
+    msgs = [{"role": "user", "content": "update 10.0.0.43"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is None
+    assert "nothing to update" in reply.lower()
 
 
 async def test_run_chat_task_update_status(db) -> None:
