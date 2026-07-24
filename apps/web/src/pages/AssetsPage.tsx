@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   type Asset,
   type AssetImportReport,
@@ -52,6 +52,7 @@ const CRIT_RANK: Record<string, number> = { low: 0, medium: 1, high: 2, critical
 
 export default function AssetsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const toast = useToast();
   const { t } = useI18n();
   const errorMessage = useErrorMessage();
@@ -422,12 +423,12 @@ export default function AssetsPage() {
               </tr>
             ) : (
               assetsPage.slice.map((a) => (
-                <tr key={a.id} className="bg-slate-950">
-                  <td className="px-4 py-2 font-mono">
-                    <Link to={`/assets/${a.id}`} className="text-emerald-400 hover:text-emerald-300">
-                      {a.ip}
-                    </Link>
-                  </td>
+                <tr
+                  key={a.id}
+                  onClick={() => navigate(`/assets/${a.id}`)}
+                  className="cursor-pointer bg-slate-950 hover:bg-slate-900"
+                >
+                  <td className="px-4 py-2 font-mono text-emerald-400">{a.ip}</td>
                   <td className="px-4 py-2 text-slate-300">{a.hostname ?? "-"}</td>
                   <td className="px-4 py-2 text-slate-300">{vlanName(a.vlan_id)}</td>
                   <td className="px-4 py-2 text-slate-300">{ownerEmail(a.owner_id)}</td>
@@ -440,7 +441,10 @@ export default function AssetsPage() {
                   <td className="px-4 py-2 text-right">
                     {canWrite && (
                       <button
-                        onClick={() => onDelete(a.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(a.id);
+                        }}
                         className="text-xs text-red-400 hover:text-red-300"
                       >
                         {t("common.delete")}
