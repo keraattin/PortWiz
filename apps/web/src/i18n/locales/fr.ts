@@ -24,6 +24,13 @@ export const fr: Partial<Record<TKey, string>> = {
   "ports.empty": "Aucun port ouvert pour l'instant",
   "ports.emptyBody":
     "Dès qu'une analyse confirme des ports ouverts, ils apparaissent ici. Lancez une analyse depuis la page Analyses.",
+  "portDetail.back": "Retour aux ports",
+  "portDetail.heading": "Port {port}",
+  "portDetail.usedFor": "Couramment utilisé pour",
+  "portDetail.unknown":
+    "Ce n'est pas un port bien connu standard. Son rôle dépend du service qui l'utilise.",
+  "portDetail.hosts": "Hôtes ayant ce port ouvert",
+  "portDetail.noHosts": "Aucun hôte n'expose actuellement ce port.",
   "assetDetail.back": "Retour à l'inventaire",
   "assetDetail.notFound": "Actif introuvable.",
   "assetDetail.details": "Détails",

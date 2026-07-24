@@ -24,6 +24,13 @@ export const es: Partial<Record<TKey, string>> = {
   "ports.empty": "Aún no hay puertos abiertos",
   "ports.emptyBody":
     "Cuando un escaneo confirme puertos abiertos, aparecerán aquí. Inicia un escaneo desde la página Escaneos.",
+  "portDetail.back": "Volver a los puertos",
+  "portDetail.heading": "Puerto {port}",
+  "portDetail.usedFor": "Comúnmente usado para",
+  "portDetail.unknown":
+    "No es un puerto bien conocido estándar. Su propósito depende del servicio que se ejecute.",
+  "portDetail.hosts": "Hosts con este puerto abierto",
+  "portDetail.noHosts": "Ningún host expone este puerto actualmente.",
   "assetDetail.back": "Volver al inventario",
   "assetDetail.notFound": "Activo no encontrado.",
   "assetDetail.details": "Detalles",

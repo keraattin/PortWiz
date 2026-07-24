@@ -24,6 +24,13 @@ export const tr: Partial<Record<TKey, string>> = {
   "ports.empty": "Henüz açık port yok",
   "ports.emptyBody":
     "Bir tarama açık portları teyit ettiğinde burada görünür. Scans sayfasından bir tarama başlat.",
+  "portDetail.back": "Portlara dön",
+  "portDetail.heading": "Port {port}",
+  "portDetail.usedFor": "Genellikle şunun için kullanılır",
+  "portDetail.unknown":
+    "Standart bir well-known port değil. Amacı, üzerinde çalışan servise bağlıdır.",
+  "portDetail.hosts": "Bu portu açık olan sunucular",
+  "portDetail.noHosts": "Şu anda hiçbir sunucu bu portu açık tutmuyor.",
   "assetDetail.back": "Envantere dön",
   "assetDetail.notFound": "Varlık bulunamadı.",
   "assetDetail.details": "Ayrıntılar",

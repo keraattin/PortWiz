@@ -24,6 +24,13 @@ export const de: Partial<Record<TKey, string>> = {
   "ports.empty": "Noch keine offenen Ports",
   "ports.emptyBody":
     "Sobald ein Scan offene Ports bestätigt, erscheinen sie hier. Starte einen Scan auf der Scans-Seite.",
+  "portDetail.back": "Zurück zu den Ports",
+  "portDetail.heading": "Port {port}",
+  "portDetail.usedFor": "Üblicherweise verwendet für",
+  "portDetail.unknown":
+    "Kein standardmäßiger bekannter Port. Sein Zweck hängt vom laufenden Dienst ab.",
+  "portDetail.hosts": "Hosts mit diesem offenen Port",
+  "portDetail.noHosts": "Derzeit stellt kein Host diesen Port bereit.",
   "assetDetail.back": "Zurück zum Inventar",
   "assetDetail.notFound": "Asset nicht gefunden.",
   "assetDetail.details": "Details",

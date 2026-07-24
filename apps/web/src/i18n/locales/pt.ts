@@ -24,6 +24,13 @@ export const pt: Partial<Record<TKey, string>> = {
   "ports.empty": "Ainda não há portas abertas",
   "ports.emptyBody":
     "Quando uma varredura confirmar portas abertas, elas aparecem aqui. Inicie uma varredura na página Varreduras.",
+  "portDetail.back": "Voltar às portas",
+  "portDetail.heading": "Porta {port}",
+  "portDetail.usedFor": "Comumente usado para",
+  "portDetail.unknown":
+    "Não é uma porta bem conhecida padrão. Sua finalidade depende do serviço em execução.",
+  "portDetail.hosts": "Hosts com esta porta aberta",
+  "portDetail.noHosts": "Nenhum host expõe esta porta no momento.",
   "assetDetail.back": "Voltar ao inventário",
   "assetDetail.notFound": "Ativo não encontrado.",
   "assetDetail.details": "Detalhes",

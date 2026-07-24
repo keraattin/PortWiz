@@ -333,7 +333,11 @@ export default function AssetDetailPage() {
                   .sort((a, b) => a.port - b.port || a.protocol.localeCompare(b.protocol))
                   .map((p) => (
                     <tr key={`${p.port}-${p.protocol}`} className="bg-slate-950">
-                      <td className="px-4 py-2 font-mono text-slate-100">{p.port}</td>
+                      <td className="px-4 py-2 font-mono text-slate-100">
+                        <Link to={`/ports/${p.port}`} className="text-emerald-400 hover:text-emerald-300">
+                          {p.port}
+                        </Link>
+                      </td>
                       <td className="px-4 py-2 uppercase text-slate-400">{p.protocol}</td>
                       <td className="px-4 py-2 text-slate-300">
                         {p.service || <span className="text-slate-600">-</span>}

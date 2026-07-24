@@ -24,6 +24,13 @@ export const en = {
   "ports.empty": "No open ports yet",
   "ports.emptyBody":
     "Once a scan confirms open ports, they appear here. Run a scan from the Scans page.",
+  "portDetail.back": "Back to ports",
+  "portDetail.heading": "Port {port}",
+  "portDetail.usedFor": "Commonly used for",
+  "portDetail.unknown":
+    "Not a standard well-known port. Its purpose depends on the service running on it.",
+  "portDetail.hosts": "Hosts with this port open",
+  "portDetail.noHosts": "No host currently exposes this port.",
   "assetDetail.back": "Back to inventory",
   "assetDetail.notFound": "Asset not found.",
   "assetDetail.details": "Details",
