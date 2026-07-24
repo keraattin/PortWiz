@@ -2,8 +2,8 @@
 
 Bundles everything an auditor needs for a scan profile into a single payload:
 the profile, its scan runs, the current confirmed-open exposure, the confirmed
-changes, the relevant slice of the immutable audit log, and a fresh chain
-integrity check. Generating a package is itself audited (chain of custody).
+changes, and a fresh integrity check over the immutable audit log. Generating a
+package is itself audited (chain of custody).
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ import datetime as dt
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.audit import append_audit, verify_chain
@@ -22,7 +22,7 @@ from ...models.change import ChangeEvent, PortState
 from ...models.cve import CVEFinding
 from ...models.scan import ScanProfile, ScanRun
 from ...models.user import User, UserRole
-from ...schemas.audit import AuditEventRead, ChainVerification
+from ...schemas.audit import ChainVerification
 from ...schemas.change import ChangeEventRead
 from ...schemas.cve import CVEFindingRead
 from ...schemas.evidence import EvidencePackage, OpenPort
@@ -49,7 +49,6 @@ async def build_evidence(
             .limit(100)
         )
     ).scalars().all()
-    run_ids = [str(r.id) for r in runs]
 
     changes = (
         await session.execute(
@@ -58,7 +57,6 @@ async def build_evidence(
             .order_by(ChangeEvent.detected_at.desc())
         )
     ).scalars().all()
-    change_ids = [str(c.id) for c in changes]
 
     states = (
         await session.execute(
@@ -87,24 +85,9 @@ async def build_evidence(
         ).scalars().all()
         cve_findings = [c for c in cve_rows if (c.ip, c.port) in open_pairs]
 
-    # Audit events touching this profile, its runs, or its changes.
-    audit_conditions = [
-        and_(AuditEvent.target_type == "scan_profile", AuditEvent.target_id == str(profile.id))
-    ]
-    if run_ids:
-        audit_conditions.append(
-            and_(AuditEvent.target_type == "scan_run", AuditEvent.target_id.in_(run_ids))
-        )
-    if change_ids:
-        audit_conditions.append(
-            and_(AuditEvent.target_type == "change_event", AuditEvent.target_id.in_(change_ids))
-        )
-    audit_rows = (
-        await session.execute(
-            select(AuditEvent).where(or_(*audit_conditions)).order_by(AuditEvent.seq.asc())
-        )
-    ).scalars().all()
-
+    # A fresh integrity check over the whole immutable audit log. The individual
+    # events are intentionally not bundled: the report documents exposure and
+    # changes, and this attests the tamper-evident log behind them is intact.
     ok, broken_seq = await verify_chain(session)
     total = (
         await session.execute(select(func.count()).select_from(AuditEvent))
@@ -129,7 +112,6 @@ async def build_evidence(
         cve_findings=[CVEFindingRead.model_validate(c) for c in cve_findings],
         scan_runs=[ScanRunRead.model_validate(r) for r in runs],
         changes=[ChangeEventRead.model_validate(c) for c in changes],
-        audit_slice=[AuditEventRead.model_validate(a) for a in audit_rows],
     )
 
 

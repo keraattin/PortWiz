@@ -70,7 +70,7 @@ export const en = {
   "docs.pkg.scan": "Scan report",
   "docs.pkg.diff": "Change diff",
   "docs.pkg.task": "Task & approval",
-  "docs.pkg.audit": "Audit-log slice",
+  "docs.pkg.audit": "Audit-chain integrity",
   "docs.pkg.out": "Signed JSON + PDF",
   "docs.hash.event": "Event",
   "docs.hash.note":
@@ -178,7 +178,7 @@ export const en = {
     "The agent has not sent a heartbeat within its online window. Check that the agent container is running and can reach the API; rotate the token and redeploy if needed.",
   "docs.ts.cve.h": "No CVE findings appear",
   "docs.ts.cve.p":
-    "Enable CVE enrichment in Settings and run a re-check. Air-gapped installs need an imported NVD feed. Findings only appear for services that report a version.",
+    "Enable CVE enrichment in Settings and run a re-check. Air-gapped installs need an imported NVD feed. Findings appear for any identified service, and are most precise when a product or version is known.",
   "docs.ts.integr.h": "Email or Jira is not working",
   "docs.ts.integr.p":
     "Use the Test button on the integration's Settings tab; it reports the exact connection error so you can fix the URL, credentials or recipients.",
@@ -206,7 +206,7 @@ export const en = {
   "docs.cve.summary": "Match discovered services to known CVEs, online or offline.",
   "docs.cve.overview.h": "Overview",
   "docs.cve.overview.p":
-    "When a scan identifies a service and version, PortWiz can match it against known CVEs and store the findings per asset and port. Two sources are available, and both come straight from NVD.",
+    "When a scan identifies a service, PortWiz can match it against known CVEs and store the findings per asset and port, using the version where one is known. Two sources are available, and both come straight from NVD.",
   "docs.cve.online.h": "Online (NVD)",
   "docs.cve.online.p":
     "The default. PortWiz queries the NVD API directly, so it stays current with no maintenance. Add an NVD API key in Settings to raise the rate limit. Requires outbound internet access.",
@@ -252,7 +252,7 @@ export const en = {
     "A confirmed change can open an in-app task, send an email, and create a Jira issue (Cloud or Server/Data Center) with your project, issue type and assignee. Task and issue status stay in sync.",
   "docs.ev.export.h": "Evidence export",
   "docs.ev.export.p":
-    "One click bundles the scan report, the change diff, the linked task and approval, and the relevant slice of the audit log into a signed JSON and PDF package for auditors.",
+    "One click bundles the scan report, the change diff, the linked task and approval, and a tamper-evidence check of the audit log into a signed JSON and PDF package for auditors.",
   "docs.ev.audit.h": "Audit integrity",
   "docs.ev.audit.p":
     "Every action is written to an immutable, hash-chained audit log. The Compliance page can verify the chain end to end and flags any record that was altered.",
@@ -736,7 +736,7 @@ export const en = {
   "cve.filterSeverity": "Severity",
   "cve.allSeverities": "All",
   "cve.empty":
-    "No CVE findings yet. Run a scan that identifies service versions, then re-check.",
+    "No CVE findings yet. Run a scan that identifies services, then re-check.",
   "cve.col.host": "Host",
   "cve.col.service": "Service",
   "cve.col.cve": "CVE",
@@ -1108,11 +1108,33 @@ export const en = {
   "settings.slack.webhook": "Webhook URL",
   "settings.slack.webhookHint":
     "In Slack: Apps → Incoming Webhooks → Add to a channel, then paste the URL here.",
+  "settings.slack.transport": "Connection method",
+  "settings.slack.transportHint":
+    "Use an incoming webhook, or a bot token for orgs that disable webhooks.",
+  "settings.slack.transport.webhook": "Incoming webhook",
+  "settings.slack.transport.bot": "Bot token (API)",
+  "settings.slack.botToken": "Bot token",
+  "settings.slack.botTokenHint":
+    "A bot token (xoxb-...) with chat:write. Invite the bot to the target channel.",
+  "settings.slack.channel": "Channel",
+  "settings.slack.channelHint": "Channel ID or #name the bot posts to.",
   "settings.teams.title": "Microsoft Teams",
   "settings.teams.enabled": "Teams enabled",
   "settings.teams.webhook": "Webhook URL",
   "settings.teams.webhookHint":
     "In a Teams channel: Connectors → Incoming Webhook → Create, then paste the URL here.",
+  "settings.teams.transport": "Connection method",
+  "settings.teams.transportHint":
+    "Use an incoming webhook, or Microsoft Graph for orgs that disable webhooks.",
+  "settings.teams.transport.webhook": "Incoming webhook",
+  "settings.teams.transport.graph": "Microsoft Graph (API)",
+  "settings.teams.tenantId": "Tenant ID",
+  "settings.teams.graphHint":
+    "From an Entra app registration with client credentials allowed to post channel messages.",
+  "settings.teams.clientId": "Client ID",
+  "settings.teams.clientSecret": "Client secret",
+  "settings.teams.teamId": "Team ID",
+  "settings.teams.channelId": "Channel ID",
   "settings.jira.title": "Jira",
   "settings.jira.enabled": "Jira enabled",
   "settings.jira.url": "URL",
@@ -1180,6 +1202,7 @@ export const en = {
   "assistant.act.vlan_create": "Create VLAN",
   "assistant.act.iprange_create": "Create IP range",
   "assistant.act.asset_create": "Add asset",
+  "assistant.act.asset_update": "Update asset",
   "assistant.act.scanprofile_create": "Create scan profile",
   "assistant.act.scan_run": "Run scan",
   "assistant.act.agent_enroll": "Enroll agent",

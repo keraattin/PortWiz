@@ -70,7 +70,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "docs.pkg.scan": "Relatório de varredura",
   "docs.pkg.diff": "Diff da mudança",
   "docs.pkg.task": "Tarefa & aprovação",
-  "docs.pkg.audit": "Fatia do log de auditoria",
+  "docs.pkg.audit": "Integridade da cadeia de auditoria",
   "docs.pkg.out": "JSON + PDF assinados",
   "docs.hash.event": "Evento",
   "docs.hash.note":
@@ -178,7 +178,7 @@ export const pt: Partial<Record<TKey, string>> = {
     "O agente não enviou heartbeat dentro da janela online. Verifique se o contêiner do agente está rodando e alcança a API; rotacione o token e reimplante se necessário.",
   "docs.ts.cve.h": "Nenhum resultado de CVE aparece",
   "docs.ts.cve.p":
-    "Ative o enriquecimento de CVE nas Configurações e execute uma reverificação. Instalações air-gapped precisam de um feed NVD importado. Os resultados só aparecem para serviços que informam uma versão.",
+    "Ative o enriquecimento de CVE nas Configurações e execute uma reverificação. Instalações air-gapped precisam de um feed NVD importado. Os resultados aparecem para qualquer serviço identificado e são mais precisos quando um produto ou versão é conhecido.",
   "docs.ts.integr.h": "E-mail ou Jira não funciona",
   "docs.ts.integr.p":
     "Use o botão Testar na aba de Configurações da integração; ele informa o erro exato de conexão para você corrigir a URL, as credenciais ou os destinatários.",
@@ -208,7 +208,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "docs.cve.summary": "Associe serviços descobertos a CVEs conhecidas, online ou offline.",
   "docs.cve.overview.h": "Visão geral",
   "docs.cve.overview.p":
-    "Quando uma varredura identifica um serviço e versão, o PortWiz pode associá-lo a CVEs conhecidas e armazenar os resultados por ativo e porta. Há duas fontes, ambas diretamente do NVD.",
+    "Quando uma varredura identifica um serviço, o PortWiz pode associá-lo a CVEs conhecidas e armazenar os resultados por ativo e porta, usando a versão quando conhecida. Há duas fontes, ambas diretamente do NVD.",
   "docs.cve.online.h": "Online (NVD)",
   "docs.cve.online.p":
     "O padrão. O PortWiz consulta a API do NVD diretamente, mantendo-se atualizado sem manutenção. Adicione uma chave de API do NVD nas Configurações para elevar o limite de taxa. Requer acesso de saída à internet.",
@@ -254,7 +254,7 @@ export const pt: Partial<Record<TKey, string>> = {
     "Uma mudança confirmada pode abrir uma tarefa no app, enviar um e-mail e criar um chamado no Jira (Cloud ou Server/Data Center) com seu projeto, tipo de item e responsável. O status da tarefa e do chamado permanece sincronizado.",
   "docs.ev.export.h": "Exportação de evidências",
   "docs.ev.export.p":
-    "Um clique agrupa o relatório de varredura, o diff da mudança, a tarefa e aprovação vinculadas e a fatia relevante do log de auditoria em um pacote JSON e PDF assinado para auditores.",
+    "Um clique agrupa o relatório de varredura, o diff da mudança, a tarefa e aprovação vinculadas e uma verificação de inviolabilidade do log de auditoria em um pacote JSON e PDF assinado para auditores.",
   "docs.ev.audit.h": "Integridade da auditoria",
   "docs.ev.audit.p":
     "Cada ação é gravada em um log de auditoria imutável e encadeado por hash. A página Conformidade pode verificar a cadeia de ponta a ponta e sinaliza qualquer registro alterado.",
@@ -742,7 +742,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "cve.filterSeverity": "Severidade",
   "cve.allSeverities": "Todas",
   "cve.empty":
-    "Ainda não há achados de CVE. Execute uma varredura que identifique versões de serviço e reverifique.",
+    "Ainda não há achados de CVE. Execute uma varredura que identifique serviços e reverifique.",
   "cve.col.host": "Host",
   "cve.col.service": "Serviço",
   "cve.col.cve": "CVE",
@@ -1116,11 +1116,33 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.slack.webhook": "URL do webhook",
   "settings.slack.webhookHint":
     "No Slack: Apps → Incoming Webhooks → adicionar a um canal e cole a URL aqui.",
+  "settings.slack.transport": "Método de conexão",
+  "settings.slack.transportHint":
+    "Use um webhook de entrada, ou um token de bot para organizações que desativam webhooks.",
+  "settings.slack.transport.webhook": "Webhook de entrada",
+  "settings.slack.transport.bot": "Token de bot (API)",
+  "settings.slack.botToken": "Token de bot",
+  "settings.slack.botTokenHint":
+    "Um token de bot (xoxb-...) com chat:write. Convide o bot para o canal de destino.",
+  "settings.slack.channel": "Canal",
+  "settings.slack.channelHint": "ID do canal ou #nome onde o bot publica.",
   "settings.teams.title": "Microsoft Teams",
   "settings.teams.enabled": "Teams ativado",
   "settings.teams.webhook": "URL do webhook",
   "settings.teams.webhookHint":
     "Em um canal do Teams: Conectores → Incoming Webhook → Criar e cole a URL aqui.",
+  "settings.teams.transport": "Método de conexão",
+  "settings.teams.transportHint":
+    "Use um webhook de entrada, ou Microsoft Graph para organizações que desativam webhooks.",
+  "settings.teams.transport.webhook": "Webhook de entrada",
+  "settings.teams.transport.graph": "Microsoft Graph (API)",
+  "settings.teams.tenantId": "ID do locatário",
+  "settings.teams.graphHint":
+    "De um registro de app do Entra com credenciais de cliente autorizadas a publicar mensagens de canal.",
+  "settings.teams.clientId": "ID do cliente",
+  "settings.teams.clientSecret": "Segredo do cliente",
+  "settings.teams.teamId": "ID da equipe",
+  "settings.teams.channelId": "ID do canal",
   "settings.jira.title": "Jira",
   "settings.jira.enabled": "Jira ativado",
   "settings.jira.url": "URL",
@@ -1188,6 +1210,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "assistant.act.vlan_create": "Criar VLAN",
   "assistant.act.iprange_create": "Criar faixa de IP",
   "assistant.act.asset_create": "Adicionar ativo",
+  "assistant.act.asset_update": "Atualizar ativo",
   "assistant.act.scanprofile_create": "Criar perfil de varredura",
   "assistant.act.scan_run": "Executar varredura",
   "assistant.act.agent_enroll": "Registrar agente",

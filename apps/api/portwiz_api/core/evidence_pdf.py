@@ -188,24 +188,5 @@ def render_evidence_pdf(pkg: EvidencePackage) -> bytes:
             )
         )
 
-    story += [Spacer(1, 8), Paragraph(f"Audit log slice ({len(pkg.audit_slice)} events)", _h2)]
-    if pkg.audit_slice:
-        story.append(
-            _table(
-                ["Seq", "Action", "Actor", "Target", "Time"],
-                [
-                    [
-                        a.seq,
-                        a.action,
-                        a.actor_email or "-",
-                        f"{a.target_type or '-'}:{(a.target_id or '')[:8]}",
-                        _fmt(a.created_at),
-                    ]
-                    for a in pkg.audit_slice
-                ],
-                [15 * mm, 45 * mm, 45 * mm, 35 * mm, 40 * mm],
-            )
-        )
-
     doc.build(story)
     return buffer.getvalue()

@@ -70,7 +70,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "docs.pkg.scan": "Rapport d'analyse",
   "docs.pkg.diff": "Diff du changement",
   "docs.pkg.task": "Tâche & approbation",
-  "docs.pkg.audit": "Extrait du journal d'audit",
+  "docs.pkg.audit": "Intégrité de la chaîne d'audit",
   "docs.pkg.out": "JSON + PDF signés",
   "docs.hash.event": "Événement",
   "docs.hash.note":
@@ -178,7 +178,7 @@ export const fr: Partial<Record<TKey, string>> = {
     "L'agent n'a pas envoyé de battement dans sa fenêtre en ligne. Vérifiez que le conteneur de l'agent tourne et peut joindre l'API ; faites tourner le jeton et redéployez si nécessaire.",
   "docs.ts.cve.h": "Aucun résultat CVE n'apparaît",
   "docs.ts.cve.p":
-    "Activez l'enrichissement CVE dans les Paramètres et lancez une revérification. Les installations air-gapped nécessitent un flux NVD importé. Les résultats n'apparaissent que pour les services qui indiquent une version.",
+    "Activez l'enrichissement CVE dans les Paramètres et lancez une revérification. Les installations air-gapped nécessitent un flux NVD importé. Les résultats apparaissent pour tout service identifié et sont plus précis lorsqu'un produit ou une version est connu.",
   "docs.ts.integr.h": "L'e-mail ou Jira ne fonctionne pas",
   "docs.ts.integr.p":
     "Utilisez le bouton Tester sur l'onglet Paramètres de l'intégration ; il indique l'erreur de connexion exacte pour corriger l'URL, les identifiants ou les destinataires.",
@@ -208,7 +208,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "docs.cve.summary": "Associer les services découverts à des CVE connues, en ligne ou hors ligne.",
   "docs.cve.overview.h": "Aperçu",
   "docs.cve.overview.p":
-    "Lorsqu'une analyse identifie un service et une version, PortWiz peut l'associer à des CVE connues et stocker les résultats par actif et par port. Deux sources sont disponibles, toutes deux directement issues de NVD.",
+    "Lorsqu'une analyse identifie un service, PortWiz peut l'associer à des CVE connues et stocker les résultats par actif et par port, en utilisant la version lorsqu'elle est connue. Deux sources sont disponibles, toutes deux directement issues de NVD.",
   "docs.cve.online.h": "En ligne (NVD)",
   "docs.cve.online.p":
     "Par défaut. PortWiz interroge directement l'API NVD, restant ainsi à jour sans maintenance. Ajoutez une clé d'API NVD dans les Paramètres pour augmenter la limite de débit. Nécessite un accès Internet sortant.",
@@ -254,7 +254,7 @@ export const fr: Partial<Record<TKey, string>> = {
     "Un changement confirmé peut ouvrir une tâche dans l'application, envoyer un e-mail et créer un ticket Jira (Cloud ou Server/Data Center) avec votre projet, type de ticket et destinataire. Les statuts de tâche et de ticket restent synchronisés.",
   "docs.ev.export.h": "Export des preuves",
   "docs.ev.export.p":
-    "Un clic regroupe le rapport d'analyse, le diff du changement, la tâche et l'approbation liées, et la tranche pertinente du journal d'audit dans un package JSON et PDF signé pour les auditeurs.",
+    "Un clic regroupe le rapport d'analyse, le diff du changement, la tâche et l'approbation liées, et une vérification d'inviolabilité du journal d'audit dans un package JSON et PDF signé pour les auditeurs.",
   "docs.ev.audit.h": "Intégrité de l'audit",
   "docs.ev.audit.p":
     "Chaque action est écrite dans un journal d'audit immuable et chaîné par hachage. La page Conformité peut vérifier la chaîne de bout en bout et signale tout enregistrement altéré.",
@@ -742,7 +742,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "cve.filterSeverity": "Gravité",
   "cve.allSeverities": "Toutes",
   "cve.empty":
-    "Aucun résultat CVE pour l'instant. Lancez une analyse qui identifie les versions de service, puis revérifiez.",
+    "Aucun résultat CVE pour l'instant. Lancez une analyse qui identifie les services, puis revérifiez.",
   "cve.col.host": "Hôte",
   "cve.col.service": "Service",
   "cve.col.cve": "CVE",
@@ -1116,11 +1116,33 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.slack.webhook": "URL du webhook",
   "settings.slack.webhookHint":
     "Dans Slack : Apps → Incoming Webhooks → ajouter à un canal, puis collez l'URL ici.",
+  "settings.slack.transport": "Méthode de connexion",
+  "settings.slack.transportHint":
+    "Utilisez un webhook entrant, ou un jeton de bot pour les organisations qui désactivent les webhooks.",
+  "settings.slack.transport.webhook": "Webhook entrant",
+  "settings.slack.transport.bot": "Jeton de bot (API)",
+  "settings.slack.botToken": "Jeton de bot",
+  "settings.slack.botTokenHint":
+    "Un jeton de bot (xoxb-...) avec chat:write. Invitez le bot dans le canal cible.",
+  "settings.slack.channel": "Canal",
+  "settings.slack.channelHint": "ID de canal ou #nom où le bot publie.",
   "settings.teams.title": "Microsoft Teams",
   "settings.teams.enabled": "Teams activé",
   "settings.teams.webhook": "URL du webhook",
   "settings.teams.webhookHint":
     "Dans un canal Teams : Connecteurs → Incoming Webhook → Créer, puis collez l'URL ici.",
+  "settings.teams.transport": "Méthode de connexion",
+  "settings.teams.transportHint":
+    "Utilisez un webhook entrant, ou Microsoft Graph pour les organisations qui désactivent les webhooks.",
+  "settings.teams.transport.webhook": "Webhook entrant",
+  "settings.teams.transport.graph": "Microsoft Graph (API)",
+  "settings.teams.tenantId": "ID de locataire",
+  "settings.teams.graphHint":
+    "Depuis une inscription d'application Entra avec des identifiants client autorisés à publier des messages de canal.",
+  "settings.teams.clientId": "ID client",
+  "settings.teams.clientSecret": "Secret client",
+  "settings.teams.teamId": "ID d'équipe",
+  "settings.teams.channelId": "ID de canal",
   "settings.jira.title": "Jira",
   "settings.jira.enabled": "Jira activé",
   "settings.jira.url": "URL",
@@ -1188,6 +1210,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "assistant.act.vlan_create": "Créer un VLAN",
   "assistant.act.iprange_create": "Créer une plage d'IP",
   "assistant.act.asset_create": "Ajouter un actif",
+  "assistant.act.asset_update": "Mettre à jour l'actif",
   "assistant.act.scanprofile_create": "Créer un profil d'analyse",
   "assistant.act.scan_run": "Exécuter l'analyse",
   "assistant.act.agent_enroll": "Enregistrer un agent",

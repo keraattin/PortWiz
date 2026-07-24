@@ -83,9 +83,9 @@ async def test_evidence_package_contents_and_custody(client, admin_headers) -> N
     assert len(pkg["scan_runs"]) == 4
     assert len(pkg["changes"]) == 2
 
-    audit_actions = {e["action"] for e in pkg["audit_slice"]}
-    assert "scan_profile.created" in audit_actions
-    assert any(a.startswith("scan_run.") for a in audit_actions)
+    # The verbose audit-log slice is intentionally not bundled in the report;
+    # only the one-line chain integrity attestation remains.
+    assert "audit_slice" not in pkg
 
     # The export itself was recorded for chain of custody.
     resp = await client.get("/api/v1/audit?action=evidence.exported", headers=admin_headers)

@@ -70,7 +70,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "docs.pkg.scan": "Tarama raporu",
   "docs.pkg.diff": "Değişiklik diff'i",
   "docs.pkg.task": "Task & onay",
-  "docs.pkg.audit": "Audit-log dilimi",
+  "docs.pkg.audit": "Audit zinciri bütünlüğü",
   "docs.pkg.out": "İmzalı JSON + PDF",
   "docs.hash.event": "Olay",
   "docs.hash.note":
@@ -178,7 +178,7 @@ export const tr: Partial<Record<TKey, string>> = {
     "Agent, online penceresi içinde heartbeat göndermemiş. Agent konteynerinin çalıştığını ve API'ye ulaşabildiğini kontrol et; gerekirse token'ı yenileyip yeniden deploy et.",
   "docs.ts.cve.h": "CVE bulgusu görünmüyor",
   "docs.ts.cve.p":
-    "Ayarlar'da CVE zenginleştirmeyi aç ve yeniden-kontrol çalıştır. Air-gapped kurulumlar içe aktarılmış bir NVD feed'i ister. Bulgular yalnızca sürüm bildiren servisler için görünür.",
+    "Ayarlar'da CVE zenginleştirmeyi aç ve yeniden-kontrol çalıştır. Air-gapped kurulumlar içe aktarılmış bir NVD feed'i ister. Bulgular tanımlanan her servis için görünür ve bir ürün ya da sürüm bilindiğinde en isabetlidir.",
   "docs.ts.integr.h": "E-posta ya da Jira çalışmıyor",
   "docs.ts.integr.p":
     "Entegrasyonun Ayarlar sekmesindeki Test butonunu kullan; tam bağlantı hatasını bildirir, böylece URL, kimlik bilgileri ya da alıcıları düzeltebilirsin.",
@@ -206,7 +206,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "docs.cve.summary": "Keşfedilen servisleri bilinen CVE'lerle eşleştir (çevrimiçi ya da çevrimdışı).",
   "docs.cve.overview.h": "Genel bakış",
   "docs.cve.overview.p":
-    "Bir tarama servis ve sürüm belirlediğinde, PortWiz bunu bilinen CVE'lerle eşleştirip bulguları varlık ve port bazında saklayabilir. İki kaynak vardır ve ikisi de doğrudan NVD'den gelir.",
+    "Bir tarama bir servis belirlediğinde, PortWiz bunu bilinen CVE'lerle eşleştirip bulguları varlık ve port bazında saklayabilir; sürüm biliniyorsa onu kullanır. İki kaynak vardır ve ikisi de doğrudan NVD'den gelir.",
   "docs.cve.online.h": "Çevrimiçi (NVD)",
   "docs.cve.online.p":
     "Varsayılan. PortWiz doğrudan NVD API'sini sorgular, böylece bakım gerektirmeden güncel kalır. Rate limit'i yükseltmek için Ayarlar'da bir NVD API anahtarı ekle. Dışa internet erişimi gerekir.",
@@ -252,7 +252,7 @@ export const tr: Partial<Record<TKey, string>> = {
     "Teyitli bir değişiklik; uygulama-içi task açabilir, e-posta gönderebilir ve projen, issue türün ve atanan kişiyle bir Jira issue'su (Cloud veya Server/Data Center) oluşturabilir. Task ve issue durumu senkron kalır.",
   "docs.ev.export.h": "Kanıt dışa aktarımı",
   "docs.ev.export.p":
-    "Tek tık; tarama raporunu, değişiklik diff'ini, bağlı task ve onayı ve audit log'un ilgili dilimini denetçiler için imzalı JSON ve PDF paketinde birleştirir.",
+    "Tek tık; tarama raporunu, değişiklik diff'ini, bağlı task ve onayı ve audit log'un kurcalama kanıtı kontrolünü denetçiler için imzalı JSON ve PDF paketinde birleştirir.",
   "docs.ev.audit.h": "Audit bütünlüğü",
   "docs.ev.audit.p":
     "Her aksiyon, değiştirilemez hash-zincirli bir audit log'a yazılır. Compliance sayfası zinciri uçtan uca doğrulayabilir ve değiştirilmiş herhangi bir kaydı işaretler.",
@@ -738,7 +738,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "cve.filterSeverity": "Önem",
   "cve.allSeverities": "Tümü",
   "cve.empty":
-    "Henüz CVE bulgusu yok. Servis versiyonlarını tespit eden bir tarama çalıştırıp yeniden kontrol edin.",
+    "Henüz CVE bulgusu yok. Servisleri tespit eden bir tarama çalıştırıp yeniden kontrol edin.",
   "cve.col.host": "Ana makine",
   "cve.col.service": "Servis",
   "cve.col.cve": "CVE",
@@ -1110,11 +1110,33 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.slack.webhook": "Webhook URL'si",
   "settings.slack.webhookHint":
     "Slack'te: Apps → Incoming Webhooks → bir kanala ekleyin, sonra URL'yi buraya yapıştırın.",
+  "settings.slack.transport": "Bağlantı yöntemi",
+  "settings.slack.transportHint":
+    "Bir incoming webhook veya webhook'ları kapatan kurumlar için bot token kullanın.",
+  "settings.slack.transport.webhook": "Incoming webhook",
+  "settings.slack.transport.bot": "Bot token (API)",
+  "settings.slack.botToken": "Bot token",
+  "settings.slack.botTokenHint":
+    "chat:write yetkili bir bot token (xoxb-...). Bot'u hedef kanala davet edin.",
+  "settings.slack.channel": "Kanal",
+  "settings.slack.channelHint": "Bot'un mesaj atacağı kanal ID'si veya #adı.",
   "settings.teams.title": "Microsoft Teams",
   "settings.teams.enabled": "Teams etkin",
   "settings.teams.webhook": "Webhook URL'si",
   "settings.teams.webhookHint":
     "Bir Teams kanalında: Connectors → Incoming Webhook → Create, sonra URL'yi buraya yapıştırın.",
+  "settings.teams.transport": "Bağlantı yöntemi",
+  "settings.teams.transportHint":
+    "Bir incoming webhook veya webhook'ları kapatan kurumlar için Microsoft Graph kullanın.",
+  "settings.teams.transport.webhook": "Incoming webhook",
+  "settings.teams.transport.graph": "Microsoft Graph (API)",
+  "settings.teams.tenantId": "Tenant ID",
+  "settings.teams.graphHint":
+    "Kanal mesajı gönderme izni olan, client credentials'lı bir Entra uygulama kaydından.",
+  "settings.teams.clientId": "Client ID",
+  "settings.teams.clientSecret": "Client secret",
+  "settings.teams.teamId": "Team ID",
+  "settings.teams.channelId": "Channel ID",
   "settings.jira.title": "Jira",
   "settings.jira.enabled": "Jira etkin",
   "settings.jira.url": "URL",
@@ -1182,6 +1204,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "assistant.act.vlan_create": "VLAN oluştur",
   "assistant.act.iprange_create": "IP aralığı oluştur",
   "assistant.act.asset_create": "Varlık ekle",
+  "assistant.act.asset_update": "Varlığı güncelle",
   "assistant.act.scanprofile_create": "Tarama profili oluştur",
   "assistant.act.scan_run": "Taramayı çalıştır",
   "assistant.act.agent_enroll": "Ajan kaydet",

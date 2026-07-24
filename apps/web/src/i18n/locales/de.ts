@@ -70,7 +70,7 @@ export const de: Partial<Record<TKey, string>> = {
   "docs.pkg.scan": "Scan-Bericht",
   "docs.pkg.diff": "Änderungs-Diff",
   "docs.pkg.task": "Aufgabe & Freigabe",
-  "docs.pkg.audit": "Audit-Log-Ausschnitt",
+  "docs.pkg.audit": "Audit-Ketten-Integrität",
   "docs.pkg.out": "Signiertes JSON + PDF",
   "docs.hash.event": "Ereignis",
   "docs.hash.note":
@@ -178,7 +178,7 @@ export const de: Partial<Record<TKey, string>> = {
     "Der Agent hat innerhalb seines Online-Fensters keinen Heartbeat gesendet. Prüfen Sie, ob der Agent-Container läuft und die API erreicht; rotieren Sie bei Bedarf das Token und stellen Sie neu bereit.",
   "docs.ts.cve.h": "Es erscheinen keine CVE-Funde",
   "docs.ts.cve.p":
-    "Aktivieren Sie die CVE-Anreicherung in den Einstellungen und führen Sie eine erneute Prüfung durch. Air-Gapped-Installationen brauchen einen importierten NVD-Feed. Funde erscheinen nur für Dienste, die eine Version melden.",
+    "Aktivieren Sie die CVE-Anreicherung in den Einstellungen und führen Sie eine erneute Prüfung durch. Air-Gapped-Installationen brauchen einen importierten NVD-Feed. Funde erscheinen für jeden erkannten Dienst und sind am genauesten, wenn ein Produkt oder eine Version bekannt ist.",
   "docs.ts.integr.h": "E-Mail oder Jira funktioniert nicht",
   "docs.ts.integr.p":
     "Verwenden Sie die Test-Schaltfläche auf dem Einstellungs-Tab der Integration; sie meldet den genauen Verbindungsfehler, damit Sie URL, Zugangsdaten oder Empfänger korrigieren können.",
@@ -208,7 +208,7 @@ export const de: Partial<Record<TKey, string>> = {
   "docs.cve.summary": "Erkannte Dienste bekannten CVEs zuordnen, online oder offline.",
   "docs.cve.overview.h": "Überblick",
   "docs.cve.overview.p":
-    "Wenn ein Scan einen Dienst und eine Version erkennt, kann PortWiz ihn bekannten CVEs zuordnen und die Funde pro Asset und Port speichern. Zwei Quellen stehen zur Verfügung, beide stammen direkt von NVD.",
+    "Wenn ein Scan einen Dienst erkennt, kann PortWiz ihn bekannten CVEs zuordnen und die Funde pro Asset und Port speichern, wobei die Version genutzt wird, sofern bekannt. Zwei Quellen stehen zur Verfügung, beide stammen direkt von NVD.",
   "docs.cve.online.h": "Online (NVD)",
   "docs.cve.online.p":
     "Der Standard. PortWiz fragt die NVD-API direkt ab und bleibt so ohne Wartung aktuell. Hinterlegen Sie in den Einstellungen einen NVD-API-Schlüssel, um das Ratenlimit zu erhöhen. Erfordert ausgehenden Internetzugang.",
@@ -254,7 +254,7 @@ export const de: Partial<Record<TKey, string>> = {
     "Eine bestätigte Änderung kann eine In-App-Aufgabe öffnen, eine E-Mail senden und ein Jira-Ticket (Cloud oder Server/Data Center) mit Ihrem Projekt, Vorgangstyp und Bearbeiter erstellen. Aufgaben- und Ticketstatus bleiben synchron.",
   "docs.ev.export.h": "Nachweis-Export",
   "docs.ev.export.p":
-    "Ein Klick bündelt den Scan-Bericht, den Änderungs-Diff, die verknüpfte Aufgabe und Freigabe sowie den relevanten Ausschnitt des Audit-Logs in ein signiertes JSON- und PDF-Paket für Auditoren.",
+    "Ein Klick bündelt den Scan-Bericht, den Änderungs-Diff, die verknüpfte Aufgabe und Freigabe sowie eine Manipulationsprüfung des Audit-Logs in ein signiertes JSON- und PDF-Paket für Auditoren.",
   "docs.ev.audit.h": "Audit-Integrität",
   "docs.ev.audit.p":
     "Jede Aktion wird in ein unveränderliches, hash-verkettetes Audit-Log geschrieben. Die Compliance-Seite kann die Kette durchgängig prüfen und markiert jeden veränderten Eintrag.",
@@ -742,7 +742,7 @@ export const de: Partial<Record<TKey, string>> = {
   "cve.filterSeverity": "Schweregrad",
   "cve.allSeverities": "Alle",
   "cve.empty":
-    "Noch keine CVE-Funde. Führe einen Scan aus, der Dienstversionen erkennt, und prüfe erneut.",
+    "Noch keine CVE-Funde. Führe einen Scan aus, der Dienste erkennt, und prüfe erneut.",
   "cve.col.host": "Host",
   "cve.col.service": "Dienst",
   "cve.col.cve": "CVE",
@@ -1116,11 +1116,33 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.slack.webhook": "Webhook-URL",
   "settings.slack.webhookHint":
     "In Slack: Apps → Incoming Webhooks → zu einem Kanal hinzufügen, dann die URL hier einfügen.",
+  "settings.slack.transport": "Verbindungsmethode",
+  "settings.slack.transportHint":
+    "Nutzen Sie einen Incoming Webhook oder ein Bot-Token für Organisationen, die Webhooks deaktivieren.",
+  "settings.slack.transport.webhook": "Incoming Webhook",
+  "settings.slack.transport.bot": "Bot-Token (API)",
+  "settings.slack.botToken": "Bot-Token",
+  "settings.slack.botTokenHint":
+    "Ein Bot-Token (xoxb-...) mit chat:write. Laden Sie den Bot in den Zielkanal ein.",
+  "settings.slack.channel": "Kanal",
+  "settings.slack.channelHint": "Kanal-ID oder #Name, in den der Bot postet.",
   "settings.teams.title": "Microsoft Teams",
   "settings.teams.enabled": "Teams aktiviert",
   "settings.teams.webhook": "Webhook-URL",
   "settings.teams.webhookHint":
     "In einem Teams-Kanal: Connectors → Incoming Webhook → Create, dann die URL hier einfügen.",
+  "settings.teams.transport": "Verbindungsmethode",
+  "settings.teams.transportHint":
+    "Nutzen Sie einen Incoming Webhook oder Microsoft Graph für Organisationen, die Webhooks deaktivieren.",
+  "settings.teams.transport.webhook": "Incoming Webhook",
+  "settings.teams.transport.graph": "Microsoft Graph (API)",
+  "settings.teams.tenantId": "Tenant-ID",
+  "settings.teams.graphHint":
+    "Aus einer Entra-App-Registrierung mit Client-Anmeldeinformationen, die Kanalnachrichten posten darf.",
+  "settings.teams.clientId": "Client-ID",
+  "settings.teams.clientSecret": "Client-Secret",
+  "settings.teams.teamId": "Team-ID",
+  "settings.teams.channelId": "Kanal-ID",
   "settings.jira.title": "Jira",
   "settings.jira.enabled": "Jira aktiviert",
   "settings.jira.url": "URL",
@@ -1188,6 +1210,7 @@ export const de: Partial<Record<TKey, string>> = {
   "assistant.act.vlan_create": "VLAN erstellen",
   "assistant.act.iprange_create": "IP-Bereich erstellen",
   "assistant.act.asset_create": "Asset hinzufügen",
+  "assistant.act.asset_update": "Asset aktualisieren",
   "assistant.act.scanprofile_create": "Scan-Profil erstellen",
   "assistant.act.scan_run": "Scan ausführen",
   "assistant.act.agent_enroll": "Agent registrieren",

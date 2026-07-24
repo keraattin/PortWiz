@@ -70,7 +70,7 @@ export const es: Partial<Record<TKey, string>> = {
   "docs.pkg.scan": "Informe de escaneo",
   "docs.pkg.diff": "Diff del cambio",
   "docs.pkg.task": "Tarea & aprobación",
-  "docs.pkg.audit": "Porción del registro de auditoría",
+  "docs.pkg.audit": "Integridad de la cadena de auditoría",
   "docs.pkg.out": "JSON + PDF firmados",
   "docs.hash.event": "Evento",
   "docs.hash.note":
@@ -178,7 +178,7 @@ export const es: Partial<Record<TKey, string>> = {
     "El agente no ha enviado un heartbeat dentro de su ventana en línea. Comprueba que el contenedor del agente esté en ejecución y pueda alcanzar la API; rota el token y vuelve a desplegar si es necesario.",
   "docs.ts.cve.h": "No aparecen hallazgos de CVE",
   "docs.ts.cve.p":
-    "Activa el enriquecimiento de CVE en Ajustes y ejecuta una reverificación. Las instalaciones air-gapped necesitan un feed NVD importado. Los hallazgos solo aparecen para servicios que informan una versión.",
+    "Activa el enriquecimiento de CVE en Ajustes y ejecuta una reverificación. Las instalaciones air-gapped necesitan un feed NVD importado. Los hallazgos aparecen para cualquier servicio identificado y son más precisos cuando se conoce un producto o versión.",
   "docs.ts.integr.h": "El correo o Jira no funciona",
   "docs.ts.integr.p":
     "Usa el botón Probar en la pestaña de Ajustes de la integración; informa el error de conexión exacto para que corrijas la URL, las credenciales o los destinatarios.",
@@ -207,7 +207,7 @@ export const es: Partial<Record<TKey, string>> = {
   "docs.cve.summary": "Asocia servicios descubiertos con CVE conocidas, en línea o sin conexión.",
   "docs.cve.overview.h": "Descripción general",
   "docs.cve.overview.p":
-    "Cuando un escaneo identifica un servicio y versión, PortWiz puede asociarlo con CVE conocidas y guardar los hallazgos por activo y puerto. Hay dos fuentes, ambas directamente de NVD.",
+    "Cuando un escaneo identifica un servicio, PortWiz puede asociarlo con CVE conocidas y guardar los hallazgos por activo y puerto, usando la versión cuando se conoce. Hay dos fuentes, ambas directamente de NVD.",
   "docs.cve.online.h": "En línea (NVD)",
   "docs.cve.online.p":
     "La opción por defecto. PortWiz consulta la API de NVD directamente, por lo que se mantiene al día sin mantenimiento. Agrega una clave de API de NVD en Ajustes para subir el límite de tasa. Requiere acceso saliente a internet.",
@@ -253,7 +253,7 @@ export const es: Partial<Record<TKey, string>> = {
     "Un cambio confirmado puede abrir una tarea en la app, enviar un correo y crear un ticket de Jira (Cloud o Server/Data Center) con tu proyecto, tipo de incidencia y asignado. El estado de la tarea y del ticket se mantiene sincronizado.",
   "docs.ev.export.h": "Exportación de evidencia",
   "docs.ev.export.p":
-    "Un clic agrupa el informe de escaneo, el diff del cambio, la tarea y aprobación vinculadas y la porción relevante del registro de auditoría en un paquete JSON y PDF firmado para auditores.",
+    "Un clic agrupa el informe de escaneo, el diff del cambio, la tarea y aprobación vinculadas y una verificación de inviolabilidad del registro de auditoría en un paquete JSON y PDF firmado para auditores.",
   "docs.ev.audit.h": "Integridad de auditoría",
   "docs.ev.audit.p":
     "Cada acción se escribe en un registro de auditoría inmutable y encadenado por hash. La página Cumplimiento puede verificar la cadena de extremo a extremo y marca cualquier registro alterado.",
@@ -741,7 +741,7 @@ export const es: Partial<Record<TKey, string>> = {
   "cve.filterSeverity": "Severidad",
   "cve.allSeverities": "Todas",
   "cve.empty":
-    "Aún no hay hallazgos de CVE. Ejecuta un escaneo que identifique versiones de servicio y reverifica.",
+    "Aún no hay hallazgos de CVE. Ejecuta un escaneo que identifique servicios y reverifica.",
   "cve.col.host": "Host",
   "cve.col.service": "Servicio",
   "cve.col.cve": "CVE",
@@ -1115,11 +1115,33 @@ export const es: Partial<Record<TKey, string>> = {
   "settings.slack.webhook": "URL del webhook",
   "settings.slack.webhookHint":
     "En Slack: Apps → Incoming Webhooks → añadir a un canal y pega la URL aquí.",
+  "settings.slack.transport": "Método de conexión",
+  "settings.slack.transportHint":
+    "Usa un webhook entrante, o un token de bot para organizaciones que deshabilitan webhooks.",
+  "settings.slack.transport.webhook": "Webhook entrante",
+  "settings.slack.transport.bot": "Token de bot (API)",
+  "settings.slack.botToken": "Token de bot",
+  "settings.slack.botTokenHint":
+    "Un token de bot (xoxb-...) con chat:write. Invita al bot al canal de destino.",
+  "settings.slack.channel": "Canal",
+  "settings.slack.channelHint": "ID del canal o #nombre donde publica el bot.",
   "settings.teams.title": "Microsoft Teams",
   "settings.teams.enabled": "Teams activado",
   "settings.teams.webhook": "URL del webhook",
   "settings.teams.webhookHint":
     "En un canal de Teams: Conectores → Incoming Webhook → Crear y pega la URL aquí.",
+  "settings.teams.transport": "Método de conexión",
+  "settings.teams.transportHint":
+    "Usa un webhook entrante, o Microsoft Graph para organizaciones que deshabilitan webhooks.",
+  "settings.teams.transport.webhook": "Webhook entrante",
+  "settings.teams.transport.graph": "Microsoft Graph (API)",
+  "settings.teams.tenantId": "ID de inquilino",
+  "settings.teams.graphHint":
+    "Desde un registro de aplicación de Entra con credenciales de cliente autorizadas a publicar mensajes de canal.",
+  "settings.teams.clientId": "ID de cliente",
+  "settings.teams.clientSecret": "Secreto de cliente",
+  "settings.teams.teamId": "ID de equipo",
+  "settings.teams.channelId": "ID de canal",
   "settings.jira.title": "Jira",
   "settings.jira.enabled": "Jira activado",
   "settings.jira.url": "URL",
@@ -1187,6 +1209,7 @@ export const es: Partial<Record<TKey, string>> = {
   "assistant.act.vlan_create": "Crear VLAN",
   "assistant.act.iprange_create": "Crear rango de IP",
   "assistant.act.asset_create": "Añadir activo",
+  "assistant.act.asset_update": "Actualizar activo",
   "assistant.act.scanprofile_create": "Crear perfil de escaneo",
   "assistant.act.scan_run": "Ejecutar escaneo",
   "assistant.act.agent_enroll": "Registrar agente",

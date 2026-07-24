@@ -6,7 +6,7 @@ import datetime as dt
 
 from pydantic import BaseModel
 
-from .audit import AuditEventRead, ChainVerification
+from .audit import ChainVerification
 from .change import ChangeEventRead
 from .cve import CVEFindingRead
 from .scan import ScanProfileRead, ScanRunRead
@@ -30,4 +30,3 @@ class EvidencePackage(BaseModel):
     cve_findings: list[CVEFindingRead]
     scan_runs: list[ScanRunRead]
     changes: list[ChangeEventRead]
-    audit_slice: list[AuditEventRead]
