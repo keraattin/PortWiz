@@ -117,11 +117,20 @@ class SettingsConfig(BaseModel):
     notify_quiet_end: str
 
     slack_enabled: bool
+    slack_transport: str
     slack_webhook_set: bool
+    slack_bot_token_set: bool
+    slack_channel: str | None
     slack_min_severity: str
     slack_scan_profiles: list[str]
     teams_enabled: bool
+    teams_transport: str
     teams_webhook_set: bool
+    teams_tenant_id: str | None
+    teams_client_id: str | None
+    teams_client_secret_set: bool
+    teams_team_id: str | None
+    teams_channel_id: str | None
     teams_min_severity: str
     teams_scan_profiles: list[str]
 
@@ -192,11 +201,20 @@ class SettingsConfigUpdate(BaseModel):
     notify_quiet_end: str | None = None
 
     slack_enabled: bool | None = None
+    slack_transport: str | None = None
     slack_webhook_url: str | None = None
+    slack_bot_token: str | None = None
+    slack_channel: str | None = None
     slack_min_severity: str | None = None
     slack_scan_profiles: list[str] | None = None
     teams_enabled: bool | None = None
+    teams_transport: str | None = None
     teams_webhook_url: str | None = None
+    teams_tenant_id: str | None = None
+    teams_client_id: str | None = None
+    teams_client_secret: str | None = None
+    teams_team_id: str | None = None
+    teams_channel_id: str | None = None
     teams_min_severity: str | None = None
     teams_scan_profiles: list[str] | None = None
 

@@ -96,11 +96,20 @@ interface FormState {
   notify_quiet_start: string;
   notify_quiet_end: string;
   slack_enabled: boolean;
+  slack_transport: string;
   slack_webhook_url: string;
+  slack_bot_token: string;
+  slack_channel: string;
   slack_min_severity: string;
   slack_scan_profiles: string[];
   teams_enabled: boolean;
+  teams_transport: string;
   teams_webhook_url: string;
+  teams_tenant_id: string;
+  teams_client_id: string;
+  teams_client_secret: string;
+  teams_team_id: string;
+  teams_channel_id: string;
   teams_min_severity: string;
   teams_scan_profiles: string[];
   jira_enabled: boolean;
@@ -164,11 +173,20 @@ function fromConfig(c: SettingsConfig): FormState {
     notify_quiet_start: c.notify_quiet_start,
     notify_quiet_end: c.notify_quiet_end,
     slack_enabled: c.slack_enabled,
+    slack_transport: c.slack_transport,
     slack_webhook_url: "",
+    slack_bot_token: "",
+    slack_channel: c.slack_channel ?? "",
     slack_min_severity: c.slack_min_severity,
     slack_scan_profiles: c.slack_scan_profiles,
     teams_enabled: c.teams_enabled,
+    teams_transport: c.teams_transport,
     teams_webhook_url: "",
+    teams_tenant_id: c.teams_tenant_id ?? "",
+    teams_client_id: c.teams_client_id ?? "",
+    teams_client_secret: "",
+    teams_team_id: c.teams_team_id ?? "",
+    teams_channel_id: c.teams_channel_id ?? "",
     teams_min_severity: c.teams_min_severity,
     teams_scan_profiles: c.teams_scan_profiles,
     jira_enabled: c.jira_enabled,
@@ -981,18 +999,53 @@ export default function SettingsPage() {
               checked={form.slack_enabled}
               onChange={(v) => set("slack_enabled", v)}
             />
-            <FormField
-              label={t("settings.slack.webhook")}
-              hint={config.slack_webhook_set ? secretHint(true, t) : t("settings.slack.webhookHint")}
-            >
-              <input
+            <FormField label={t("settings.slack.transport")} hint={t("settings.slack.transportHint")}>
+              <select
                 className={inputClass}
-                type="password"
-                placeholder={config.slack_webhook_set ? "••••••••" : "https://hooks.slack.com/services/…"}
-                value={form.slack_webhook_url}
-                onChange={(e) => set("slack_webhook_url", e.target.value)}
-              />
+                value={form.slack_transport}
+                onChange={(e) => set("slack_transport", e.target.value)}
+              >
+                <option value="webhook">{t("settings.slack.transport.webhook")}</option>
+                <option value="bot">{t("settings.slack.transport.bot")}</option>
+              </select>
             </FormField>
+            {form.slack_transport === "bot" ? (
+              <>
+                <FormField
+                  label={t("settings.slack.botToken")}
+                  hint={config.slack_bot_token_set ? secretHint(true, t) : t("settings.slack.botTokenHint")}
+                >
+                  <input
+                    className={inputClass}
+                    type="password"
+                    placeholder={config.slack_bot_token_set ? "••••••••" : "xoxb-…"}
+                    value={form.slack_bot_token}
+                    onChange={(e) => set("slack_bot_token", e.target.value)}
+                  />
+                </FormField>
+                <FormField label={t("settings.slack.channel")} hint={t("settings.slack.channelHint")}>
+                  <input
+                    className={inputClass}
+                    placeholder="#alerts"
+                    value={form.slack_channel}
+                    onChange={(e) => set("slack_channel", e.target.value)}
+                  />
+                </FormField>
+              </>
+            ) : (
+              <FormField
+                label={t("settings.slack.webhook")}
+                hint={config.slack_webhook_set ? secretHint(true, t) : t("settings.slack.webhookHint")}
+              >
+                <input
+                  className={inputClass}
+                  type="password"
+                  placeholder={config.slack_webhook_set ? "••••••••" : "https://hooks.slack.com/services/…"}
+                  value={form.slack_webhook_url}
+                  onChange={(e) => set("slack_webhook_url", e.target.value)}
+                />
+              </FormField>
+            )}
             <ChannelRules
               t={t}
               profiles={scanProfiles}
@@ -1008,7 +1061,10 @@ export default function SettingsPage() {
                 onClick={() =>
                   save("slack", {
                     slack_enabled: form.slack_enabled,
+                    slack_transport: form.slack_transport,
                     slack_webhook_url: form.slack_webhook_url,
+                    slack_bot_token: form.slack_bot_token,
+                    slack_channel: form.slack_channel,
                     slack_min_severity: form.slack_min_severity,
                     slack_scan_profiles: form.slack_scan_profiles,
                   })
@@ -1040,18 +1096,73 @@ export default function SettingsPage() {
               checked={form.teams_enabled}
               onChange={(v) => set("teams_enabled", v)}
             />
-            <FormField
-              label={t("settings.teams.webhook")}
-              hint={config.teams_webhook_set ? secretHint(true, t) : t("settings.teams.webhookHint")}
-            >
-              <input
+            <FormField label={t("settings.teams.transport")} hint={t("settings.teams.transportHint")}>
+              <select
                 className={inputClass}
-                type="password"
-                placeholder={config.teams_webhook_set ? "••••••••" : "https://outlook.office.com/webhook/…"}
-                value={form.teams_webhook_url}
-                onChange={(e) => set("teams_webhook_url", e.target.value)}
-              />
+                value={form.teams_transport}
+                onChange={(e) => set("teams_transport", e.target.value)}
+              >
+                <option value="webhook">{t("settings.teams.transport.webhook")}</option>
+                <option value="graph">{t("settings.teams.transport.graph")}</option>
+              </select>
             </FormField>
+            {form.teams_transport === "graph" ? (
+              <>
+                <FormField label={t("settings.teams.tenantId")} hint={t("settings.teams.graphHint")}>
+                  <input
+                    className={inputClass}
+                    value={form.teams_tenant_id}
+                    onChange={(e) => set("teams_tenant_id", e.target.value)}
+                  />
+                </FormField>
+                <FormField label={t("settings.teams.clientId")}>
+                  <input
+                    className={inputClass}
+                    value={form.teams_client_id}
+                    onChange={(e) => set("teams_client_id", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label={t("settings.teams.clientSecret")}
+                  hint={config.teams_client_secret_set ? secretHint(true, t) : undefined}
+                >
+                  <input
+                    className={inputClass}
+                    type="password"
+                    placeholder={config.teams_client_secret_set ? "••••••••" : ""}
+                    value={form.teams_client_secret}
+                    onChange={(e) => set("teams_client_secret", e.target.value)}
+                  />
+                </FormField>
+                <FormField label={t("settings.teams.teamId")}>
+                  <input
+                    className={inputClass}
+                    value={form.teams_team_id}
+                    onChange={(e) => set("teams_team_id", e.target.value)}
+                  />
+                </FormField>
+                <FormField label={t("settings.teams.channelId")}>
+                  <input
+                    className={inputClass}
+                    value={form.teams_channel_id}
+                    onChange={(e) => set("teams_channel_id", e.target.value)}
+                  />
+                </FormField>
+              </>
+            ) : (
+              <FormField
+                label={t("settings.teams.webhook")}
+                hint={config.teams_webhook_set ? secretHint(true, t) : t("settings.teams.webhookHint")}
+              >
+                <input
+                  className={inputClass}
+                  type="password"
+                  placeholder={config.teams_webhook_set ? "••••••••" : "https://outlook.office.com/webhook/…"}
+                  value={form.teams_webhook_url}
+                  onChange={(e) => set("teams_webhook_url", e.target.value)}
+                />
+              </FormField>
+            )}
             <ChannelRules
               t={t}
               profiles={scanProfiles}
@@ -1067,7 +1178,13 @@ export default function SettingsPage() {
                 onClick={() =>
                   save("teams", {
                     teams_enabled: form.teams_enabled,
+                    teams_transport: form.teams_transport,
                     teams_webhook_url: form.teams_webhook_url,
+                    teams_tenant_id: form.teams_tenant_id,
+                    teams_client_id: form.teams_client_id,
+                    teams_client_secret: form.teams_client_secret,
+                    teams_team_id: form.teams_team_id,
+                    teams_channel_id: form.teams_channel_id,
                     teams_min_severity: form.teams_min_severity,
                     teams_scan_profiles: form.teams_scan_profiles,
                   })

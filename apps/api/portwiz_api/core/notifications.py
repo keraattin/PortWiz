@@ -9,6 +9,7 @@ lazily so importing this module is cheap and side-effect free.
 from __future__ import annotations
 
 import datetime as dt
+import html
 import logging
 from dataclasses import dataclass
 from email.message import EmailMessage
@@ -133,6 +134,31 @@ class SlackNotifier(_WebhookNotifier):
         return {"text": f"*{subject}*\n{body}"}
 
 
+class SlackApiNotifier:
+    """Posts via the Slack Web API (``chat.postMessage``) with a bot token, the
+    non-webhook path for orgs that disable incoming webhooks. The bot must be a
+    member of the target channel. Slack returns HTTP 200 even for logical errors,
+    so the JSON ``ok`` flag is checked and surfaced as a failure."""
+
+    def __init__(self, bot_token: str, channel: str) -> None:
+        self._token = bot_token
+        self._channel = channel
+
+    async def send(self, subject: str, body: str, recipients: list[str]) -> None:
+        import httpx  # imported lazily
+
+        headers = {"Authorization": f"Bearer {self._token}"}
+        payload = {"channel": self._channel, "text": f"*{subject}*\n{body}"}
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                "https://slack.com/api/chat.postMessage", headers=headers, json=payload
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if not data.get("ok"):
+                raise RuntimeError(f"Slack API error: {data.get('error', 'unknown')}")
+
+
 class TeamsNotifier(_WebhookNotifier):
     """Posts a MessageCard to a Microsoft Teams incoming webhook, the format the
     connector accepts. Blank lines separate list items so each renders on its
@@ -149,6 +175,58 @@ class TeamsNotifier(_WebhookNotifier):
         }
 
 
+class TeamsGraphNotifier:
+    """Posts a channel message via Microsoft Graph using app-only (client
+    credentials) auth, the non-webhook path. Requires an Entra app registration
+    allowed to post channel messages to the target team. It fetches a token, then
+    posts an HTML message to ``/teams/{team}/channels/{channel}/messages``."""
+
+    _LOGIN = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+    _GRAPH = "https://graph.microsoft.com/v1.0/teams/{team}/channels/{channel}/messages"
+
+    def __init__(
+        self,
+        tenant_id: str,
+        client_id: str,
+        client_secret: str,
+        team_id: str,
+        channel_id: str,
+    ) -> None:
+        self._tenant = tenant_id
+        self._client_id = client_id
+        self._client_secret = client_secret
+        self._team = team_id
+        self._channel = channel_id
+
+    async def _access_token(self, client: Any) -> str:
+        resp = await client.post(
+            self._LOGIN.format(tenant=self._tenant),
+            data={
+                "grant_type": "client_credentials",
+                "client_id": self._client_id,
+                "client_secret": self._client_secret,
+                "scope": "https://graph.microsoft.com/.default",
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()["access_token"]
+
+    async def send(self, subject: str, body: str, recipients: list[str]) -> None:
+        import httpx  # imported lazily
+
+        content = f"<b>{html.escape(subject)}</b><br>" + html.escape(body).replace(
+            "\n", "<br>"
+        )
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            token = await self._access_token(client)
+            resp = await client.post(
+                self._GRAPH.format(team=self._team, channel=self._channel),
+                headers={"Authorization": f"Bearer {token}"},
+                json={"body": {"contentType": "html", "content": content}},
+            )
+            resp.raise_for_status()
+
+
 def build_notifier(settings) -> Notifier:
     if not settings.notifications_enabled or not settings.smtp_host:
         return NullNotifier()
@@ -160,6 +238,50 @@ def build_notifier(settings) -> Notifier:
         username=settings.smtp_username,
         password=settings.smtp_password,
     )
+
+
+def build_slack_notifier(settings) -> Notifier | None:
+    """The Slack notifier for the active transport, or ``None`` when Slack is off
+    or the chosen transport is not fully configured. A bot token (non-webhook)
+    takes the ``bot`` path; otherwise an incoming webhook is used."""
+    if not settings.slack_enabled:
+        return None
+    if settings.slack_transport == "bot":
+        if settings.slack_bot_token and settings.slack_channel:
+            return SlackApiNotifier(settings.slack_bot_token, settings.slack_channel)
+        return None
+    if settings.slack_webhook_url:
+        return SlackNotifier(settings.slack_webhook_url)
+    return None
+
+
+def build_teams_notifier(settings) -> Notifier | None:
+    """The Teams notifier for the active transport, or ``None`` when Teams is off
+    or the chosen transport is not fully configured. Microsoft Graph (non-webhook)
+    needs all five app-registration fields; otherwise an incoming webhook is used."""
+    if not settings.teams_enabled:
+        return None
+    if settings.teams_transport == "graph":
+        if all(
+            (
+                settings.teams_tenant_id,
+                settings.teams_client_id,
+                settings.teams_client_secret,
+                settings.teams_team_id,
+                settings.teams_channel_id,
+            )
+        ):
+            return TeamsGraphNotifier(
+                settings.teams_tenant_id,
+                settings.teams_client_id,
+                settings.teams_client_secret,
+                settings.teams_team_id,
+                settings.teams_channel_id,
+            )
+        return None
+    if settings.teams_webhook_url:
+        return TeamsNotifier(settings.teams_webhook_url)
+    return None
 
 
 @dataclass
@@ -177,7 +299,8 @@ def build_channels(settings) -> list[Channel]:
     paired with its per-channel delivery rules.
 
     Email is included only when recipients exist (an SMTP host with no
-    recipients has nowhere to send); Slack/Teams each need their webhook URL.
+    recipients has nowhere to send); Slack/Teams each use their active transport
+    (incoming webhook, or a tokened API) once it is fully configured.
     """
     out: list[Channel] = []
     email = build_notifier(settings)
@@ -189,18 +312,20 @@ def build_channels(settings) -> list[Channel]:
                 list(settings.email_scan_profiles),
             )
         )
-    if settings.slack_enabled and settings.slack_webhook_url:
+    slack = build_slack_notifier(settings)
+    if slack is not None:
         out.append(
             Channel(
-                SlackNotifier(settings.slack_webhook_url),
+                slack,
                 settings.slack_min_severity,
                 list(settings.slack_scan_profiles),
             )
         )
-    if settings.teams_enabled and settings.teams_webhook_url:
+    teams = build_teams_notifier(settings)
+    if teams is not None:
         out.append(
             Channel(
-                TeamsNotifier(settings.teams_webhook_url),
+                teams,
                 settings.teams_min_severity,
                 list(settings.teams_scan_profiles),
             )

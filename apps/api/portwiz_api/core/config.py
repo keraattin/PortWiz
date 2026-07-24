@@ -137,14 +137,25 @@ class Settings(BaseSettings):
     notify_quiet_start: str = "22:00"
     notify_quiet_end: str = "07:00"
 
-    # Chat webhooks (Slack / Microsoft Teams). Each fires on confirmed changes,
-    # independently of email, when enabled and its incoming-webhook URL is set.
+    # Chat notifications (Slack / Microsoft Teams). Each fires on confirmed
+    # changes, independently of email, when enabled and its transport is
+    # configured. Each platform supports an incoming webhook or a tokened API
+    # (Slack bot token / Microsoft Graph) for orgs that disallow webhooks.
     slack_enabled: bool = False
+    slack_transport: str = "webhook"  # "webhook" | "bot"
     slack_webhook_url: str | None = None
+    slack_bot_token: str | None = None  # Slack bot token (xoxb-...) for chat.postMessage
+    slack_channel: str | None = None  # channel id or #name, used with the bot token
     slack_min_severity: str = "low"
     slack_scan_profiles: list[str] = []
     teams_enabled: bool = False
+    teams_transport: str = "webhook"  # "webhook" | "graph"
     teams_webhook_url: str | None = None
+    teams_tenant_id: str | None = None  # Entra tenant id, for Graph client credentials
+    teams_client_id: str | None = None
+    teams_client_secret: str | None = None
+    teams_team_id: str | None = None  # target team and channel for Graph messages
+    teams_channel_id: str | None = None
     teams_min_severity: str = "low"
     teams_scan_profiles: list[str] = []
 

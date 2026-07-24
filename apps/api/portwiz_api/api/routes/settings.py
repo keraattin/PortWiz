@@ -28,8 +28,8 @@ from ...core.issue_tracker import IssueTracker, NullTracker, get_issue_tracker
 from ...core.notifications import (
     Notifier,
     NullNotifier,
-    SlackNotifier,
-    TeamsNotifier,
+    build_slack_notifier,
+    build_teams_notifier,
     get_notifier,
 )
 from ...models.user import User, UserRole
@@ -75,11 +75,20 @@ def _config_from(s: Settings) -> SettingsConfig:
         notify_quiet_start=s.notify_quiet_start,
         notify_quiet_end=s.notify_quiet_end,
         slack_enabled=s.slack_enabled,
+        slack_transport=s.slack_transport,
         slack_webhook_set=bool(s.slack_webhook_url),
+        slack_bot_token_set=bool(s.slack_bot_token),
+        slack_channel=s.slack_channel,
         slack_min_severity=s.slack_min_severity,
         slack_scan_profiles=list(s.slack_scan_profiles),
         teams_enabled=s.teams_enabled,
+        teams_transport=s.teams_transport,
         teams_webhook_set=bool(s.teams_webhook_url),
+        teams_tenant_id=s.teams_tenant_id,
+        teams_client_id=s.teams_client_id,
+        teams_client_secret_set=bool(s.teams_client_secret),
+        teams_team_id=s.teams_team_id,
+        teams_channel_id=s.teams_channel_id,
         teams_min_severity=s.teams_min_severity,
         teams_scan_profiles=list(s.teams_scan_profiles),
         jira_enabled=s.jira_enabled,
@@ -157,9 +166,9 @@ async def get_settings_status(
         smtp_from=s.smtp_from,
         email_recipients=list(s.notification_recipients),
         slack_enabled=s.slack_enabled,
-        slack_configured=bool(s.slack_enabled and s.slack_webhook_url),
+        slack_configured=build_slack_notifier(s) is not None,
         teams_enabled=s.teams_enabled,
-        teams_configured=bool(s.teams_enabled and s.teams_webhook_url),
+        teams_configured=build_teams_notifier(s) is not None,
         jira_enabled=s.jira_enabled,
         jira_deployment=s.jira_deployment,
         jira_url=s.jira_url,
@@ -269,12 +278,11 @@ async def test_slack(
     session: AsyncSession = Depends(get_session),
 ) -> TestResult:
     s = await effective_settings(session)
-    if not s.slack_enabled or not s.slack_webhook_url:
-        return TestResult(ok=False, detail="Slack is disabled or no webhook URL is set.")
+    notifier = build_slack_notifier(s)
+    if notifier is None:
+        return TestResult(ok=False, detail="Slack is disabled or its transport is not configured.")
     try:
-        await SlackNotifier(s.slack_webhook_url).send(
-            "PortWiz test", "This is a PortWiz connectivity test.", []
-        )
+        await notifier.send("PortWiz test", "This is a PortWiz connectivity test.", [])
         return TestResult(ok=True, detail="Sent a test message to Slack.")
     except Exception as exc:
         return TestResult(ok=False, detail=str(exc))
@@ -286,12 +294,11 @@ async def test_teams(
     session: AsyncSession = Depends(get_session),
 ) -> TestResult:
     s = await effective_settings(session)
-    if not s.teams_enabled or not s.teams_webhook_url:
-        return TestResult(ok=False, detail="Teams is disabled or no webhook URL is set.")
+    notifier = build_teams_notifier(s)
+    if notifier is None:
+        return TestResult(ok=False, detail="Teams is disabled or its transport is not configured.")
     try:
-        await TeamsNotifier(s.teams_webhook_url).send(
-            "PortWiz test", "This is a PortWiz connectivity test.", []
-        )
+        await notifier.send("PortWiz test", "This is a PortWiz connectivity test.", [])
         return TestResult(ok=True, detail="Sent a test message to Teams.")
     except Exception as exc:
         return TestResult(ok=False, detail=str(exc))

@@ -5,12 +5,19 @@ from __future__ import annotations
 import datetime as dt
 from types import SimpleNamespace
 
+import httpx
+import pytest
+
 from portwiz_api.core.notifications import (
     Channel,
+    SlackApiNotifier,
     SlackNotifier,
+    TeamsGraphNotifier,
     TeamsNotifier,
     build_change_email,
     build_channels,
+    build_slack_notifier,
+    build_teams_notifier,
     in_quiet_hours,
     meets_min_severity,
     notify_changes,
@@ -44,11 +51,20 @@ def _settings(**overrides):
         notify_quiet_start="22:00",
         notify_quiet_end="07:00",
         slack_enabled=False,
+        slack_transport="webhook",
         slack_webhook_url=None,
+        slack_bot_token=None,
+        slack_channel=None,
         slack_min_severity="low",
         slack_scan_profiles=[],
         teams_enabled=False,
+        teams_transport="webhook",
         teams_webhook_url=None,
+        teams_tenant_id=None,
+        teams_client_id=None,
+        teams_client_secret=None,
+        teams_team_id=None,
+        teams_channel_id=None,
         teams_min_severity="low",
         teams_scan_profiles=[],
     )
@@ -134,6 +150,143 @@ def test_build_channels_carries_per_channel_rules() -> None:
 def test_webhook_enabled_without_url_is_skipped() -> None:
     assert build_channels(_settings(slack_enabled=True)) == []
     assert build_channels(_settings(teams_enabled=True)) == []
+
+
+def test_slack_bot_transport_uses_api_notifier() -> None:
+    # The bot transport builds the token-based API notifier, not a webhook one.
+    notifier = build_slack_notifier(
+        _settings(
+            slack_enabled=True,
+            slack_transport="bot",
+            slack_bot_token="xoxb-123",
+            slack_channel="#alerts",
+        )
+    )
+    assert isinstance(notifier, SlackApiNotifier)
+
+
+def test_slack_bot_transport_needs_token_and_channel() -> None:
+    # A bot transport missing the token or channel is not configured -> None.
+    assert build_slack_notifier(
+        _settings(slack_enabled=True, slack_transport="bot", slack_bot_token="xoxb-123")
+    ) is None
+    assert build_slack_notifier(
+        _settings(slack_enabled=True, slack_transport="bot", slack_channel="#alerts")
+    ) is None
+    # A stale webhook URL is ignored while the bot transport is selected.
+    assert build_slack_notifier(
+        _settings(
+            slack_enabled=True,
+            slack_transport="bot",
+            slack_webhook_url="https://hooks.slack.test/x",
+        )
+    ) is None
+
+
+def test_teams_graph_transport_uses_graph_notifier() -> None:
+    notifier = build_teams_notifier(
+        _settings(
+            teams_enabled=True,
+            teams_transport="graph",
+            teams_tenant_id="t",
+            teams_client_id="c",
+            teams_client_secret="s",
+            teams_team_id="team",
+            teams_channel_id="chan",
+        )
+    )
+    assert isinstance(notifier, TeamsGraphNotifier)
+
+
+def test_teams_graph_transport_needs_all_fields() -> None:
+    # Missing any one of the five Graph fields leaves Teams unconfigured.
+    assert build_teams_notifier(
+        _settings(
+            teams_enabled=True,
+            teams_transport="graph",
+            teams_tenant_id="t",
+            teams_client_id="c",
+            teams_client_secret="s",
+            teams_team_id="team",
+            # teams_channel_id missing
+        )
+    ) is None
+
+
+def test_bot_and_graph_transports_flow_through_build_channels() -> None:
+    channels = build_channels(
+        _settings(
+            slack_enabled=True,
+            slack_transport="bot",
+            slack_bot_token="xoxb-123",
+            slack_channel="#alerts",
+            teams_enabled=True,
+            teams_transport="graph",
+            teams_tenant_id="t",
+            teams_client_id="c",
+            teams_client_secret="s",
+            teams_team_id="team",
+            teams_channel_id="chan",
+        )
+    )
+    kinds = {type(c.notifier).__name__ for c in channels}
+    assert kinds == {"SlackApiNotifier", "TeamsGraphNotifier"}
+
+
+def _patch_httpx(monkeypatch, handler) -> list[httpx.Request]:
+    """Route the notifier's internally-created httpx client through a mock
+    transport, returning the list that captures each request it makes."""
+    captured: list[httpx.Request] = []
+
+    def capturing(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return handler(request)
+
+    real_client = httpx.AsyncClient
+
+    def fake_client(*args, **kwargs):
+        kwargs.pop("timeout", None)
+        return real_client(transport=httpx.MockTransport(capturing))
+
+    monkeypatch.setattr(httpx, "AsyncClient", fake_client)
+    return captured
+
+
+async def test_slack_api_notifier_posts_to_chat_postmessage(monkeypatch) -> None:
+    captured = _patch_httpx(
+        monkeypatch, lambda req: httpx.Response(200, json={"ok": True})
+    )
+    await SlackApiNotifier("xoxb-123", "#alerts").send("Subj", "line1\nline2", [])
+    assert len(captured) == 1
+    assert str(captured[0].url) == "https://slack.com/api/chat.postMessage"
+    assert captured[0].headers["authorization"] == "Bearer xoxb-123"
+
+
+async def test_slack_api_notifier_raises_on_logical_error(monkeypatch) -> None:
+    # Slack returns HTTP 200 with ok:false on logical failures; that must raise
+    # so a channel error is surfaced, not silently swallowed.
+    _patch_httpx(
+        monkeypatch,
+        lambda req: httpx.Response(200, json={"ok": False, "error": "channel_not_found"}),
+    )
+    with pytest.raises(RuntimeError, match="channel_not_found"):
+        await SlackApiNotifier("xoxb-123", "#nope").send("Subj", "body", [])
+
+
+async def test_teams_graph_notifier_fetches_token_then_posts(monkeypatch) -> None:
+    # Two calls: the token endpoint, then the Graph channel-messages endpoint with
+    # the bearer token attached.
+    def handler(req: httpx.Request) -> httpx.Response:
+        if "login.microsoftonline.com" in req.url.host:
+            return httpx.Response(200, json={"access_token": "gtok"})
+        return httpx.Response(201, json={"id": "1"})
+
+    captured = _patch_httpx(monkeypatch, handler)
+    await TeamsGraphNotifier("t", "c", "s", "team", "chan").send("Subj", "b", [])
+    assert len(captured) == 2
+    assert "oauth2/v2.0/token" in str(captured[0].url)
+    assert "teams/team/channels/chan/messages" in str(captured[1].url)
+    assert captured[1].headers["authorization"] == "Bearer gtok"
 
 
 async def test_notify_changes_no_channels_returns_zero() -> None:
