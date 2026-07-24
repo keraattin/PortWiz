@@ -35,6 +35,7 @@ export default function AgentDeployPanel({ name, token, pollSeconds }: AgentDepl
   // can correct it to whatever address the remote agent can actually reach.
   const [apiUrl, setApiUrl] = useState(() => window.location.origin);
   const [copied, setCopied] = useState<"" | "build" | "run">("");
+  const [mode, setMode] = useState<"docker" | "native">("docker");
 
   const id = slug(name);
   const isHttps = /^https:\/\//i.test(apiUrl.trim());
@@ -50,6 +51,17 @@ export default function AgentDeployPanel({ name, token, pollSeconds }: AgentDepl
     `-e PORTWIZ_AGENT_ID=${id} ` +
     `-e PORTWIZ_POLL_SECONDS=${pollSeconds} ` +
     `portwiz/agent:latest`;
+
+  // The non-Docker path: build the Go binary, then run it with the same env the
+  // container would set. nmap must be on PATH for service-version detection.
+  const nativeBuildCommand = "go build -o portwiz-agent ./apps/agent/cmd/agent";
+  const nativeCommand =
+    `PORTWIZ_API_URL=${apiUrl} ` +
+    `PORTWIZ_AGENT_TOKEN=${token || TOKEN_PLACEHOLDER} ` +
+    `PORTWIZ_AGENT_ID=${id} ` +
+    `PORTWIZ_POLL_SECONDS=${pollSeconds} ` +
+    `./portwiz-agent`;
+  const isDocker = mode === "docker";
 
   function copyBtn(which: "build" | "run", value: string) {
     return (
@@ -86,27 +98,61 @@ export default function AgentDeployPanel({ name, token, pollSeconds }: AgentDepl
         )}
       </div>
 
-      <div>
-        <label className="block text-xs text-slate-400">{t("agents.deploy.buildTitle")}</label>
-        <div className="flex items-start gap-2">
-          <code className="flex-1 overflow-x-auto whitespace-pre rounded bg-slate-900 px-3 py-2 font-mono text-xs text-slate-200">
-            {buildCommand}
-          </code>
-          {copyBtn("build", buildCommand)}
-        </div>
-        <p className="mt-1 text-xs text-slate-500">{t("agents.deploy.buildHint")}</p>
+      <div className="flex gap-2 text-xs">
+        <button
+          type="button"
+          onClick={() => setMode("docker")}
+          className={`rounded-lg px-3 py-1.5 font-medium ${
+            isDocker
+              ? "bg-emerald-600 text-white"
+              : "border border-slate-700 text-slate-300 hover:bg-slate-800"
+          }`}
+        >
+          {t("agents.deploy.modeDocker")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("native")}
+          className={`rounded-lg px-3 py-1.5 font-medium ${
+            !isDocker
+              ? "bg-emerald-600 text-white"
+              : "border border-slate-700 text-slate-300 hover:bg-slate-800"
+          }`}
+        >
+          {t("agents.deploy.modeNative")}
+        </button>
       </div>
 
       <div>
-        <label className="block text-xs text-slate-400">{t("agents.deploy.command")}</label>
+        <label className="block text-xs text-slate-400">
+          {isDocker ? t("agents.deploy.buildTitle") : t("agents.deploy.nativeBuildTitle")}
+        </label>
         <div className="flex items-start gap-2">
           <code className="flex-1 overflow-x-auto whitespace-pre rounded bg-slate-900 px-3 py-2 font-mono text-xs text-slate-200">
-            {command}
+            {isDocker ? buildCommand : nativeBuildCommand}
           </code>
-          {copyBtn("run", command)}
+          {copyBtn("build", isDocker ? buildCommand : nativeBuildCommand)}
+        </div>
+        <p className="mt-1 text-xs text-slate-500">
+          {isDocker ? t("agents.deploy.buildHint") : t("agents.deploy.nativeBuildHint")}
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-xs text-slate-400">
+          {isDocker ? t("agents.deploy.command") : t("agents.deploy.nativeCommand")}
+        </label>
+        <div className="flex items-start gap-2">
+          <code className="flex-1 overflow-x-auto whitespace-pre rounded bg-slate-900 px-3 py-2 font-mono text-xs text-slate-200">
+            {isDocker ? command : nativeCommand}
+          </code>
+          {copyBtn("run", isDocker ? command : nativeCommand)}
         </div>
         {!hasToken && (
           <p className="mt-1 text-xs text-amber-400">{t("agents.deploy.tokenPlaceholderHint")}</p>
+        )}
+        {!isDocker && (
+          <p className="mt-1 text-xs text-slate-500">{t("agents.deploy.nativeNmapHint")}</p>
         )}
       </div>
 

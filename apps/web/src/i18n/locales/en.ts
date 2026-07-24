@@ -622,6 +622,14 @@ export const en = {
   "agents.deploy.apiUrlHint":
     "The address this agent can reach the server at. Prefilled with this page's origin; change it if the agent runs elsewhere.",
   "agents.deploy.command": "Run command",
+  "agents.deploy.modeDocker": "Docker",
+  "agents.deploy.modeNative": "Without Docker",
+  "agents.deploy.nativeBuildTitle": "Build the agent binary (one time)",
+  "agents.deploy.nativeBuildHint":
+    "Run from the PortWiz repo root. Needs the Go toolchain; produces a self-contained portwiz-agent binary you can copy to the host.",
+  "agents.deploy.nativeCommand": "Run command",
+  "agents.deploy.nativeNmapHint":
+    "Install nmap on the host so the agent can detect service versions (nmap -sV).",
   "agents.deploy.buildTitle": "Build the agent image (one time)",
   "agents.deploy.buildHint":
     "Run once from the PortWiz repo root. Or pull a published image (e.g. ghcr.io/<your-org>/portwiz-agent) and use its name in the run command.",

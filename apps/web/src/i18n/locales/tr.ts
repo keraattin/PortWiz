@@ -624,6 +624,14 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.deploy.apiUrlHint":
     "Bu ajanın sunucuya ulaşabileceği adres. Bu sayfanın origin'i ile dolduruldu; ajan başka yerde çalışıyorsa değiştirin.",
   "agents.deploy.command": "Çalıştırma komutu",
+  "agents.deploy.modeDocker": "Docker",
+  "agents.deploy.modeNative": "Docker'sız",
+  "agents.deploy.nativeBuildTitle": "Agent ikilisini derle (tek sefer)",
+  "agents.deploy.nativeBuildHint":
+    "PortWiz repo kökünden çalıştır. Go araç zinciri gerekir; host'a kopyalayabileceğin bağımsız bir portwiz-agent ikilisi üretir.",
+  "agents.deploy.nativeCommand": "Çalıştırma komutu",
+  "agents.deploy.nativeNmapHint":
+    "Agent'ın servis sürümlerini tespit edebilmesi için host'a nmap kur (nmap -sV).",
   "agents.deploy.buildTitle": "Ajan imajını derle (tek sefer)",
   "agents.deploy.buildHint":
     "PortWiz repo kökünde bir kez çalıştırın. Ya da yayınlanmış bir imaj çekin (ör. ghcr.io/<kurulusunuz>/portwiz-agent) ve adını çalıştırma komutunda kullanın.",

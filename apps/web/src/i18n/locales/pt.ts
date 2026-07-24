@@ -627,6 +627,14 @@ export const pt: Partial<Record<TKey, string>> = {
   "agents.deploy.apiUrlHint":
     "O endereço pelo qual este agente alcança o servidor. Preenchido com a origem desta página; altere se o agente rodar em outro lugar.",
   "agents.deploy.command": "Comando de execução",
+  "agents.deploy.modeDocker": "Docker",
+  "agents.deploy.modeNative": "Sem Docker",
+  "agents.deploy.nativeBuildTitle": "Compilar o binário do agente (uma vez)",
+  "agents.deploy.nativeBuildHint":
+    "Execute a partir da raiz do repositório PortWiz. Requer o toolchain Go; produz um binário portwiz-agent autônomo que você pode copiar para o host.",
+  "agents.deploy.nativeCommand": "Comando de execução",
+  "agents.deploy.nativeNmapHint":
+    "Instale o nmap no host para que o agente possa detectar versões de serviço (nmap -sV).",
   "agents.deploy.buildTitle": "Construir a imagem do agente (uma vez)",
   "agents.deploy.buildHint":
     "Execute uma vez na raiz do repositório PortWiz. Ou baixe uma imagem publicada (ex.: ghcr.io/<sua-org>/portwiz-agent) e use o nome dela no comando de execução.",
