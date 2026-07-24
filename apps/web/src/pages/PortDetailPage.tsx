@@ -63,7 +63,9 @@ export default function PortDetailPage() {
 
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
         <p className="text-sm font-medium text-slate-300">{t("portDetail.usedFor")}</p>
-        <p className="mt-1 text-sm text-slate-400">{info ? info.description : t("portDetail.unknown")}</p>
+        <p className="mt-1 text-sm text-slate-400">
+          {info ? t(info.descKey) : t("portDetail.unknown")}
+        </p>
       </div>
 
       <div>
