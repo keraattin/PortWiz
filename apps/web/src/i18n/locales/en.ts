@@ -612,6 +612,9 @@ export const en = {
   "agents.o.online": "Online cut-off (s)",
   "agents.o.rate": "Max scan rate (pps)",
   "agents.o.global": "global",
+  "agents.o.pollHint": "How often this agent asks the server for scan work.",
+  "agents.o.onlineHint": "Grace period before an agent that stops reporting is marked offline.",
+  "agents.o.rateHint": "Upper bound on scan packets per second, to protect fragile links.",
   "agents.deploy.title": "Deploy this agent",
   "agents.deploy.intro":
     "Run the agent on a host inside the target network segment. It needs only outbound access to the API; no inbound ports.",

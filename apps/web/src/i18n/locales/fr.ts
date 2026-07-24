@@ -617,6 +617,9 @@ export const fr: Partial<Record<TKey, string>> = {
   "agents.o.online": "Seuil en ligne (s)",
   "agents.o.rate": "Débit d'analyse max (pps)",
   "agents.o.global": "global",
+  "agents.o.pollHint": "Fréquence à laquelle cet agent demande du travail d'analyse au serveur.",
+  "agents.o.onlineHint": "Délai de grâce avant qu'un agent qui cesse de répondre soit marqué hors ligne.",
+  "agents.o.rateHint": "Limite supérieure de paquets d'analyse par seconde, pour protéger les liens fragiles.",
   "agents.deploy.title": "Déployer cet agent",
   "agents.deploy.intro":
     "Exécutez l'agent sur un hôte du segment réseau cible. Il n'a besoin que d'un accès sortant à l'API ; aucun port entrant.",

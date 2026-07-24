@@ -617,6 +617,9 @@ export const de: Partial<Record<TKey, string>> = {
   "agents.o.online": "Online-Grenze (s)",
   "agents.o.rate": "Max. Scan-Rate (pps)",
   "agents.o.global": "global",
+  "agents.o.pollHint": "Wie oft dieser Agent den Server nach Scan-Aufträgen fragt.",
+  "agents.o.onlineHint": "Kulanzzeit, bevor ein Agent, der nichts mehr meldet, als offline gilt.",
+  "agents.o.rateHint": "Obergrenze für Scan-Pakete pro Sekunde, um fragile Verbindungen zu schützen.",
   "agents.deploy.title": "Diesen Agenten bereitstellen",
   "agents.deploy.intro":
     "Führe den Agenten auf einem Host im Zielnetzsegment aus. Er benötigt nur ausgehenden Zugriff auf die API; keine eingehenden Ports.",

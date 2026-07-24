@@ -616,6 +616,9 @@ export const es: Partial<Record<TKey, string>> = {
   "agents.o.online": "Umbral en línea (s)",
   "agents.o.rate": "Tasa máx. de escaneo (pps)",
   "agents.o.global": "global",
+  "agents.o.pollHint": "Con qué frecuencia este agente pide trabajo de escaneo al servidor.",
+  "agents.o.onlineHint": "Periodo de gracia antes de marcar como desconectado a un agente que deja de reportar.",
+  "agents.o.rateHint": "Límite máximo de paquetes de escaneo por segundo, para proteger enlaces frágiles.",
   "agents.deploy.title": "Desplegar este agente",
   "agents.deploy.intro":
     "Ejecute el agente en un host dentro del segmento de red objetivo. Solo necesita acceso saliente a la API; ningún puerto entrante.",

@@ -614,6 +614,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.o.online": "Online eşiği (sn)",
   "agents.o.rate": "Maks tarama hızı (pps)",
   "agents.o.global": "global",
+  "agents.o.pollHint": "Bu agent'ın sunucudan ne sıklıkla tarama işi istediği.",
+  "agents.o.onlineHint": "Rapor vermeyi bırakan bir agent'ın çevrimdışı sayılmadan önceki tolerans süresi.",
+  "agents.o.rateHint": "Kırılgan ağları korumak için saniyedeki tarama paketi üst sınırı.",
   "agents.deploy.title": "Bu ajanı dağıt",
   "agents.deploy.intro":
     "Ajanı hedef ağ segmentindeki bir makinede çalıştırın. Yalnızca API'ye giden (outbound) erişime ihtiyaç duyar; gelen port gerekmez.",

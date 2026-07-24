@@ -617,6 +617,9 @@ export const pt: Partial<Record<TKey, string>> = {
   "agents.o.online": "Limite online (s)",
   "agents.o.rate": "Taxa máx. de varredura (pps)",
   "agents.o.global": "global",
+  "agents.o.pollHint": "Com que frequência este agente pede trabalho de varredura ao servidor.",
+  "agents.o.onlineHint": "Período de tolerância antes de um agente que para de reportar ser marcado como offline.",
+  "agents.o.rateHint": "Limite máximo de pacotes de varredura por segundo, para proteger links frágeis.",
   "agents.deploy.title": "Implantar este agente",
   "agents.deploy.intro":
     "Execute o agente em um host dentro do segmento de rede alvo. Ele precisa apenas de acesso de saída à API; nenhuma porta de entrada.",

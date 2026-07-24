@@ -254,6 +254,7 @@ export default function AgentDetailPage() {
                     value={pollOverride}
                     onChange={(e) => setPollOverride(e.target.value)}
                   />
+                  <p className="mt-1 text-[11px] text-slate-500">{t("agents.o.pollHint")}</p>
                 </div>
                 <div>
                   <label className="block text-xs text-slate-400">{t("agents.o.online")}</label>
@@ -265,6 +266,7 @@ export default function AgentDetailPage() {
                     value={onlineOverride}
                     onChange={(e) => setOnlineOverride(e.target.value)}
                   />
+                  <p className="mt-1 text-[11px] text-slate-500">{t("agents.o.onlineHint")}</p>
                 </div>
                 <div>
                   <label className="block text-xs text-slate-400">{t("agents.o.rate")}</label>
@@ -276,6 +278,7 @@ export default function AgentDetailPage() {
                     value={rateOverride}
                     onChange={(e) => setRateOverride(e.target.value)}
                   />
+                  <p className="mt-1 text-[11px] text-slate-500">{t("agents.o.rateHint")}</p>
                 </div>
               </div>
             </div>
