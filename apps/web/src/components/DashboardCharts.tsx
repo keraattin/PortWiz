@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useNavigate } from "react-router-dom";
 import type { ChartSlice, DashboardCharts as Charts } from "../api/client";
 import { useI18n } from "../i18n/I18nContext";
 import { useTheme } from "../theme/ThemeContext";
@@ -116,11 +117,26 @@ function Donut({
   );
 }
 
-function CountBars({ data }: { data: ChartSlice[] }) {
+function CountBars({
+  data,
+  onBarClick,
+}: {
+  data: ChartSlice[];
+  onBarClick?: (name: string) => void;
+}) {
   const { grid, tooltip } = useChartTheme();
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+      <BarChart
+        data={data}
+        margin={{ top: 4, right: 8, bottom: 0, left: -20 }}
+        onClick={
+          onBarClick
+            ? (state: { activeLabel?: string | number }) =>
+                state?.activeLabel != null && onBarClick(String(state.activeLabel))
+            : undefined
+        }
+      >
         <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
         <XAxis
           dataKey="name"
@@ -140,7 +156,13 @@ function CountBars({ data }: { data: ChartSlice[] }) {
           cursor={{ fill: `${grid}55` }}
           labelFormatter={(l) => prettify(String(l))}
         />
-        <Bar dataKey="value" fill={ACCENT} radius={[4, 4, 0, 0]} maxBarSize={48} />
+        <Bar
+          dataKey="value"
+          fill={ACCENT}
+          radius={[4, 4, 0, 0]}
+          maxBarSize={48}
+          cursor={onBarClick ? "pointer" : undefined}
+        />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -149,6 +171,7 @@ function CountBars({ data }: { data: ChartSlice[] }) {
 export default function DashboardCharts({ data }: { data: Charts }) {
   const { grid, tooltip } = useChartTheme();
   const { t } = useI18n();
+  const navigate = useNavigate();
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold text-slate-200">{t("trends.title")}</h2>
@@ -214,7 +237,10 @@ export default function DashboardCharts({ data }: { data: Charts }) {
           hint={t("trends.topOpenPortsHint")}
           empty={total(data.top_open_ports) === 0}
         >
-          <CountBars data={data.top_open_ports} />
+          <CountBars
+            data={data.top_open_ports}
+            onBarClick={(name) => navigate(`/ports/${name}`)}
+          />
         </ChartCard>
       </div>
     </section>
