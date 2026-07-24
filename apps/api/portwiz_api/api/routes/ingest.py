@@ -27,7 +27,7 @@ from ...core.app_settings import effective_settings
 from ...core.audit import append_audit
 from ...core.change_detection import detect_changes
 from ...core.db import get_session
-from ...core.fingerprint import match_banner
+from ...core.fingerprint import PORT_MAP_CONFIDENCE, match_banner, service_for_port
 from ...core.inventory_source import (
     InventorySource,
     SourceAsset,
@@ -175,6 +175,19 @@ async def ingest_scan_results(
                     confidence = match.confidence
                     fp_source = "heuristic"
                     low_confidence = False
+
+            # Last-resort label: a port left unidentified by nmap and banner is
+            # very likely its registered service if it sits on a well-known
+            # number (3306 -> mysql). A low-confidence guess, so a banner-bearing
+            # port is still refined by the AI fallback below, which now receives
+            # this guess as its service hint.
+            if not service and port.state == "open":
+                guessed = service_for_port(port.port, port.protocol)
+                if guessed:
+                    service = guessed
+                    fp_source = "port-map"
+                    if confidence is None:
+                        confidence = PORT_MAP_CONFIDENCE
 
             obs = Observation(
                 ts=received_at,

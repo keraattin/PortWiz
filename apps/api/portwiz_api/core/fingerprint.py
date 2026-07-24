@@ -102,6 +102,90 @@ _RULES: tuple[_Rule, ...] = (
 )
 
 
+# The registered service for a well-known (port, protocol). Used only as a last
+# resort when neither the agent's nmap probe nor a banner identified the service:
+# an open port on a well-known number is very likely its registered service
+# (3306 -> mysql, 6379 -> redis). It is a guess *by port number*, so it carries a
+# low confidence and never overrides an observed fingerprint; it just turns
+# "unknown" into the likely service for the common ports that make up most
+# exposure. Kept conservative and canonical (nmap service names) so a wrong label
+# is unlikely for an audit tool.
+PORT_MAP_CONFIDENCE = 0.4
+
+_WELL_KNOWN_PORTS: dict[tuple[int, str], str] = {
+    (21, "tcp"): "ftp",
+    (22, "tcp"): "ssh",
+    (23, "tcp"): "telnet",
+    (25, "tcp"): "smtp",
+    (53, "tcp"): "dns",
+    (53, "udp"): "dns",
+    (67, "udp"): "dhcp",
+    (69, "udp"): "tftp",
+    (80, "tcp"): "http",
+    (88, "tcp"): "kerberos",
+    (110, "tcp"): "pop3",
+    (111, "tcp"): "rpcbind",
+    (123, "udp"): "ntp",
+    (135, "tcp"): "msrpc",
+    (139, "tcp"): "netbios-ssn",
+    (143, "tcp"): "imap",
+    (161, "udp"): "snmp",
+    (179, "tcp"): "bgp",
+    (389, "tcp"): "ldap",
+    (443, "tcp"): "https",
+    (445, "tcp"): "microsoft-ds",
+    (465, "tcp"): "smtps",
+    (500, "udp"): "isakmp",
+    (514, "udp"): "syslog",
+    (587, "tcp"): "submission",
+    (631, "tcp"): "ipp",
+    (636, "tcp"): "ldaps",
+    (993, "tcp"): "imaps",
+    (995, "tcp"): "pop3s",
+    (1080, "tcp"): "socks",
+    (1194, "udp"): "openvpn",
+    (1433, "tcp"): "ms-sql-s",
+    (1521, "tcp"): "oracle",
+    (1723, "tcp"): "pptp",
+    (2049, "tcp"): "nfs",
+    (2181, "tcp"): "zookeeper",
+    (2375, "tcp"): "docker",
+    (2376, "tcp"): "docker-ssl",
+    (2379, "tcp"): "etcd",
+    (3306, "tcp"): "mysql",
+    (3389, "tcp"): "ms-wbt-server",
+    (3690, "tcp"): "svn",
+    (5060, "tcp"): "sip",
+    (5060, "udp"): "sip",
+    (5222, "tcp"): "xmpp-client",
+    (5432, "tcp"): "postgresql",
+    (5601, "tcp"): "kibana",
+    (5672, "tcp"): "amqp",
+    (5900, "tcp"): "vnc",
+    (5984, "tcp"): "couchdb",
+    (6379, "tcp"): "redis",
+    (6443, "tcp"): "kubernetes-api",
+    (8080, "tcp"): "http-proxy",
+    (8086, "tcp"): "influxdb",
+    (8443, "tcp"): "https-alt",
+    (9042, "tcp"): "cassandra",
+    (9092, "tcp"): "kafka",
+    (9200, "tcp"): "elasticsearch",
+    (11211, "tcp"): "memcached",
+    (15672, "tcp"): "rabbitmq-management",
+    (27017, "tcp"): "mongodb",
+}
+
+
+def service_for_port(port: int, protocol: str | None) -> str | None:
+    """The registered service for a well-known (port, protocol), or ``None``.
+
+    A guess by port number only: use it as a last resort when nothing observed
+    the service, never to override a real fingerprint."""
+    proto = (protocol or "tcp").strip().lower()
+    return _WELL_KNOWN_PORTS.get((port, proto))
+
+
 def match_banner(banner: str | None) -> FingerprintMatch | None:
     """Identify a service from a raw banner via distinctive self-announcing
     tokens. Returns ``None`` when nothing matches confidently."""

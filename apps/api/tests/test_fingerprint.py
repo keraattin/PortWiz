@@ -9,7 +9,11 @@ from __future__ import annotations
 
 import pytest
 
-from portwiz_api.core.fingerprint import HEURISTIC_CONFIDENCE, match_banner
+from portwiz_api.core.fingerprint import (
+    HEURISTIC_CONFIDENCE,
+    match_banner,
+    service_for_port,
+)
 
 
 @pytest.mark.parametrize(
@@ -68,3 +72,33 @@ def test_smtp_wins_over_ftp_for_esmtp_banner() -> None:
     match = match_banner("220 host.example.com ESMTP ready")
     assert match is not None
     assert match.service == "smtp"
+
+
+@pytest.mark.parametrize(
+    ("port", "protocol", "expected"),
+    [
+        (22, "tcp", "ssh"),
+        (3306, "tcp", "mysql"),
+        (6379, "tcp", "redis"),
+        (443, "tcp", "https"),
+        (53, "udp", "dns"),
+        (53, "tcp", "dns"),
+        (161, "udp", "snmp"),
+        (22, None, "ssh"),  # protocol defaults to tcp
+        (22, "TCP", "ssh"),  # case-insensitive protocol
+    ],
+)
+def test_service_for_port_known(port, protocol, expected) -> None:
+    assert service_for_port(port, protocol) == expected
+
+
+@pytest.mark.parametrize(
+    ("port", "protocol"),
+    [
+        (9999, "tcp"),  # not a registered well-known port
+        (161, "tcp"),  # snmp is udp, not tcp
+        (12345, "udp"),
+    ],
+)
+def test_service_for_port_unknown_returns_none(port, protocol) -> None:
+    assert service_for_port(port, protocol) is None

@@ -255,6 +255,59 @@ async def test_ingest_heuristic_resolves_ssh_without_ai(client, admin_headers, d
     assert obs.fingerprint_source == "heuristic"
 
 
+async def test_ingest_port_map_labels_unidentified_well_known_port(
+    client, admin_headers, db
+) -> None:
+    # A well-known port with no service and no banner is labelled from the
+    # registered-ports map, so common exposure is not left "unknown". No AI needed.
+    from portwiz_api.core.ai import NullProvider, get_ai_provider
+    from portwiz_api.main import app
+
+    app.dependency_overrides[get_ai_provider] = lambda: NullProvider()
+    try:
+        token = await _enroll(client, admin_headers)
+        ip = "10.0.0.62"
+        run_id = await _run(client, admin_headers, ip)
+        resp = await client.post(
+            "/api/v1/ingest/scan-results",
+            json=_banner_payload(run_id, ip, 6379, None, 0.0),
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 202, resp.text
+    finally:
+        del app.dependency_overrides[get_ai_provider]
+
+    obs = await _observation(db, run_id)
+    assert obs is not None
+    assert obs.service == "redis"
+    assert obs.fingerprint_source == "port-map"
+
+
+async def test_ingest_port_map_skips_unknown_port(client, admin_headers, db) -> None:
+    # An unidentified port that is not a well-known number stays unknown: the
+    # port map never invents a label for arbitrary high ports.
+    from portwiz_api.core.ai import NullProvider, get_ai_provider
+    from portwiz_api.main import app
+
+    app.dependency_overrides[get_ai_provider] = lambda: NullProvider()
+    try:
+        token = await _enroll(client, admin_headers)
+        ip = "10.0.0.63"
+        run_id = await _run(client, admin_headers, ip)
+        resp = await client.post(
+            "/api/v1/ingest/scan-results",
+            json=_banner_payload(run_id, ip, 48213, None, 0.0),
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 202, resp.text
+    finally:
+        del app.dependency_overrides[get_ai_provider]
+
+    obs = await _observation(db, run_id)
+    assert obs is not None
+    assert obs.service is None
+
+
 async def test_ingest_confident_fingerprint_marked_agent(client, admin_headers, db) -> None:
     # A confident edge fingerprint is trusted as-is and recorded as coming from
     # the agent's probe; neither the heuristic nor AI overrides it.
