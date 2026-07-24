@@ -751,6 +751,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "cve.notConfigured": "CVE zenginleştirme kapalı. Bir CVE kaynağını şurada etkinleştirin:",
   "cve.filterSeverity": "Önem",
   "cve.allSeverities": "Tümü",
+  "cve.minCvss": "Min CVSS",
   "cve.empty":
     "Henüz CVE bulgusu yok. Servisleri tespit eden bir tarama çalıştırıp yeniden kontrol edin.",
   "cve.col.host": "Ana makine",

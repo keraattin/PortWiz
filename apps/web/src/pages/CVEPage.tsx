@@ -56,6 +56,7 @@ export default function CVEPage() {
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
   const [search, setSearch] = useState("");
+  const [minCvss, setMinCvss] = useState("");
 
   const columns: Column<CVEFinding>[] = [
     { key: "host", label: t("cve.col.host"), filter: "text", get: (f) => `${f.ip}:${f.port}` },
@@ -74,9 +75,14 @@ export default function CVEPage() {
       get: (f) => f.severity,
       rank: SEV_RANK,
     },
-    { key: "summary", label: t("cve.col.summary"), sortable: false, get: (f) => f.summary },
+    { key: "summary", label: t("cve.col.summary"), filter: "text", sortable: false, get: (f) => f.summary },
   ];
-  const processed = processRows(findings, columns, sort, filters, search);
+  // CVSS is a numeric score, so a "minimum threshold" reads better than the
+  // exact-match column dropdown; it filters before the shared row processing.
+  const visible = minCvss
+    ? findings.filter((f) => (f.cvss ?? -1) >= Number(minCvss))
+    : findings;
+  const processed = processRows(visible, columns, sort, filters, search);
   const page = usePagination(processed, 15);
   const onColFilter = (key: string, v: string) => {
     setFilter(key, v);
@@ -160,6 +166,19 @@ export default function CVEPage() {
 
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput value={search} onChange={setSearch} />
+        <label className="flex items-center gap-2 text-xs text-slate-400">
+          {t("cve.minCvss")}
+          <select
+            value={minCvss}
+            onChange={(e) => setMinCvss(e.target.value)}
+            className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-500"
+          >
+            <option value="">{t("filters.all")}</option>
+            <option value="9">≥ 9.0</option>
+            <option value="7">≥ 7.0</option>
+            <option value="4">≥ 4.0</option>
+          </select>
+        </label>
         {aiConfigured && (
           <Button
             variant="outline"

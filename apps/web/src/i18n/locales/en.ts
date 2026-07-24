@@ -749,6 +749,7 @@ export const en = {
   "cve.notConfigured": "CVE enrichment is off. Enable a CVE source in",
   "cve.filterSeverity": "Severity",
   "cve.allSeverities": "All",
+  "cve.minCvss": "Min CVSS",
   "cve.empty":
     "No CVE findings yet. Run a scan that identifies services, then re-check.",
   "cve.col.host": "Host",

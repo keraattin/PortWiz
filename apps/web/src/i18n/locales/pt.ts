@@ -755,6 +755,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "cve.notConfigured": "O enriquecimento de CVE está desativado. Ative uma fonte de CVE em",
   "cve.filterSeverity": "Severidade",
   "cve.allSeverities": "Todas",
+  "cve.minCvss": "CVSS mín.",
   "cve.empty":
     "Ainda não há achados de CVE. Execute uma varredura que identifique serviços e reverifique.",
   "cve.col.host": "Host",
