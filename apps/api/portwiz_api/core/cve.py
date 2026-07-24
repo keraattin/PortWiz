@@ -297,17 +297,59 @@ async def get_cve_source(session: AsyncSession = Depends(get_session)) -> CVESou
     return build_cve_source(await effective_settings(session), session)
 
 
+# Service labels too generic to yield precise CVEs on their own. Looking up a
+# bare "http" or "https" (no product, no version) returns thousands of unrelated
+# advisories, which is noise for an audit tool, so a port known only by one of
+# these is skipped unless it also carries a product or version.
+_GENERIC_SERVICES = frozenset(
+    {
+        "http",
+        "https",
+        "http-proxy",
+        "https-alt",
+        "http-alt",
+        "ssl",
+        "tls",
+        "www",
+        "unknown",
+        "tcpwrapped",
+    }
+)
+
+
+def _cve_target(product: str | None, service: str | None, version: str | None) -> str | None:
+    """The product/service string to search CVEs for, or ``None`` when the port
+    is too generic to yield precise findings.
+
+    A named product (nmap's ``OpenSSH``, ``nginx``) is always specific enough. A
+    bare service is used when it is either version-qualified or a distinctive
+    product-like name (``redis``, ``mysql``); a generic protocol label alone
+    (``http``) is skipped to keep findings precise.
+    """
+    prod = (product or "").strip()
+    if prod:
+        return prod
+    svc = (service or "").strip()
+    if svc and (version or svc.lower() not in _GENERIC_SERVICES):
+        return svc
+    return None
+
+
 async def recheck_cves(
     session: AsyncSession, source: CVESource, limit: int = 25
 ) -> dict[str, int]:
-    """Re-compute CVE findings for the current open ports that carry a version.
+    """Re-compute CVE findings for the current open ports with an identified
+    service, whether or not a change was detected and whether or not a version is
+    known.
 
-    Uses the latest observation per (ip, port) with a known version, looks each
-    up against the source, and replaces that port's findings. Bounded by
+    Uses the latest observation per (ip, port) that carries a product, service,
+    or version, looks each up against the source, and replaces that port's
+    findings. Ports known only by a generic protocol label (a bare ``http`` with
+    no product or version) are skipped so findings stay precise. Bounded by
     ``limit`` because online sources are rate-limited; a lookup that errors (e.g.
     a rate-limit hit) is skipped so a partial re-check still records what it can.
     """
-    from sqlalchemy import delete, select
+    from sqlalchemy import delete, or_, select
 
     from ..models.cve import CVEFinding
     from ..models.scan import Observation
@@ -315,7 +357,14 @@ async def recheck_cves(
     rows = (
         await session.execute(
             select(Observation)
-            .where(Observation.version.is_not(None), Observation.state == "open")
+            .where(
+                Observation.state == "open",
+                or_(
+                    Observation.product.is_not(None),
+                    Observation.service.is_not(None),
+                    Observation.version.is_not(None),
+                ),
+            )
             .order_by(Observation.ts.desc())
             .limit(2000)
         )
@@ -327,7 +376,7 @@ async def recheck_cves(
 
     checked = findings = 0
     for obs in list(latest.values())[: max(0, limit)]:
-        product = (obs.product or obs.service or "").strip()
+        product = _cve_target(obs.product, obs.service, obs.version)
         if not product:
             continue
         try:

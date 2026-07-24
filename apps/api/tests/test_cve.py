@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import httpx
+import pytest
 
 from portwiz_api.core.cve import (
     NullCVESource,
     NvdSource,
+    _cve_target,
     build_cve_source,
     severity_from_cvss,
 )
@@ -42,6 +44,25 @@ def _mock_client(captured: list[httpx.Request], body: dict) -> httpx.AsyncClient
         return httpx.Response(200, json=body)
 
     return httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+
+@pytest.mark.parametrize(
+    ("product", "service", "version", "expected"),
+    [
+        ("OpenSSH", None, None, "OpenSSH"),  # a named product is always specific
+        ("nginx", "http", "1.24.0", "nginx"),  # product preferred over service
+        (None, "redis", None, "redis"),  # distinctive service, no version
+        (None, "mysql", None, "mysql"),
+        (None, "http", "1.24.0", "http"),  # generic but version-qualified -> allowed
+        (None, "http", None, None),  # bare generic protocol label -> skipped
+        (None, "https", None, None),
+        (None, "tcpwrapped", None, None),
+        (None, None, None, None),  # nothing identifiable
+        ("  ", "  ", None, None),  # whitespace only
+    ],
+)
+def test_cve_target(product, service, version, expected) -> None:
+    assert _cve_target(product, service, version) == expected
 
 
 def test_severity_from_cvss() -> None:

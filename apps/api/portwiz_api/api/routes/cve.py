@@ -36,8 +36,10 @@ async def recheck(
     session: AsyncSession = Depends(get_session),
     source: CVESource = Depends(get_cve_source),
 ) -> CVERecheckResult:
-    """Look up CVEs for the current open ports (latest observation with a version)
-    and replace each port's findings. Bounded by ``limit`` for rate limits."""
+    """Look up CVEs for the current open ports with an identified service (latest
+    observation carrying a product, service, or version), whether or not a change
+    was detected, and replace each port's findings. Bounded by ``limit`` for rate
+    limits."""
     if isinstance(source, NullCVESource):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "CVE enrichment is not configured")
     result = await recheck_cves(session, source, limit)

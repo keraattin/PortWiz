@@ -88,6 +88,89 @@ async def _ingest_versioned_service(client, admin_headers) -> None:
     assert resp.status_code == 202, resp.text
 
 
+async def _ingest_port(client, admin_headers, name: str, ip: str, port_entry: dict) -> None:
+    """Ingest a single open port with caller-controlled service fields, so a test
+    can exercise product-only / generic-service cases."""
+    token = (
+        await client.post("/api/v1/agents", json={"name": name}, headers=admin_headers)
+    ).json()["token"]
+    profile = (
+        await client.post(
+            "/api/v1/scan-profiles",
+            json={"name": f"{name}-prof", "targets": [ip], "ports": "80"},
+            headers=admin_headers,
+        )
+    ).json()
+    run = (
+        await client.post(
+            f"/api/v1/scan-profiles/{profile['id']}/run", headers=admin_headers
+        )
+    ).json()
+    payload = {
+        "version": 1,
+        "job_id": str(uuid.uuid4()),
+        "scan_run_id": run["id"],
+        "agent_id": name,
+        "started_at": "2026-07-08T10:00:00Z",
+        "finished_at": "2026-07-08T10:05:00Z",
+        "status": "completed",
+        "hosts": [{"ip": ip, "ports": [port_entry]}],
+    }
+    resp = await client.post(
+        "/api/v1/ingest/scan-results",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 202, resp.text
+
+
+async def test_recheck_checks_product_without_version(client, admin_headers) -> None:
+    # A port identified by product but with no version is still CVE-checked, so a
+    # vulnerable service is not missed just because nmap could not read a version.
+    _use_fake_cve_source()
+    await _ingest_port(
+        client,
+        admin_headers,
+        "cve-nover",
+        "10.0.0.31",
+        {
+            "port": 22,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "ssh",
+            "product": "OpenSSH",
+            "fingerprint_confidence": 0.95,
+        },
+    )
+    resp = await client.post("/api/v1/cve/recheck", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["checked"] == 1
+    assert resp.json()["findings"] == 1
+
+
+async def test_recheck_skips_generic_service_without_version(client, admin_headers) -> None:
+    # A port known only by a generic protocol label (bare "http", no product or
+    # version) is skipped so findings are not flooded with unrelated advisories.
+    _use_fake_cve_source()
+    await _ingest_port(
+        client,
+        admin_headers,
+        "cve-generic",
+        "10.0.0.32",
+        {
+            "port": 8081,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "http",
+            "fingerprint_confidence": 0.95,
+        },
+    )
+    resp = await client.post("/api/v1/cve/recheck", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["checked"] == 0
+    assert resp.json()["findings"] == 0
+
+
 async def test_recheck_populates_findings(client, admin_headers) -> None:
     _use_fake_cve_source()
     await _ingest_versioned_service(client, admin_headers)
