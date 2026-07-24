@@ -80,6 +80,14 @@ export default function CompliancePage() {
   const { t } = useI18n();
   const errorMessage = useErrorMessage();
   const toast = useToast();
+
+  // A localised label per audit action code, falling back to the code-derived
+  // humanised form for any action not (yet) in the dictionary.
+  const actionLabel = (action: string): string => {
+    const key = `audit.action.${action.replace(/\./g, "_")}` as TKey;
+    const label = t(key);
+    return label === key ? humanizeAction(action) : label;
+  };
   const [chain, setChain] = useState<ChainVerification | null>(null);
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [total, setTotal] = useState(0);
@@ -147,7 +155,7 @@ export default function CompliancePage() {
       filter: "text",
       get: (e) => e.actor_email ?? t("compliance.system"),
     },
-    { key: "action", label: t("compliance.col.action"), filter: "text", get: (e) => humanizeAction(e.action) },
+    { key: "action", label: t("compliance.col.action"), filter: "text", get: (e) => actionLabel(e.action) },
     {
       key: "target",
       label: t("compliance.col.target"),
@@ -467,7 +475,7 @@ export default function CompliancePage() {
                       {e.actor_email ?? t("compliance.system")}
                     </td>
                     <td className="px-4 py-2 font-medium text-slate-100" title={e.action}>
-                      {humanizeAction(e.action)}
+                      {actionLabel(e.action)}
                     </td>
                     <td className="px-4 py-2 text-xs text-slate-400">
                       {e.target_type ? `${e.target_type}:${(e.target_id ?? "").slice(0, 8)}` : "-"}
