@@ -638,6 +638,10 @@ export const en = {
   "agents.deploy.nativeBuildHint":
     "Run from the PortWiz repo root. Needs the Go toolchain; produces a self-contained portwiz-agent binary you can copy to the host.",
   "agents.deploy.nativeCommand": "Run command",
+  "agents.deploy.download": "Download the prebuilt binary",
+  "agents.deploy.downloadHint": "Download the asset for your OS and architecture from",
+  "agents.deploy.releasesLink": "the PortWiz releases page.",
+  "agents.deploy.orBuild": "Or build it from source (needs the Go toolchain)",
   "agents.deploy.nativeNmapHint":
     "Install nmap on the host so the agent can detect service versions (nmap -sV).",
   "agents.deploy.buildTitle": "Build the agent image (one time)",

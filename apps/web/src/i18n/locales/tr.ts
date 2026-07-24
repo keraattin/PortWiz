@@ -640,6 +640,10 @@ export const tr: Partial<Record<TKey, string>> = {
   "agents.deploy.nativeBuildHint":
     "PortWiz repo kökünden çalıştır. Go araç zinciri gerekir; host'a kopyalayabileceğin bağımsız bir portwiz-agent ikilisi üretir.",
   "agents.deploy.nativeCommand": "Çalıştırma komutu",
+  "agents.deploy.download": "Hazır binary'yi indir",
+  "agents.deploy.downloadHint": "İşletim sistemine ve mimarine uygun dosyayı şuradan indir:",
+  "agents.deploy.releasesLink": "PortWiz releases sayfası.",
+  "agents.deploy.orBuild": "Ya da kaynaktan derle (Go araç zinciri gerekir)",
   "agents.deploy.nativeNmapHint":
     "Agent'ın servis sürümlerini tespit edebilmesi için host'a nmap kur (nmap -sV).",
   "agents.deploy.buildTitle": "Ajan imajını derle (tek sefer)",

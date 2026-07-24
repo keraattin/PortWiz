@@ -642,6 +642,10 @@ export const es: Partial<Record<TKey, string>> = {
   "agents.deploy.nativeBuildHint":
     "Ejecuta desde la raíz del repositorio de PortWiz. Requiere el toolchain de Go; produce un binario portwiz-agent autónomo que puedes copiar al host.",
   "agents.deploy.nativeCommand": "Comando de ejecución",
+  "agents.deploy.download": "Descargar el binario precompilado",
+  "agents.deploy.downloadHint": "Descarga el archivo para tu sistema operativo y arquitectura desde",
+  "agents.deploy.releasesLink": "la página de releases de PortWiz.",
+  "agents.deploy.orBuild": "O compílalo desde el código fuente (requiere el toolchain de Go)",
   "agents.deploy.nativeNmapHint":
     "Instala nmap en el host para que el agente pueda detectar versiones de servicio (nmap -sV).",
   "agents.deploy.buildTitle": "Construir la imagen del agente (una vez)",
