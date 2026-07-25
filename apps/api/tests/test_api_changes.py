@@ -76,6 +76,31 @@ async def test_change_confirmed_after_threshold(client, admin_headers) -> None:
     assert by_type["closed"]["before"]["state"] == "open"
 
 
+async def test_changes_ip_port_filters(client, admin_headers) -> None:
+    # The per-host and per-port timelines rely on ip/port scoping.
+    token = await _enroll(client, admin_headers, "hist-agent")
+    profile = await _profile(client, admin_headers, "hist-profile", "10.0.0.5", "22,80,443")
+    pid, ip = profile["id"], "10.0.0.5"
+    await _ingest(client, admin_headers, token, pid, ip, [22, 80])
+    await _ingest(client, admin_headers, token, pid, ip, [22, 80])
+    await _ingest(client, admin_headers, token, pid, ip, [22, 443])
+    await _ingest(client, admin_headers, token, pid, ip, [22, 443])
+
+    by_ip = (await client.get(f"/api/v1/changes?ip={ip}", headers=admin_headers)).json()
+    assert {c["change_type"] for c in by_ip} == {"opened", "closed"}
+    assert all(c["ip"] == ip for c in by_ip)
+
+    by_port = (
+        await client.get(f"/api/v1/changes?ip={ip}&port=443", headers=admin_headers)
+    ).json()
+    assert len(by_port) == 1
+    assert by_port[0]["port"] == 443 and by_port[0]["change_type"] == "opened"
+
+    # A port that never changed has no history.
+    quiet = (await client.get(f"/api/v1/changes?ip={ip}&port=22", headers=admin_headers)).json()
+    assert quiet == []
+
+
 async def test_changes_limit_bounds(client, admin_headers) -> None:
     # A negative/zero limit is a clean 422, not a 500 (Postgres LIMIT -1 crash).
     assert (await client.get("/api/v1/changes?limit=-1", headers=admin_headers)).status_code == 422

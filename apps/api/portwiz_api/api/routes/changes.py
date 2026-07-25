@@ -29,6 +29,8 @@ async def list_changes(
     scan_profile_id: uuid.UUID | None = None,
     change_type: str | None = None,
     status_filter: str | None = Query(default=None, alias="status"),
+    ip: str | None = None,
+    port: int | None = None,
     limit: int = Query(default=100, ge=1, le=500),
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
@@ -40,6 +42,12 @@ async def list_changes(
         query = query.where(ChangeEvent.change_type == change_type)
     if status_filter is not None:
         query = query.where(ChangeEvent.status == status_filter)
+    # ip/port scope the change history for a single host or port, powering the
+    # per-host and per-port timelines.
+    if ip is not None:
+        query = query.where(ChangeEvent.ip == ip)
+    if port is not None:
+        query = query.where(ChangeEvent.port == port)
     result = await session.execute(query)
     return list(result.scalars().all())
 
