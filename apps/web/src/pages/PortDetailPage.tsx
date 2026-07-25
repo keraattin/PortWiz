@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { type OpenPort, listOpenPorts } from "../api/client";
+import { type ChangeEvent, type OpenPort, listChanges, listOpenPorts } from "../api/client";
 import { portInfo } from "../data/portInfo";
 import { useErrorMessage } from "../i18n/useErrorMessage";
+import ChangeTimeline from "../components/ChangeTimeline";
 import EmptyState from "../components/EmptyState";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -20,6 +21,7 @@ export default function PortDetailPage() {
   const { t } = useI18n();
   const errorMessage = useErrorMessage();
   const [rows, setRows] = useState<OpenPort[]>([]);
+  const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +29,14 @@ export default function PortDetailPage() {
     void (async () => {
       setLoading(true);
       try {
-        setRows(Number.isNaN(port) ? [] : await listOpenPorts({ port }));
+        if (Number.isNaN(port)) {
+          setRows([]);
+          setChanges([]);
+        } else {
+          const [r, ch] = await Promise.all([listOpenPorts({ port }), listChanges({ port })]);
+          setRows(r);
+          setChanges(ch);
+        }
       } catch (e) {
         setError(errorMessage(e));
       } finally {
@@ -136,6 +145,12 @@ export default function PortDetailPage() {
             </table>
           </div>
         )}
+      </div>
+
+      <div>
+        <p className="text-sm font-medium text-slate-300">{t("timeline.title")}</p>
+        <p className="mb-3 text-xs text-slate-600">{t("timeline.hint")}</p>
+        <ChangeTimeline events={changes} context="host" />
       </div>
     </div>
   );

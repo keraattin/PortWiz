@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   type Asset,
   type CVEFinding,
+  type ChangeEvent,
   type Criticality,
   type CurrentUser,
   type DataSensitivity,
@@ -11,11 +12,13 @@ import {
   deleteAsset,
   fetchCVEFindings,
   getAsset,
+  listChanges,
   listOpenPorts,
   listUsers,
   listVlans,
   updateAsset,
 } from "../api/client";
+import ChangeTimeline from "../components/ChangeTimeline";
 import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
@@ -57,6 +60,7 @@ export default function AssetDetailPage() {
   const [users, setUsers] = useState<CurrentUser[]>([]);
   const [ports, setPorts] = useState<OpenPort[]>([]);
   const [cves, setCves] = useState<CVEFinding[]>([]);
+  const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,17 +79,19 @@ export default function AssetDetailPage() {
       // The asset loads first so its IP can key the CVE lookup, then the rest
       // fans out in parallel.
       const a = await getAsset(id);
-      const [v, u, p, c] = await Promise.all([
+      const [v, u, p, c, ch] = await Promise.all([
         listVlans(),
         listUsers(),
         listOpenPorts({ asset_id: id }),
         fetchCVEFindings({ ip: a.ip }),
+        listChanges({ ip: a.ip }),
       ]);
       setAsset(a);
       setVlans(v);
       setUsers(u);
       setPorts(p);
       setCves(c);
+      setChanges(ch);
       setIp(a.ip);
       setHostname(a.hostname ?? "");
       setVlanId(a.vlan_id ?? "");
@@ -403,6 +409,12 @@ export default function AssetDetailPage() {
             </table>
           </div>
         )}
+      </div>
+
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+        <p className="text-sm font-medium text-slate-300">{t("timeline.title")}</p>
+        <p className="mb-3 text-xs text-slate-600">{t("timeline.hint")}</p>
+        <ChangeTimeline events={changes} context="port" />
       </div>
     </div>
   );

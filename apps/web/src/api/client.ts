@@ -635,9 +635,17 @@ export interface ChangeEvent {
   detected_at: string;
 }
 
-export function listChanges(params?: { status?: string }): Promise<ChangeEvent[]> {
-  const query = params?.status ? `?status=${params.status}` : "";
-  return request<ChangeEvent[]>(`/changes${query}`);
+export function listChanges(params?: {
+  status?: string;
+  ip?: string;
+  port?: number;
+}): Promise<ChangeEvent[]> {
+  const q = new URLSearchParams();
+  if (params?.status) q.set("status", params.status);
+  if (params?.ip) q.set("ip", params.ip);
+  if (params?.port != null) q.set("port", String(params.port));
+  const qs = q.toString();
+  return request<ChangeEvent[]>(`/changes${qs ? `?${qs}` : ""}`);
 }
 
 export function updateChangeStatus(
