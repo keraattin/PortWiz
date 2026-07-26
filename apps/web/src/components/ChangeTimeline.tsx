@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { type ChangeEvent, type ChangeType, type PortSnapshot } from "../api/client";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -16,6 +17,16 @@ const CHANGE_DOT: Record<ChangeType, string> = {
   service_changed: "bg-amber-400",
   version_changed: "bg-orange-400",
 };
+
+// Status = outline pills, matching the Changes page.
+const STATUS_BADGE: Record<string, string> = {
+  open: "border border-sky-700 text-sky-300",
+  acknowledged: "border border-amber-700 text-amber-300",
+  resolved: "border border-emerald-700 text-emerald-300",
+};
+
+const CHANGE_TYPES: ChangeType[] = ["opened", "closed", "service_changed", "version_changed"];
+const SEVERITIES = ["low", "medium", "high"] as const;
 
 type Translate = (key: TKey, vars?: Record<string, string | number>) => string;
 
@@ -36,35 +47,72 @@ export default function ChangeTimeline({
   context?: "port" | "host";
 }) {
   const { t } = useI18n();
+  const [typeFilter, setTypeFilter] = useState("");
+  const [sevFilter, setSevFilter] = useState("");
 
   if (events.length === 0) {
     return <p className="py-6 text-center text-sm text-slate-600">{t("timeline.empty")}</p>;
   }
 
+  const filtered = events.filter(
+    (e) =>
+      (!typeFilter || e.change_type === typeFilter) && (!sevFilter || e.severity === sevFilter),
+  );
+  const selectCls =
+    "rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-500";
+
   return (
-    <ol className="relative space-y-4 border-l border-slate-800 pl-5">
-      {events.map((e) => (
-        <li key={e.id} className="relative">
-          <span
-            className={`absolute -left-[1.42rem] top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-slate-950 ${CHANGE_DOT[e.change_type]}`}
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full px-2 py-0.5 text-xs ${CHANGE_BADGE[e.change_type]}`}>
-              {t(`changeType.${e.change_type}` as TKey)}
-            </span>
-            <span className="font-mono text-xs text-slate-300">
-              {context === "host" ? e.ip : `${e.port}/${e.protocol}`}
-            </span>
-            <span className="text-xs text-slate-500">
-              {new Date(e.detected_at).toLocaleString()}
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-slate-400">
-            {describe(e.before, t)} <span className="text-slate-600">→</span>{" "}
-            {describe(e.after, t)}
-          </p>
-        </li>
-      ))}
-    </ol>
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className={selectCls}>
+          <option value="">{t("filters.all")}</option>
+          {CHANGE_TYPES.map((ct) => (
+            <option key={ct} value={ct}>
+              {t(`changeType.${ct}` as TKey)}
+            </option>
+          ))}
+        </select>
+        <select value={sevFilter} onChange={(e) => setSevFilter(e.target.value)} className={selectCls}>
+          <option value="">{t("filters.all")}</option>
+          {SEVERITIES.map((s) => (
+            <option key={s} value={s}>
+              {t(`severity.${s}` as TKey)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="py-6 text-center text-sm text-slate-600">{t("common.noData")}</p>
+      ) : (
+        <ol className="relative space-y-4 border-l border-slate-800 pl-5">
+          {filtered.map((e) => (
+            <li key={e.id} className="relative">
+              <span
+                className={`absolute -left-[1.42rem] top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-slate-950 ${CHANGE_DOT[e.change_type]}`}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`rounded-full px-2 py-0.5 text-xs ${CHANGE_BADGE[e.change_type]}`}>
+                  {t(`changeType.${e.change_type}` as TKey)}
+                </span>
+                <span className="font-mono text-xs text-slate-300">
+                  {context === "host" ? e.ip : `${e.port}/${e.protocol}`}
+                </span>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_BADGE[e.status] ?? ""}`}>
+                  {t(`changeStatus.${e.status}` as TKey)}
+                </span>
+                <span className="text-xs text-slate-500">
+                  {new Date(e.detected_at).toLocaleString()}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-slate-400">
+                {describe(e.before, t)} <span className="text-slate-600">→</span>{" "}
+                {describe(e.after, t)}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
   );
 }
