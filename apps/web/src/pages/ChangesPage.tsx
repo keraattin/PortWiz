@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   type ChangeEvent,
   type ChangeStatus,
@@ -188,7 +189,18 @@ export default function ChangesPage() {
           {new Date(c.detected_at).toLocaleString()}
         </td>
         <td className="px-4 py-2 font-mono text-slate-100">
-          {c.ip}:{c.port}/{c.protocol}
+          {c.asset_id ? (
+            <Link to={`/assets/${c.asset_id}`} className="text-emerald-400 hover:text-emerald-300">
+              {c.ip}
+            </Link>
+          ) : (
+            c.ip
+          )}
+          :
+          <Link to={`/ports/${c.port}`} className="text-emerald-400 hover:text-emerald-300">
+            {c.port}
+          </Link>
+          /{c.protocol}
         </td>
         <td className="px-4 py-2">
           <span className={`rounded-full px-2 py-0.5 text-xs ${CHANGE_BADGE[c.change_type]}`}>
