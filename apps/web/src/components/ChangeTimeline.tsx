@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   type ChangeEvent,
   type ChangeStatus,
@@ -110,9 +111,12 @@ export default function ChangeTimeline({
                 <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_BADGE[e.status] ?? ""}`}>
                   {t(`changeStatus.${e.status}` as TKey)}
                 </span>
-                <span className="text-xs text-slate-500">
+                <Link
+                  to={`/changes/${e.id}`}
+                  className="text-xs text-slate-500 hover:text-emerald-400"
+                >
                   {new Date(e.detected_at).toLocaleString()}
-                </span>
+                </Link>
               </div>
               <p className="mt-1 text-sm text-slate-400">
                 {describe(e.before, t)} <span className="text-slate-600">→</span>{" "}

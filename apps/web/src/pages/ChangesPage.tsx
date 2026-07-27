@@ -185,8 +185,10 @@ export default function ChangesPage() {
   function renderRow(c: ChangeEvent) {
     return (
       <tr key={c.id} className="bg-slate-950">
-        <td className="px-4 py-2 text-xs text-slate-400">
-          {new Date(c.detected_at).toLocaleString()}
+        <td className="px-4 py-2 text-xs">
+          <Link to={`/changes/${c.id}`} className="text-slate-400 hover:text-emerald-400">
+            {new Date(c.detected_at).toLocaleString()}
+          </Link>
         </td>
         <td className="px-4 py-2 font-mono text-slate-100">
           {c.asset_id ? (

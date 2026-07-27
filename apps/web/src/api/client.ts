@@ -648,6 +648,10 @@ export function listChanges(params?: {
   return request<ChangeEvent[]>(`/changes${qs ? `?${qs}` : ""}`);
 }
 
+export function getChange(id: string): Promise<ChangeEvent> {
+  return request<ChangeEvent>(`/changes/${id}`);
+}
+
 export function updateChangeStatus(
   id: string,
   status: ChangeStatus,
@@ -717,12 +721,16 @@ export interface ChainVerification {
 export function listAudit(params?: {
   action?: string;
   actor_email?: string;
+  target_type?: string;
+  target_id?: string;
   limit?: number;
   offset?: number;
 }): Promise<AuditPage> {
   const qs = new URLSearchParams();
   if (params?.action) qs.set("action", params.action);
   if (params?.actor_email) qs.set("actor_email", params.actor_email);
+  if (params?.target_type) qs.set("target_type", params.target_type);
+  if (params?.target_id) qs.set("target_id", params.target_id);
   qs.set("limit", String(params?.limit ?? 50));
   qs.set("offset", String(params?.offset ?? 0));
   return request<AuditPage>(`/audit?${qs.toString()}`);
