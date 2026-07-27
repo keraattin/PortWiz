@@ -13,7 +13,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from ..schemas.evidence import EvidencePackage
+from ..schemas.evidence import EvidencePackage, HostEvidencePackage
 
 _TEAL = colors.HexColor("#0f766e")
 _INK = colors.HexColor("#0f172a")
@@ -187,6 +187,112 @@ def render_evidence_pdf(pkg: EvidencePackage) -> bytes:
                 [25 * mm, 45 * mm, 55 * mm, 55 * mm],
             )
         )
+
+    doc.build(story)
+    return buffer.getvalue()
+
+
+def render_host_evidence_pdf(pkg: HostEvidencePackage) -> bytes:
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
+        leftMargin=15 * mm,
+        rightMargin=15 * mm,
+        title="PortWiz Host Evidence Package",
+    )
+
+    chain = pkg.chain_verification
+    chain_color = "#059669" if chain.ok else "#dc2626"
+    chain_text = "INTACT" if chain.ok else f"BROKEN at seq {chain.broken_seq}"
+
+    a = pkg.asset
+    host_line = f"Host: <b>{a.ip}</b>" + (f" ({a.hostname})" if a.hostname else "")
+    story: list[Any] = [
+        Paragraph("PortWiz Host Evidence Package", _title),
+        Paragraph(host_line, _meta),
+        Paragraph(
+            f"Criticality: {_ev(a.criticality)}  |  Data sensitivity: {_ev(a.data_sensitivity)}",
+            _meta,
+        ),
+        Paragraph(f"Generated {_fmt(pkg.generated_at)} by {pkg.generated_by}", _meta),
+        Paragraph(
+            f'Audit chain integrity: <font color="{chain_color}"><b>{chain_text}</b></font>'
+            f" ({chain.total} total events)",
+            _meta,
+        ),
+        Spacer(1, 8),
+        Paragraph(f"Current exposure ({len(pkg.current_open_ports)} open ports)", _h2),
+    ]
+
+    if pkg.current_open_ports:
+        story.append(
+            _table(
+                ["Port", "Proto", "Service", "Version", "Last seen open"],
+                [
+                    [
+                        o.port,
+                        o.protocol,
+                        o.service or "-",
+                        o.version or "-",
+                        _fmt(o.last_seen_open_at),
+                    ]
+                    for o in pkg.current_open_ports
+                ],
+                [22 * mm, 20 * mm, 45 * mm, 40 * mm, 53 * mm],
+            )
+        )
+    else:
+        story.append(Paragraph("No open ports.", _meta))
+
+    story += [
+        Spacer(1, 8),
+        Paragraph(f"Known vulnerabilities ({len(pkg.cve_findings)})", _h2),
+    ]
+    if pkg.cve_findings:
+        story.append(
+            _table(
+                ["Port", "CVE", "CVSS", "Severity", "Summary"],
+                [
+                    [
+                        f.port,
+                        f.cve_id,
+                        "-" if f.cvss is None else f"{f.cvss:.1f}",
+                        f.severity,
+                        f.summary or "-",
+                    ]
+                    for f in pkg.cve_findings
+                ],
+                [18 * mm, 32 * mm, 15 * mm, 20 * mm, 95 * mm],
+            )
+        )
+    else:
+        story.append(Paragraph("No known vulnerabilities recorded.", _meta))
+
+    story += [Spacer(1, 8), Paragraph(f"Confirmed changes ({len(pkg.changes)})", _h2)]
+    if pkg.changes:
+        story.append(
+            _table(
+                ["Type", "Port", "Before", "After", "Severity", "Status", "Detected"],
+                [
+                    [
+                        c.change_type,
+                        f"{c.port}/{c.protocol}",
+                        _snapshot(c.before),
+                        _snapshot(c.after),
+                        c.severity,
+                        c.status,
+                        _fmt(c.detected_at),
+                    ]
+                    for c in pkg.changes
+                ],
+                [22 * mm, 24 * mm, 28 * mm, 28 * mm, 18 * mm, 22 * mm, 38 * mm],
+            )
+        )
+    else:
+        story.append(Paragraph("No confirmed changes.", _meta))
 
     doc.build(story)
     return buffer.getvalue()

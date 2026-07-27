@@ -17,15 +17,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.audit import append_audit, verify_chain
 from ...core.db import get_session
+from ...models.asset import Asset
 from ...models.audit import AuditEvent
 from ...models.change import ChangeEvent, PortState
 from ...models.cve import CVEFinding
 from ...models.scan import ScanProfile, ScanRun
 from ...models.user import User, UserRole
+from ...schemas.asset import AssetRead
 from ...schemas.audit import ChainVerification
 from ...schemas.change import ChangeEventRead
 from ...schemas.cve import CVEFindingRead
-from ...schemas.evidence import EvidencePackage, OpenPort
+from ...schemas.evidence import EvidencePackage, HostEvidencePackage, OpenPort
 from ...schemas.scan import ScanProfileRead, ScanRunRead
 from ..deps import require_roles
 
@@ -112,6 +114,145 @@ async def build_evidence(
         cve_findings=[CVEFindingRead.model_validate(c) for c in cve_findings],
         scan_runs=[ScanRunRead.model_validate(r) for r in runs],
         changes=[ChangeEventRead.model_validate(c) for c in changes],
+    )
+
+
+async def build_host_evidence(
+    session: AsyncSession, asset: Asset, generated_by: str
+) -> HostEvidencePackage:
+    """Evidence for one host: its confirmed-open exposure, matching CVEs, and
+    confirmed changes, plus a fresh audit-log integrity check."""
+    state_rows = (
+        await session.execute(
+            select(PortState)
+            .where(PortState.ip == asset.ip, PortState.confirmed_state == "open")
+            .order_by(
+                PortState.port, PortState.protocol, PortState.last_seen_open_at.desc()
+            )
+        )
+    ).scalars().all()
+    # A host can sit in several scan profiles; keep the freshest per (port, proto).
+    states: list[PortState] = []
+    seen: set[tuple[int, str]] = set()
+    for s in state_rows:
+        key = (s.port, s.protocol)
+        if key in seen:
+            continue
+        seen.add(key)
+        states.append(s)
+
+    open_pairs = {(asset.ip, s.port) for s in states}
+    cve_findings: list[CVEFinding] = []
+    if states:
+        cve_rows = (
+            await session.execute(
+                select(CVEFinding)
+                .where(CVEFinding.ip == asset.ip)
+                .order_by(func.coalesce(CVEFinding.cvss, 0).desc(), CVEFinding.cve_id)
+            )
+        ).scalars().all()
+        cve_findings = [c for c in cve_rows if (c.ip, c.port) in open_pairs]
+
+    changes = (
+        await session.execute(
+            select(ChangeEvent)
+            .where(ChangeEvent.ip == asset.ip)
+            .order_by(ChangeEvent.detected_at.desc())
+        )
+    ).scalars().all()
+
+    ok, broken_seq = await verify_chain(session)
+    total = (
+        await session.execute(select(func.count()).select_from(AuditEvent))
+    ).scalar_one()
+
+    return HostEvidencePackage(
+        generated_at=_utcnow(),
+        generated_by=generated_by,
+        asset=AssetRead.model_validate(asset),
+        chain_verification=ChainVerification(ok=ok, broken_seq=broken_seq, total=total),
+        current_open_ports=[
+            OpenPort(
+                ip=s.ip,
+                port=s.port,
+                protocol=s.protocol,
+                service=s.confirmed_service,
+                version=s.confirmed_version,
+                last_seen_open_at=s.last_seen_open_at,
+            )
+            for s in states
+        ],
+        cve_findings=[CVEFindingRead.model_validate(c) for c in cve_findings],
+        changes=[ChangeEventRead.model_validate(c) for c in changes],
+    )
+
+
+@router.get("/assets/{asset_id}", response_model=HostEvidencePackage)
+async def evidence_for_host(
+    asset_id: uuid.UUID,
+    current_user: User = Depends(ReadDep),
+    session: AsyncSession = Depends(get_session),
+) -> HostEvidencePackage:
+    asset = await session.get(Asset, asset_id)
+    if asset is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Asset not found")
+
+    package = await build_host_evidence(session, asset, current_user.email)
+    await append_audit(
+        session,
+        action="evidence.exported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=str(asset_id),
+        payload={
+            "format": "json",
+            "changes": len(package.changes),
+            "cves": len(package.cve_findings),
+            "open_ports": len(package.current_open_ports),
+        },
+    )
+    await session.commit()
+    return package
+
+
+@router.get("/assets/{asset_id}/pdf")
+async def evidence_for_host_pdf(
+    asset_id: uuid.UUID,
+    current_user: User = Depends(ReadDep),
+    session: AsyncSession = Depends(get_session),
+) -> Response:
+    from ...core.evidence_pdf import render_host_evidence_pdf
+
+    asset = await session.get(Asset, asset_id)
+    if asset is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Asset not found")
+
+    package = await build_host_evidence(session, asset, current_user.email)
+    pdf_bytes = render_host_evidence_pdf(package)
+
+    await append_audit(
+        session,
+        action="evidence.exported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=str(asset_id),
+        payload={
+            "format": "pdf",
+            "changes": len(package.changes),
+            "cves": len(package.cve_findings),
+            "open_ports": len(package.current_open_ports),
+        },
+    )
+    await session.commit()
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="portwiz-evidence-host-{asset_id}.pdf"'
+        },
     )
 
 

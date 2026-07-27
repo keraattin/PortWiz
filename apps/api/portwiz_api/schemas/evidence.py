@@ -6,6 +6,7 @@ import datetime as dt
 
 from pydantic import BaseModel
 
+from .asset import AssetRead
 from .audit import ChainVerification
 from .change import ChangeEventRead
 from .cve import CVEFindingRead
@@ -29,4 +30,18 @@ class EvidencePackage(BaseModel):
     current_open_ports: list[OpenPort]
     cve_findings: list[CVEFindingRead]
     scan_runs: list[ScanRunRead]
+    changes: list[ChangeEventRead]
+
+
+class HostEvidencePackage(BaseModel):
+    """Evidence scoped to a single host (asset), rather than a scan profile:
+    its current confirmed-open exposure, known CVEs, and confirmed changes, plus
+    the same tamper-evidence integrity check over the audit log."""
+
+    generated_at: dt.datetime
+    generated_by: str
+    asset: AssetRead
+    chain_verification: ChainVerification
+    current_open_ports: list[OpenPort]
+    cve_findings: list[CVEFindingRead]
     changes: list[ChangeEventRead]

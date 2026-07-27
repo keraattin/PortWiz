@@ -166,6 +166,68 @@ async def test_evidence_unknown_profile_404(client, admin_headers) -> None:
     assert resp.status_code == 404
 
 
+async def test_host_evidence_package(client, admin_headers) -> None:
+    token = await _enroll(client, admin_headers, "he-agent")
+    profile = await _profile(client, admin_headers, "he-profile", "10.0.0.20", "22,80,443")
+    pid, ip = profile["id"], "10.0.0.20"
+    await _ingest(client, admin_headers, token, pid, ip, [22, 80])
+    await _ingest(client, admin_headers, token, pid, ip, [22, 80])
+    await _ingest(client, admin_headers, token, pid, ip, [22, 443])
+    await _ingest(client, admin_headers, token, pid, ip, [22, 443])
+
+    # The scanned host was auto-discovered as an asset.
+    assets = (await client.get("/api/v1/assets", headers=admin_headers)).json()
+    asset = next(a for a in assets if a["ip"] == ip)
+
+    resp = await client.get(f"/api/v1/evidence/assets/{asset['id']}", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    pkg = resp.json()
+    assert pkg["asset"]["ip"] == ip
+    assert pkg["chain_verification"]["ok"] is True
+    open_ports = {o["port"] for o in pkg["current_open_ports"]}
+    assert 22 in open_ports and 443 in open_ports and 80 not in open_ports
+    assert {c["change_type"] for c in pkg["changes"]} == {"opened", "closed"}
+    # Profile-scoped fields do not appear on the host package.
+    assert "profile" not in pkg and "scan_runs" not in pkg
+
+    audit = await client.get("/api/v1/audit?action=evidence.exported", headers=admin_headers)
+    assert audit.json()["total"] >= 1
+
+
+async def test_host_evidence_pdf(client, admin_headers) -> None:
+    created = await client.post(
+        "/api/v1/assets", json={"ip": "10.0.0.21"}, headers=admin_headers
+    )
+    resp = await client.get(
+        f"/api/v1/evidence/assets/{created.json()['id']}/pdf", headers=admin_headers
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.headers["content-type"] == "application/pdf"
+    assert resp.content[:4] == b"%PDF"
+
+
+async def test_host_evidence_unknown_asset_404(client, admin_headers) -> None:
+    resp = await client.get(
+        f"/api/v1/evidence/assets/{uuid.uuid4()}", headers=admin_headers
+    )
+    assert resp.status_code == 404
+
+
+async def test_host_evidence_rbac(client, admin_headers) -> None:
+    created = await client.post(
+        "/api/v1/assets", json={"ip": "10.0.0.22"}, headers=admin_headers
+    )
+    aid = created.json()["id"]
+    await client.post(
+        "/api/v1/users",
+        json={"email": "ophe@test.local", "password": "Secret123!", "role": "operator"},
+        headers=admin_headers,
+    )
+    operator_headers = await _login(client, "ophe@test.local", "Secret123!")
+    resp = await client.get(f"/api/v1/evidence/assets/{aid}", headers=operator_headers)
+    assert resp.status_code == 403
+
+
 async def test_evidence_pdf_export(client, admin_headers) -> None:
     profile = await _profile(client, admin_headers, "pdf-ev", "10.0.0.8", "22")
     resp = await client.get(
