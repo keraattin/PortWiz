@@ -86,6 +86,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "assetDetail.vulns": "Zafiyetler",
   "assetDetail.vulnsHint": "Bu sunucudaki servisler için bilinen CVE'ler.",
   "assetDetail.noVulns": "Bu sunucu için bilinen bir zafiyet kaydı yok.",
+  "assetDetail.evidence": "Kanıt",
+  "assetDetail.evidenceHint":
+    "Bu host için imzalı kanıt paketi indir: açık portlar, CVE'ler, değişiklikler ve denetim bütünlüğü.",
   "assetDetail.editTitle": "Varlığı düzenle",
   "assetDetail.descriptionLabel": "Açıklama",
   "assetDetail.descriptionHint": "Bu sunucu hakkında isteğe bağlı notlar: amaç, sahip ekip veya konum.",

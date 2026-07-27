@@ -11,6 +11,8 @@ import {
   type OpenPort,
   type Vlan,
   deleteAsset,
+  downloadHostEvidenceJson,
+  downloadHostEvidencePdf,
   fetchCVEFindings,
   getAsset,
   listChanges,
@@ -56,6 +58,7 @@ export default function AssetDetailPage() {
   const errorMessage = useErrorMessage();
   const toast = useToast();
   const canWrite = user?.role === "admin" || user?.role === "operator";
+  const canReadEvidence = user?.role === "admin" || user?.role === "auditor";
 
   const [asset, setAsset] = useState<Asset | null>(null);
   const [vlans, setVlans] = useState<Vlan[]>([]);
@@ -150,6 +153,16 @@ export default function AssetDetailPage() {
     }
   }
 
+  async function onDownloadEvidence(fmt: "json" | "pdf") {
+    if (!asset) return;
+    try {
+      if (fmt === "json") await downloadHostEvidenceJson(asset.id, asset.ip);
+      else await downloadHostEvidencePdf(asset.id, asset.ip);
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
+
   async function onChangeStatus(id: string, changeStatus: ChangeStatus) {
     try {
       const updated = await updateChangeStatus(id, changeStatus);
@@ -204,6 +217,25 @@ export default function AssetDetailPage() {
           {t("assetDetail.updated")}: {new Date(asset.updated_at).toLocaleString()}
         </p>
       </div>
+
+      {canReadEvidence && (
+        <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-slate-300">{t("assetDetail.evidence")}</p>
+              <p className="text-xs text-slate-600">{t("assetDetail.evidenceHint")}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => void onDownloadEvidence("json")}>
+                {t("compliance.downloadJson")}
+              </Button>
+              <Button variant="outline" onClick={() => void onDownloadEvidence("pdf")}>
+                {t("compliance.downloadPdf")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {canWrite ? (
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">

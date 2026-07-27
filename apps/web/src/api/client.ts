@@ -776,6 +776,18 @@ export async function downloadEvidencePdf(profileId: string, profileName: string
   triggerDownload(await res.blob(), `portwiz-evidence-${profileName}.pdf`);
 }
 
+export async function downloadHostEvidenceJson(assetId: string, label: string): Promise<void> {
+  const res = await authedFetch(`/evidence/assets/${assetId}`);
+  const data = await res.json();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  triggerDownload(blob, `portwiz-evidence-host-${label}.json`);
+}
+
+export async function downloadHostEvidencePdf(assetId: string, label: string): Promise<void> {
+  const res = await authedFetch(`/evidence/assets/${assetId}/pdf`);
+  triggerDownload(await res.blob(), `portwiz-evidence-host-${label}.pdf`);
+}
+
 export async function downloadAssetImportTemplate(): Promise<void> {
   const res = await authedFetch("/assets/import-template");
   triggerDownload(await res.blob(), "portwiz-assets-template.csv");

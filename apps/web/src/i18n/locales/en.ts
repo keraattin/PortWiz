@@ -86,6 +86,9 @@ export const en = {
   "assetDetail.vulns": "Vulnerabilities",
   "assetDetail.vulnsHint": "Known CVEs for the services exposed on this host.",
   "assetDetail.noVulns": "No known vulnerabilities recorded for this host.",
+  "assetDetail.evidence": "Evidence",
+  "assetDetail.evidenceHint":
+    "Download a signed evidence package for this host: open ports, CVEs, changes, and audit integrity.",
   "assetDetail.editTitle": "Edit asset",
   "assetDetail.descriptionLabel": "Description",
   "assetDetail.descriptionHint": "Optional notes about this host: purpose, owning team, or location.",

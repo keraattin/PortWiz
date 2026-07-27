@@ -86,6 +86,9 @@ export const pt: Partial<Record<TKey, string>> = {
   "assetDetail.vulns": "Vulnerabilidades",
   "assetDetail.vulnsHint": "CVEs conhecidas para os serviços expostos neste host.",
   "assetDetail.noVulns": "Nenhuma vulnerabilidade conhecida registrada para este host.",
+  "assetDetail.evidence": "Evidência",
+  "assetDetail.evidenceHint":
+    "Baixe um pacote de evidências assinado para este host: portas abertas, CVEs, alterações e integridade da auditoria.",
   "assetDetail.editTitle": "Editar ativo",
   "assetDetail.descriptionLabel": "Descrição",
   "assetDetail.descriptionHint": "Notas opcionais sobre este host: finalidade, equipe responsável ou local.",
