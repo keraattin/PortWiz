@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { type ChangeEvent, type ChangeType, type PortSnapshot } from "../api/client";
+import {
+  type ChangeEvent,
+  type ChangeStatus,
+  type ChangeType,
+  type PortSnapshot,
+} from "../api/client";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -42,9 +47,13 @@ function describe(snapshot: PortSnapshot, t: Translate): string {
 export default function ChangeTimeline({
   events,
   context = "port",
+  canWrite = false,
+  onStatusChange,
 }: {
   events: ChangeEvent[];
   context?: "port" | "host";
+  canWrite?: boolean;
+  onStatusChange?: (id: string, status: ChangeStatus) => void;
 }) {
   const { t } = useI18n();
   const [typeFilter, setTypeFilter] = useState("");
@@ -109,6 +118,24 @@ export default function ChangeTimeline({
                 {describe(e.before, t)} <span className="text-slate-600">→</span>{" "}
                 {describe(e.after, t)}
               </p>
+              {canWrite && onStatusChange && e.status !== "resolved" && (
+                <div className="mt-1 flex gap-3">
+                  {e.status !== "acknowledged" && (
+                    <button
+                      onClick={() => onStatusChange(e.id, "acknowledged")}
+                      className="text-xs text-amber-400 hover:text-amber-300"
+                    >
+                      {t("changes.acknowledge")}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onStatusChange(e.id, "resolved")}
+                    className="text-xs text-emerald-400 hover:text-emerald-300"
+                  >
+                    {t("changes.resolve")}
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ol>

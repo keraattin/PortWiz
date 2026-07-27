@@ -4,6 +4,7 @@ import {
   type Asset,
   type CVEFinding,
   type ChangeEvent,
+  type ChangeStatus,
   type Criticality,
   type CurrentUser,
   type DataSensitivity,
@@ -17,6 +18,7 @@ import {
   listUsers,
   listVlans,
   updateAsset,
+  updateChangeStatus,
 } from "../api/client";
 import ChangeTimeline from "../components/ChangeTimeline";
 import { inputClass } from "../components/formStyles";
@@ -143,6 +145,16 @@ export default function AssetDetailPage() {
       await deleteAsset(asset.id);
       toast.success(t("assets.deleted"));
       navigate("/assets");
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
+
+  async function onChangeStatus(id: string, changeStatus: ChangeStatus) {
+    try {
+      const updated = await updateChangeStatus(id, changeStatus);
+      setChanges((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      toast.success(t("changes.marked", { status: t(`changeStatus.${changeStatus}` as TKey) }));
     } catch (e) {
       toast.error(errorMessage(e));
     }
@@ -414,7 +426,12 @@ export default function AssetDetailPage() {
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
         <p className="text-sm font-medium text-slate-300">{t("timeline.title")}</p>
         <p className="mb-3 text-xs text-slate-600">{t("timeline.hint")}</p>
-        <ChangeTimeline events={changes} context="port" />
+        <ChangeTimeline
+          events={changes}
+          context="port"
+          canWrite={canWrite}
+          onStatusChange={onChangeStatus}
+        />
       </div>
     </div>
   );

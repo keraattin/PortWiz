@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { type ChangeEvent, type OpenPort, listChanges, listOpenPorts } from "../api/client";
+import {
+  type ChangeEvent,
+  type ChangeStatus,
+  type OpenPort,
+  listChanges,
+  listOpenPorts,
+  updateChangeStatus,
+} from "../api/client";
 import { portInfo } from "../data/portInfo";
 import { useErrorMessage } from "../i18n/useErrorMessage";
+import { useAuth } from "../auth/AuthContext";
 import ChangeTimeline from "../components/ChangeTimeline";
 import EmptyState from "../components/EmptyState";
+import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -19,7 +28,10 @@ export default function PortDetailPage() {
   const { port: portParam = "" } = useParams();
   const port = Number.parseInt(portParam, 10);
   const { t } = useI18n();
+  const { user } = useAuth();
+  const toast = useToast();
   const errorMessage = useErrorMessage();
+  const canWrite = user?.role === "admin" || user?.role === "operator";
   const [rows, setRows] = useState<OpenPort[]>([]);
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +57,16 @@ export default function PortDetailPage() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [port]);
+
+  async function onChangeStatus(id: string, changeStatus: ChangeStatus) {
+    try {
+      const updated = await updateChangeStatus(id, changeStatus);
+      setChanges((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      toast.success(t("changes.marked", { status: t(`changeStatus.${changeStatus}` as TKey) }));
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
 
   const info = portInfo(port);
   // Fall back to a service name observed on the wire when the port is not in the
@@ -150,7 +172,12 @@ export default function PortDetailPage() {
       <div>
         <p className="text-sm font-medium text-slate-300">{t("timeline.title")}</p>
         <p className="mb-3 text-xs text-slate-600">{t("timeline.hint")}</p>
-        <ChangeTimeline events={changes} context="host" />
+        <ChangeTimeline
+          events={changes}
+          context="host"
+          canWrite={canWrite}
+          onStatusChange={onChangeStatus}
+        />
       </div>
     </div>
   );
