@@ -111,7 +111,7 @@ async def _with_status(agents: list[Agent], session: AsyncSession) -> list[Agent
 
 @router.get("", response_model=list[AgentRead])
 async def list_agents(
-    _: User = Depends(require_roles(UserRole.admin, UserRole.auditor)),
+    _: User = Depends(require_roles(UserRole.admin, UserRole.operator, UserRole.auditor)),
     session: AsyncSession = Depends(get_session),
 ) -> list[AgentRead]:
     agents = list((await session.execute(select(Agent).order_by(Agent.name))).scalars().all())
@@ -120,7 +120,7 @@ async def list_agents(
 
 @router.get("/fleet", response_model=FleetSummaryRead)
 async def get_fleet(
-    _: User = Depends(require_roles(UserRole.admin, UserRole.auditor)),
+    _: User = Depends(require_roles(UserRole.admin, UserRole.operator, UserRole.auditor)),
     session: AsyncSession = Depends(get_session),
 ) -> FleetSummaryRead:
     """Fleet-wide health plus per-segment coverage. Highlights coverage gaps:
@@ -336,7 +336,7 @@ async def poll_job(
 @router.get("/{agent_id}", response_model=AgentRead)
 async def get_agent(
     agent_id: uuid.UUID,
-    _: User = Depends(require_roles(UserRole.admin, UserRole.auditor)),
+    _: User = Depends(require_roles(UserRole.admin, UserRole.operator, UserRole.auditor)),
     session: AsyncSession = Depends(get_session),
 ) -> AgentRead:
     agent = await session.get(Agent, agent_id)

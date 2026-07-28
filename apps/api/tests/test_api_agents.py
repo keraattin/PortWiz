@@ -167,6 +167,35 @@ async def test_rotate_token_requires_admin(client, admin_headers) -> None:
     assert resp.status_code == 403
 
 
+async def test_operator_can_read_but_not_manage_agents(client, admin_headers) -> None:
+    # Operators can now view agents (the menu is visible to them) and read the
+    # user list (asset owner resolution), but enroll/rotate stay admin-only.
+    aid = (
+        await client.post("/api/v1/agents", json={"name": "op-view"}, headers=admin_headers)
+    ).json()["id"]
+    await client.post(
+        "/api/v1/users",
+        json={"email": "op@test.local", "password": "Secret123!", "role": "operator"},
+        headers=admin_headers,
+    )
+    login = await client.post(
+        "/api/v1/auth/login", data={"username": "op@test.local", "password": "Secret123!"}
+    )
+    op = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    assert (await client.get("/api/v1/agents", headers=op)).status_code == 200
+    assert (await client.get(f"/api/v1/agents/{aid}", headers=op)).status_code == 200
+    assert (await client.get("/api/v1/agents/fleet", headers=op)).status_code == 200
+    assert (await client.get("/api/v1/users", headers=op)).status_code == 200
+    # Write actions stay admin-only.
+    assert (
+        await client.post("/api/v1/agents", json={"name": "nope"}, headers=op)
+    ).status_code == 403
+    assert (
+        await client.post(f"/api/v1/agents/{aid}/rotate-token", headers=op)
+    ).status_code == 403
+
+
 async def test_heartbeat_with_agent_token(client, admin_headers) -> None:
     token = await _enroll_agent(client, admin_headers, "hb-agent")
     resp = await client.post(

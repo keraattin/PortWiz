@@ -42,7 +42,7 @@ const SECTIONS: Section[] = [
     tabs: [
       { to: "/scans", labelKey: "nav.scans" },
       { to: "/ports", labelKey: "nav.ports" },
-      { to: "/agents", labelKey: "nav.agents", roles: ["admin", "auditor"] },
+      { to: "/agents", labelKey: "nav.agents" },
     ],
   },
   {
@@ -62,9 +62,9 @@ const SECTIONS: Section[] = [
   {
     labelKey: "nav.admin",
     icon: "admin",
-    roles: ["admin", "auditor"],
+    roles: ["admin"],
     tabs: [
-      { to: "/users", labelKey: "nav.users", roles: ["admin", "auditor"] },
+      { to: "/users", labelKey: "nav.users" },
       { to: "/settings", labelKey: "nav.settings" },
     ],
   },
