@@ -88,3 +88,25 @@ async def test_get_user_by_id(client, admin_headers) -> None:
     await _make_user(client, admin_headers, "op2@test.local", role="operator")
     op = await _login(client, "op2@test.local")
     assert (await client.get(f"/api/v1/users/{user['id']}", headers=op)).status_code == 403
+
+
+async def test_update_user_audit_records_old_and_new(client, admin_headers) -> None:
+    user = await _make_user(client, admin_headers, "audited@test.local", role="operator")
+    resp = await client.patch(
+        f"/api/v1/users/{user['id']}",
+        json={"role": "auditor"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+
+    audit = await client.get(
+        "/api/v1/audit",
+        params={"action": "user.updated", "target_id": user["id"]},
+        headers=admin_headers,
+    )
+    assert audit.status_code == 200, audit.text
+    events = audit.json()["events"]
+    assert events, "expected a user.updated audit event"
+    payload = events[0]["payload"]
+    assert payload["email"] == "audited@test.local"
+    assert payload["changes"]["role"] == {"old": "operator", "new": "auditor"}

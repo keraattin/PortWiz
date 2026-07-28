@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...core.audit import append_audit
+from ...core.audit import append_audit, field_diff
 from ...core.db import get_session
 from ...core.security import hash_password
 from ...models.user import User, UserRole
@@ -103,6 +103,7 @@ async def update_user(
                 status.HTTP_400_BAD_REQUEST, "You cannot deactivate your own account."
             )
 
+    before = {key: getattr(user, key) for key in changes}
     for key, value in changes.items():
         setattr(user, key, value)
     await append_audit(
@@ -112,7 +113,7 @@ async def update_user(
         actor_email=current_user.email,
         target_type="user",
         target_id=str(user.id),
-        payload={"changes": list(changes.keys())},
+        payload={"email": user.email, "changes": field_diff(before, changes)},
     )
     await session.commit()
     await session.refresh(user)

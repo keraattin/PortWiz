@@ -206,6 +206,7 @@ async def evidence_for_host(
         target_type="asset",
         target_id=str(asset_id),
         payload={
+            "host": asset.hostname or asset.ip,
             "format": "json",
             "changes": len(package.changes),
             "cves": len(package.cve_findings),
@@ -239,6 +240,7 @@ async def evidence_for_host_pdf(
         target_type="asset",
         target_id=str(asset_id),
         payload={
+            "host": asset.hostname or asset.ip,
             "format": "pdf",
             "changes": len(package.changes),
             "cves": len(package.cve_findings),
@@ -277,6 +279,7 @@ async def evidence_for_profile(
         target_type="scan_profile",
         target_id=str(profile_id),
         payload={
+            "profile": profile.name,
             "format": "json",
             "runs": len(package.scan_runs),
             "changes": len(package.changes),
@@ -311,6 +314,7 @@ async def evidence_for_profile_pdf(
         target_type="scan_profile",
         target_id=str(profile_id),
         payload={
+            "profile": profile.name,
             "format": "pdf",
             "runs": len(package.scan_runs),
             "changes": len(package.changes),

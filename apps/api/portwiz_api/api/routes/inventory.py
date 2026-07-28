@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.asset_import import parse_asset_file
 from ...core.asset_store import upsert_asset
-from ...core.audit import append_audit
+from ...core.audit import append_audit, field_diff
 from ...core.db import get_session
 from ...core.inventory_source import (
     InventorySource,
@@ -287,6 +287,7 @@ async def update_vlan(
     if vlan is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "VLAN not found")
     changes = payload.model_dump(exclude_unset=True)
+    before = {key: getattr(vlan, key) for key in changes}
     for key, value in changes.items():
         setattr(vlan, key, value)
     await append_audit(
@@ -296,7 +297,7 @@ async def update_vlan(
         actor_email=current_user.email,
         target_type="vlan",
         target_id=str(vlan.id),
-        payload={"changes": list(changes.keys())},
+        payload={"vlan": vlan.name, "changes": field_diff(before, changes)},
     )
     await session.commit()
     await session.refresh(vlan)
@@ -377,6 +378,7 @@ async def update_ip_range(
     if "vlan_id" in changes and changes["vlan_id"] is not None:
         if await session.get(VLAN, changes["vlan_id"]) is None:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced VLAN does not exist")
+    before = {key: getattr(ip_range, key) for key in changes}
     for key, value in changes.items():
         setattr(ip_range, key, value)
     await append_audit(
@@ -386,7 +388,7 @@ async def update_ip_range(
         actor_email=current_user.email,
         target_type="ip_range",
         target_id=str(ip_range.id),
-        payload={"changes": list(changes.keys())},
+        payload={"cidr": ip_range.cidr, "changes": field_diff(before, changes)},
     )
     await session.commit()
     await session.refresh(ip_range)
@@ -784,6 +786,7 @@ async def update_asset(
         changes.get("vlan_id") if "vlan_id" in changes else None,
         changes.get("owner_id") if "owner_id" in changes else None,
     )
+    before = {key: getattr(asset, key) for key in changes}
     for key, value in changes.items():
         setattr(asset, key, value)
     asset.updated_at = _utcnow()
@@ -794,7 +797,7 @@ async def update_asset(
         actor_email=current_user.email,
         target_type="asset",
         target_id=str(asset.id),
-        payload={"changes": list(changes.keys())},
+        payload={"ip": asset.ip, "changes": field_diff(before, changes)},
     )
     await session.commit()
     await session.refresh(asset)

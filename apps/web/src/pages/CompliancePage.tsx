@@ -76,6 +76,41 @@ function humanizeAction(action: string): string {
     .join(" ");
 }
 
+function fmtVal(v: unknown): string {
+  if (v === null || v === undefined) return "none";
+  if (typeof v === "boolean") return v ? "true" : "false";
+  return String(v);
+}
+
+function isOldNew(v: unknown): v is { old?: unknown; new?: unknown } {
+  return typeof v === "object" && v !== null && ("old" in v || "new" in v);
+}
+
+// A readable summary of an audit event's payload: the subject and what changed
+// (old -> new where the backend records it), falling back to the raw target
+// reference when there is no payload. Powers the audit log's detail column.
+function formatAuditDetails(e: AuditEvent): string {
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(e.payload ?? {})) {
+    if (v === null || v === undefined) continue;
+    if (Array.isArray(v)) {
+      if (v.length) parts.push(`${k}: ${v.map(fmtVal).join(", ")}`);
+    } else if (isOldNew(v)) {
+      parts.push(`${k}: ${fmtVal(v.old)} → ${fmtVal(v.new)}`);
+    } else if (typeof v === "object") {
+      for (const [fk, fv] of Object.entries(v as Record<string, unknown>)) {
+        if (isOldNew(fv)) parts.push(`${fk}: ${fmtVal(fv.old)} → ${fmtVal(fv.new)}`);
+        else parts.push(`${fk}: ${fmtVal(fv)}`);
+      }
+    } else {
+      parts.push(`${k}: ${fmtVal(v)}`);
+    }
+  }
+  const summary = parts.join(" · ");
+  if (summary) return summary;
+  return e.target_type ? `${e.target_type}:${(e.target_id ?? "").slice(0, 8)}` : "";
+}
+
 export default function CompliancePage() {
   const { t } = useI18n();
   const errorMessage = useErrorMessage();
@@ -160,7 +195,7 @@ export default function CompliancePage() {
       key: "target",
       label: t("compliance.col.target"),
       filter: "text",
-      get: (e) => (e.target_type ? `${e.target_type}:${e.target_id ?? ""}` : ""),
+      get: (e) => formatAuditDetails(e),
     },
   ];
   const processedAudit = processRows(events, auditColumns, auditSort, auditFilters, auditSearch);
@@ -478,7 +513,7 @@ export default function CompliancePage() {
                       {actionLabel(e.action)}
                     </td>
                     <td className="px-4 py-2 text-xs text-slate-400">
-                      {e.target_type ? `${e.target_type}:${(e.target_id ?? "").slice(0, 8)}` : "-"}
+                      {formatAuditDetails(e) || "-"}
                     </td>
                   </tr>
                 ))

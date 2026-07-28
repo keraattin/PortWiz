@@ -34,6 +34,28 @@ def canonical_payload(payload: dict[str, Any]) -> str:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
 
 
+def audit_value(value: Any) -> Any:
+    """A JSON-safe scalar for audit payloads: enum -> its value, UUID -> str,
+    everything else unchanged. Used to record readable old/new values."""
+    if value is None:
+        return None
+    if hasattr(value, "value"):  # enum
+        return value.value
+    if isinstance(value, uuid.UUID):
+        return str(value)
+    return value
+
+
+def field_diff(before: dict[str, Any], after: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Build a ``{field: {"old": ..., "new": ...}}`` map for the changed fields,
+    so an audit entry records what a value became, not just which key changed.
+    Never pass secret fields through this; log only which secret keys changed."""
+    return {
+        key: {"old": audit_value(before.get(key)), "new": audit_value(after[key])}
+        for key in after
+    }
+
+
 def compute_event_hash(
     *,
     prev_hash: str,

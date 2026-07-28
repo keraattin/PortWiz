@@ -74,6 +74,7 @@ async def update_change_status(
     change = await session.get(ChangeEvent, change_id)
     if change is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Change event not found")
+    old_status = change.status
     change.status = payload.status
     await append_audit(
         session,
@@ -82,7 +83,10 @@ async def update_change_status(
         actor_email=current_user.email,
         target_type="change_event",
         target_id=str(change.id),
-        payload={"status": payload.status},
+        payload={
+            "target": f"{change.ip}:{change.port}/{change.protocol}",
+            "status": {"old": old_status, "new": payload.status},
+        },
     )
     await session.commit()
     await session.refresh(change)
