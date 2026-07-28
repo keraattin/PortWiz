@@ -61,16 +61,29 @@ function ChartCard({
   title,
   hint,
   empty,
+  to,
   children,
 }: {
   title: string;
   hint?: string;
   empty?: boolean;
+  // When set, the whole card is a shortcut to this route. (Charts with their own
+  // per-mark navigation, like the ports bars, leave this unset to avoid clashing.)
+  to?: string;
   children: React.ReactNode;
 }) {
   const { t } = useI18n();
+  const navigate = useNavigate();
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+    <div
+      onClick={to ? () => navigate(to) : undefined}
+      onKeyDown={to ? (e) => (e.key === "Enter" ? navigate(to) : undefined) : undefined}
+      role={to ? "link" : undefined}
+      tabIndex={to ? 0 : undefined}
+      className={`rounded-xl border border-slate-800 bg-slate-900 p-5 ${
+        to ? "cursor-pointer transition-colors hover:border-slate-700 hover:bg-slate-800/40" : ""
+      }`}
+    >
       <h3 className="text-sm font-medium text-slate-300">{title}</h3>
       {hint && <p className="mt-0.5 text-xs text-slate-600">{hint}</p>}
       <div className="mt-3">
@@ -179,6 +192,7 @@ export default function DashboardCharts({ data }: { data: Charts }) {
       <ChartCard
         title={t("trends.changes30d")}
         hint={t("trends.changes30dHint")}
+        to="/changes"
         empty={total(data.changes_by_day.map((p) => ({ name: p.date, value: p.count }))) === 0}
       >
         <ResponsiveContainer width="100%" height={240}>
@@ -219,16 +233,25 @@ export default function DashboardCharts({ data }: { data: Charts }) {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ChartCard
           title={t("trends.assetsByCriticality")}
+          to="/assets"
           empty={total(data.assets_by_criticality) === 0}
         >
           <Donut data={data.assets_by_criticality} colors={CRIT_COLORS} />
         </ChartCard>
 
-        <ChartCard title={t("trends.runsByStatus")} empty={total(data.runs_by_status) === 0}>
+        <ChartCard
+          title={t("trends.runsByStatus")}
+          to="/scans"
+          empty={total(data.runs_by_status) === 0}
+        >
           <CountBars data={data.runs_by_status} />
         </ChartCard>
 
-        <ChartCard title={t("trends.changesByType")} empty={total(data.changes_by_type) === 0}>
+        <ChartCard
+          title={t("trends.changesByType")}
+          to="/changes"
+          empty={total(data.changes_by_type) === 0}
+        >
           <CountBars data={data.changes_by_type} />
         </ChartCard>
 
