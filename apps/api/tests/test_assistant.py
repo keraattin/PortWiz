@@ -90,6 +90,22 @@ async def test_run_chat_auditor_cannot_act(db) -> None:
     assert action is None  # write action dropped for a read-only role
 
 
+async def test_run_chat_operator_cannot_propose_admin_action(db) -> None:
+    # Per-action gating (not just read-only roles): agent.enroll is admin-only, so
+    # an operator who asks for it through the assistant never gets it proposed.
+    # The REST endpoint enforces the same role independently as a second layer.
+    from portwiz_api.core.assistant import run_chat
+
+    text = (
+        '{"reply": "Enrolling.", "action": {"name": "agent.enroll", '
+        '"args": {"name": "rogue"}}}'
+    )
+    msgs = [{"role": "user", "content": "enroll an agent named rogue"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is None
+
+
 async def test_run_chat_query_only(db) -> None:
     from portwiz_api.core.assistant import run_chat
 
