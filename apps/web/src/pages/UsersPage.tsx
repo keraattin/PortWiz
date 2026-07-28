@@ -1,10 +1,10 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   type CurrentUser,
   type Role,
   createUser,
   listUsers,
-  updateUser,
 } from "../api/client";
 import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
@@ -33,6 +33,7 @@ const labelClass = "block text-sm text-slate-300";
 
 export default function UsersPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const toast = useToast();
   const { t } = useI18n();
   const errorMessage = useErrorMessage();
@@ -77,13 +78,6 @@ export default function UsersPage() {
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<Role>("operator");
 
-  const [editUser, setEditUser] = useState<CurrentUser | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editRole, setEditRole] = useState<Role>("operator");
-  const [editActive, setEditActive] = useState(true);
-
-  const editingSelf = editUser?.id === user?.id;
-
   async function reload() {
     setLoading(true);
     try {
@@ -108,13 +102,8 @@ export default function UsersPage() {
     setAddOpen(true);
   }
 
-  function openEdit(u: CurrentUser) {
-    if (!isAdmin) return;
-    setError(null);
-    setEditUser(u);
-    setEditName(u.full_name ?? "");
-    setEditRole(u.role as Role);
-    setEditActive(u.is_active);
+  function openDetail(u: CurrentUser) {
+    if (isAdmin) navigate(`/users/${u.id}`);
   }
 
   async function onCreate(e: FormEvent) {
@@ -124,24 +113,6 @@ export default function UsersPage() {
       await createUser({ email, password, full_name: fullName || null, role });
       setAddOpen(false);
       toast.success(t("users.created"));
-      await reload();
-    } catch (e) {
-      setError(errorMessage(e));
-    }
-  }
-
-  async function onSave(e: FormEvent) {
-    e.preventDefault();
-    if (!editUser) return;
-    setError(null);
-    try {
-      await updateUser(editUser.id, {
-        full_name: editName || null,
-        role: editRole,
-        is_active: editActive,
-      });
-      setEditUser(null);
-      toast.success(t("users.updated"));
       await reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -167,9 +138,7 @@ export default function UsersPage() {
         }
       />
 
-      {error && !addOpen && editUser === null && (
-        <p className="text-sm text-red-400">{error}</p>
-      )}
+      {error && !addOpen && <p className="text-sm text-red-400">{error}</p>}
 
       <div className="flex justify-end">
         <SearchInput value={search} onChange={setSearch} />
@@ -207,13 +176,13 @@ export default function UsersPage() {
               usersPage.slice.map((u) => (
                 <tr
                   key={u.id}
-                  onClick={() => openEdit(u)}
+                  onClick={() => openDetail(u)}
                   onKeyDown={
                     isAdmin
                       ? (e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            openEdit(u);
+                            openDetail(u);
                           }
                         }
                       : undefined
@@ -313,55 +282,6 @@ export default function UsersPage() {
         </form>
       </Modal>
 
-      <Modal
-        open={editUser !== null}
-        onClose={() => setEditUser(null)}
-        title={t("users.editTitle", { email: editUser?.email ?? "" })}
-      >
-        <form onSubmit={onSave} className="space-y-3">
-          <div>
-            <label className={labelClass}>{t("users.f.fullNameEdit")}</label>
-            <input
-              className={inputClass}
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>{t("users.f.role")}</label>
-            <select
-              className={inputClass}
-              value={editRole}
-              onChange={(e) => setEditRole(e.target.value as Role)}
-              disabled={editingSelf}
-            >
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {t(`role.${r}` as TKey)}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-slate-500">{t(`roleHint.${editRole}` as TKey)}</p>
-          </div>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={editActive}
-              onChange={(e) => setEditActive(e.target.checked)}
-              disabled={editingSelf}
-            />
-            {t("users.f.active")}
-          </label>
-          {editingSelf && <p className="text-xs text-amber-400">{t("users.cannotEditSelf")}</p>}
-          <RoleMatrix />
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          <div className="flex justify-end">
-            <Button type="submit">
-              {t("users.saveChanges")}
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 }

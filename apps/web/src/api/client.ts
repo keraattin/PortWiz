@@ -187,6 +187,10 @@ export interface UserUpdateInput {
   is_active?: boolean;
 }
 
+export function getUser(id: string): Promise<CurrentUser> {
+  return request<CurrentUser>(`/users/${id}`);
+}
+
 export function updateUser(id: string, payload: UserUpdateInput): Promise<CurrentUser> {
   return request<CurrentUser>(`/users/${id}`, {
     method: "PATCH",

@@ -70,3 +70,21 @@ async def test_update_missing_user_404(client, admin_headers) -> None:
         f"/api/v1/users/{uuid.uuid4()}", json={"role": "auditor"}, headers=admin_headers
     )
     assert resp.status_code == 404
+
+
+async def test_get_user_by_id(client, admin_headers) -> None:
+    import uuid
+
+    user = await _make_user(client, admin_headers, "detail@test.local", role="auditor")
+    got = await client.get(f"/api/v1/users/{user['id']}", headers=admin_headers)
+    assert got.status_code == 200, got.text
+    assert got.json()["email"] == "detail@test.local"
+    assert got.json()["role"] == "auditor"
+
+    # Unknown id is a clean 404; the endpoint is admin-only.
+    assert (
+        await client.get(f"/api/v1/users/{uuid.uuid4()}", headers=admin_headers)
+    ).status_code == 404
+    await _make_user(client, admin_headers, "op2@test.local", role="operator")
+    op = await _login(client, "op2@test.local")
+    assert (await client.get(f"/api/v1/users/{user['id']}", headers=op)).status_code == 403

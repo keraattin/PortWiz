@@ -57,11 +57,26 @@ async def create_user(
 
 @router.get("", response_model=list[UserRead])
 async def list_users(
-    _: User = Depends(require_roles(UserRole.admin, UserRole.auditor)),
+    # All roles may read the user list (operators/auditors need owner names to
+    # resolve asset ownership); only admins may create/update/delete users, and
+    # the Users menu itself is admin-only in the UI.
+    _: User = Depends(require_roles(UserRole.admin, UserRole.operator, UserRole.auditor)),
     session: AsyncSession = Depends(get_session),
 ) -> list[User]:
     result = await session.execute(select(User).order_by(User.created_at))
     return list(result.scalars().all())
+
+
+@router.get("/{user_id}", response_model=UserRead)
+async def get_user(
+    user_id: uuid.UUID,
+    _: User = Depends(require_roles(UserRole.admin)),
+    session: AsyncSession = Depends(get_session),
+) -> User:
+    user = await session.get(User, user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    return user
 
 
 @router.patch("/{user_id}", response_model=UserRead)
