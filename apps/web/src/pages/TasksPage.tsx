@@ -68,7 +68,7 @@ export default function TasksPage() {
     try {
       setUsers(await listUsers());
     } catch {
-      // Listing users requires admin/auditor; operators just see no names.
+      // Best-effort: if the user list can't be read, assignee names just show blank.
     }
   }
 
@@ -85,6 +85,7 @@ export default function TasksPage() {
     {
       key: "status",
       label: t("tasks.col.status"),
+      filter: STATUSES.map((s) => ({ value: s, label: t(`taskStatus.${s}` as TKey) })),
       get: (task) => task.status,
       rank: STATUS_RANK,
     },
