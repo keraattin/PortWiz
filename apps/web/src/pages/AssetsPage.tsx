@@ -85,6 +85,9 @@ export default function AssetsPage() {
   const [pushError, setPushError] = useState<string | null>(null);
   const [pushing, setPushing] = useState(false);
   const [netboxOn, setNetboxOn] = useState(false);
+  // Asset import can be turned off in Settings independently of NetBox being
+  // connected (which still allows pushing discovered hosts back).
+  const [assetImportOn, setAssetImportOn] = useState(false);
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
   const [search, setSearch] = useState("");
@@ -107,7 +110,10 @@ export default function AssetsPage() {
     void reload();
     // NetBox sync/push only work once NetBox is connected in Settings.
     fetchSettings()
-      .then((s) => setNetboxOn(s.netbox_configured))
+      .then((s) => {
+        setNetboxOn(s.netbox_configured);
+        setAssetImportOn(s.netbox_import_assets);
+      })
       .catch(() => {
         /* leave NetBox actions disabled if status can't be read */
       });
@@ -328,7 +334,14 @@ export default function AssetsPage() {
             <span className="text-xs text-slate-500">{t("assets.syncHint")}</span>
           </div>
           {!netboxOn && <p className="text-xs text-amber-400">{t("assets.netboxOff")}</p>}
-          <Button variant="outline" onClick={onSync} disabled={syncing || !netboxOn}>
+          {netboxOn && !assetImportOn && (
+            <p className="text-xs text-amber-400">{t("assets.importOff")}</p>
+          )}
+          <Button
+            variant="outline"
+            onClick={onSync}
+            disabled={syncing || !netboxOn || !assetImportOn}
+          >
             {syncing ? t("assets.syncing") : t("assets.syncTitle")}
           </Button>
           {syncError && <p className="text-sm text-red-400">{syncError}</p>}

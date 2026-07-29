@@ -43,6 +43,8 @@ class SettingsStatus(BaseModel):
     netbox_enabled: bool
     netbox_url: str | None
     netbox_configured: bool
+    netbox_import_assets: bool
+    netbox_import_vlans: bool
 
     # CVE enrichment
     cve_enabled: bool
@@ -151,6 +153,10 @@ class SettingsConfig(BaseModel):
     netbox_enabled: bool
     netbox_url: str | None
     netbox_writeback_enabled: bool
+    netbox_import_assets: bool
+    netbox_import_vlans: bool
+    netbox_import_hostnames: bool
+    netbox_import_descriptions: bool
     netbox_token_set: bool
 
     cve_enabled: bool
@@ -236,6 +242,10 @@ class SettingsConfigUpdate(BaseModel):
     netbox_url: str | None = None
     netbox_token: str | None = None
     netbox_writeback_enabled: bool | None = None
+    netbox_import_assets: bool | None = None
+    netbox_import_vlans: bool | None = None
+    netbox_import_hostnames: bool | None = None
+    netbox_import_descriptions: bool | None = None
 
     cve_enabled: bool | None = None
     cve_source: str | None = None

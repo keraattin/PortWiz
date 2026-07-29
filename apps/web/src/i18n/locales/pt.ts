@@ -535,6 +535,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "assets.row": "Linha",
   "assets.syncTitle": "Sincronizar do NetBox",
   "assets.netboxOff": "Conecte o NetBox nas Configurações para ativar a sincronização.",
+  "assets.importOff": "A importação de ativos está desativada nas Configurações.",
   "assets.syncHint":
     "Obtém hosts do seu NetBox configurado e os insere/atualiza por IP.",
   "assets.syncing": "Sincronizando…",
@@ -578,6 +579,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "vlans.bulkImportHint": 'CSV ou .xlsx com uma coluna "name". Opcional: tag, description.',
   "vlans.syncTitle": "Sincronizar do NetBox",
   "vlans.syncHint": "Obtém as VLANs do seu NetBox configurado e as insere/atualiza por nome.",
+  "vlans.importOff": "A importação de VLANs está desativada nas Configurações.",
   "vlans.syncing": "Sincronizando…",
   "vlans.unit": "VLANs",
   "vlans.col.name": "Nome",
@@ -1311,6 +1313,12 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.netbox.writeback": "Escrever hosts descobertos automaticamente após cada varredura",
   "settings.netbox.writebackHint":
     "Quando ativado, cada varredura escreve seus hosts recém-descobertos de volta no NetBox. Desativado por padrão; caso contrário, use o botão manual na página Ativos.",
+  "settings.netbox.importScope": "Escopo da importação",
+  "settings.netbox.importScopeHint": "Escolha o que uma sincronização do NetBox traz. Desative um campo para manter seus próprios valores em vez dos do NetBox.",
+  "settings.netbox.importAssets": "Importar ativos (hosts)",
+  "settings.netbox.importVlans": "Importar VLANs",
+  "settings.netbox.importHostnames": "Importar nomes de host",
+  "settings.netbox.importDescriptions": "Importar descrições",
 
   // Assistant
   "assistant.providerUnavailable":

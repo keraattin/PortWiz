@@ -535,6 +535,7 @@ export const de: Partial<Record<TKey, string>> = {
   "assets.row": "Zeile",
   "assets.syncTitle": "Aus NetBox synchronisieren",
   "assets.netboxOff": "Verbinde NetBox in den Einstellungen, um die Synchronisierung zu aktivieren.",
+  "assets.importOff": "Der Asset-Import ist in den Einstellungen deaktiviert.",
   "assets.syncHint":
     "Holt Hosts aus Ihrem konfigurierten NetBox und legt sie anhand der IP an oder aktualisiert sie.",
   "assets.syncing": "Wird synchronisiert…",
@@ -578,6 +579,7 @@ export const de: Partial<Record<TKey, string>> = {
   "vlans.bulkImportHint": 'CSV oder .xlsx mit einer Spalte "name". Optional: tag, description.',
   "vlans.syncTitle": "Aus NetBox synchronisieren",
   "vlans.syncHint": "Holt VLANs aus Ihrem konfigurierten NetBox und legt sie per Name an bzw. aktualisiert sie.",
+  "vlans.importOff": "Der VLAN-Import ist in den Einstellungen deaktiviert.",
   "vlans.syncing": "Wird synchronisiert…",
   "vlans.unit": "VLANs",
   "vlans.col.name": "Name",
@@ -1311,6 +1313,12 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.netbox.writeback": "Erkannte Hosts nach jedem Scan automatisch schreiben",
   "settings.netbox.writebackHint":
     "Wenn aktiviert, schreibt jeder Scan seine neu erkannten Hosts zurück nach NetBox. Standardmäßig aus; nutzen Sie sonst die manuelle Schaltfläche auf der Assets-Seite.",
+  "settings.netbox.importScope": "Importumfang",
+  "settings.netbox.importScopeHint": "Wählen Sie, was eine NetBox-Synchronisierung übernimmt. Deaktivieren Sie ein Feld, um Ihre eigenen Werte statt der von NetBox zu behalten.",
+  "settings.netbox.importAssets": "Assets (Hosts) importieren",
+  "settings.netbox.importVlans": "VLANs importieren",
+  "settings.netbox.importHostnames": "Hostnamen importieren",
+  "settings.netbox.importDescriptions": "Beschreibungen importieren",
 
   // Assistant
   "assistant.providerUnavailable":

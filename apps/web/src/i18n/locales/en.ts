@@ -533,6 +533,7 @@ export const en = {
   "assets.row": "Row",
   "assets.syncTitle": "Sync from NetBox",
   "assets.netboxOff": "Connect NetBox in Settings to enable sync.",
+  "assets.importOff": "Asset import is turned off in Settings.",
   "assets.syncHint": "Pulls hosts from your configured NetBox and upserts them by IP.",
   "assets.syncing": "Syncing…",
   "assets.hosts": "hosts",
@@ -573,6 +574,7 @@ export const en = {
   "vlans.bulkImportHint": 'CSV or .xlsx with a "name" column. Optional: tag, description.',
   "vlans.syncTitle": "Sync from NetBox",
   "vlans.syncHint": "Pulls VLANs from your configured NetBox and upserts them by name.",
+  "vlans.importOff": "VLAN import is turned off in Settings.",
   "vlans.syncing": "Syncing…",
   "vlans.unit": "VLANs",
   "vlans.col.name": "Name",
@@ -1303,6 +1305,13 @@ export const en = {
   "settings.netbox.writeback": "Auto-write discovered hosts after each scan",
   "settings.netbox.writebackHint":
     "When on, each scan writes its newly discovered hosts back to NetBox. Off by default; otherwise use the manual button on the Assets page.",
+  "settings.netbox.importScope": "Import scope",
+  "settings.netbox.importScopeHint":
+    "Choose what a NetBox sync pulls in. Turn off a field to keep your own values instead of NetBox's.",
+  "settings.netbox.importAssets": "Import assets (hosts)",
+  "settings.netbox.importVlans": "Import VLANs",
+  "settings.netbox.importHostnames": "Import hostnames",
+  "settings.netbox.importDescriptions": "Import descriptions",
 
   // Assistant
   "assistant.providerUnavailable":

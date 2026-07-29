@@ -113,3 +113,31 @@ async def test_sync_is_audited(client, admin_headers) -> None:
     await client.post("/api/v1/assets/sync", headers=admin_headers)
     audit = (await client.get("/api/v1/audit", headers=admin_headers)).json()
     assert any(e["action"] == "asset.synced" for e in audit["events"])
+
+
+async def test_sync_assets_disabled_returns_400(client, admin_headers) -> None:
+    _use_source([_src("10.0.0.5", hostname="web01")])
+    await client.patch(
+        "/api/v1/settings/config",
+        json={"netbox_import_assets": False},
+        headers=admin_headers,
+    )
+    resp = await client.post("/api/v1/assets/sync", headers=admin_headers)
+    assert resp.status_code == 400
+    assert "disabled" in resp.json()["detail"].lower()
+
+
+async def test_sync_skips_hostname_when_disabled(client, admin_headers) -> None:
+    # A team that owns hostnames locally can pull IPs from NetBox without letting
+    # it overwrite their hostnames, while still importing descriptions.
+    await client.patch(
+        "/api/v1/settings/config",
+        json={"netbox_import_hostnames": False},
+        headers=admin_headers,
+    )
+    _use_source([_src("10.0.0.7", hostname="from-netbox", description="owned")])
+    resp = await client.post("/api/v1/assets/sync", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    asset = (await client.get("/api/v1/assets", headers=admin_headers)).json()[0]
+    assert asset["hostname"] is None
+    assert asset["description"] == "owned"

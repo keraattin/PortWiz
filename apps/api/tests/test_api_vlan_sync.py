@@ -103,3 +103,15 @@ async def test_vlan_sync_is_audited(client, admin_headers) -> None:
     await client.post("/api/v1/vlans/sync", headers=admin_headers)
     audit = (await client.get("/api/v1/audit", headers=admin_headers)).json()
     assert any(e["action"] == "vlan.synced" for e in audit["events"])
+
+
+async def test_vlan_sync_disabled_returns_400(client, admin_headers) -> None:
+    _use_source([_vlan("prod", tag=10)])
+    await client.patch(
+        "/api/v1/settings/config",
+        json={"netbox_import_vlans": False},
+        headers=admin_headers,
+    )
+    resp = await client.post("/api/v1/vlans/sync", headers=admin_headers)
+    assert resp.status_code == 400
+    assert "disabled" in resp.json()["detail"].lower()

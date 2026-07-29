@@ -83,6 +83,10 @@ EDITABLE_KEYS: list[str] = [
     "netbox_url",
     "netbox_token",
     "netbox_writeback_enabled",
+    "netbox_import_assets",
+    "netbox_import_vlans",
+    "netbox_import_hostnames",
+    "netbox_import_descriptions",
     # CVE enrichment
     "cve_enabled",
     "cve_source",

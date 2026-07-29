@@ -129,6 +129,10 @@ interface FormState {
   netbox_url: string;
   netbox_token: string;
   netbox_writeback_enabled: boolean;
+  netbox_import_assets: boolean;
+  netbox_import_vlans: boolean;
+  netbox_import_hostnames: boolean;
+  netbox_import_descriptions: boolean;
   cve_enabled: boolean;
   cve_source: string;
   cve_api_url: string;
@@ -206,6 +210,10 @@ function fromConfig(c: SettingsConfig): FormState {
     netbox_url: c.netbox_url ?? "",
     netbox_token: "",
     netbox_writeback_enabled: c.netbox_writeback_enabled,
+    netbox_import_assets: c.netbox_import_assets,
+    netbox_import_vlans: c.netbox_import_vlans,
+    netbox_import_hostnames: c.netbox_import_hostnames,
+    netbox_import_descriptions: c.netbox_import_descriptions,
     cve_enabled: c.cve_enabled,
     cve_source: c.cve_source || "nvd",
     cve_api_url: c.cve_api_url ?? "",
@@ -1540,6 +1548,30 @@ export default function SettingsPage() {
             />
             <p className="text-xs text-slate-500">{t("settings.netbox.writebackHint")}</p>
           </div>
+          <div className="space-y-2 rounded-lg border border-slate-800 p-3">
+            <p className="text-sm font-medium text-slate-200">{t("settings.netbox.importScope")}</p>
+            <p className="text-xs text-slate-500">{t("settings.netbox.importScopeHint")}</p>
+            <Toggle
+              label={t("settings.netbox.importAssets")}
+              checked={form.netbox_import_assets}
+              onChange={(v) => set("netbox_import_assets", v)}
+            />
+            <Toggle
+              label={t("settings.netbox.importVlans")}
+              checked={form.netbox_import_vlans}
+              onChange={(v) => set("netbox_import_vlans", v)}
+            />
+            <Toggle
+              label={t("settings.netbox.importHostnames")}
+              checked={form.netbox_import_hostnames}
+              onChange={(v) => set("netbox_import_hostnames", v)}
+            />
+            <Toggle
+              label={t("settings.netbox.importDescriptions")}
+              checked={form.netbox_import_descriptions}
+              onChange={(v) => set("netbox_import_descriptions", v)}
+            />
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
               className={primaryBtn}
@@ -1550,6 +1582,10 @@ export default function SettingsPage() {
                   netbox_url: form.netbox_url,
                   netbox_token: form.netbox_token,
                   netbox_writeback_enabled: form.netbox_writeback_enabled,
+                  netbox_import_assets: form.netbox_import_assets,
+                  netbox_import_vlans: form.netbox_import_vlans,
+                  netbox_import_hostnames: form.netbox_import_hostnames,
+                  netbox_import_descriptions: form.netbox_import_descriptions,
                 })
               }
             >

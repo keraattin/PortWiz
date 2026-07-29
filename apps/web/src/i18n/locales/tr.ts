@@ -533,6 +533,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "assets.row": "Satır",
   "assets.syncTitle": "NetBox'tan eşitle",
   "assets.netboxOff": "Eşitlemeyi etkinleştirmek için Ayarlar'dan NetBox'ı bağlayın.",
+  "assets.importOff": "Varlık içe aktarma Ayarlar'da kapalı.",
   "assets.syncHint":
     "Yapılandırılmış NetBox'tan ana makineleri çeker ve IP'ye göre ekler/günceller.",
   "assets.syncing": "Eşitleniyor…",
@@ -576,6 +577,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "vlans.bulkImportHint": '"name" sütunu olan CSV veya .xlsx. İsteğe bağlı: tag, description.',
   "vlans.syncTitle": "NetBox'tan eşitle",
   "vlans.syncHint": "Yapılandırılmış NetBox'tan VLAN'ları çeker ve isme göre ekler/günceller.",
+  "vlans.importOff": "VLAN içe aktarma Ayarlar'da kapalı.",
   "vlans.syncing": "Eşitleniyor…",
   "vlans.unit": "VLAN",
   "vlans.col.name": "Ad",
@@ -1305,6 +1307,12 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.netbox.writeback": "Her taramadan sonra keşfedilen host'ları otomatik yaz",
   "settings.netbox.writebackHint":
     "Açıkken her tarama, yeni keşfettiği host'ları NetBox'a geri yazar. Varsayılan kapalı; aksi halde Varlıklar sayfasındaki manuel butonu kullanın.",
+  "settings.netbox.importScope": "İçe aktarma kapsamı",
+  "settings.netbox.importScopeHint": "Bir NetBox eşitlemesinin neleri çekeceğini seçin. NetBox'ın değerleri yerine kendi değerlerinizi korumak için bir alanı kapatın.",
+  "settings.netbox.importAssets": "Varlıkları içe aktar (host'lar)",
+  "settings.netbox.importVlans": "VLAN'ları içe aktar",
+  "settings.netbox.importHostnames": "Host adlarını içe aktar",
+  "settings.netbox.importDescriptions": "Açıklamaları içe aktar",
 
   // Assistant
   "assistant.providerUnavailable":

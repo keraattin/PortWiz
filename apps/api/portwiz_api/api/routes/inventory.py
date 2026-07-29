@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, Up
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.app_settings import effective_settings
 from ...core.asset_import import parse_asset_file
 from ...core.asset_store import upsert_asset
 from ...core.audit import append_audit, field_diff
@@ -210,6 +211,11 @@ async def sync_vlans(
     upsert them by name. Returns a summary; one vlan.synced event is audited."""
     if source.name == "none":
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No inventory source is configured.")
+    eff = await effective_settings(session)
+    if not eff.netbox_import_vlans:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "VLAN import from NetBox is disabled."
+        )
     try:
         items = await source.fetch_vlans()
     except Exception as exc:
@@ -230,7 +236,7 @@ async def sync_vlans(
         fields: dict[str, object] = {"name": item.name}
         if tag is not None:
             fields["vlan_tag"] = tag
-        if item.description:
+        if item.description and eff.netbox_import_descriptions:
             fields["description"] = item.description
 
         existing = by_name.get(item.name.lower())
@@ -656,6 +662,11 @@ async def sync_assets(
     upsert them by IP. Returns a summary; one asset.synced event is audited."""
     if source.name == "none":
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No inventory source is configured.")
+    eff = await effective_settings(session)
+    if not eff.netbox_import_assets:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "Asset import from NetBox is disabled."
+        )
     try:
         items = await source.fetch_assets()
     except Exception as exc:
@@ -677,9 +688,9 @@ async def sync_assets(
             errors_detail.append(f"Invalid IP '{item.ip}'")
             continue
         fields: dict[str, object] = {}
-        if item.hostname:
+        if item.hostname and eff.netbox_import_hostnames:
             fields["hostname"] = item.hostname
-        if item.description:
+        if item.description and eff.netbox_import_descriptions:
             fields["description"] = item.description
         if item.vlan_name:
             vlan_id = vlan_by_name.get(item.vlan_name.lower())

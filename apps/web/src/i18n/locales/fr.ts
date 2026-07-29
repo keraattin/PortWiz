@@ -535,6 +535,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "assets.row": "Ligne",
   "assets.syncTitle": "Synchroniser depuis NetBox",
   "assets.netboxOff": "Connectez NetBox dans les Paramètres pour activer la synchronisation.",
+  "assets.importOff": "L'import des actifs est désactivé dans les Paramètres.",
   "assets.syncHint":
     "Récupère les hôtes de votre NetBox configuré et les insère/met à jour par IP.",
   "assets.syncing": "Synchronisation…",
@@ -578,6 +579,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "vlans.bulkImportHint": 'CSV ou .xlsx avec une colonne "name". Optionnel : tag, description.',
   "vlans.syncTitle": "Synchroniser depuis NetBox",
   "vlans.syncHint": "Récupère les VLAN de votre NetBox configuré et les insère/met à jour par nom.",
+  "vlans.importOff": "L'import des VLAN est désactivé dans les Paramètres.",
   "vlans.syncing": "Synchronisation…",
   "vlans.unit": "VLAN",
   "vlans.col.name": "Nom",
@@ -1311,6 +1313,12 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.netbox.writeback": "Écrire automatiquement les hôtes détectés après chaque analyse",
   "settings.netbox.writebackHint":
     "Si activé, chaque analyse réécrit ses hôtes nouvellement détectés dans NetBox. Désactivé par défaut ; sinon utilisez le bouton manuel sur la page Actifs.",
+  "settings.netbox.importScope": "Portée de l'import",
+  "settings.netbox.importScopeHint": "Choisissez ce qu'une synchronisation NetBox récupère. Désactivez un champ pour conserver vos propres valeurs plutôt que celles de NetBox.",
+  "settings.netbox.importAssets": "Importer les actifs (hôtes)",
+  "settings.netbox.importVlans": "Importer les VLAN",
+  "settings.netbox.importHostnames": "Importer les noms d'hôte",
+  "settings.netbox.importDescriptions": "Importer les descriptions",
 
   // Assistant
   "assistant.providerUnavailable":

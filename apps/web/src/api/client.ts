@@ -893,6 +893,8 @@ export interface SettingsStatus {
   netbox_enabled: boolean;
   netbox_url: string | null;
   netbox_configured: boolean;
+  netbox_import_assets: boolean;
+  netbox_import_vlans: boolean;
   cve_enabled: boolean;
   cve_configured: boolean;
   agent_online_seconds: number;
@@ -1127,6 +1129,10 @@ export interface SettingsConfig {
   netbox_enabled: boolean;
   netbox_url: string | null;
   netbox_writeback_enabled: boolean;
+  netbox_import_assets: boolean;
+  netbox_import_vlans: boolean;
+  netbox_import_hostnames: boolean;
+  netbox_import_descriptions: boolean;
   netbox_token_set: boolean;
   cve_enabled: boolean;
   cve_source: string;
@@ -1204,6 +1210,10 @@ export type SettingsConfigUpdate = Partial<{
   netbox_url: string;
   netbox_token: string;
   netbox_writeback_enabled: boolean;
+  netbox_import_assets: boolean;
+  netbox_import_vlans: boolean;
+  netbox_import_hostnames: boolean;
+  netbox_import_descriptions: boolean;
   cve_enabled: boolean;
   cve_source: string;
   cve_api_url: string;

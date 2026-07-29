@@ -61,6 +61,8 @@ export default function VlansPage() {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [netboxOn, setNetboxOn] = useState(false);
+  // VLAN import can be disabled in Settings while NetBox stays connected.
+  const [vlanImportOn, setVlanImportOn] = useState(false);
 
   const { sort: vlanSort, toggleSort: vlanToggle } = useSort();
   const { sort: rangeSort, toggleSort: rangeToggle } = useSort();
@@ -114,7 +116,10 @@ export default function VlansPage() {
   useEffect(() => {
     void reload();
     fetchSettings()
-      .then((s) => setNetboxOn(s.netbox_configured))
+      .then((s) => {
+        setNetboxOn(s.netbox_configured);
+        setVlanImportOn(s.netbox_import_vlans);
+      })
       .catch(() => {
         /* leave NetBox sync disabled if status can't be read */
       });
@@ -326,7 +331,14 @@ export default function VlansPage() {
               <span className="text-xs text-slate-500">{t("vlans.syncHint")}</span>
             </div>
             {!netboxOn && <p className="text-xs text-amber-400">{t("assets.netboxOff")}</p>}
-            <Button variant="outline" onClick={onSync} disabled={syncing || !netboxOn}>
+            {netboxOn && !vlanImportOn && (
+              <p className="text-xs text-amber-400">{t("vlans.importOff")}</p>
+            )}
+            <Button
+              variant="outline"
+              onClick={onSync}
+              disabled={syncing || !netboxOn || !vlanImportOn}
+            >
               {syncing ? t("vlans.syncing") : t("vlans.syncTitle")}
             </Button>
             {syncError && <p className="text-sm text-red-400">{syncError}</p>}

@@ -196,6 +196,12 @@ class Settings(BaseSettings):
     # When set, each scan automatically writes its discovered hosts back to
     # NetBox. Off by default; the manual push button is the primary path.
     netbox_writeback_enabled: bool = False
+    # Granular import scope: choose which object types and which fields a NetBox
+    # sync pulls, so teams can bring in only what they trust NetBox to own.
+    netbox_import_assets: bool = True  # allow syncing hosts/assets from NetBox
+    netbox_import_vlans: bool = True  # allow syncing VLANs from NetBox
+    netbox_import_hostnames: bool = True  # pull dns_name into asset hostname
+    netbox_import_descriptions: bool = True  # pull description onto assets/VLANs
 
 
 @lru_cache
