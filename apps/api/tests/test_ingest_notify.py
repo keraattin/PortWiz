@@ -11,7 +11,13 @@ import uuid
 from types import SimpleNamespace
 
 _FAKE_CHANGE = SimpleNamespace(
-    change_type="opened", ip="10.0.0.60", port=22, protocol="tcp", severity="high"
+    change_type="opened",
+    ip="10.0.0.60",
+    port=22,
+    protocol="tcp",
+    severity="high",
+    status="open",
+    notified_at=None,
 )
 
 

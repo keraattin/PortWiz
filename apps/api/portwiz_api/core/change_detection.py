@@ -114,6 +114,26 @@ async def detect_changes(session: AsyncSession, run: ScanRun) -> list[ChangeEven
     ).scalars().all()
     state_by_key = {(s.ip, s.port, s.protocol): s for s in states}
 
+    # Known ports: once a team acknowledges a change on a port, later identical
+    # changes (same ip/port/protocol/type) are recorded but auto-acknowledged and
+    # not re-alarmed, so a flapping-but-known port does not page the team on every
+    # transition. Resolved is deliberately excluded: a resolved change recurring
+    # is a regression worth surfacing again.
+    ack_rows = (
+        await session.execute(
+            select(
+                ChangeEvent.ip,
+                ChangeEvent.port,
+                ChangeEvent.protocol,
+                ChangeEvent.change_type,
+            ).where(
+                ChangeEvent.scan_profile_id == run.scan_profile_id,
+                ChangeEvent.status == "acknowledged",
+            )
+        )
+    ).all()
+    known_ports = {(ip, port, proto, ctype) for ip, port, proto, ctype in ack_rows}
+
     prior_completed = (
         await session.execute(
             select(func.count())
@@ -199,6 +219,9 @@ async def detect_changes(session: AsyncSession, run: ScanRun) -> list[ChangeEven
         state.updated_at = now
 
         if state.candidate_count >= confirmations:
+            # A recurrence on a known port is recorded but pre-acknowledged and
+            # marked processed, so it never re-alarms or reopens a task.
+            known = (ip, port, protocol, change_type) in known_ports
             event = ChangeEvent(
                 scan_profile_id=run.scan_profile_id,
                 scan_run_id=run.id,
@@ -218,24 +241,26 @@ async def detect_changes(session: AsyncSession, run: ScanRun) -> list[ChangeEven
                     "version": desired.version,
                 },
                 severity=_SEVERITY.get(change_type, "medium"),
-                status="open",
+                status="acknowledged" if known else "open",
+                notified_at=now if known else None,
                 detected_at=now,
             )
             session.add(event)
             events.append(event)
 
-            # Open a follow-up task for every confirmed change.
-            session.add(
-                Task(
-                    title=f"Review {change_type} on {ip}:{port}/{protocol}",
-                    description=(
-                        f"Confirmed {change_type} change on {ip}:{port}/{protocol} "
-                        f"(severity {_SEVERITY.get(change_type, 'medium')})."
-                    ),
-                    status=TaskStatus.open,
-                    change_event_id=event.id,
+            # Open a follow-up task only for changes that still need triage.
+            if not known:
+                session.add(
+                    Task(
+                        title=f"Review {change_type} on {ip}:{port}/{protocol}",
+                        description=(
+                            f"Confirmed {change_type} change on {ip}:{port}/{protocol} "
+                            f"(severity {_SEVERITY.get(change_type, 'medium')})."
+                        ),
+                        status=TaskStatus.open,
+                        change_event_id=event.id,
+                    )
                 )
-            )
 
             state.confirmed_state = desired.state
             state.confirmed_service = desired.service

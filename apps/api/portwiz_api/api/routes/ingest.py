@@ -222,6 +222,10 @@ async def ingest_scan_results(
     # Flush observations so change detection can read them, then run it.
     await session.flush()
     changes = await detect_changes(session, run)
+    # Recurrences on known (previously acknowledged) ports come back already
+    # acknowledged; only genuinely new "open" changes should alarm, notify, or
+    # open a tracker issue. See detect_changes for the suppression rule.
+    alerting = [c for c in changes if c.status == "open"]
     profile_id = str(run.scan_profile_id) if run.scan_profile_id is not None else None
     change_summaries = [
         {
@@ -232,7 +236,7 @@ async def ingest_scan_results(
             "severity": c.severity,
             "scan_profile_id": profile_id,
         }
-        for c in changes
+        for c in alerting
     ]
 
     eff = await effective_settings(session)
@@ -243,16 +247,16 @@ async def ingest_scan_results(
     # flush later. A profile that opted out records its changes but is marked
     # processed so nothing is ever sent for them.
     send_now = False
-    if changes:
+    if alerting:
         profile_opted_out = False
         if run.scan_profile_id is not None:
             prof = await session.get(ScanProfile, run.scan_profile_id)
             profile_opted_out = prof is not None and not prof.notify_enabled
         if profile_opted_out:
-            for c in changes:
+            for c in alerting:
                 c.notified_at = received_at
         elif eff.notify_mode == "immediate" and not in_quiet_hours(received_at, eff):
-            for c in changes:
+            for c in alerting:
                 c.notified_at = received_at
             send_now = True
 
@@ -267,6 +271,7 @@ async def ingest_scan_results(
             "observations": count,
             "status": payload.status,
             "changes": len(changes),
+            "suppressed": len(changes) - len(alerting),
             "discovered_assets": discovered,
         },
     )
@@ -290,9 +295,9 @@ async def ingest_scan_results(
             logger.warning("NetBox writeback failed: %s", exc)
 
     # Best-effort issue-tracker sync (creates Jira issues for the new tasks).
-    if changes:
+    if alerting:
         try:
-            await link_changes_to_tracker(session, changes, tracker)
+            await link_changes_to_tracker(session, alerting, tracker)
         except Exception as exc:  # noqa: BLE001
             logger.warning("issue tracker sync failed: %s", exc)
 
@@ -301,5 +306,6 @@ async def ingest_scan_results(
         "observations": count,
         "status": payload.status,
         "changes": len(changes),
+        "suppressed": len(changes) - len(alerting),
         "discovered_assets": discovered,
     }

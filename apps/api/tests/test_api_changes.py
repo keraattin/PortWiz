@@ -156,3 +156,48 @@ async def test_acknowledge_change(client, admin_headers) -> None:
     )
     assert resp.status_code == 200
     assert resp.json()["status"] == "acknowledged"
+
+
+async def test_known_port_recurrence_is_auto_acknowledged(client, admin_headers) -> None:
+    # Once a port's change is acknowledged, an identical change recurring later is
+    # recorded but auto-acknowledged and not re-alarmed, so a flapping-but-known
+    # port stops paging the team on every transition.
+    await client.patch(
+        "/api/v1/settings/config", json={"change_confirmations": 1}, headers=admin_headers
+    )
+    token = await _enroll(client, admin_headers, "known-agent")
+    profile = await _profile(client, admin_headers, "known-profile", "10.0.0.8", "22,80")
+    pid, ip = profile["id"], "10.0.0.8"
+
+    await _ingest(client, admin_headers, token, pid, ip, [22])  # baseline: 80 closed
+    opened = await _ingest(client, admin_headers, token, pid, ip, [22, 80])  # 80 opens
+    assert opened["changes"] == 1 and opened["suppressed"] == 0
+
+    port80 = (
+        await client.get(f"/api/v1/changes?ip={ip}&port=80", headers=admin_headers)
+    ).json()
+    first = port80[0]
+    assert first["change_type"] == "opened" and first["status"] == "open"
+
+    # The team accepts this port as known.
+    ack = await client.patch(
+        f"/api/v1/changes/{first['id']}",
+        json={"status": "acknowledged"},
+        headers=admin_headers,
+    )
+    assert ack.status_code == 200
+
+    await _ingest(client, admin_headers, token, pid, ip, [22])  # 80 closes
+    reopened = await _ingest(client, admin_headers, token, pid, ip, [22, 80])  # opens again
+    # The recurrence is counted but suppressed: no new open alarm.
+    assert reopened["changes"] == 1 and reopened["suppressed"] == 1
+
+    opens = [
+        c
+        for c in (
+            await client.get(f"/api/v1/changes?ip={ip}&port=80", headers=admin_headers)
+        ).json()
+        if c["change_type"] == "opened"
+    ]
+    assert len(opens) == 2
+    assert all(c["status"] == "acknowledged" for c in opens)
