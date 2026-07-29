@@ -512,8 +512,24 @@ export function listScanRuns(): Promise<ScanRun[]> {
   return request<ScanRun[]>("/scan-runs");
 }
 
+export function getScanRun(runId: string): Promise<ScanRun> {
+  return request<ScanRun>(`/scan-runs/${runId}`);
+}
+
 export function listRunObservations(runId: string): Promise<Observation[]> {
   return request<Observation[]>(`/scan-runs/${runId}/observations`);
+}
+
+export interface ScanRunJiraExport {
+  total: number;
+  exported: number;
+  already_linked: number;
+  skipped: number;
+  errors: number;
+}
+
+export function exportRunToJira(runId: string): Promise<ScanRunJiraExport> {
+  return request<ScanRunJiraExport>(`/scan-runs/${runId}/jira`, { method: "POST" });
 }
 
 // Scan agents
@@ -643,11 +659,13 @@ export function listChanges(params?: {
   status?: string;
   ip?: string;
   port?: number;
+  scan_run_id?: string;
 }): Promise<ChangeEvent[]> {
   const q = new URLSearchParams();
   if (params?.status) q.set("status", params.status);
   if (params?.ip) q.set("ip", params.ip);
   if (params?.port != null) q.set("port", String(params.port));
+  if (params?.scan_run_id) q.set("scan_run_id", params.scan_run_id);
   const qs = q.toString();
   return request<ChangeEvent[]>(`/changes${qs ? `?${qs}` : ""}`);
 }

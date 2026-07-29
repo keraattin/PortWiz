@@ -123,6 +123,16 @@ class ScanRunRead(BaseModel):
     created_at: dt.datetime
 
 
+class ScanRunJiraExport(BaseModel):
+    """Outcome of exporting a scan run's open changes to the issue tracker."""
+
+    total: int  # open changes considered
+    exported: int  # new issues created
+    already_linked: int  # skipped, their task already had a Jira key
+    skipped: int  # skipped, no task to record the key on
+    errors: int  # issue creation failed
+
+
 # Scan job dispatched to an agent (mirrors packages/contracts/scan_job.schema.json)
 class ScanJobOut(BaseModel):
     version: int = 1

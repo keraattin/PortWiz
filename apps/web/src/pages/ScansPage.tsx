@@ -1,10 +1,10 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   type Asset,
   type ComplianceFramework,
   type FrameworkTemplate,
   type IpRange,
-  type Observation,
   type ScanProfile,
   type ScanRun,
   type ScanRunStatus,
@@ -18,7 +18,6 @@ import {
   fetchSettings,
   listAssets,
   listIpRanges,
-  listRunObservations,
   listScanProfiles,
   listScanRuns,
   listVlans,
@@ -40,14 +39,6 @@ import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
 const SCAN_TYPES: ScanType[] = ["connect", "syn", "udp"];
-
-// Provenance of a service/version: agent nmap probe (most trusted), a
-// deterministic server-side banner match, or an AI guess (treat with caution).
-const SOURCE_CLASS: Record<string, string> = {
-  agent: "bg-emerald-500/10 text-emerald-400",
-  heuristic: "bg-sky-500/10 text-sky-400",
-  ai: "bg-amber-500/10 text-amber-400",
-};
 
 // Friendly scan frequency, compiled to a cron expression so non-technical users
 // never have to write cron. "advanced" reveals a raw cron field.
@@ -138,6 +129,7 @@ function parseTargets(raw: string): string[] {
 
 export default function ScansPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const toast = useToast();
   const { t } = useI18n();
   const errorMessage = useErrorMessage();
@@ -149,10 +141,6 @@ export default function ScansPage() {
   const [ranges, setRanges] = useState<IpRange[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedRun, setSelectedRun] = useState<ScanRun | null>(null);
-  const [observations, setObservations] = useState<Observation[]>([]);
-  const [obsLoading, setObsLoading] = useState(false);
-  const obsPage = usePagination(observations, 12);
 
   const { sort: profileSort, toggleSort: profileToggle } = useSort();
   const { filters: profileFilters, setFilter: setProfileFilter } = useColumnFilters();
@@ -397,21 +385,6 @@ export default function ScansPage() {
     }
   }
 
-  async function onViewRun(run: ScanRun) {
-    setError(null);
-    setSelectedRun(run);
-    setObservations([]);
-    setObsLoading(true);
-    obsPage.setPage(0);
-    try {
-      setObservations(await listRunObservations(run.id));
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setObsLoading(false);
-    }
-  }
-
   return (
     <div className="space-y-8">
       <section className="space-y-4">
@@ -577,7 +550,7 @@ export default function ScansPage() {
                     </td>
                     <td className="px-4 py-2 text-right">
                       <button
-                        onClick={() => onViewRun(r)}
+                        onClick={() => navigate(`/scans/${r.id}`)}
                         className="text-xs font-medium text-sky-400 hover:text-sky-300"
                       >
                         {t("scans.viewResults")}
@@ -819,84 +792,6 @@ export default function ScansPage() {
         </form>
       </Modal>
 
-      <Modal
-        open={selectedRun !== null}
-        onClose={() => setSelectedRun(null)}
-        title={
-          selectedRun
-            ? t("scans.resultsTitle", {
-                id: selectedRun.id.slice(0, 8),
-                count: observations.length,
-              })
-            : ""
-        }
-        wide
-      >
-        <div className="overflow-x-auto rounded-xl border border-slate-800">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-900 text-slate-400">
-              <tr>
-                <th className="px-4 py-2 font-medium">{t("scans.col.host")}</th>
-                <th className="px-4 py-2 font-medium">{t("scans.col.port")}</th>
-                <th className="px-4 py-2 font-medium">{t("scans.col.state")}</th>
-                <th className="px-4 py-2 font-medium">{t("scans.col.service")}</th>
-                <th className="px-4 py-2 font-medium">{t("scans.col.version")}</th>
-                <th className="px-4 py-2 font-medium">{t("scans.col.source")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {obsLoading ? (
-                <tr>
-                  <td className="px-4 py-3 text-slate-500" colSpan={6}>
-                    {t("common.loading")}
-                  </td>
-                </tr>
-              ) : observations.length === 0 ? (
-                <tr>
-                  <td className="px-4 py-3 text-slate-500" colSpan={6}>
-                    {t("scans.noOpenPorts")}
-                  </td>
-                </tr>
-              ) : (
-                obsPage.slice.map((o) => (
-                  <tr key={o.id} className="bg-slate-950">
-                    <td className="px-4 py-2 font-mono text-slate-100">{o.ip}</td>
-                    <td className="px-4 py-2 text-slate-300">
-                      {o.port}/{o.protocol}
-                    </td>
-                    <td className="px-4 py-2 text-emerald-400">{o.state}</td>
-                    <td className="px-4 py-2 text-slate-300">{o.service ?? "-"}</td>
-                    <td className="px-4 py-2 text-slate-400">
-                      {[o.product, o.version].filter(Boolean).join(" ") || "-"}
-                    </td>
-                    <td className="px-4 py-2">
-                      {o.fingerprint_source ? (
-                        <span
-                          className={`rounded px-2 py-0.5 text-xs ${
-                            SOURCE_CLASS[o.fingerprint_source] ?? "bg-slate-700 text-slate-300"
-                          }`}
-                        >
-                          {t(`fingerprint.${o.fingerprint_source}` as TKey)}
-                        </span>
-                      ) : (
-                        <span className="text-slate-600">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <Pagination
-          page={obsPage.page}
-          pageCount={obsPage.pageCount}
-          total={obsPage.total}
-          onPage={obsPage.setPage}
-          pageSize={obsPage.pageSize}
-          onPageSize={obsPage.setPageSize}
-        />
-      </Modal>
     </div>
   );
 }

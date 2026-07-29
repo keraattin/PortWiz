@@ -16,6 +16,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.app_settings import effective_settings
 from ...core.audit import append_audit
 from ...core.db import get_session
+from ...core.issue_tracker import (
+    IssueTracker,
+    NullTracker,
+    export_changes_to_tracker,
+    get_issue_tracker,
+)
+from ...models.change import ChangeEvent
 from ...models.scan import (
     Observation,
     ScanProfile,
@@ -30,6 +37,7 @@ from ...schemas.scan import (
     ScanProfileCreate,
     ScanProfileRead,
     ScanProfileUpdate,
+    ScanRunJiraExport,
     ScanRunRead,
 )
 from ..deps import get_current_user, require_roles
@@ -209,3 +217,47 @@ async def list_run_observations(
         .order_by(Observation.ip, Observation.port)
     )
     return list(result.scalars().all())
+
+
+@runs_router.post("/{run_id}/jira", response_model=ScanRunJiraExport)
+async def export_run_to_jira(
+    run_id: uuid.UUID,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    tracker: IssueTracker = Depends(get_issue_tracker),
+) -> ScanRunJiraExport:
+    """Create Jira issues for this run's open confirmed changes.
+
+    Changes already linked to Jira are skipped so a re-export never duplicates
+    issues. Requires Jira to be configured, otherwise 400.
+    """
+    run = await session.get(ScanRun, run_id)
+    if run is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Scan run not found")
+    if isinstance(tracker, NullTracker):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "Issue tracker is not configured"
+        )
+
+    changes = list(
+        (
+            await session.execute(
+                select(ChangeEvent).where(
+                    ChangeEvent.scan_run_id == run_id,
+                    ChangeEvent.status == "open",
+                )
+            )
+        ).scalars().all()
+    )
+    result = await export_changes_to_tracker(session, changes, tracker)
+    await append_audit(
+        session,
+        action="scan_run.jira_exported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="scan_run",
+        target_id=str(run_id),
+        payload=dict(result),
+    )
+    await session.commit()
+    return ScanRunJiraExport(**result)

@@ -27,6 +27,7 @@ WriteDep = require_roles(UserRole.admin, UserRole.operator)
 @router.get("", response_model=list[ChangeEventRead])
 async def list_changes(
     scan_profile_id: uuid.UUID | None = None,
+    scan_run_id: uuid.UUID | None = None,
     change_type: str | None = None,
     status_filter: str | None = Query(default=None, alias="status"),
     ip: str | None = None,
@@ -38,6 +39,9 @@ async def list_changes(
     query = select(ChangeEvent).order_by(ChangeEvent.detected_at.desc()).limit(limit)
     if scan_profile_id is not None:
         query = query.where(ChangeEvent.scan_profile_id == scan_profile_id)
+    # scan_run_id scopes changes to a single scan run, powering the run detail page.
+    if scan_run_id is not None:
+        query = query.where(ChangeEvent.scan_run_id == scan_run_id)
     if change_type is not None:
         query = query.where(ChangeEvent.change_type == change_type)
     if status_filter is not None:

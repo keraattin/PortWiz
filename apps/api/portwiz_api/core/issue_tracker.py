@@ -354,3 +354,47 @@ async def link_changes_to_tracker(
     if linked:
         await session.commit()
     return linked
+
+
+async def export_changes_to_tracker(
+    session: AsyncSession, changes: list[ChangeEvent], tracker: IssueTracker
+) -> dict[str, int]:
+    """Export a batch of changes to the tracker for a manual "send scan to Jira".
+
+    Unlike :func:`link_changes_to_tracker`, this skips changes whose task is
+    already linked, so re-exporting a scan never creates duplicate issues, and it
+    isolates per-issue failures so one bad call does not abort the rest. The
+    caller commits the surrounding transaction. Returns counts by outcome.
+    """
+    exported = already_linked = skipped = errors = 0
+    for change in changes:
+        task = (
+            await session.execute(select(Task).where(Task.change_event_id == change.id))
+        ).scalars().first()
+        if task is None:
+            # No task to record the key on; skip rather than orphan an issue.
+            skipped += 1
+            continue
+        if task.jira_key:
+            already_linked += 1
+            continue
+        summary, description = build_change_issue(change)
+        try:
+            key = await tracker.create_issue(
+                summary, description, severity=change.severity
+            )
+        except Exception as exc:  # noqa: BLE001 - report the failure, keep going
+            logger.warning("scan export: issue creation failed for %s: %s", change.id, exc)
+            key = None
+        if not key:
+            errors += 1
+            continue
+        task.jira_key = key
+        exported += 1
+    return {
+        "total": len(changes),
+        "exported": exported,
+        "already_linked": already_linked,
+        "skipped": skipped,
+        "errors": errors,
+    }
