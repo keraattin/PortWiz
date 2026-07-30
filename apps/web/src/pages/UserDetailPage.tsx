@@ -13,6 +13,7 @@ import { useErrorMessage } from "../i18n/useErrorMessage";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import FormField from "../components/FormField";
+import Pagination, { usePagination } from "../components/Pagination";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
@@ -42,6 +43,7 @@ export default function UserDetailPage() {
 
   const [u, setU] = useState<CurrentUser | null>(null);
   const [activity, setActivity] = useState<AuditEvent[]>([]);
+  const [actionFilter, setActionFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,6 +91,14 @@ export default function UserDetailPage() {
       toast.error(errorMessage(e));
     }
   }
+
+  // A dropdown of the action labels present, plus client-side paging over the
+  // loaded window, so a busy user's activity stays browsable.
+  const actionOptions = [...new Set(activity.map((a) => a.action))]
+    .map((a) => ({ value: a, label: auditLabel(a, t) }))
+    .sort((x, y) => x.label.localeCompare(y.label));
+  const filteredActivity = activity.filter((a) => !actionFilter || a.action === actionFilter);
+  const actPage = usePagination(filteredActivity, 15);
 
   const back = (
     <Link to="/users" className="text-sm text-slate-400 hover:text-slate-200">
@@ -177,30 +187,61 @@ export default function UserDetailPage() {
       </div>
 
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-        <p className="mb-3 text-sm font-medium text-slate-300">{t("userDetail.activity")}</p>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium text-slate-300">{t("userDetail.activity")}</p>
+          {activity.length > 0 && (
+            <select
+              value={actionFilter}
+              onChange={(e) => {
+                setActionFilter(e.target.value);
+                actPage.setPage(0);
+              }}
+              className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-500"
+            >
+              <option value="">{t("filters.all")}</option>
+              {actionOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
         {activity.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-600">{t("userDetail.noActivity")}</p>
+        ) : filteredActivity.length === 0 ? (
+          <p className="py-6 text-center text-sm text-slate-600">{t("common.noData")}</p>
         ) : (
-          <ol className="space-y-2 text-sm">
-            {activity.map((a) => (
-              <li
-                key={a.seq}
-                className="flex flex-wrap items-center gap-2 border-b border-slate-800/60 py-1"
-              >
-                <span className="text-slate-200" title={a.action}>
-                  {auditLabel(a.action, t)}
-                </span>
-                {a.target_type && (
-                  <span className="font-mono text-xs text-slate-500">
-                    {a.target_type}:{(a.target_id ?? "").slice(0, 8)}
+          <>
+            <ol className="space-y-2 text-sm">
+              {actPage.slice.map((a) => (
+                <li
+                  key={a.seq}
+                  className="flex flex-wrap items-center gap-2 border-b border-slate-800/60 py-1"
+                >
+                  <span className="text-slate-200" title={a.action}>
+                    {auditLabel(a.action, t)}
                   </span>
-                )}
-                <span className="ml-auto text-xs text-slate-500">
-                  {new Date(a.created_at).toLocaleString()}
-                </span>
-              </li>
-            ))}
-          </ol>
+                  {a.target_type && (
+                    <span className="font-mono text-xs text-slate-500">
+                      {a.target_type}:{(a.target_id ?? "").slice(0, 8)}
+                    </span>
+                  )}
+                  <span className="ml-auto text-xs text-slate-500">
+                    {new Date(a.created_at).toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <Pagination
+              page={actPage.page}
+              pageCount={actPage.pageCount}
+              total={actPage.total}
+              onPage={actPage.setPage}
+              pageSize={actPage.pageSize}
+              onPageSize={actPage.setPageSize}
+            />
+          </>
         )}
       </div>
     </div>
