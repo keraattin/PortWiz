@@ -578,6 +578,9 @@ export const pt: Partial<Record<TKey, string>> = {
   "vlans.bulkImport": "Importação em massa",
   "vlans.bulkImportHint": 'CSV ou .xlsx com uma coluna "name". Opcional: tag, description, cidr (um intervalo para essa VLAN; repita o nome para vários).',
   "vlans.rangesAdded": "Intervalos de IP adicionados",
+  "vlans.addRange": "Adicionar faixa",
+  "vlans.noRanges": "Ainda sem faixas",
+  "vlans.rangesFailed": "Não foi possível adicionar: {cidrs}",
   "vlans.syncTitle": "Sincronizar do NetBox",
   "vlans.syncHint": "Obtém as VLANs do seu NetBox configurado e as insere/atualiza por nome.",
   "vlans.importOff": "A importação de VLANs está desativada nas Configurações.",
@@ -592,6 +595,8 @@ export const pt: Partial<Record<TKey, string>> = {
   "vlans.f.tagHint": "Tag 802.1Q opcional, 1-4094. Deixe em branco se não se aplicar.",
   "vlans.f.description": "Descrição",
   "vlans.f.descriptionHint": "Nota opcional sobre o que reside neste segmento.",
+  "vlans.f.ranges": "Faixas de IP (opcional)",
+  "vlans.f.rangesHint": "Um CIDR por linha ou separados por vírgula, eles são vinculados a esta VLAN.",
 
   // IP ranges
   "ranges.title": "Faixas de IP",
@@ -603,6 +608,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "ranges.confirmDelete": "Excluir esta faixa de IP?",
   "ranges.empty": "Ainda sem faixas de IP.",
   "ranges.addFirst": "Adicione sua primeira faixa de IP",
+  "ranges.unassigned": "Faixas sem VLAN",
   "ranges.col.cidr": "CIDR",
   "ranges.col.vlan": "VLAN",
   "ranges.col.description": "Descrição",

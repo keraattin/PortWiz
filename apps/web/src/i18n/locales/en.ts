@@ -574,6 +574,9 @@ export const en = {
   "vlans.bulkImportHint":
     'CSV or .xlsx with a "name" column. Optional: tag, description, cidr (a range for that VLAN; repeat the name for several).',
   "vlans.rangesAdded": "IP ranges added",
+  "vlans.addRange": "Add range",
+  "vlans.noRanges": "No ranges yet",
+  "vlans.rangesFailed": "Could not add: {cidrs}",
   "vlans.syncTitle": "Sync from NetBox",
   "vlans.syncHint": "Pulls VLANs from your configured NetBox and upserts them by name.",
   "vlans.importOff": "VLAN import is turned off in Settings.",
@@ -588,6 +591,8 @@ export const en = {
   "vlans.f.tagHint": "Optional 802.1Q tag, 1-4094. Leave blank if not applicable.",
   "vlans.f.description": "Description",
   "vlans.f.descriptionHint": "Optional note about what lives on this segment.",
+  "vlans.f.ranges": "IP ranges (optional)",
+  "vlans.f.rangesHint": "One CIDR per line or comma-separated; they attach to this VLAN.",
 
   // IP ranges
   "ranges.title": "IP ranges",
@@ -599,6 +604,7 @@ export const en = {
   "ranges.confirmDelete": "Delete this IP range?",
   "ranges.empty": "No IP ranges yet.",
   "ranges.addFirst": "Add your first IP range",
+  "ranges.unassigned": "Ranges without a VLAN",
   "ranges.col.cidr": "CIDR",
   "ranges.col.vlan": "VLAN",
   "ranges.col.description": "Description",

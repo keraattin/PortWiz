@@ -576,6 +576,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "vlans.bulkImport": "Toplu içe aktarma",
   "vlans.bulkImportHint": '"name" sütunu olan CSV veya .xlsx. İsteğe bağlı: tag, description, cidr (o VLAN için bir aralık; birkaçı için adı tekrarlayın).',
   "vlans.rangesAdded": "IP aralıkları eklendi",
+  "vlans.addRange": "Aralık ekle",
+  "vlans.noRanges": "Henüz aralık yok",
+  "vlans.rangesFailed": "Eklenemedi: {cidrs}",
   "vlans.syncTitle": "NetBox'tan eşitle",
   "vlans.syncHint": "Yapılandırılmış NetBox'tan VLAN'ları çeker ve isme göre ekler/günceller.",
   "vlans.importOff": "VLAN içe aktarma Ayarlar'da kapalı.",
@@ -590,6 +593,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "vlans.f.tagHint": "İsteğe bağlı 802.1Q etiketi, 1-4094. Uygun değilse boş bırakın.",
   "vlans.f.description": "Açıklama",
   "vlans.f.descriptionHint": "Bu segmentte ne olduğuna dair isteğe bağlı not.",
+  "vlans.f.ranges": "IP aralıkları (isteğe bağlı)",
+  "vlans.f.rangesHint": "Her satırda bir CIDR veya virgülle ayrılmış, bu VLAN'a bağlanır.",
 
   // IP ranges
   "ranges.title": "IP aralıkları",
@@ -601,6 +606,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "ranges.confirmDelete": "Bu IP aralığı silinsin mi?",
   "ranges.empty": "Henüz IP aralığı yok.",
   "ranges.addFirst": "İlk IP aralığını ekle",
+  "ranges.unassigned": "VLAN'ı olmayan aralıklar",
   "ranges.col.cidr": "CIDR",
   "ranges.col.vlan": "VLAN",
   "ranges.col.description": "Açıklama",

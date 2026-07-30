@@ -577,6 +577,9 @@ export const es: Partial<Record<TKey, string>> = {
   "vlans.bulkImport": "Importación masiva",
   "vlans.bulkImportHint": 'CSV o .xlsx con una columna "name". Opcional: tag, description, cidr (un rango para esa VLAN; repite el nombre para varios).',
   "vlans.rangesAdded": "Rangos de IP añadidos",
+  "vlans.addRange": "Añadir rango",
+  "vlans.noRanges": "Aún no hay rangos",
+  "vlans.rangesFailed": "No se pudo añadir: {cidrs}",
   "vlans.syncTitle": "Sincronizar desde NetBox",
   "vlans.syncHint": "Obtiene las VLAN de tu NetBox configurado y las inserta/actualiza por nombre.",
   "vlans.importOff": "La importación de VLAN está desactivada en Ajustes.",
@@ -591,6 +594,8 @@ export const es: Partial<Record<TKey, string>> = {
   "vlans.f.tagHint": "Etiqueta 802.1Q opcional, 1-4094. Déjala en blanco si no aplica.",
   "vlans.f.description": "Descripción",
   "vlans.f.descriptionHint": "Nota opcional sobre lo que reside en este segmento.",
+  "vlans.f.ranges": "Rangos de IP (opcional)",
+  "vlans.f.rangesHint": "Un CIDR por línea o separados por comas, se vinculan a esta VLAN.",
 
   // IP ranges
   "ranges.title": "Rangos de IP",
@@ -602,6 +607,7 @@ export const es: Partial<Record<TKey, string>> = {
   "ranges.confirmDelete": "¿Eliminar este rango de IP?",
   "ranges.empty": "Aún no hay rangos de IP.",
   "ranges.addFirst": "Añade tu primer rango de IP",
+  "ranges.unassigned": "Rangos sin VLAN",
   "ranges.col.cidr": "CIDR",
   "ranges.col.vlan": "VLAN",
   "ranges.col.description": "Descripción",

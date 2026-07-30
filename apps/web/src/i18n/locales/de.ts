@@ -578,6 +578,9 @@ export const de: Partial<Record<TKey, string>> = {
   "vlans.bulkImport": "Massenimport",
   "vlans.bulkImportHint": 'CSV oder .xlsx mit einer Spalte "name". Optional: tag, description, cidr (ein Bereich für dieses VLAN; für mehrere den Namen wiederholen).',
   "vlans.rangesAdded": "IP-Bereiche hinzugefügt",
+  "vlans.addRange": "Bereich hinzufügen",
+  "vlans.noRanges": "Noch keine Bereiche",
+  "vlans.rangesFailed": "Konnte nicht hinzugefügt werden: {cidrs}",
   "vlans.syncTitle": "Aus NetBox synchronisieren",
   "vlans.syncHint": "Holt VLANs aus Ihrem konfigurierten NetBox und legt sie per Name an bzw. aktualisiert sie.",
   "vlans.importOff": "Der VLAN-Import ist in den Einstellungen deaktiviert.",
@@ -592,6 +595,8 @@ export const de: Partial<Record<TKey, string>> = {
   "vlans.f.tagHint": "Optionales 802.1Q-Tag, 1-4094. Leer lassen, falls nicht zutreffend.",
   "vlans.f.description": "Beschreibung",
   "vlans.f.descriptionHint": "Optionale Notiz darüber, was in diesem Segment liegt.",
+  "vlans.f.ranges": "IP-Bereiche (optional)",
+  "vlans.f.rangesHint": "Ein CIDR pro Zeile oder kommagetrennt, sie werden diesem VLAN zugeordnet.",
 
   // IP ranges
   "ranges.title": "IP-Bereiche",
@@ -603,6 +608,7 @@ export const de: Partial<Record<TKey, string>> = {
   "ranges.confirmDelete": "Diesen IP-Bereich löschen?",
   "ranges.empty": "Noch keine IP-Bereiche.",
   "ranges.addFirst": "Ersten IP-Bereich hinzufügen",
+  "ranges.unassigned": "Bereiche ohne VLAN",
   "ranges.col.cidr": "CIDR",
   "ranges.col.vlan": "VLAN",
   "ranges.col.description": "Beschreibung",

@@ -25,8 +25,7 @@ import InfoCallout from "../components/InfoCallout";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
-import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
-import { useSort } from "../components/useSort";
+import SearchInput from "../components/SearchInput";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -40,11 +39,15 @@ export default function VlansPage() {
   const [ipRanges, setIpRanges] = useState<IpRange[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const [vlanOpen, setVlanOpen] = useState(false);
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
   const [description, setDescription] = useState("");
+  // Ranges entered alongside the VLAN, so a VLAN and its ranges are created in
+  // one flow (they are treated as one unit throughout the page).
+  const [vlanRanges, setVlanRanges] = useState("");
 
   const [rangeOpen, setRangeOpen] = useState(false);
   const [cidr, setCidr] = useState("");
@@ -63,11 +66,6 @@ export default function VlansPage() {
   const [netboxOn, setNetboxOn] = useState(false);
   // VLAN import can be disabled in Settings while NetBox stays connected.
   const [vlanImportOn, setVlanImportOn] = useState(false);
-
-  const { sort: vlanSort, toggleSort: vlanToggle } = useSort();
-  const { sort: rangeSort, toggleSort: rangeToggle } = useSort();
-  const { filters: vlanFilters, setFilter: setVlanFilter } = useColumnFilters();
-  const { filters: rangeFilters, setFilter: setRangeFilter } = useColumnFilters();
 
   async function onSync() {
     setSyncError(null);
@@ -125,48 +123,26 @@ export default function VlansPage() {
       });
   }, []);
 
-  const vlanName = (id: string | null) =>
-    id ? (vlans.find((v) => v.id === id)?.name ?? "-") : "-";
+  // Group ranges under their VLAN so each VLAN is shown with its ranges; ranges
+  // without a VLAN get their own section.
+  const rangesByVlan: Record<string, IpRange[]> = {};
+  for (const r of ipRanges) {
+    if (r.vlan_id) (rangesByVlan[r.vlan_id] ??= []).push(r);
+  }
+  const unassignedRanges = ipRanges.filter((r) => !r.vlan_id);
 
-  const vlanColumns: Column<Vlan>[] = [
-    { key: "name", label: t("vlans.col.name"), filter: "text", get: (v) => v.name },
-    { key: "tag", label: t("vlans.col.tag"), filter: "text", get: (v) => v.vlan_tag },
-    {
-      key: "description",
-      label: t("vlans.col.description"),
-      filter: "text",
-      get: (v) => v.description ?? "",
-    },
-  ];
-  const vlanRows = processRows(vlans, vlanColumns, vlanSort, vlanFilters);
-  const vlansPage = usePagination(vlanRows, 15);
-  const onVlanFilter = (key: string, val: string) => {
-    setVlanFilter(key, val);
-    vlansPage.setPage(0);
-  };
-
-  const rangeColumns: Column<IpRange>[] = [
-    { key: "cidr", label: t("ranges.col.cidr"), filter: "text", get: (r) => r.cidr },
-    { key: "vlan", label: t("ranges.col.vlan"), filter: "text", get: (r) => vlanName(r.vlan_id) },
-    {
-      key: "description",
-      label: t("ranges.col.description"),
-      filter: "text",
-      get: (r) => r.description ?? "",
-    },
-  ];
-  const rangeRows = processRows(ipRanges, rangeColumns, rangeSort, rangeFilters);
-  const rangesPage = usePagination(rangeRows, 15);
-  const onRangeFilter = (key: string, val: string) => {
-    setRangeFilter(key, val);
-    rangesPage.setPage(0);
-  };
+  const q = search.trim().toLowerCase();
+  const filteredVlans = vlans.filter(
+    (v) => !q || v.name.toLowerCase().includes(q) || (v.description ?? "").toLowerCase().includes(q),
+  );
+  const vlansPage = usePagination(filteredVlans, 10);
 
   function openAddVlan() {
     setError(null);
     setName("");
     setTag("");
     setDescription("");
+    setVlanRanges("");
     setVlanOpen(true);
   }
 
@@ -174,14 +150,31 @@ export default function VlansPage() {
     e.preventDefault();
     setError(null);
     try {
-      await createVlan({
+      const vlan = await createVlan({
         name,
         vlan_tag: tag ? Number(tag) : null,
         description: description || null,
       });
+      // Attach any ranges entered in the same form to the new VLAN.
+      const cidrs = vlanRanges
+        .split(/[\s,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const failed: string[] = [];
+      for (const c of cidrs) {
+        try {
+          await createIpRange({ cidr: c, vlan_id: vlan.id, description: null });
+        } catch {
+          failed.push(c);
+        }
+      }
       setVlanOpen(false);
-      toast.success(t("vlans.added"));
       await reload();
+      if (failed.length) {
+        toast.error(t("vlans.rangesFailed", { cidrs: failed.join(", ") }));
+      } else {
+        toast.success(t("vlans.added"));
+      }
     } catch (e) {
       setError(errorMessage(e));
     }
@@ -198,10 +191,10 @@ export default function VlansPage() {
     }
   }
 
-  function openAddRange() {
+  function openAddRange(vlanId = "") {
     setError(null);
     setCidr("");
-    setRangeVlanId("");
+    setRangeVlanId(vlanId);
     setRangeDesc("");
     setRangeOpen(true);
   }
@@ -233,6 +226,21 @@ export default function VlansPage() {
       toast.error(errorMessage(e));
     }
   }
+
+  const rangeRow = (r: IpRange) => (
+    <li key={r.id} className="flex flex-wrap items-center gap-3 px-4 py-2">
+      <span className="font-mono text-sm text-slate-200">{r.cidr}</span>
+      {r.description && <span className="text-xs text-slate-500">{r.description}</span>}
+      {canWrite && (
+        <button
+          onClick={() => onDeleteRange(r.id)}
+          className="ml-auto text-xs text-red-400 hover:text-red-300"
+        >
+          {t("common.delete")}
+        </button>
+      )}
+    </li>
+  );
 
   return (
     <div className="space-y-6">
@@ -386,145 +394,86 @@ export default function VlansPage() {
           action={canWrite && <Button onClick={openAddVlan}>{t("vlans.add")}</Button>}
         />
       ) : (
-        <>
-      <div className="overflow-x-auto rounded-xl border border-slate-800">
-        <table className="w-full text-left text-sm">
-          <TableHead
-            columns={vlanColumns}
-            sort={vlanSort}
-            toggleSort={vlanToggle}
-            filters={vlanFilters}
-            setFilter={onVlanFilter}
-            trailing
-          />
-          <tbody className="divide-y divide-slate-800">
-            {loading ? (
-              <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={4}>
-                  {t("common.loading")}
-                </td>
-              </tr>
-            ) : vlanRows.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
-                  {t("common.noData")}
-                </td>
-              </tr>
-            ) : (
-              vlansPage.slice.map((v) => (
-                <tr key={v.id} className="bg-slate-950">
-                  <td className="px-4 py-2 text-slate-100">{v.name}</td>
-                  <td className="px-4 py-2 text-slate-300">{v.vlan_tag ?? "-"}</td>
-                  <td className="px-4 py-2 text-slate-400">{v.description ?? "-"}</td>
-                  <td className="px-4 py-2 text-right">
-                    {canWrite && (
-                      <button
-                        onClick={() => onDelete(v.id)}
-                        className="text-xs text-red-400 hover:text-red-300"
-                      >
-                        {t("common.delete")}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <SearchInput value={search} onChange={setSearch} />
+            {canWrite && (
+              <Button variant="outline" onClick={() => openAddRange()} className="whitespace-nowrap">
+                {t("ranges.add")}
+              </Button>
             )}
-          </tbody>
-        </table>
-      </div>
-      <Pagination
-        page={vlansPage.page}
-        pageCount={vlansPage.pageCount}
-        total={vlansPage.total}
-        onPage={vlansPage.setPage}
-        pageSize={vlansPage.pageSize}
-        onPageSize={vlansPage.setPageSize}
-      />
-        </>
-      )}
+          </div>
 
-      <div className="flex items-start justify-between gap-3 pt-2">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-200">{t("ranges.title")}</h2>
-          <p className="text-sm text-slate-500">{t("ranges.subtitle")}</p>
+          {loading ? (
+            <p className="py-6 text-center text-sm text-slate-500">{t("common.loading")}</p>
+          ) : filteredVlans.length === 0 ? (
+            <p className="py-6 text-center text-sm text-slate-500">{t("common.noData")}</p>
+          ) : (
+            <>
+              {vlansPage.slice.map((v) => {
+                const ranges = rangesByVlan[v.id] ?? [];
+                return (
+                  <div key={v.id} className="rounded-xl border border-slate-800 bg-slate-900">
+                    <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+                      <span className="font-medium text-slate-100">{v.name}</span>
+                      {v.vlan_tag != null && (
+                        <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
+                          {t("vlans.col.tag")} {v.vlan_tag}
+                        </span>
+                      )}
+                      {v.description && (
+                        <span className="text-sm text-slate-500">{v.description}</span>
+                      )}
+                      {canWrite && (
+                        <div className="ml-auto flex items-center gap-3">
+                          <button
+                            onClick={() => openAddRange(v.id)}
+                            className="text-xs text-emerald-400 hover:text-emerald-300"
+                          >
+                            {t("vlans.addRange")}
+                          </button>
+                          <button
+                            onClick={() => onDelete(v.id)}
+                            className="text-xs text-red-400 hover:text-red-300"
+                          >
+                            {t("common.delete")}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <ul className="divide-y divide-slate-800/60 border-t border-slate-800">
+                      {ranges.length === 0 ? (
+                        <li className="px-4 py-2 text-xs text-slate-600">{t("vlans.noRanges")}</li>
+                      ) : (
+                        ranges.map(rangeRow)
+                      )}
+                    </ul>
+                  </div>
+                );
+              })}
+              <Pagination
+                page={vlansPage.page}
+                pageCount={vlansPage.pageCount}
+                total={vlansPage.total}
+                onPage={vlansPage.setPage}
+                pageSize={vlansPage.pageSize}
+                onPageSize={vlansPage.setPageSize}
+              />
+            </>
+          )}
+
+          {unassignedRanges.length > 0 && (
+            <div className="rounded-xl border border-slate-800 bg-slate-900">
+              <div className="px-4 py-3 text-sm font-medium text-slate-300">
+                {t("ranges.unassigned")}
+              </div>
+              <ul className="divide-y divide-slate-800/60 border-t border-slate-800">
+                {unassignedRanges.map(rangeRow)}
+              </ul>
+            </div>
+          )}
         </div>
-        {canWrite && (
-          <Button onClick={openAddRange} className="whitespace-nowrap">
-            {t("ranges.add")}
-          </Button>
-        )}
-      </div>
-
-      <div className="overflow-x-auto rounded-xl border border-slate-800">
-        <table className="w-full text-left text-sm">
-          <TableHead
-            columns={rangeColumns}
-            sort={rangeSort}
-            toggleSort={rangeToggle}
-            filters={rangeFilters}
-            setFilter={onRangeFilter}
-            trailing
-          />
-          <tbody className="divide-y divide-slate-800">
-            {loading ? (
-              <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={4}>
-                  {t("common.loading")}
-                </td>
-              </tr>
-            ) : ipRanges.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
-                  {t("ranges.empty")}
-                  {canWrite && (
-                    <>
-                      {" "}
-                      <button
-                        onClick={openAddRange}
-                        className="font-medium text-emerald-400 hover:text-emerald-300"
-                      >
-                        {t("ranges.addFirst")}
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ) : rangeRows.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={4}>
-                  {t("common.noData")}
-                </td>
-              </tr>
-            ) : (
-              rangesPage.slice.map((r) => (
-                <tr key={r.id} className="bg-slate-950">
-                  <td className="px-4 py-2 font-mono text-slate-100">{r.cidr}</td>
-                  <td className="px-4 py-2 text-slate-300">{vlanName(r.vlan_id)}</td>
-                  <td className="px-4 py-2 text-slate-400">{r.description ?? "-"}</td>
-                  <td className="px-4 py-2 text-right">
-                    {canWrite && (
-                      <button
-                        onClick={() => onDeleteRange(r.id)}
-                        className="text-xs text-red-400 hover:text-red-300"
-                      >
-                        {t("common.delete")}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      <Pagination
-        page={rangesPage.page}
-        pageCount={rangesPage.pageCount}
-        total={rangesPage.total}
-        onPage={rangesPage.setPage}
-        pageSize={rangesPage.pageSize}
-        onPageSize={rangesPage.setPageSize}
-      />
+      )}
 
       <Modal open={vlanOpen} onClose={() => setVlanOpen(false)} title={t("vlans.add")}>
         <form onSubmit={onCreate} className="space-y-3">
@@ -554,6 +503,15 @@ export default function VlansPage() {
               placeholder="Internet-facing servers"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+            />
+          </FormField>
+          <FormField label={t("vlans.f.ranges")} hint={t("vlans.f.rangesHint")}>
+            <textarea
+              className={inputClass}
+              rows={2}
+              placeholder="10.0.0.0/24, 10.0.1.0/24"
+              value={vlanRanges}
+              onChange={(e) => setVlanRanges(e.target.value)}
             />
           </FormField>
           {error && <p className="text-sm text-red-400">{error}</p>}
