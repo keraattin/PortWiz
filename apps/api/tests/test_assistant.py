@@ -28,6 +28,10 @@ def test_actions_for_role() -> None:
     assert "asset.update" in operator
     assert "asset.bulk_create" in operator
     assert "asset.bulk_delete" in operator
+    assert "vlan.bulk_create" in operator
+    assert "vlan.bulk_delete" in operator
+    assert "iprange.bulk_create" in operator
+    assert "iprange.bulk_delete" in operator
     assert "agent.enroll" not in operator  # admin-only
 
     admin = {a.name for a in actions_for_role("admin")}
@@ -338,6 +342,87 @@ async def test_run_chat_asset_bulk_delete_no_match(db) -> None:
         reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
     assert action is None  # nothing matched, so nothing is proposed
     assert "no assets found" in reply.lower()
+
+
+async def test_run_chat_vlan_bulk_create(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+
+    text = (
+        '{"reply": "Adding.", "action": {"name": "vlan.bulk_create", "args": '
+        '{"items": [{"name": "DMZ", "vlan_tag": 10}, {"name": "Servers"}]}}}'
+    )
+    msgs = [{"role": "user", "content": "add vlans DMZ and Servers"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["name"] == "vlan.bulk_create"
+    assert action["request"]["path"] == "/vlans/bulk-create"
+    body = action["request"]["body"]
+    assert [i["name"] for i in body["items"]] == ["DMZ", "Servers"]
+    assert body["items"][0]["vlan_tag"] == 10
+    assert "2" in action["summary"]["action"]
+
+
+async def test_run_chat_vlan_bulk_delete_previews(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+    from portwiz_api.models.asset import VLAN
+
+    async with db() as session:
+        session.add(VLAN(name="DMZ"))
+        session.add(VLAN(name="Servers"))
+        await session.commit()
+
+    text = (
+        '{"reply": "Deleting.", "action": {"name": "vlan.bulk_delete", '
+        '"args": {"names": ["DMZ", "Servers", "Ghost"]}}}'
+    )
+    msgs = [{"role": "user", "content": "delete vlans DMZ, Servers, Ghost"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["request"]["path"] == "/vlans/bulk-delete"
+    assert action["request"]["body"]["names"] == ["DMZ", "Servers", "Ghost"]
+    assert action["summary"]["action"] == "Delete 2 of 3 VLANs"
+
+
+async def test_run_chat_iprange_bulk_create(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+
+    text = (
+        '{"reply": "Adding.", "action": {"name": "iprange.bulk_create", "args": '
+        '{"items": [{"cidr": "10.0.0.0/24"}, {"cidr": "10.0.1.0/24"}]}}}'
+    )
+    msgs = [{"role": "user", "content": "add ranges"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["name"] == "iprange.bulk_create"
+    assert action["request"]["path"] == "/ip-ranges/bulk-create"
+    assert [i["cidr"] for i in action["request"]["body"]["items"]] == [
+        "10.0.0.0/24",
+        "10.0.1.0/24",
+    ]
+
+
+async def test_run_chat_iprange_bulk_delete_previews(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+    from portwiz_api.models.asset import IPRange
+
+    async with db() as session:
+        session.add(IPRange(cidr="10.0.0.0/24"))
+        await session.commit()
+
+    # A host-bit CIDR still matches the stored, normalised range.
+    text = (
+        '{"reply": "Deleting.", "action": {"name": "iprange.bulk_delete", '
+        '"args": {"cidrs": ["10.0.0.5/24", "10.9.9.0/24"]}}}'
+    )
+    msgs = [{"role": "user", "content": "delete ranges"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["request"]["path"] == "/ip-ranges/bulk-delete"
+    assert action["summary"]["action"] == "Delete 1 IP ranges"
 
 
 async def test_run_chat_task_update_status(db) -> None:
