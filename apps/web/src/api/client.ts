@@ -745,6 +745,8 @@ export function listAudit(params?: {
   actor_email?: string;
   target_type?: string;
   target_id?: string;
+  created_from?: string;
+  created_to?: string;
   limit?: number;
   offset?: number;
 }): Promise<AuditPage> {
@@ -753,6 +755,8 @@ export function listAudit(params?: {
   if (params?.actor_email) qs.set("actor_email", params.actor_email);
   if (params?.target_type) qs.set("target_type", params.target_type);
   if (params?.target_id) qs.set("target_id", params.target_id);
+  if (params?.created_from) qs.set("created_from", params.created_from);
+  if (params?.created_to) qs.set("created_to", params.created_to);
   qs.set("limit", String(params?.limit ?? 50));
   qs.set("offset", String(params?.offset ?? 0));
   return request<AuditPage>(`/audit?${qs.toString()}`);

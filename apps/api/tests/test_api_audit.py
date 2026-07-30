@@ -40,6 +40,32 @@ async def test_audit_filter_by_action(client, admin_headers) -> None:
     assert all(e["action"] == "asset.created" for e in page["events"])
 
 
+async def test_audit_filter_by_date_range(client, admin_headers) -> None:
+    await client.post("/api/v1/assets", json={"ip": "10.0.0.7"}, headers=admin_headers)
+
+    # A window entirely in the future excludes every recorded event.
+    future = await client.get(
+        "/api/v1/audit?created_from=2999-01-01T00:00:00", headers=admin_headers
+    )
+    assert future.status_code == 200
+    assert future.json()["total"] == 0
+
+    # A window entirely in the past excludes every recorded event.
+    past = await client.get(
+        "/api/v1/audit?created_to=2000-01-01T00:00:00", headers=admin_headers
+    )
+    assert past.status_code == 200
+    assert past.json()["total"] == 0
+
+    # A wide window includes them.
+    wide = await client.get(
+        "/api/v1/audit?created_from=2000-01-01T00:00:00&created_to=2999-01-01T00:00:00",
+        headers=admin_headers,
+    )
+    assert wide.status_code == 200
+    assert wide.json()["total"] >= 1
+
+
 async def test_audit_requires_privileged_role(client, admin_headers) -> None:
     await client.post(
         "/api/v1/users",

@@ -1043,6 +1043,8 @@ export const es: Partial<Record<TKey, string>> = {
   "compliance.downloadJson": "Descargar JSON",
   "compliance.downloadPdf": "Descargar PDF",
   "compliance.auditTitle": "Registro de auditoría",
+  "compliance.from": "Desde",
+  "compliance.to": "Hasta",
   "compliance.filterPlaceholder": "Filtrar por acción (p. ej. asset.created)",
   "compliance.apply": "Aplicar",
   "compliance.col.seq": "Sec",

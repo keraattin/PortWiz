@@ -1038,6 +1038,8 @@ export const en = {
   "compliance.downloadJson": "Download JSON",
   "compliance.downloadPdf": "Download PDF",
   "compliance.auditTitle": "Audit log",
+  "compliance.from": "From",
+  "compliance.to": "To",
   "compliance.filterPlaceholder": "Filter by action (e.g. asset.created)",
   "compliance.apply": "Apply",
   "compliance.col.seq": "Seq",

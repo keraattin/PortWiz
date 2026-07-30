@@ -1040,6 +1040,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "compliance.downloadJson": "JSON indir",
   "compliance.downloadPdf": "PDF indir",
   "compliance.auditTitle": "Denetim günlüğü",
+  "compliance.from": "Başlangıç",
+  "compliance.to": "Bitiş",
   "compliance.filterPlaceholder": "Eyleme göre filtrele (ör. asset.created)",
   "compliance.apply": "Uygula",
   "compliance.col.seq": "Sıra",

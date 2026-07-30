@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   type AuditEvent,
@@ -213,6 +213,15 @@ export default function CompliancePage() {
   const { sort: auditSort, toggleSort: auditToggle } = useSort();
   const { filters: auditFilters, setFilter: setAuditFilter } = useColumnFilters();
   const [auditSearch, setAuditSearch] = useState("");
+  // Date range is applied server-side (see loadAudit) so it scopes the whole
+  // history, not just the loaded page.
+  const [auditFrom, setAuditFrom] = useState("");
+  const [auditTo, setAuditTo] = useState("");
+  // A dropdown of the action labels actually present, so a reviewer picks from a
+  // list instead of guessing the wording.
+  const actionOptions = [...new Set(events.map((e) => e.action))]
+    .map((a) => ({ value: actionLabel(a), label: actionLabel(a) }))
+    .sort((a, b) => a.label.localeCompare(b.label));
   const auditColumns: Column<AuditEvent>[] = [
     { key: "seq", label: t("compliance.col.seq"), get: (e) => e.seq },
     { key: "time", label: t("compliance.col.time"), filter: "text", get: (e) => e.created_at },
@@ -222,7 +231,12 @@ export default function CompliancePage() {
       filter: "text",
       get: (e) => e.actor_email ?? t("compliance.system"),
     },
-    { key: "action", label: t("compliance.col.action"), filter: "text", get: (e) => actionLabel(e.action) },
+    {
+      key: "action",
+      label: t("compliance.col.action"),
+      filter: actionOptions,
+      get: (e) => actionLabel(e.action),
+    },
     {
       key: "target",
       label: t("compliance.col.target"),
@@ -249,13 +263,31 @@ export default function CompliancePage() {
   async function loadAudit() {
     setError(null);
     try {
-      const res = await listAudit({ limit: AUDIT_CAP });
+      const res = await listAudit({
+        limit: AUDIT_CAP,
+        // Inclusive whole-day bounds from the date pickers.
+        created_from: auditFrom ? `${auditFrom}T00:00:00` : undefined,
+        created_to: auditTo ? `${auditTo}T23:59:59` : undefined,
+      });
       setTotal(res.total);
       setEvents(res.events);
+      auditPage.setPage(0);
     } catch (e) {
       setError(errorMessage(e));
     }
   }
+
+  // Reload from the server whenever the date range changes (skip the initial
+  // mount, which the init effect already covers).
+  const firstAuditLoad = useRef(true);
+  useEffect(() => {
+    if (firstAuditLoad.current) {
+      firstAuditLoad.current = false;
+      return;
+    }
+    void loadAudit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auditFrom, auditTo]);
 
   useEffect(() => {
     async function init() {
@@ -486,13 +518,33 @@ export default function CompliancePage() {
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-200">{t("compliance.auditTitle")}</h2>
-          <SearchInput
-            value={auditSearch}
-            onChange={(v) => {
-              setAuditSearch(v);
-              auditPage.setPage(0);
-            }}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-1 text-xs text-slate-400">
+              {t("compliance.from")}
+              <input
+                type="date"
+                value={auditFrom}
+                onChange={(e) => setAuditFrom(e.target.value)}
+                className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-200"
+              />
+            </label>
+            <label className="flex items-center gap-1 text-xs text-slate-400">
+              {t("compliance.to")}
+              <input
+                type="date"
+                value={auditTo}
+                onChange={(e) => setAuditTo(e.target.value)}
+                className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-200"
+              />
+            </label>
+            <SearchInput
+              value={auditSearch}
+              onChange={(v) => {
+                setAuditSearch(v);
+                auditPage.setPage(0);
+              }}
+            />
+          </div>
         </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}

@@ -8,6 +8,8 @@ with.
 
 from __future__ import annotations
 
+import datetime as dt
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,6 +32,8 @@ async def list_audit(
     target_type: str | None = None,
     target_id: str | None = None,
     actor_email: str | None = None,
+    created_from: dt.datetime | None = None,
+    created_to: dt.datetime | None = None,
     limit: int = Query(default=50, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
     _: User = Depends(ReadDep),
@@ -44,6 +48,12 @@ async def list_audit(
         conditions.append(AuditEvent.target_id == target_id)
     if actor_email is not None:
         conditions.append(AuditEvent.actor_email == actor_email)
+    # Inclusive date range on when the event was recorded, so reviewers can scope
+    # to a window (e.g. an incident) across the full history, not just the page.
+    if created_from is not None:
+        conditions.append(AuditEvent.created_at >= created_from)
+    if created_to is not None:
+        conditions.append(AuditEvent.created_at <= created_to)
 
     total = (
         await session.execute(
