@@ -6,6 +6,7 @@ import {
   type ChangeType,
   type PortSnapshot,
 } from "../api/client";
+import Pagination, { usePagination } from "./Pagination";
 import { type TKey } from "../i18n/locales/en";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -33,6 +34,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 const CHANGE_TYPES: ChangeType[] = ["opened", "closed", "service_changed", "version_changed"];
 const SEVERITIES = ["low", "medium", "high"] as const;
+const STATUSES = ["open", "acknowledged", "resolved"] as const;
 
 type Translate = (key: TKey, vars?: Record<string, string | number>) => string;
 
@@ -59,22 +61,33 @@ export default function ChangeTimeline({
   const { t } = useI18n();
   const [typeFilter, setTypeFilter] = useState("");
   const [sevFilter, setSevFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const filtered = events.filter(
+    (e) =>
+      (!typeFilter || e.change_type === typeFilter) &&
+      (!sevFilter || e.severity === sevFilter) &&
+      (!statusFilter || e.status === statusFilter),
+  );
+  const page = usePagination(filtered, 10);
+  const selectCls =
+    "rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-500";
 
   if (events.length === 0) {
     return <p className="py-6 text-center text-sm text-slate-600">{t("timeline.empty")}</p>;
   }
 
-  const filtered = events.filter(
-    (e) =>
-      (!typeFilter || e.change_type === typeFilter) && (!sevFilter || e.severity === sevFilter),
-  );
-  const selectCls =
-    "rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-500";
-
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className={selectCls}>
+        <select
+          value={typeFilter}
+          onChange={(e) => {
+            setTypeFilter(e.target.value);
+            page.setPage(0);
+          }}
+          className={selectCls}
+        >
           <option value="">{t("filters.all")}</option>
           {CHANGE_TYPES.map((ct) => (
             <option key={ct} value={ct}>
@@ -82,11 +95,33 @@ export default function ChangeTimeline({
             </option>
           ))}
         </select>
-        <select value={sevFilter} onChange={(e) => setSevFilter(e.target.value)} className={selectCls}>
+        <select
+          value={sevFilter}
+          onChange={(e) => {
+            setSevFilter(e.target.value);
+            page.setPage(0);
+          }}
+          className={selectCls}
+        >
           <option value="">{t("filters.all")}</option>
           {SEVERITIES.map((s) => (
             <option key={s} value={s}>
               {t(`severity.${s}` as TKey)}
+            </option>
+          ))}
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            page.setPage(0);
+          }}
+          className={selectCls}
+        >
+          <option value="">{t("filters.all")}</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {t(`changeStatus.${s}` as TKey)}
             </option>
           ))}
         </select>
@@ -96,7 +131,7 @@ export default function ChangeTimeline({
         <p className="py-6 text-center text-sm text-slate-600">{t("common.noData")}</p>
       ) : (
         <ol className="relative space-y-4 border-l border-slate-800 pl-5">
-          {filtered.map((e) => (
+          {page.slice.map((e) => (
             <li key={e.id} className="relative">
               <span
                 className={`absolute -left-[1.42rem] top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-slate-950 ${CHANGE_DOT[e.change_type]}`}
@@ -143,6 +178,17 @@ export default function ChangeTimeline({
             </li>
           ))}
         </ol>
+      )}
+
+      {filtered.length > 0 && (
+        <Pagination
+          page={page.page}
+          pageCount={page.pageCount}
+          total={page.total}
+          onPage={page.setPage}
+          pageSize={page.pageSize}
+          onPageSize={page.setPageSize}
+        />
       )}
     </div>
   );
