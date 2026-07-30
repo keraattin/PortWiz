@@ -104,9 +104,9 @@ async def create_vlan(
 
 
 _VLAN_TEMPLATE_CSV = (
-    "name,tag,description\r\n"
-    "DMZ,10,Internet-facing servers\r\n"
-    "Servers,20,Internal application servers\r\n"
+    "name,tag,description,cidr\r\n"
+    "DMZ,10,Internet-facing servers,10.0.0.0/24\r\n"
+    "Servers,20,Internal application servers,10.0.1.0/24\r\n"
 )
 
 
@@ -131,7 +131,9 @@ async def import_vlans(
 ) -> VLANImportReport:
     """Bulk-create or update VLANs from a CSV or .xlsx upload, upserting by name.
 
-    A per-row report is returned and one summary event is appended to the audit
+    A VLAN and its IP ranges import as one unit: an optional ``cidr`` per row
+    attaches that range to the row's VLAN (repeat the name to add several). A
+    per-row report is returned and one summary event is appended to the audit
     log. Tags are validated to the 802.1Q range (1-4094)."""
     content = await file.read()
     if len(content) > MAX_IMPORT_BYTES:
@@ -146,15 +148,23 @@ async def import_vlans(
     by_name = {
         v.name.lower(): v for v in (await session.execute(select(VLAN))).scalars()
     }
+    # Existing ranges, so a re-import does not duplicate a CIDR that is already in.
+    existing_ranges = {
+        r.cidr for r in (await session.execute(select(IPRange))).scalars()
+    }
 
     results: list[VLANImportRowResult] = []
     created = updated = skipped = errors = 0
+    ranges_created = ranges_skipped = 0
     for parsed in rows:
         name = parsed.values.get("name")
+        cidr = parsed.values.get("cidr")
         if parsed.error:
             errors += 1
             results.append(
-                VLANImportRowResult(row=parsed.row, name=name, status="error", error=parsed.error)
+                VLANImportRowResult(
+                    row=parsed.row, name=name, cidr=cidr, status="error", error=parsed.error
+                )
             )
             continue
 
@@ -167,21 +177,36 @@ async def import_vlans(
 
         existing = by_name.get(values["name"].lower())
         if existing is not None:
+            vlan = existing
             if on_conflict == "skip":
                 skipped += 1
-                results.append(VLANImportRowResult(row=parsed.row, name=name, status="skipped"))
-                continue
-            for key, value in fields.items():
-                setattr(existing, key, value)
-            updated += 1
-            results.append(VLANImportRowResult(row=parsed.row, name=name, status="updated"))
+                status_label = "skipped"
+            else:
+                for key, value in fields.items():
+                    setattr(existing, key, value)
+                updated += 1
+                status_label = "updated"
         else:
             vlan = VLAN(**fields)
             session.add(vlan)
             await session.flush()
             by_name[values["name"].lower()] = vlan
             created += 1
-            results.append(VLANImportRowResult(row=parsed.row, name=name, status="created"))
+            status_label = "created"
+
+        # Attach the row's IP range to this VLAN, independent of the VLAN's
+        # create/update/skip outcome, deduped by CIDR.
+        if cidr:
+            if cidr in existing_ranges:
+                ranges_skipped += 1
+            else:
+                session.add(IPRange(cidr=cidr, vlan_id=vlan.id))
+                existing_ranges.add(cidr)
+                ranges_created += 1
+
+        results.append(
+            VLANImportRowResult(row=parsed.row, name=name, cidr=cidr, status=status_label)
+        )
 
     await append_audit(
         session,
@@ -190,7 +215,13 @@ async def import_vlans(
         actor_email=current_user.email,
         target_type="vlan",
         target_id=None,
-        payload={"total": len(rows), "created": created, "updated": updated, "errors": errors},
+        payload={
+            "total": len(rows),
+            "created": created,
+            "updated": updated,
+            "errors": errors,
+            "ranges_created": ranges_created,
+        },
     )
     await session.commit()
     return VLANImportReport(
@@ -199,6 +230,8 @@ async def import_vlans(
         updated=updated,
         skipped=skipped,
         errors=errors,
+        ranges_created=ranges_created,
+        ranges_skipped=ranges_skipped,
         results=results,
     )
 

@@ -31,3 +31,13 @@ def test_parse_vlan_aliases_and_tag_validation() -> None:
 def test_parse_vlan_missing_name_column() -> None:
     with pytest.raises(ValueError):
         parse_vlan_file(b"tag,description\n10,x\n", "vlans.csv")
+
+
+def test_parse_vlan_with_cidr_column() -> None:
+    # A VLAN and its range travel on one row; 'subnet' aliases cidr and a
+    # host-bit-set network is normalised to its base.
+    content = b"name,tag,subnet\nDMZ,10,10.0.0.5/24\nBad,20,not-a-cidr\n"
+    rows = parse_vlan_file(content, "vlans.csv")
+    assert rows[0].values["cidr"] == "10.0.0.0/24"  # normalised
+    assert rows[0].error is None
+    assert rows[1].error and "cidr" in rows[1].error.lower()

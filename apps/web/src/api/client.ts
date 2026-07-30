@@ -319,6 +319,7 @@ export async function importAssets(
 export interface VlanImportRowResult {
   row: number;
   name: string | null;
+  cidr: string | null;
   status: string; // created | updated | skipped | error
   error: string | null;
 }
@@ -328,6 +329,8 @@ export interface VlanImportReport {
   updated: number;
   skipped: number;
   errors: number;
+  ranges_created: number;
+  ranges_skipped: number;
   results: VlanImportRowResult[];
 }
 

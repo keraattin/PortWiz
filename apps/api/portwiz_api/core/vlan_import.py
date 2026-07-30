@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import csv
 import io
+import ipaddress
 from dataclasses import dataclass, field
 
 # Canonical field -> accepted header spellings (lowercased, trimmed).
@@ -18,6 +19,10 @@ _HEADER_ALIASES: dict[str, set[str]] = {
     "name": {"name", "vlan", "vlan name", "label"},
     "tag": {"tag", "vlan tag", "vlan_tag", "vlan id", "802.1q", "dot1q"},
     "description": {"description", "desc", "notes"},
+    # A VLAN and its IP range travel in one file: an optional cidr per row
+    # attaches that range to the VLAN on the same row. Repeat the name on more
+    # rows to give one VLAN several ranges.
+    "cidr": {"cidr", "range", "ip range", "subnet", "network", "prefix"},
 }
 
 _HEADER_LOOKUP = {alias: field for field, aliases in _HEADER_ALIASES.items() for alias in aliases}
@@ -69,6 +74,12 @@ def _validate_values(values: dict[str, str]) -> tuple[dict[str, str], str | None
         if not 1 <= tag <= 4094:
             return values, f"VLAN tag out of range (1-4094): '{raw}'"
         values["tag"] = str(tag)
+    if "cidr" in values:
+        raw = values["cidr"]
+        try:
+            values["cidr"] = str(ipaddress.ip_network(raw, strict=False))
+        except ValueError:
+            return values, f"Invalid CIDR '{raw}'"
     return values, None
 
 

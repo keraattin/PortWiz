@@ -55,12 +55,40 @@ async def test_vlan_import_bad_tag_is_reported(client, admin_headers) -> None:
     assert body["errors"] == 1
 
 
+async def test_vlan_import_attaches_ranges(client, admin_headers) -> None:
+    # A VLAN with two ranges (name repeated) plus a VLAN with none, in one file.
+    csv = b"name,tag,cidr\nDMZ,10,10.0.0.0/24\nDMZ,,10.0.1.0/24\nServers,20,\n"
+    resp = await client.post("/api/v1/vlans/import", files=_file(csv), headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["created"] == 2  # DMZ + Servers (the second DMZ row updates it)
+    assert body["ranges_created"] == 2
+
+    ranges = (await client.get("/api/v1/ip-ranges", headers=admin_headers)).json()
+    cidrs = {r["cidr"] for r in ranges}
+    assert {"10.0.0.0/24", "10.0.1.0/24"} <= cidrs
+    vlans = (await client.get("/api/v1/vlans", headers=admin_headers)).json()
+    dmz = next(v for v in vlans if v["name"] == "DMZ")
+    assert all(
+        r["vlan_id"] == dmz["id"]
+        for r in ranges
+        if r["cidr"] in ("10.0.0.0/24", "10.0.1.0/24")
+    )
+
+    # Re-importing does not duplicate ranges: existing CIDRs are skipped.
+    again = (
+        await client.post("/api/v1/vlans/import", files=_file(csv), headers=admin_headers)
+    ).json()
+    assert again["ranges_created"] == 0
+    assert again["ranges_skipped"] == 2
+
+
 async def test_vlan_import_template(client, admin_headers) -> None:
     resp = await client.get("/api/v1/vlans/import-template", headers=admin_headers)
     assert resp.status_code == 200, resp.text
     assert "text/csv" in resp.headers["content-type"]
     header = resp.text.splitlines()[0]
-    for col in ("name", "tag", "description"):
+    for col in ("name", "tag", "description", "cidr"):
         assert col in header
 
 

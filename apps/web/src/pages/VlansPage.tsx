@@ -310,6 +310,17 @@ export default function VlansPage() {
                   {importReport.errors} {t("assets.errors")}
                 </span>
               </p>
+              {(importReport.ranges_created > 0 || importReport.ranges_skipped > 0) && (
+                <p className="text-slate-300">
+                  <span className="text-emerald-400">
+                    {importReport.ranges_created} {t("vlans.rangesAdded")}
+                  </span>
+                  ,{" "}
+                  <span className="text-slate-400">
+                    {importReport.ranges_skipped} {t("assets.skipped")}
+                  </span>
+                </p>
+              )}
               {importReport.errors > 0 && (
                 <ul className="space-y-1 text-xs text-red-400">
                   {importReport.results

@@ -571,7 +571,9 @@ export const en = {
     "Add your network VLANs, then add IP ranges and assets to them so scans know where to look.",
   "vlans.addFirst": "Add your first VLAN",
   "vlans.bulkImport": "Bulk import",
-  "vlans.bulkImportHint": 'CSV or .xlsx with a "name" column. Optional: tag, description.',
+  "vlans.bulkImportHint":
+    'CSV or .xlsx with a "name" column. Optional: tag, description, cidr (a range for that VLAN; repeat the name for several).',
+  "vlans.rangesAdded": "IP ranges added",
   "vlans.syncTitle": "Sync from NetBox",
   "vlans.syncHint": "Pulls VLANs from your configured NetBox and upserts them by name.",
   "vlans.importOff": "VLAN import is turned off in Settings.",

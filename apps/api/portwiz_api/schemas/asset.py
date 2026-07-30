@@ -144,6 +144,7 @@ class AssetImportReport(BaseModel):
 class VLANImportRowResult(BaseModel):
     row: int
     name: str | None = None
+    cidr: str | None = None  # the IP range attached on this row, if any
     status: str  # created | updated | skipped | error
     error: str | None = None
 
@@ -154,6 +155,9 @@ class VLANImportReport(BaseModel):
     updated: int
     skipped: int
     errors: int
+    # IP ranges attached from the same file (VLAN + its ranges import as one unit).
+    ranges_created: int = 0
+    ranges_skipped: int = 0
     results: list[VLANImportRowResult]
 
 
