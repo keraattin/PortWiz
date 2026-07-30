@@ -216,6 +216,57 @@ async def _asset_update(session: AsyncSession, args: dict[str, Any]) -> BuiltAct
     return summary, {"method": "PATCH", "path": f"/assets/{asset.id}", "body": body}
 
 
+async def _asset_bulk_create(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    """Add several assets in one action. Each item needs an ip; hostname and
+    classification are optional. Existing IPs are skipped at execution time."""
+    items = args.get("items")
+    if not isinstance(items, list) or not items:
+        raise ActionError("Provide a non-empty 'items' list of assets to create.")
+    built: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            raise ActionError("Each item must be an object with at least an ip.")
+        ip = item.get("ip")
+        if not isinstance(ip, str) or not ip.strip():
+            raise ActionError("Each asset needs an ip.")
+        entry: dict[str, Any] = {"ip": ip.strip()}
+        hostname = _opt_str(item, "hostname")
+        if hostname:
+            entry["hostname"] = hostname
+        criticality = _enum(item, "criticality", _CRITICALITIES, None)
+        if criticality:
+            entry["criticality"] = criticality
+        sensitivity = _enum(item, "data_sensitivity", _SENSITIVITIES, None)
+        if sensitivity:
+            entry["data_sensitivity"] = sensitivity
+        built.append(entry)
+    preview = ", ".join(e["ip"] for e in built[:10])
+    summary = {"action": f"Create {len(built)} assets", "ips": preview}
+    return summary, {"method": "POST", "path": "/assets/bulk-create", "body": {"items": built}}
+
+
+async def _asset_bulk_delete(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    """Delete several assets by IP in one action. The summary previews how many
+    of the given IPs actually exist, so the confirm card shows the blast radius
+    before anything is deleted."""
+    ips_arg = args.get("ips")
+    if not isinstance(ips_arg, list) or not ips_arg:
+        raise ActionError("Provide a non-empty 'ips' list of assets to delete.")
+    ips = [str(x).strip() for x in ips_arg if str(x).strip()]
+    if not ips:
+        raise ActionError("Provide a non-empty 'ips' list of assets to delete.")
+    matched = (
+        await session.execute(select(Asset.ip).where(Asset.ip.in_(ips)))
+    ).scalars().all()
+    if not matched:
+        raise ActionError("No assets found for those IPs.")
+    summary = {
+        "action": f"Delete {len(matched)} of {len(ips)} assets",
+        "ips": ", ".join(sorted(matched)[:10]),
+    }
+    return summary, {"method": "POST", "path": "/assets/bulk-delete", "body": {"ips": ips}}
+
+
 async def _scanprofile_create(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
     name = _req_str(args, "name")
     raw_targets = args.get("targets")
@@ -404,6 +455,23 @@ CATALOG: list[ActionSpec] = [
         "(optional), criticality (low|medium|high|critical, optional), "
         "data_sensitivity (none|pii|cde|ephi, optional), description (optional)",
         _asset_update,
+    ),
+    ActionSpec(
+        "asset.bulk_create",
+        WRITE_ROLES,
+        "Add several assets (hosts) at once. Existing IPs are skipped.",
+        "items: list of {ip (required), hostname (optional), criticality "
+        "(low|medium|high|critical, optional), data_sensitivity "
+        "(none|pii|cde|ephi, optional)}",
+        _asset_bulk_create,
+    ),
+    ActionSpec(
+        "asset.bulk_delete",
+        WRITE_ROLES,
+        "Delete several assets by IP at once. The confirm card shows how many "
+        "match before you run it.",
+        "ips: list of IP addresses (required)",
+        _asset_bulk_delete,
     ),
     ActionSpec(
         "scanprofile.create",

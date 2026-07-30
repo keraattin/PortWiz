@@ -28,6 +28,9 @@ from ...core.vlan_import import parse_vlan_file
 from ...models.asset import VLAN, Asset, IPRange
 from ...models.user import User, UserRole
 from ...schemas.asset import (
+    AssetBulkCreate,
+    AssetBulkDelete,
+    AssetBulkReport,
     AssetCreate,
     AssetImportReport,
     AssetImportRowResult,
@@ -834,3 +837,93 @@ async def delete_asset(
         target_id=str(asset_id),
     )
     await session.commit()
+
+
+@assets_router.post("/bulk-create", response_model=AssetBulkReport)
+async def bulk_create_assets(
+    payload: AssetBulkCreate,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> AssetBulkReport:
+    """Create many assets at once (assistant bulk add). Existing IPs are skipped
+    and invalid IPs are reported per item; one audit entry records the batch."""
+    created = skipped = errors = 0
+    errors_detail: list[str] = []
+    for item in payload.items:
+        try:
+            ipaddress.ip_address(item.ip)
+        except ValueError:
+            errors += 1
+            errors_detail.append(f"Invalid IP '{item.ip}'")
+            continue
+        fields: dict[str, object] = {
+            "criticality": item.criticality,
+            "data_sensitivity": item.data_sensitivity,
+        }
+        if item.hostname:
+            fields["hostname"] = item.hostname
+        outcome = await upsert_asset(session, item.ip, fields, "skip")
+        if outcome == "created":
+            created += 1
+        else:
+            skipped += 1
+    await append_audit(
+        session,
+        action="asset.bulk_created",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=None,
+        payload={
+            "total": len(payload.items),
+            "created": created,
+            "skipped": skipped,
+            "errors": errors,
+        },
+    )
+    await session.commit()
+    return AssetBulkReport(
+        total=len(payload.items),
+        succeeded=created,
+        skipped=skipped,
+        errors=errors,
+        errors_detail=errors_detail[:50],
+    )
+
+
+@assets_router.post("/bulk-delete", response_model=AssetBulkReport)
+async def bulk_delete_assets(
+    payload: AssetBulkDelete,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> AssetBulkReport:
+    """Delete many assets by IP at once (assistant bulk delete). An IP with no
+    matching asset is reported, not an error; one audit entry records the batch."""
+    deleted = 0
+    not_found: list[str] = []
+    for ip in payload.ips:
+        asset = (
+            await session.execute(select(Asset).where(Asset.ip == ip))
+        ).scalars().first()
+        if asset is None:
+            not_found.append(ip)
+            continue
+        await session.delete(asset)
+        deleted += 1
+    await append_audit(
+        session,
+        action="asset.bulk_deleted",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=None,
+        payload={"total": len(payload.ips), "deleted": deleted, "not_found": not_found},
+    )
+    await session.commit()
+    return AssetBulkReport(
+        total=len(payload.ips),
+        succeeded=deleted,
+        skipped=len(not_found),
+        errors=0,
+        errors_detail=not_found[:50],
+    )

@@ -26,6 +26,8 @@ def test_actions_for_role() -> None:
     assert "change.acknowledge" in operator
     assert "task.update_status" in operator
     assert "asset.update" in operator
+    assert "asset.bulk_create" in operator
+    assert "asset.bulk_delete" in operator
     assert "agent.enroll" not in operator  # admin-only
 
     admin = {a.name for a in actions_for_role("admin")}
@@ -276,6 +278,66 @@ async def test_run_chat_asset_update_needs_a_field(db) -> None:
         reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
     assert action is None
     assert "nothing to update" in reply.lower()
+
+
+async def test_run_chat_asset_bulk_create(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+
+    text = (
+        '{"reply": "Adding them.", "action": {"name": "asset.bulk_create", "args": '
+        '{"items": [{"ip": "10.0.0.1"}, {"ip": "10.0.0.2", "criticality": "high"}]}}}'
+    )
+    msgs = [{"role": "user", "content": "add 10.0.0.1 and 10.0.0.2"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["name"] == "asset.bulk_create"
+    assert action["request"]["method"] == "POST"
+    assert action["request"]["path"] == "/assets/bulk-create"
+    body = action["request"]["body"]
+    assert [i["ip"] for i in body["items"]] == ["10.0.0.1", "10.0.0.2"]
+    assert body["items"][1]["criticality"] == "high"
+    # The summary previews the count for the confirm card.
+    assert "2" in action["summary"]["action"]
+
+
+async def test_run_chat_asset_bulk_delete_previews_matches(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+    from portwiz_api.models.asset import Asset
+
+    async with db() as session:
+        session.add(Asset(ip="10.0.0.1"))
+        session.add(Asset(ip="10.0.0.2"))
+        await session.commit()
+
+    # Ask to delete three IPs, only two of which exist: the preview counts matches.
+    text = (
+        '{"reply": "Deleting.", "action": {"name": "asset.bulk_delete", "args": '
+        '{"ips": ["10.0.0.1", "10.0.0.2", "10.0.0.99"]}}}'
+    )
+    msgs = [{"role": "user", "content": "delete 10.0.0.1, 10.0.0.2, 10.0.0.99"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["name"] == "asset.bulk_delete"
+    assert action["request"]["path"] == "/assets/bulk-delete"
+    assert action["request"]["body"]["ips"] == ["10.0.0.1", "10.0.0.2", "10.0.0.99"]
+    # "Delete 2 of 3 assets": the confirm card shows the real blast radius.
+    assert action["summary"]["action"] == "Delete 2 of 3 assets"
+
+
+async def test_run_chat_asset_bulk_delete_no_match(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+
+    text = (
+        '{"reply": "Deleting.", "action": {"name": "asset.bulk_delete", '
+        '"args": {"ips": ["203.0.113.7"]}}}'
+    )
+    msgs = [{"role": "user", "content": "delete 203.0.113.7"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is None  # nothing matched, so nothing is proposed
+    assert "no assets found" in reply.lower()
 
 
 async def test_run_chat_task_update_status(db) -> None:

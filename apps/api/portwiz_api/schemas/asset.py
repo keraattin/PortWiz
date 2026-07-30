@@ -167,6 +167,30 @@ class AssetSyncReport(BaseModel):
     errors_detail: list[str]
 
 
+# Bulk operations (assistant "add/delete several at once"), keyed by IP.
+class AssetBulkItem(BaseModel):
+    ip: str
+    hostname: str | None = Field(default=None, max_length=255)
+    criticality: Criticality = Criticality.medium
+    data_sensitivity: DataSensitivity = DataSensitivity.none
+
+
+class AssetBulkCreate(BaseModel):
+    items: list[AssetBulkItem]
+
+
+class AssetBulkDelete(BaseModel):
+    ips: list[str]
+
+
+class AssetBulkReport(BaseModel):
+    total: int
+    succeeded: int  # created (bulk create) or deleted (bulk delete)
+    skipped: int  # already existed (create) / not found (delete)
+    errors: int
+    errors_detail: list[str]
+
+
 class VlanSyncReport(BaseModel):
     source: str
     total: int
