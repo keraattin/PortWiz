@@ -13,6 +13,7 @@ manipulated model cannot reach an arbitrary endpoint.
 from __future__ import annotations
 
 import datetime as dt
+import ipaddress
 import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -22,7 +23,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.agent import Agent
-from ..models.asset import VLAN, Asset, Criticality, DataSensitivity
+from ..models.asset import VLAN, Asset, Criticality, DataSensitivity, IPRange
 from ..models.change import ChangeEvent
 from ..models.scan import ComplianceFramework, ScanProfile, ScanRun, ScanType
 from ..models.task import Task, TaskStatus
@@ -134,6 +135,109 @@ async def _iprange_create(session: AsyncSession, args: dict[str, Any]) -> BuiltA
     summary = {"cidr": cidr, "vlan": vlan_name, "description": desc}
     body = {"cidr": cidr, "vlan_id": vlan_id, "description": desc}
     return summary, {"method": "POST", "path": "/ip-ranges", "body": body}
+
+
+async def _vlan_bulk_create(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    items = args.get("items")
+    if not isinstance(items, list) or not items:
+        raise ActionError("Provide a non-empty 'items' list of VLANs to create.")
+    built: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            raise ActionError("Each item must be an object with at least a name.")
+        name = item.get("name")
+        if not isinstance(name, str) or not name.strip():
+            raise ActionError("Each VLAN needs a name.")
+        entry: dict[str, Any] = {"name": name.strip()}
+        tag = _opt_int(item, "vlan_tag")
+        if tag is not None:
+            entry["vlan_tag"] = tag
+        desc = _opt_str(item, "description")
+        if desc:
+            entry["description"] = desc
+        built.append(entry)
+    summary = {
+        "action": f"Create {len(built)} VLANs",
+        "names": ", ".join(e["name"] for e in built[:10]),
+    }
+    return summary, {"method": "POST", "path": "/vlans/bulk-create", "body": {"items": built}}
+
+
+async def _vlan_bulk_delete(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    names_arg = args.get("names")
+    if not isinstance(names_arg, list) or not names_arg:
+        raise ActionError("Provide a non-empty 'names' list of VLANs to delete.")
+    names = [str(x).strip() for x in names_arg if str(x).strip()]
+    if not names:
+        raise ActionError("Provide a non-empty 'names' list of VLANs to delete.")
+    wanted = {n.lower() for n in names}
+    stored = (await session.execute(select(VLAN.name))).scalars().all()
+    matched = [n for n in stored if n.lower() in wanted]
+    if not matched:
+        raise ActionError("No VLANs found for those names.")
+    summary = {
+        "action": f"Delete {len(matched)} of {len(names)} VLANs",
+        "names": ", ".join(sorted(matched)[:10]),
+    }
+    return summary, {"method": "POST", "path": "/vlans/bulk-delete", "body": {"names": names}}
+
+
+async def _iprange_bulk_create(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    items = args.get("items")
+    if not isinstance(items, list) or not items:
+        raise ActionError("Provide a non-empty 'items' list of IP ranges to create.")
+    built: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            raise ActionError("Each item must be an object with at least a cidr.")
+        cidr = item.get("cidr")
+        if not isinstance(cidr, str) or not cidr.strip():
+            raise ActionError("Each IP range needs a cidr.")
+        entry: dict[str, Any] = {"cidr": cidr.strip()}
+        vlan_name = _opt_str(item, "vlan_name")
+        if vlan_name:
+            entry["vlan_name"] = vlan_name
+        desc = _opt_str(item, "description")
+        if desc:
+            entry["description"] = desc
+        built.append(entry)
+    summary = {
+        "action": f"Create {len(built)} IP ranges",
+        "cidrs": ", ".join(e["cidr"] for e in built[:10]),
+    }
+    return summary, {
+        "method": "POST",
+        "path": "/ip-ranges/bulk-create",
+        "body": {"items": built},
+    }
+
+
+async def _iprange_bulk_delete(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    cidrs_arg = args.get("cidrs")
+    if not isinstance(cidrs_arg, list) or not cidrs_arg:
+        raise ActionError("Provide a non-empty 'cidrs' list of IP ranges to delete.")
+    cidrs = [str(x).strip() for x in cidrs_arg if str(x).strip()]
+    if not cidrs:
+        raise ActionError("Provide a non-empty 'cidrs' list of IP ranges to delete.")
+    normalized = set()
+    for c in cidrs:
+        try:
+            normalized.add(str(ipaddress.ip_network(c, strict=False)))
+        except ValueError:
+            continue  # invalid CIDR matches nothing; the endpoint reports it
+    stored = (await session.execute(select(IPRange.cidr))).scalars().all()
+    matched = sum(1 for r in stored if r in normalized)
+    if matched == 0:
+        raise ActionError("No IP ranges found for those CIDRs.")
+    summary = {
+        "action": f"Delete {matched} IP ranges",
+        "cidrs": ", ".join(cidrs[:10]),
+    }
+    return summary, {
+        "method": "POST",
+        "path": "/ip-ranges/bulk-delete",
+        "body": {"cidrs": cidrs},
+    }
 
 
 async def _asset_create(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
@@ -431,11 +535,43 @@ CATALOG: list[ActionSpec] = [
         _vlan_create,
     ),
     ActionSpec(
+        "vlan.bulk_create",
+        WRITE_ROLES,
+        "Add several VLANs at once. Existing names are skipped.",
+        "items: list of {name (required), vlan_tag (number, optional), "
+        "description (optional)}",
+        _vlan_bulk_create,
+    ),
+    ActionSpec(
+        "vlan.bulk_delete",
+        WRITE_ROLES,
+        "Delete several VLANs by name at once. The confirm card shows how many "
+        "match before you run it.",
+        "names: list of VLAN names (required)",
+        _vlan_bulk_delete,
+    ),
+    ActionSpec(
         "iprange.create",
         WRITE_ROLES,
         "Create an IP range (CIDR block).",
         "cidr (required), vlan_name (optional), description (optional)",
         _iprange_create,
+    ),
+    ActionSpec(
+        "iprange.bulk_create",
+        WRITE_ROLES,
+        "Add several IP ranges at once. CIDRs already present are skipped.",
+        "items: list of {cidr (required), vlan_name (optional), "
+        "description (optional)}",
+        _iprange_bulk_create,
+    ),
+    ActionSpec(
+        "iprange.bulk_delete",
+        WRITE_ROLES,
+        "Delete several IP ranges by CIDR at once. The confirm card shows how "
+        "many match before you run it.",
+        "cidrs: list of CIDR blocks (required)",
+        _iprange_bulk_delete,
     ),
     ActionSpec(
         "asset.create",

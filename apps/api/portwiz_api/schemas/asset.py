@@ -195,6 +195,43 @@ class AssetBulkReport(BaseModel):
     errors_detail: list[str]
 
 
+# Shared bulk-operation report for VLANs and IP ranges (same shape as assets).
+class BulkReport(BaseModel):
+    total: int
+    succeeded: int  # created or deleted
+    skipped: int  # already existed / not found
+    errors: int
+    errors_detail: list[str]
+
+
+class VlanBulkItem(BaseModel):
+    name: str
+    vlan_tag: int | None = None
+    description: str | None = None
+
+
+class VlanBulkCreate(BaseModel):
+    items: list[VlanBulkItem]
+
+
+class VlanBulkDelete(BaseModel):
+    names: list[str]
+
+
+class IPRangeBulkItem(BaseModel):
+    cidr: str
+    vlan_name: str | None = None
+    description: str | None = None
+
+
+class IPRangeBulkCreate(BaseModel):
+    items: list[IPRangeBulkItem]
+
+
+class IPRangeBulkDelete(BaseModel):
+    cidrs: list[str]
+
+
 class VlanSyncReport(BaseModel):
     source: str
     total: int

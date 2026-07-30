@@ -38,9 +38,14 @@ from ...schemas.asset import (
     AssetRead,
     AssetSyncReport,
     AssetUpdate,
+    BulkReport,
+    IPRangeBulkCreate,
+    IPRangeBulkDelete,
     IPRangeCreate,
     IPRangeRead,
     IPRangeUpdate,
+    VlanBulkCreate,
+    VlanBulkDelete,
     VLANCreate,
     VLANImportReport,
     VLANImportRowResult,
@@ -367,6 +372,91 @@ async def delete_vlan(
     await session.commit()
 
 
+@vlans_router.post("/bulk-create", response_model=BulkReport)
+async def bulk_create_vlans(
+    payload: VlanBulkCreate,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> BulkReport:
+    """Create many VLANs at once (assistant bulk add). Existing names are skipped;
+    an out-of-range tag is reported per item. One audit entry records the batch."""
+    by_name = {
+        v.name.lower(): v for v in (await session.execute(select(VLAN))).scalars()
+    }
+    created = skipped = errors = 0
+    errors_detail: list[str] = []
+    for item in payload.items:
+        if item.vlan_tag is not None and not (1 <= item.vlan_tag <= 4094):
+            errors += 1
+            errors_detail.append(f"VLAN '{item.name}' has out-of-range tag {item.vlan_tag}")
+            continue
+        if item.name.lower() in by_name:
+            skipped += 1
+            continue
+        vlan = VLAN(name=item.name, vlan_tag=item.vlan_tag, description=item.description)
+        session.add(vlan)
+        await session.flush()
+        by_name[item.name.lower()] = vlan
+        created += 1
+    await append_audit(
+        session,
+        action="vlan.bulk_created",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="vlan",
+        target_id=None,
+        payload={"total": len(payload.items), "created": created, "skipped": skipped},
+    )
+    await session.commit()
+    return BulkReport(
+        total=len(payload.items),
+        succeeded=created,
+        skipped=skipped,
+        errors=errors,
+        errors_detail=errors_detail[:50],
+    )
+
+
+@vlans_router.post("/bulk-delete", response_model=BulkReport)
+async def bulk_delete_vlans(
+    payload: VlanBulkDelete,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> BulkReport:
+    """Delete many VLANs by name at once (assistant bulk delete). A name with no
+    matching VLAN is reported, not an error. One audit entry records the batch."""
+    by_name = {
+        v.name.lower(): v for v in (await session.execute(select(VLAN))).scalars()
+    }
+    deleted = 0
+    not_found: list[str] = []
+    for name in payload.names:
+        # pop so a duplicate name in the same request is only deleted once.
+        vlan = by_name.pop(name.lower(), None)
+        if vlan is None:
+            not_found.append(name)
+            continue
+        await session.delete(vlan)
+        deleted += 1
+    await append_audit(
+        session,
+        action="vlan.bulk_deleted",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="vlan",
+        target_id=None,
+        payload={"total": len(payload.names), "deleted": deleted, "not_found": not_found},
+    )
+    await session.commit()
+    return BulkReport(
+        total=len(payload.names),
+        succeeded=deleted,
+        skipped=len(not_found),
+        errors=0,
+        errors_detail=not_found[:50],
+    )
+
+
 # IP ranges
 ip_ranges_router = APIRouter(prefix="/ip-ranges", tags=["inventory"])
 
@@ -456,6 +546,105 @@ async def delete_ip_range(
         target_id=str(ip_range_id),
     )
     await session.commit()
+
+
+@ip_ranges_router.post("/bulk-create", response_model=BulkReport)
+async def bulk_create_ip_ranges(
+    payload: IPRangeBulkCreate,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> BulkReport:
+    """Create many IP ranges at once (assistant bulk add). CIDRs already present
+    are skipped; an invalid CIDR or unknown VLAN is reported per item. One audit
+    entry records the batch."""
+    vlan_by_name = {
+        v.name.lower(): v.id for v in (await session.execute(select(VLAN))).scalars()
+    }
+    existing = {r.cidr for r in (await session.execute(select(IPRange))).scalars()}
+    created = skipped = errors = 0
+    errors_detail: list[str] = []
+    for item in payload.items:
+        try:
+            cidr = str(ipaddress.ip_network(item.cidr, strict=False))
+        except ValueError:
+            errors += 1
+            errors_detail.append(f"Invalid CIDR '{item.cidr}'")
+            continue
+        vlan_id = None
+        if item.vlan_name:
+            vlan_id = vlan_by_name.get(item.vlan_name.lower())
+            if vlan_id is None:
+                errors += 1
+                errors_detail.append(f"VLAN '{item.vlan_name}' not found")
+                continue
+        if cidr in existing:
+            skipped += 1
+            continue
+        session.add(IPRange(cidr=cidr, vlan_id=vlan_id, description=item.description))
+        existing.add(cidr)
+        created += 1
+    await append_audit(
+        session,
+        action="ip_range.bulk_created",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="ip_range",
+        target_id=None,
+        payload={"total": len(payload.items), "created": created, "skipped": skipped},
+    )
+    await session.commit()
+    return BulkReport(
+        total=len(payload.items),
+        succeeded=created,
+        skipped=skipped,
+        errors=errors,
+        errors_detail=errors_detail[:50],
+    )
+
+
+@ip_ranges_router.post("/bulk-delete", response_model=BulkReport)
+async def bulk_delete_ip_ranges(
+    payload: IPRangeBulkDelete,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> BulkReport:
+    """Delete many IP ranges by CIDR at once (assistant bulk delete). All ranges
+    matching a given CIDR are removed; a CIDR with no match is reported. One audit
+    entry records the batch."""
+    deleted = 0
+    not_found: list[str] = []
+    for raw in payload.cidrs:
+        try:
+            cidr = str(ipaddress.ip_network(raw, strict=False))
+        except ValueError:
+            not_found.append(raw)
+            continue
+        rows = (
+            await session.execute(select(IPRange).where(IPRange.cidr == cidr))
+        ).scalars().all()
+        if not rows:
+            not_found.append(raw)
+            continue
+        for row in rows:
+            await session.delete(row)
+            deleted += 1
+    await append_audit(
+        session,
+        action="ip_range.bulk_deleted",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="ip_range",
+        target_id=None,
+        payload={"total": len(payload.cidrs), "deleted": deleted, "not_found": not_found},
+    )
+    await session.commit()
+    return BulkReport(
+        total=len(payload.cidrs),
+        succeeded=deleted,
+        skipped=len(not_found),
+        errors=0,
+        errors_detail=not_found[:50],
+    )
 
 
 # Assets
