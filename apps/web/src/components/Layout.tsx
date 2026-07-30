@@ -43,6 +43,7 @@ const SECTIONS: Section[] = [
       { to: "/scans", labelKey: "nav.scans" },
       { to: "/ports", labelKey: "nav.ports" },
       { to: "/agents", labelKey: "nav.agents" },
+      { to: "/segments", labelKey: "nav.segments" },
     ],
   },
   {

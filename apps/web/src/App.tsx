@@ -24,6 +24,7 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const AgentsPage = lazy(() => import("./pages/AgentsPage"));
 const AgentEnrollPage = lazy(() => import("./pages/AgentEnrollPage"));
 const AgentDetailPage = lazy(() => import("./pages/AgentDetailPage"));
+const SegmentsPage = lazy(() => import("./pages/SegmentsPage"));
 const UsersPage = lazy(() => import("./pages/UsersPage"));
 const UserDetailPage = lazy(() => import("./pages/UserDetailPage"));
 const DocsPage = lazy(() => import("./pages/DocsPage"));
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/agents" element={<AgentsPage />} />
           <Route path="/agents/new" element={<AgentEnrollPage />} />
           <Route path="/agents/:id" element={<AgentDetailPage />} />
+          <Route path="/segments" element={<SegmentsPage />} />
           <Route path="/ports" element={<PortsPage />} />
           <Route path="/ports/:port" element={<PortDetailPage />} />
           <Route path="/changes" element={<ChangesPage />} />
