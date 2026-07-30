@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   type AuditEvent,
   type ChainVerification,
@@ -11,6 +12,7 @@ import {
   listScanProfiles,
   verifyAudit,
 } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
 import { useErrorMessage } from "../i18n/useErrorMessage";
 import DocsLink from "../components/DocsLink";
 import Pagination, { usePagination } from "../components/Pagination";
@@ -111,10 +113,40 @@ function formatAuditDetails(e: AuditEvent): string {
   return e.target_type ? `${e.target_type}:${(e.target_id ?? "").slice(0, 8)}` : "";
 }
 
+// The in-app page an audit event's target points at, so a reviewer can jump from
+// "who touched what" straight to that record. null when the type has no page.
+// Note: /users/:id is admin-only, so the caller gates that link on the role.
+function targetHref(type: string | null, id: string | null): string | null {
+  switch (type) {
+    case "asset":
+      return id ? `/assets/${id}` : "/assets";
+    case "change_event":
+      return id ? `/changes/${id}` : "/changes";
+    case "scan_run":
+      return id ? `/scans/${id}` : "/scans";
+    case "scan_profile":
+      return "/scans";
+    case "agent":
+      return id ? `/agents/${id}` : "/agents";
+    case "vlan":
+    case "ip_range":
+      return "/vlans";
+    case "task":
+      return "/tasks";
+    case "user":
+      return id ? `/users/${id}` : "/users";
+    default:
+      return null;
+  }
+}
+
 export default function CompliancePage() {
   const { t } = useI18n();
+  const { user } = useAuth();
   const errorMessage = useErrorMessage();
   const toast = useToast();
+  // The user detail page (and so the actor/user-target links) is admin-only.
+  const isAdmin = user?.role === "admin";
 
   // A localised label per audit action code, falling back to the code-derived
   // humanised form for any action not (yet) in the dictionary.
@@ -507,13 +539,33 @@ export default function CompliancePage() {
                       {new Date(e.created_at).toLocaleString()}
                     </td>
                     <td className="px-4 py-2 text-slate-300">
-                      {e.actor_email ?? t("compliance.system")}
+                      {e.actor_email && e.actor_id && isAdmin ? (
+                        <Link
+                          to={`/users/${e.actor_id}`}
+                          className="text-emerald-400 hover:text-emerald-300"
+                        >
+                          {e.actor_email}
+                        </Link>
+                      ) : (
+                        (e.actor_email ?? t("compliance.system"))
+                      )}
                     </td>
                     <td className="px-4 py-2 font-medium text-slate-100" title={e.action}>
                       {actionLabel(e.action)}
                     </td>
                     <td className="px-4 py-2 text-xs text-slate-400">
-                      {formatAuditDetails(e) || "-"}
+                      {(() => {
+                        const details = formatAuditDetails(e) || "-";
+                        const href = targetHref(e.target_type, e.target_id);
+                        const linkable = href && (e.target_type !== "user" || isAdmin);
+                        return linkable ? (
+                          <Link to={href} className="text-emerald-400 hover:text-emerald-300">
+                            {details}
+                          </Link>
+                        ) : (
+                          details
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))
