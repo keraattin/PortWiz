@@ -42,11 +42,13 @@ from ...schemas.asset import (
     BulkReport,
     IPRangeBulkCreate,
     IPRangeBulkDelete,
+    IPRangeBulkUpdate,
     IPRangeCreate,
     IPRangeRead,
     IPRangeUpdate,
     VlanBulkCreate,
     VlanBulkDelete,
+    VlanBulkUpdate,
     VLANCreate,
     VLANImportReport,
     VLANImportRowResult,
@@ -458,6 +460,54 @@ async def bulk_delete_vlans(
     )
 
 
+@vlans_router.post("/bulk-update", response_model=BulkReport)
+async def bulk_update_vlans(
+    payload: VlanBulkUpdate,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> BulkReport:
+    """Apply the same field change to many VLANs by id (bulk edit). One audit
+    entry records the batch."""
+    fields: dict[str, object] = {}
+    if payload.description is not None:
+        fields["description"] = payload.description
+    if not fields:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "Provide at least one field to update."
+        )
+    updated = 0
+    not_found: list[str] = []
+    for vlan_id in payload.ids:
+        vlan = await session.get(VLAN, vlan_id)
+        if vlan is None:
+            not_found.append(str(vlan_id))
+            continue
+        for key, value in fields.items():
+            setattr(vlan, key, value)
+        updated += 1
+    await append_audit(
+        session,
+        action="vlan.bulk_updated",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="vlan",
+        target_id=None,
+        payload={
+            "total": len(payload.ids),
+            "updated": updated,
+            "fields": {k: audit_value(v) for k, v in fields.items()},
+        },
+    )
+    await session.commit()
+    return BulkReport(
+        total=len(payload.ids),
+        succeeded=updated,
+        skipped=len(not_found),
+        errors=0,
+        errors_detail=not_found[:50],
+    )
+
+
 # IP ranges
 ip_ranges_router = APIRouter(prefix="/ip-ranges", tags=["inventory"])
 
@@ -642,6 +692,59 @@ async def bulk_delete_ip_ranges(
     return BulkReport(
         total=len(payload.cidrs),
         succeeded=deleted,
+        skipped=len(not_found),
+        errors=0,
+        errors_detail=not_found[:50],
+    )
+
+
+@ip_ranges_router.post("/bulk-update", response_model=BulkReport)
+async def bulk_update_ip_ranges(
+    payload: IPRangeBulkUpdate,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> BulkReport:
+    """Apply the same field changes to many IP ranges by id (bulk edit), e.g.
+    assign a batch of ranges to a VLAN. One audit entry records the batch."""
+    fields: dict[str, object] = {}
+    if payload.vlan_id is not None:
+        fields["vlan_id"] = payload.vlan_id
+    if payload.description is not None:
+        fields["description"] = payload.description
+    if not fields:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "Provide at least one field to update."
+        )
+    if payload.vlan_id is not None and await session.get(VLAN, payload.vlan_id) is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced VLAN does not exist")
+
+    updated = 0
+    not_found: list[str] = []
+    for range_id in payload.ids:
+        ip_range = await session.get(IPRange, range_id)
+        if ip_range is None:
+            not_found.append(str(range_id))
+            continue
+        for key, value in fields.items():
+            setattr(ip_range, key, value)
+        updated += 1
+    await append_audit(
+        session,
+        action="ip_range.bulk_updated",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="ip_range",
+        target_id=None,
+        payload={
+            "total": len(payload.ids),
+            "updated": updated,
+            "fields": {k: audit_value(v) for k, v in fields.items()},
+        },
+    )
+    await session.commit()
+    return BulkReport(
+        total=len(payload.ids),
+        succeeded=updated,
         skipped=len(not_found),
         errors=0,
         errors_detail=not_found[:50],

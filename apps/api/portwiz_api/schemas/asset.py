@@ -228,6 +228,12 @@ class VlanBulkDelete(BaseModel):
     names: list[str]
 
 
+class VlanBulkUpdate(BaseModel):
+    # By id (the UI selects specific rows); only set fields are applied.
+    ids: list[uuid.UUID]
+    description: str | None = None
+
+
 class IPRangeBulkItem(BaseModel):
     cidr: str
     vlan_name: str | None = None
@@ -240,6 +246,12 @@ class IPRangeBulkCreate(BaseModel):
 
 class IPRangeBulkDelete(BaseModel):
     cidrs: list[str]
+
+
+class IPRangeBulkUpdate(BaseModel):
+    ids: list[uuid.UUID]
+    vlan_id: uuid.UUID | None = None
+    description: str | None = None
 
 
 class VlanSyncReport(BaseModel):

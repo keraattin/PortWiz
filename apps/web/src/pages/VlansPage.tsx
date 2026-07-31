@@ -6,6 +6,8 @@ import {
   type VlanSyncReport,
   bulkDeleteIpRanges,
   bulkDeleteVlans,
+  bulkUpdateIpRanges,
+  bulkUpdateVlans,
   createIpRange,
   createVlan,
   deleteIpRange,
@@ -47,6 +49,11 @@ export default function VlansPage() {
   // VLAN by name, range by CIDR).
   const vlanSel = useTableSelection();
   const rangeSel = useTableSelection();
+  // Bulk-edit modal (empty field = leave unchanged).
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkVlanDesc, setBulkVlanDesc] = useState("");
+  const [bulkRangeVlan, setBulkRangeVlan] = useState("");
+  const [bulkRangeDesc, setBulkRangeDesc] = useState("");
 
   const [vlanOpen, setVlanOpen] = useState(false);
   const [name, setName] = useState("");
@@ -255,6 +262,38 @@ export default function VlansPage() {
     }
   }
 
+  function openBulkEdit() {
+    setBulkVlanDesc("");
+    setBulkRangeVlan("");
+    setBulkRangeDesc("");
+    setBulkEditOpen(true);
+  }
+
+  async function onBulkEdit(e: FormEvent) {
+    e.preventDefault();
+    const vlanIds = vlans.filter((v) => vlanSel.selected.has(v.id)).map((v) => v.id);
+    const rangeIds = ipRanges.filter((r) => rangeSel.selected.has(r.id)).map((r) => r.id);
+    const rangeFields: { vlan_id?: string; description?: string } = {};
+    if (bulkRangeVlan) rangeFields.vlan_id = bulkRangeVlan;
+    if (bulkRangeDesc) rangeFields.description = bulkRangeDesc;
+    try {
+      let done = 0;
+      if (vlanIds.length && bulkVlanDesc) {
+        done += (await bulkUpdateVlans(vlanIds, { description: bulkVlanDesc })).succeeded;
+      }
+      if (rangeIds.length && Object.keys(rangeFields).length) {
+        done += (await bulkUpdateIpRanges(rangeIds, rangeFields)).succeeded;
+      }
+      toast.success(t("table.bulkUpdateDone", { count: done }));
+      setBulkEditOpen(false);
+      vlanSel.clear();
+      rangeSel.clear();
+      await reload();
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
+
   const rangeRow = (r: IpRange) => (
     <li key={r.id} className="flex flex-wrap items-center gap-3 px-4 py-2">
       {canWrite && (
@@ -439,6 +478,12 @@ export default function VlansPage() {
                   <span className="text-sm text-slate-300">
                     {t("table.selected", { count: selectedCount })}
                   </span>
+                  <button
+                    onClick={openBulkEdit}
+                    className="rounded-md bg-sky-900/50 px-3 py-1 text-xs font-medium text-sky-300 hover:bg-sky-900"
+                  >
+                    {t("table.editSelected")}
+                  </button>
                   <button
                     onClick={onBulkDelete}
                     className="rounded-md bg-red-900/60 px-3 py-1 text-xs font-medium text-red-300 hover:bg-red-900"
@@ -625,6 +670,62 @@ export default function VlansPage() {
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
             <Button type="submit">{t("ranges.add")}</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={bulkEditOpen}
+        onClose={() => setBulkEditOpen(false)}
+        title={t("table.bulkEditTitle", { count: selectedCount })}
+      >
+        <form onSubmit={onBulkEdit} className="space-y-4">
+          {vlanSel.selected.size > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-slate-200">
+                {t("vlans.title")} ({vlanSel.selected.size})
+              </p>
+              <FormField label={t("vlans.f.description")}>
+                <input
+                  className={inputClass}
+                  placeholder={t("table.keepUnchanged")}
+                  value={bulkVlanDesc}
+                  onChange={(e) => setBulkVlanDesc(e.target.value)}
+                />
+              </FormField>
+            </div>
+          )}
+          {rangeSel.selected.size > 0 && (
+            <div className="space-y-2 border-t border-slate-800 pt-3">
+              <p className="text-sm font-medium text-slate-200">
+                {t("ranges.title")} ({rangeSel.selected.size})
+              </p>
+              <FormField label={t("ranges.f.vlan")}>
+                <select
+                  className={inputClass}
+                  value={bulkRangeVlan}
+                  onChange={(e) => setBulkRangeVlan(e.target.value)}
+                >
+                  <option value="">{t("table.keepUnchanged")}</option>
+                  {vlans.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label={t("ranges.f.description")}>
+                <input
+                  className={inputClass}
+                  placeholder={t("table.keepUnchanged")}
+                  value={bulkRangeDesc}
+                  onChange={(e) => setBulkRangeDesc(e.target.value)}
+                />
+              </FormField>
+            </div>
+          )}
+          <div className="flex justify-end">
+            <Button type="submit">{t("table.apply")}</Button>
           </div>
         </form>
       </Modal>

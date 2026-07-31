@@ -169,3 +169,81 @@ async def test_bulk_operations_are_audited(client, admin_headers) -> None:
         "ip_range.bulk_created",
         "ip_range.bulk_deleted",
     } <= actions
+
+
+# --- bulk update ---
+
+
+async def test_vlan_bulk_update_description(client, admin_headers) -> None:
+    a = (await client.post("/api/v1/vlans", json={"name": "bu1"}, headers=admin_headers)).json()
+    b = (await client.post("/api/v1/vlans", json={"name": "bu2"}, headers=admin_headers)).json()
+    resp = await client.post(
+        "/api/v1/vlans/bulk-update",
+        json={"ids": [a["id"], b["id"]], "description": "prod net"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["succeeded"] == 2
+    listed = (await client.get("/api/v1/vlans", headers=admin_headers)).json()
+    for v in listed:
+        if v["name"] in ("bu1", "bu2"):
+            assert v["description"] == "prod net"
+
+
+async def test_vlan_bulk_update_requires_a_field(client, admin_headers) -> None:
+    a = (await client.post("/api/v1/vlans", json={"name": "bu3"}, headers=admin_headers)).json()
+    resp = await client.post(
+        "/api/v1/vlans/bulk-update", json={"ids": [a["id"]]}, headers=admin_headers
+    )
+    assert resp.status_code == 400
+
+
+async def test_iprange_bulk_update_assigns_vlan(client, admin_headers) -> None:
+    vlan = (await client.post("/api/v1/vlans", json={"name": "prod"}, headers=admin_headers)).json()
+    r1 = (
+        await client.post("/api/v1/ip-ranges", json={"cidr": "10.20.0.0/24"}, headers=admin_headers)
+    ).json()
+    r2 = (
+        await client.post("/api/v1/ip-ranges", json={"cidr": "10.21.0.0/24"}, headers=admin_headers)
+    ).json()
+    resp = await client.post(
+        "/api/v1/ip-ranges/bulk-update",
+        json={"ids": [r1["id"], r2["id"]], "vlan_id": vlan["id"]},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["succeeded"] == 2
+    ranges = (await client.get("/api/v1/ip-ranges", headers=admin_headers)).json()
+    for r in ranges:
+        if r["cidr"] in ("10.20.0.0/24", "10.21.0.0/24"):
+            assert r["vlan_id"] == vlan["id"]
+
+
+async def test_iprange_bulk_update_validates_vlan(client, admin_headers) -> None:
+    import uuid
+
+    r1 = (
+        await client.post("/api/v1/ip-ranges", json={"cidr": "10.22.0.0/24"}, headers=admin_headers)
+    ).json()
+    resp = await client.post(
+        "/api/v1/ip-ranges/bulk-update",
+        json={"ids": [r1["id"]], "vlan_id": str(uuid.uuid4())},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 400  # referenced VLAN does not exist
+
+
+async def test_bulk_update_requires_write_role(client, admin_headers) -> None:
+    a = (await client.post("/api/v1/vlans", json={"name": "bu4"}, headers=admin_headers)).json()
+    await client.post(
+        "/api/v1/users",
+        json={"email": "aud-inv-upd@test.local", "password": "Secret123!", "role": "auditor"},
+        headers=admin_headers,
+    )
+    aud = await _login(client, "aud-inv-upd@test.local")
+    resp = await client.post(
+        "/api/v1/vlans/bulk-update",
+        json={"ids": [a["id"]], "description": "x"},
+        headers=aud,
+    )
+    assert resp.status_code == 403

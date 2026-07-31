@@ -313,10 +313,30 @@ export function bulkDeleteVlans(names: string[]): Promise<BulkResult> {
   });
 }
 
+export function bulkUpdateVlans(
+  ids: string[],
+  fields: { description?: string },
+): Promise<BulkResult> {
+  return request<BulkResult>("/vlans/bulk-update", {
+    method: "POST",
+    body: JSON.stringify({ ids, ...fields }),
+  });
+}
+
 export function bulkDeleteIpRanges(cidrs: string[]): Promise<BulkResult> {
   return request<BulkResult>("/ip-ranges/bulk-delete", {
     method: "POST",
     body: JSON.stringify({ cidrs }),
+  });
+}
+
+export function bulkUpdateIpRanges(
+  ids: string[],
+  fields: { vlan_id?: string | null; description?: string },
+): Promise<BulkResult> {
+  return request<BulkResult>("/ip-ranges/bulk-update", {
+    method: "POST",
+    body: JSON.stringify({ ids, ...fields }),
   });
 }
 
