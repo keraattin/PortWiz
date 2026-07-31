@@ -28,6 +28,7 @@ def test_actions_for_role() -> None:
     assert "asset.update" in operator
     assert "asset.bulk_create" in operator
     assert "asset.bulk_delete" in operator
+    assert "asset.bulk_update" in operator
     assert "vlan.bulk_create" in operator
     assert "vlan.bulk_delete" in operator
     assert "iprange.bulk_create" in operator
@@ -342,6 +343,51 @@ async def test_run_chat_asset_bulk_delete_no_match(db) -> None:
         reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
     assert action is None  # nothing matched, so nothing is proposed
     assert "no assets found" in reply.lower()
+
+
+async def test_run_chat_asset_bulk_update_previews(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+    from portwiz_api.models.asset import Asset
+
+    async with db() as session:
+        session.add(Asset(ip="10.0.0.1"))
+        session.add(Asset(ip="10.0.0.2"))
+        await session.commit()
+
+    text = (
+        '{"reply": "Updating.", "action": {"name": "asset.bulk_update", "args": '
+        '{"ips": ["10.0.0.1", "10.0.0.2", "10.0.0.9"], "criticality": "high"}}}'
+    )
+    msgs = [{"role": "user", "content": "set 10.0.0.1, 10.0.0.2, 10.0.0.9 to high"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is not None
+    assert action["name"] == "asset.bulk_update"
+    assert action["request"]["path"] == "/assets/bulk-update"
+    body = action["request"]["body"]
+    assert body["ips"] == ["10.0.0.1", "10.0.0.2", "10.0.0.9"]
+    assert body["criticality"] == "high"
+    assert action["summary"]["action"] == "Update 2 of 3 assets"
+
+
+async def test_run_chat_asset_bulk_update_needs_a_field(db) -> None:
+    from portwiz_api.core.assistant import run_chat
+    from portwiz_api.models.asset import Asset
+
+    async with db() as session:
+        session.add(Asset(ip="10.0.0.1"))
+        await session.commit()
+
+    # Only IPs, no field to change: the action is rejected with a hint.
+    text = (
+        '{"reply": "OK.", "action": {"name": "asset.bulk_update", '
+        '"args": {"ips": ["10.0.0.1"]}}}'
+    )
+    msgs = [{"role": "user", "content": "update 10.0.0.1"}]
+    async with db() as session:
+        reply, action = await run_chat(session, FakeProvider(text), "operator", msgs)
+    assert action is None
+    assert "at least one field" in reply.lower()
 
 
 async def test_run_chat_vlan_bulk_create(db) -> None:

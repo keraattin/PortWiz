@@ -371,6 +371,46 @@ async def _asset_bulk_delete(session: AsyncSession, args: dict[str, Any]) -> Bui
     return summary, {"method": "POST", "path": "/assets/bulk-delete", "body": {"ips": ips}}
 
 
+async def _asset_bulk_update(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
+    """Apply the same field changes to several assets by IP. Only supplied fields
+    are sent; the summary previews how many of the IPs actually exist."""
+    ips_arg = args.get("ips")
+    if not isinstance(ips_arg, list) or not ips_arg:
+        raise ActionError("Provide a non-empty 'ips' list of assets to update.")
+    ips = [str(x).strip() for x in ips_arg if str(x).strip()]
+    if not ips:
+        raise ActionError("Provide a non-empty 'ips' list of assets to update.")
+
+    body: dict[str, Any] = {"ips": ips}
+    summary: dict[str, Any] = {}
+    criticality = _enum(args, "criticality", _CRITICALITIES, None)
+    if criticality:
+        body["criticality"] = criticality
+        summary["criticality"] = criticality
+    sensitivity = _enum(args, "data_sensitivity", _SENSITIVITIES, None)
+    if sensitivity:
+        body["data_sensitivity"] = sensitivity
+        summary["data_sensitivity"] = sensitivity
+    owner_email = _opt_str(args, "owner_email")
+    if owner_email:
+        body["owner_id"] = await _user_id_by_email(session, owner_email)
+        summary["owner"] = owner_email
+    vlan_name = _opt_str(args, "vlan_name")
+    if vlan_name:
+        body["vlan_id"] = await _vlan_id_by_name(session, vlan_name)
+        summary["vlan"] = vlan_name
+    if len(body) == 1:  # only "ips"
+        raise ActionError("Provide at least one field to change (criticality, owner, ...).")
+
+    matched = (
+        await session.execute(select(Asset.ip).where(Asset.ip.in_(ips)))
+    ).scalars().all()
+    if not matched:
+        raise ActionError("No assets found for those IPs.")
+    summary = {"action": f"Update {len(matched)} of {len(ips)} assets", **summary}
+    return summary, {"method": "POST", "path": "/assets/bulk-update", "body": body}
+
+
 async def _scanprofile_create(session: AsyncSession, args: dict[str, Any]) -> BuiltAction:
     name = _req_str(args, "name")
     raw_targets = args.get("targets")
@@ -608,6 +648,15 @@ CATALOG: list[ActionSpec] = [
         "match before you run it.",
         "ips: list of IP addresses (required)",
         _asset_bulk_delete,
+    ),
+    ActionSpec(
+        "asset.bulk_update",
+        WRITE_ROLES,
+        "Change the same fields on several assets by IP at once (bulk edit).",
+        "ips: list of IP addresses (required); then any of criticality "
+        "(low|medium|high|critical), data_sensitivity (none|pii|cde|ephi), "
+        "owner_email, vlan_name",
+        _asset_bulk_update,
     ),
     ActionSpec(
         "scanprofile.create",
