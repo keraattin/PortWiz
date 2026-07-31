@@ -797,6 +797,7 @@ export const en = {
   "changes.subtitle":
     "Only changes confirmed across consecutive scans appear here, so network flapping does not raise noise.",
   "changes.marked": "Marked {status}",
+  "changes.bulkMarked": "{count} marked {status}",
   "changes.empty": "No changes recorded.",
   "changes.col.detected": "Detected",
   "changes.col.host": "Host",

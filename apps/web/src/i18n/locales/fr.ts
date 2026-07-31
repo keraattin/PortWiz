@@ -799,6 +799,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "changes.subtitle":
     "Seuls les changements confirmés sur des analyses consécutives apparaissent ici, afin que les fluctuations du réseau ne génèrent pas de bruit.",
   "changes.marked": "Marqué {status}",
+  "changes.bulkMarked": "{count} marqué(s) {status}",
   "changes.empty": "Aucun changement enregistré.",
   "changes.col.detected": "Détecté",
   "changes.col.host": "Hôte",

@@ -799,6 +799,7 @@ export const de: Partial<Record<TKey, string>> = {
   "changes.subtitle":
     "Hier erscheinen nur Änderungen, die über aufeinanderfolgende Scans bestätigt wurden, sodass Netzwerk-Flattern kein Rauschen erzeugt.",
   "changes.marked": "Als {status} markiert",
+  "changes.bulkMarked": "{count} als {status} markiert",
   "changes.empty": "Keine Änderungen erfasst.",
   "changes.col.detected": "Erkannt",
   "changes.col.host": "Host",

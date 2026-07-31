@@ -799,6 +799,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "changes.subtitle":
     "Apenas alterações confirmadas em varreduras consecutivas aparecem aqui, para que oscilações de rede não gerem ruído.",
   "changes.marked": "Marcado como {status}",
+  "changes.bulkMarked": "{count} marcado(s) como {status}",
   "changes.empty": "Nenhuma alteração registrada.",
   "changes.col.detected": "Detectado",
   "changes.col.host": "Host",

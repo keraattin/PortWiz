@@ -795,6 +795,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "changes.subtitle":
     "Yalnızca ardışık taramalarda teyit edilen değişiklikler burada görünür, böylece ağ titreşimi gürültü oluşturmaz.",
   "changes.marked": "{status} olarak işaretlendi",
+  "changes.bulkMarked": "{count} tanesi {status} olarak işaretlendi",
   "changes.empty": "Kayıtlı değişiklik yok.",
   "changes.col.detected": "Tespit",
   "changes.col.host": "Ana makine",

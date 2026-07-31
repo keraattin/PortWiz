@@ -16,7 +16,14 @@ import InfoCallout from "../components/InfoCallout";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
-import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
+import {
+  CHECKBOX_CLS,
+  type Column,
+  TableHead,
+  processRows,
+  useColumnFilters,
+  useTableSelection,
+} from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
@@ -78,6 +85,7 @@ export default function ChangesPage() {
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
   const [search, setSearch] = useState("");
+  const selection = useTableSelection();
   const profileName = (id: string) =>
     profiles.find((p) => p.id === id)?.name ?? t("scans.deletedProfile");
   const columns: Column<ChangeEvent>[] = [
@@ -156,6 +164,24 @@ export default function ChangesPage() {
     }
   }
 
+  async function onBulkStatus(status: ChangeStatus) {
+    const ids = changes.filter((c) => selection.selected.has(c.id)).map((c) => c.id);
+    if (ids.length === 0) return;
+    try {
+      await Promise.all(ids.map((id) => updateChangeStatus(id, status)));
+      toast.success(
+        t("changes.bulkMarked", {
+          count: ids.length,
+          status: t(`changeStatus.${status}` as TKey),
+        }),
+      );
+      selection.clear();
+      await reload();
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
+
   function onFilter(filter: (typeof STATUS_FILTERS)[number]) {
     setStatusFilter(filter);
     changesPage.setPage(0);
@@ -185,6 +211,16 @@ export default function ChangesPage() {
   function renderRow(c: ChangeEvent) {
     return (
       <tr key={c.id} className="bg-slate-950">
+        {canWrite && (
+          <td className="px-4 py-2">
+            <input
+              type="checkbox"
+              className={CHECKBOX_CLS}
+              checked={selection.selected.has(c.id)}
+              onChange={() => selection.toggle(c.id)}
+            />
+          </td>
+        )}
         <td className="px-4 py-2 text-xs">
           <Link to={`/changes/${c.id}`} className="text-slate-400 hover:text-emerald-400">
             {new Date(c.detected_at).toLocaleString()}
@@ -302,6 +338,31 @@ export default function ChangesPage() {
               <option value="scan">{t("changes.group.scan")}</option>
             </select>
           </label>
+          {canWrite && selection.selected.size > 0 && (
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-slate-300">
+                {t("table.selected", { count: selection.selected.size })}
+              </span>
+              <button
+                onClick={() => onBulkStatus("acknowledged")}
+                className="rounded-md bg-amber-900/50 px-3 py-1 text-xs font-medium text-amber-300 hover:bg-amber-900"
+              >
+                {t("changes.acknowledge")}
+              </button>
+              <button
+                onClick={() => onBulkStatus("resolved")}
+                className="rounded-md bg-emerald-900/50 px-3 py-1 text-xs font-medium text-emerald-300 hover:bg-emerald-900"
+              >
+                {t("changes.resolve")}
+              </button>
+              <button
+                onClick={selection.clear}
+                className="text-xs text-slate-400 hover:text-slate-200"
+              >
+                {t("table.clear")}
+              </button>
+            </div>
+          )}
           <div className="ml-auto">
             <SearchInput value={search} onChange={setSearch} />
           </div>
@@ -355,6 +416,20 @@ export default function ChangesPage() {
                 filters={filters}
                 setFilter={onColFilter}
                 trailing
+                selection={
+                  canWrite
+                    ? {
+                        allChecked:
+                          processed.length > 0 &&
+                          processed.every((c) => selection.selected.has(c.id)),
+                        onToggleAll: (on) =>
+                          selection.setMany(
+                            processed.map((c) => c.id),
+                            on,
+                          ),
+                      }
+                    : undefined
+                }
               />
               <tbody className="divide-y divide-slate-800">
                 {changesPage.slice.map(renderRow)}
