@@ -4,6 +4,8 @@ import {
   type Vlan,
   type VlanImportReport,
   type VlanSyncReport,
+  bulkDeleteIpRanges,
+  bulkDeleteVlans,
   createIpRange,
   createVlan,
   deleteIpRange,
@@ -26,6 +28,7 @@ import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
+import { CHECKBOX_CLS, useTableSelection } from "../components/tableView";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../i18n/I18nContext";
 
@@ -40,6 +43,10 @@ export default function VlansPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  // VLANs and ranges are selected independently for bulk delete (different keys:
+  // VLAN by name, range by CIDR).
+  const vlanSel = useTableSelection();
+  const rangeSel = useTableSelection();
 
   const [vlanOpen, setVlanOpen] = useState(false);
   const [name, setName] = useState("");
@@ -227,8 +234,37 @@ export default function VlansPage() {
     }
   }
 
+  const selectedCount = vlanSel.selected.size + rangeSel.selected.size;
+
+  async function onBulkDelete() {
+    const names = vlans.filter((v) => vlanSel.selected.has(v.id)).map((v) => v.name);
+    const cidrs = ipRanges.filter((r) => rangeSel.selected.has(r.id)).map((r) => r.cidr);
+    if (names.length + cidrs.length === 0) return;
+    if (!window.confirm(t("table.confirmBulkDelete", { count: names.length + cidrs.length })))
+      return;
+    try {
+      let deleted = 0;
+      if (names.length) deleted += (await bulkDeleteVlans(names)).succeeded;
+      if (cidrs.length) deleted += (await bulkDeleteIpRanges(cidrs)).succeeded;
+      toast.success(t("table.bulkDeleteDone", { count: deleted }));
+      vlanSel.clear();
+      rangeSel.clear();
+      await reload();
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
+
   const rangeRow = (r: IpRange) => (
     <li key={r.id} className="flex flex-wrap items-center gap-3 px-4 py-2">
+      {canWrite && (
+        <input
+          type="checkbox"
+          className={CHECKBOX_CLS}
+          checked={rangeSel.selected.has(r.id)}
+          onChange={() => rangeSel.toggle(r.id)}
+        />
+      )}
       <span className="font-mono text-sm text-slate-200">{r.cidr}</span>
       {r.description && <span className="text-xs text-slate-500">{r.description}</span>}
       {canWrite && (
@@ -396,7 +432,31 @@ export default function VlansPage() {
       ) : (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <SearchInput value={search} onChange={setSearch} />
+            <div className="flex items-center gap-3">
+              <SearchInput value={search} onChange={setSearch} />
+              {canWrite && selectedCount > 0 && (
+                <>
+                  <span className="text-sm text-slate-300">
+                    {t("table.selected", { count: selectedCount })}
+                  </span>
+                  <button
+                    onClick={onBulkDelete}
+                    className="rounded-md bg-red-900/60 px-3 py-1 text-xs font-medium text-red-300 hover:bg-red-900"
+                  >
+                    {t("table.deleteSelected")}
+                  </button>
+                  <button
+                    onClick={() => {
+                      vlanSel.clear();
+                      rangeSel.clear();
+                    }}
+                    className="text-xs text-slate-400 hover:text-slate-200"
+                  >
+                    {t("table.clear")}
+                  </button>
+                </>
+              )}
+            </div>
             {canWrite && (
               <Button variant="outline" onClick={() => openAddRange()} className="whitespace-nowrap">
                 {t("ranges.add")}
@@ -415,6 +475,14 @@ export default function VlansPage() {
                 return (
                   <div key={v.id} className="rounded-xl border border-slate-800 bg-slate-900">
                     <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+                      {canWrite && (
+                        <input
+                          type="checkbox"
+                          className={CHECKBOX_CLS}
+                          checked={vlanSel.selected.has(v.id)}
+                          onChange={() => vlanSel.toggle(v.id)}
+                        />
+                      )}
                       <span className="font-medium text-slate-100">{v.name}</span>
                       {v.vlan_tag != null && (
                         <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">

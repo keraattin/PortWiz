@@ -291,6 +291,20 @@ export function bulkDeleteAssets(ips: string[]): Promise<BulkResult> {
   });
 }
 
+export function bulkDeleteVlans(names: string[]): Promise<BulkResult> {
+  return request<BulkResult>("/vlans/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify({ names }),
+  });
+}
+
+export function bulkDeleteIpRanges(cidrs: string[]): Promise<BulkResult> {
+  return request<BulkResult>("/ip-ranges/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify({ cidrs }),
+  });
+}
+
 // Bulk import (CSV / Excel)
 export interface AssetImportRowResult {
   row: number;
