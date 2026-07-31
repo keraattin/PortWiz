@@ -772,6 +772,8 @@ export const pt: Partial<Record<TKey, string>> = {
   "tasks.subtitle":
     "Uma tarefa é aberta automaticamente para cada alteração confirmada e também pode ser criada manualmente. Vincule uma tarefa ao Jira para acompanhá-la externamente.",
   "tasks.updated": "Tarefa atualizada",
+  "tasks.markSelected": "Marcar como {status}",
+  "tasks.bulkUpdated": "{count} atualizado(s)",
   "tasks.empty": "Sem tarefas.",
   "tasks.col.title": "Título",
   "tasks.col.status": "Status",

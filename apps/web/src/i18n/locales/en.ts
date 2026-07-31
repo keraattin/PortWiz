@@ -770,6 +770,8 @@ export const en = {
   "tasks.subtitle":
     "A task is opened automatically for every confirmed change, and can also be created manually. Link a task to Jira to track it externally.",
   "tasks.updated": "Task updated",
+  "tasks.markSelected": "Mark {status}",
+  "tasks.bulkUpdated": "{count} updated",
   "tasks.empty": "No tasks.",
   "tasks.col.title": "Title",
   "tasks.col.status": "Status",

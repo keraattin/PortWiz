@@ -772,6 +772,8 @@ export const de: Partial<Record<TKey, string>> = {
   "tasks.subtitle":
     "Für jede bestätigte Änderung wird automatisch eine Aufgabe geöffnet; sie kann auch manuell erstellt werden. Verknüpfen Sie eine Aufgabe mit Jira, um sie extern zu verfolgen.",
   "tasks.updated": "Aufgabe aktualisiert",
+  "tasks.markSelected": "Als {status} markieren",
+  "tasks.bulkUpdated": "{count} aktualisiert",
   "tasks.empty": "Keine Aufgaben.",
   "tasks.col.title": "Titel",
   "tasks.col.status": "Status",

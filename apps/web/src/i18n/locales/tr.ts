@@ -768,6 +768,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "tasks.subtitle":
     "Her teyitli değişiklik için otomatik olarak bir görev açılır, ayrıca elle de oluşturulabilir. Harici takip için bir görevi Jira'ya bağlayın.",
   "tasks.updated": "Görev güncellendi",
+  "tasks.markSelected": "{status} işaretle",
+  "tasks.bulkUpdated": "{count} güncellendi",
   "tasks.empty": "Görev yok.",
   "tasks.col.title": "Başlık",
   "tasks.col.status": "Durum",

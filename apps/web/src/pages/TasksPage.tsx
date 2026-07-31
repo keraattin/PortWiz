@@ -14,7 +14,14 @@ import { useAuth } from "../auth/AuthContext";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
-import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
+import {
+  CHECKBOX_CLS,
+  type Column,
+  TableHead,
+  processRows,
+  useColumnFilters,
+  useTableSelection,
+} from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
@@ -52,6 +59,7 @@ export default function TasksPage() {
   const { sort, toggleSort } = useSort();
   const { filters, setFilter: setColFilter } = useColumnFilters();
   const [search, setSearch] = useState("");
+  const selection = useTableSelection();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -124,6 +132,19 @@ export default function TasksPage() {
     }
   }
 
+  async function onBulkStatus(status: TaskStatus) {
+    const ids = tasks.filter((task) => selection.selected.has(task.id)).map((task) => task.id);
+    if (ids.length === 0) return;
+    try {
+      await Promise.all(ids.map((id) => updateTask(id, { status })));
+      toast.success(t("tasks.bulkUpdated", { count: ids.length }));
+      selection.clear();
+      await reload();
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
+
   function onFilter(f: (typeof FILTERS)[number]) {
     setFilter(f);
     tasksPage.setPage(0);
@@ -154,7 +175,34 @@ export default function TasksPage() {
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {canWrite && selection.selected.size > 0 ? (
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-slate-300">
+              {t("table.selected", { count: selection.selected.size })}
+            </span>
+            <button
+              onClick={() => onBulkStatus("done")}
+              className="rounded-md bg-emerald-900/50 px-3 py-1 text-xs font-medium text-emerald-300 hover:bg-emerald-900"
+            >
+              {t("tasks.markSelected", { status: t("taskStatus.done") })}
+            </button>
+            <button
+              onClick={() => onBulkStatus("cancelled")}
+              className="rounded-md bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300 hover:bg-slate-700"
+            >
+              {t("tasks.markSelected", { status: t("taskStatus.cancelled") })}
+            </button>
+            <button
+              onClick={selection.clear}
+              className="text-xs text-slate-400 hover:text-slate-200"
+            >
+              {t("table.clear")}
+            </button>
+          </div>
+        ) : (
+          <span />
+        )}
         <SearchInput value={search} onChange={setSearch} />
       </div>
 
@@ -166,29 +214,53 @@ export default function TasksPage() {
             toggleSort={toggleSort}
             filters={filters}
             setFilter={onColFilter}
+            selection={
+              canWrite
+                ? {
+                    allChecked:
+                      processed.length > 0 &&
+                      processed.every((task) => selection.selected.has(task.id)),
+                    onToggleAll: (on) =>
+                      selection.setMany(
+                        processed.map((task) => task.id),
+                        on,
+                      ),
+                  }
+                : undefined
+            }
           />
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                <td className="px-4 py-3 text-slate-500" colSpan={canWrite ? 6 : 5}>
                   {t("common.loading")}
                 </td>
               </tr>
             ) : tasks.length === 0 ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={5}>
+                <td className="px-4 py-3 text-slate-500" colSpan={canWrite ? 6 : 5}>
                   {t("tasks.empty")}
                 </td>
               </tr>
             ) : processed.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={5}>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={canWrite ? 6 : 5}>
                   {t("common.noData")}
                 </td>
               </tr>
             ) : (
               tasksPage.slice.map((task) => (
                 <tr key={task.id} className="bg-slate-950">
+                  {canWrite && (
+                    <td className="px-4 py-2">
+                      <input
+                        type="checkbox"
+                        className={CHECKBOX_CLS}
+                        checked={selection.selected.has(task.id)}
+                        onChange={() => selection.toggle(task.id)}
+                      />
+                    </td>
+                  )}
                   <td className="px-4 py-2 text-slate-100">{task.title}</td>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
