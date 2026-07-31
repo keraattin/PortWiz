@@ -291,6 +291,21 @@ export function bulkDeleteAssets(ips: string[]): Promise<BulkResult> {
   });
 }
 
+export function bulkUpdateAssets(
+  ips: string[],
+  fields: {
+    criticality?: Criticality;
+    data_sensitivity?: DataSensitivity;
+    owner_id?: string | null;
+    vlan_id?: string | null;
+  },
+): Promise<BulkResult> {
+  return request<BulkResult>("/assets/bulk-update", {
+    method: "POST",
+    body: JSON.stringify({ ips, ...fields }),
+  });
+}
+
 export function bulkDeleteVlans(names: string[]): Promise<BulkResult> {
   return request<BulkResult>("/vlans/bulk-delete", {
     method: "POST",

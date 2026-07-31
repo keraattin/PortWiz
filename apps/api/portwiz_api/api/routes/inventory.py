@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.app_settings import effective_settings
 from ...core.asset_import import parse_asset_file
 from ...core.asset_store import upsert_asset
-from ...core.audit import append_audit, field_diff
+from ...core.audit import append_audit, audit_value, field_diff
 from ...core.db import get_session
 from ...core.inventory_source import (
     InventorySource,
@@ -31,6 +31,7 @@ from ...schemas.asset import (
     AssetBulkCreate,
     AssetBulkDelete,
     AssetBulkReport,
+    AssetBulkUpdate,
     AssetCreate,
     AssetImportReport,
     AssetImportRowResult,
@@ -1145,6 +1146,66 @@ async def bulk_delete_assets(
     return AssetBulkReport(
         total=len(payload.ips),
         succeeded=deleted,
+        skipped=len(not_found),
+        errors=0,
+        errors_detail=not_found[:50],
+    )
+
+
+@assets_router.post("/bulk-update", response_model=BulkReport)
+async def bulk_update_assets(
+    payload: AssetBulkUpdate,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> BulkReport:
+    """Apply the same field changes to many assets by IP (bulk edit). Only the
+    fields set in the request are changed; an IP with no matching asset is
+    reported. One audit entry records the batch."""
+    fields: dict[str, object] = {}
+    if payload.criticality is not None:
+        fields["criticality"] = payload.criticality
+    if payload.data_sensitivity is not None:
+        fields["data_sensitivity"] = payload.data_sensitivity
+    if payload.owner_id is not None:
+        fields["owner_id"] = payload.owner_id
+    if payload.vlan_id is not None:
+        fields["vlan_id"] = payload.vlan_id
+    if not fields:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "Provide at least one field to update."
+        )
+    await _validate_asset_refs(session, payload.vlan_id, payload.owner_id)
+
+    updated = 0
+    not_found: list[str] = []
+    for ip in payload.ips:
+        asset = (
+            await session.execute(select(Asset).where(Asset.ip == ip))
+        ).scalars().first()
+        if asset is None:
+            not_found.append(ip)
+            continue
+        for key, value in fields.items():
+            setattr(asset, key, value)
+        asset.updated_at = _utcnow()
+        updated += 1
+    await append_audit(
+        session,
+        action="asset.bulk_updated",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=None,
+        payload={
+            "total": len(payload.ips),
+            "updated": updated,
+            "fields": {k: audit_value(v) for k, v in fields.items()},
+        },
+    )
+    await session.commit()
+    return BulkReport(
+        total=len(payload.ips),
+        succeeded=updated,
         skipped=len(not_found),
         errors=0,
         errors_detail=not_found[:50],

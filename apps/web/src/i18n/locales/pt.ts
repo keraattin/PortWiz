@@ -430,6 +430,11 @@ export const pt: Partial<Record<TKey, string>> = {
   "table.clear": "Limpar",
   "table.confirmBulkDelete": "Excluir {count} itens selecionados? Esta ação não pode ser desfeita.",
   "table.bulkDeleteDone": "{count} excluído(s).",
+  "table.editSelected": "Editar selecionados",
+  "table.bulkEditTitle": "Editar {count} selecionado(s)",
+  "table.keepUnchanged": "Manter inalterado",
+  "table.apply": "Aplicar",
+  "table.bulkUpdateDone": "{count} atualizado(s).",
   "common.active": "Ativo",
   "common.inactive": "Inativo",
 

@@ -187,6 +187,16 @@ class AssetBulkDelete(BaseModel):
     ips: list[str]
 
 
+class AssetBulkUpdate(BaseModel):
+    ips: list[str]
+    # Only the fields that are set are applied to every listed asset; omitted
+    # fields are left untouched (this cannot clear an owner/VLAN, only set one).
+    criticality: Criticality | None = None
+    data_sensitivity: DataSensitivity | None = None
+    owner_id: uuid.UUID | None = None
+    vlan_id: uuid.UUID | None = None
+
+
 class AssetBulkReport(BaseModel):
     total: int
     succeeded: int  # created (bulk create) or deleted (bulk delete)

@@ -428,6 +428,11 @@ export const tr: Partial<Record<TKey, string>> = {
   "table.clear": "Temizle",
   "table.confirmBulkDelete": "{count} seçili öğe silinsin mi? Bu işlem geri alınamaz.",
   "table.bulkDeleteDone": "{count} silindi.",
+  "table.editSelected": "Seçilenleri düzenle",
+  "table.bulkEditTitle": "{count} seçileni düzenle",
+  "table.keepUnchanged": "Değiştirmeden bırak",
+  "table.apply": "Uygula",
+  "table.bulkUpdateDone": "{count} güncellendi.",
   "common.active": "Aktif",
   "common.inactive": "Pasif",
 

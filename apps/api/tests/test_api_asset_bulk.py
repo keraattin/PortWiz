@@ -94,9 +94,72 @@ async def test_bulk_operations_are_audited(client, admin_headers) -> None:
         "/api/v1/assets/bulk-create", json={"items": [{"ip": "10.4.0.1"}]}, headers=admin_headers
     )
     await client.post(
+        "/api/v1/assets/bulk-update",
+        json={"ips": ["10.4.0.1"], "criticality": "high"},
+        headers=admin_headers,
+    )
+    await client.post(
         "/api/v1/assets/bulk-delete", json={"ips": ["10.4.0.1"]}, headers=admin_headers
     )
     audit = (await client.get("/api/v1/audit", headers=admin_headers)).json()
     actions = {e["action"] for e in audit["events"]}
     assert "asset.bulk_created" in actions
+    assert "asset.bulk_updated" in actions
     assert "asset.bulk_deleted" in actions
+
+
+async def test_bulk_update_sets_fields_and_reports_missing(client, admin_headers) -> None:
+    await client.post(
+        "/api/v1/assets/bulk-create",
+        json={"items": [{"ip": "10.8.0.1"}, {"ip": "10.8.0.2"}]},
+        headers=admin_headers,
+    )
+    resp = await client.post(
+        "/api/v1/assets/bulk-update",
+        json={"ips": ["10.8.0.1", "10.8.0.2", "10.8.0.9"], "criticality": "high"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["succeeded"] == 2 and body["skipped"] == 1
+    assert "10.8.0.9" in body["errors_detail"]
+    listed = (await client.get("/api/v1/assets", headers=admin_headers)).json()
+    for a in listed:
+        if a["ip"] in ("10.8.0.1", "10.8.0.2"):
+            assert a["criticality"] == "high"
+
+
+async def test_bulk_update_requires_a_field(client, admin_headers) -> None:
+    resp = await client.post(
+        "/api/v1/assets/bulk-update", json={"ips": ["10.8.0.1"]}, headers=admin_headers
+    )
+    assert resp.status_code == 400
+
+
+async def test_bulk_update_validates_owner(client, admin_headers) -> None:
+    import uuid
+
+    await client.post(
+        "/api/v1/assets/bulk-create", json={"items": [{"ip": "10.8.1.1"}]}, headers=admin_headers
+    )
+    resp = await client.post(
+        "/api/v1/assets/bulk-update",
+        json={"ips": ["10.8.1.1"], "owner_id": str(uuid.uuid4())},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 400  # referenced owner does not exist
+
+
+async def test_bulk_update_requires_write_role(client, admin_headers) -> None:
+    await client.post(
+        "/api/v1/users",
+        json={"email": "aud-upd@test.local", "password": "Secret123!", "role": "auditor"},
+        headers=admin_headers,
+    )
+    aud = await _login(client, "aud-upd@test.local")
+    resp = await client.post(
+        "/api/v1/assets/bulk-update",
+        json={"ips": ["10.8.0.1"], "criticality": "low"},
+        headers=aud,
+    )
+    assert resp.status_code == 403

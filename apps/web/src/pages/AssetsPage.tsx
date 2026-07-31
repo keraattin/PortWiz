@@ -10,6 +10,7 @@ import {
   type DataSensitivity,
   type Vlan,
   bulkDeleteAssets,
+  bulkUpdateAssets,
   createAsset,
   deleteAsset,
   downloadAssetImportTemplate,
@@ -100,6 +101,12 @@ export default function AssetsPage() {
   const { filters, setFilter } = useColumnFilters();
   const [search, setSearch] = useState("");
   const selection = useTableSelection();
+  // Bulk-edit modal: each field is "" when it should be left unchanged.
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkCrit, setBulkCrit] = useState("");
+  const [bulkSens, setBulkSens] = useState("");
+  const [bulkOwner, setBulkOwner] = useState("");
+  const [bulkVlan, setBulkVlan] = useState("");
 
   async function reload() {
     setLoading(true);
@@ -208,6 +215,37 @@ export default function AssetsPage() {
     try {
       const res = await bulkDeleteAssets(ips);
       toast.success(t("table.bulkDeleteDone", { count: res.succeeded }));
+      selection.clear();
+      await reload();
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
+
+  function openBulkEdit() {
+    setBulkCrit("");
+    setBulkSens("");
+    setBulkOwner("");
+    setBulkVlan("");
+    setBulkEditOpen(true);
+  }
+
+  async function onBulkEdit(e: FormEvent) {
+    e.preventDefault();
+    const ips = assets.filter((a) => selection.selected.has(a.id)).map((a) => a.ip);
+    const fields: Parameters<typeof bulkUpdateAssets>[1] = {};
+    if (bulkCrit) fields.criticality = bulkCrit as Criticality;
+    if (bulkSens) fields.data_sensitivity = bulkSens as DataSensitivity;
+    if (bulkOwner) fields.owner_id = bulkOwner;
+    if (bulkVlan) fields.vlan_id = bulkVlan;
+    if (ips.length === 0 || Object.keys(fields).length === 0) {
+      setBulkEditOpen(false);
+      return;
+    }
+    try {
+      const res = await bulkUpdateAssets(ips, fields);
+      toast.success(t("table.bulkUpdateDone", { count: res.succeeded }));
+      setBulkEditOpen(false);
       selection.clear();
       await reload();
     } catch (e) {
@@ -437,6 +475,12 @@ export default function AssetsPage() {
               {t("table.selected", { count: selection.selected.size })}
             </span>
             <button
+              onClick={openBulkEdit}
+              className="rounded-md bg-sky-900/50 px-3 py-1 text-xs font-medium text-sky-300 hover:bg-sky-900"
+            >
+              {t("table.editSelected")}
+            </button>
+            <button
               onClick={onBulkDelete}
               className="rounded-md bg-red-900/60 px-3 py-1 text-xs font-medium text-red-300 hover:bg-red-900"
             >
@@ -617,6 +661,74 @@ export default function AssetsPage() {
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
             <Button type="submit">{t("assets.add")}</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={bulkEditOpen}
+        onClose={() => setBulkEditOpen(false)}
+        title={t("table.bulkEditTitle", { count: selection.selected.size })}
+      >
+        <form onSubmit={onBulkEdit} className="space-y-3">
+          <FormField label={t("assets.f.criticality")}>
+            <select
+              className={inputClass}
+              value={bulkCrit}
+              onChange={(e) => setBulkCrit(e.target.value)}
+            >
+              <option value="">{t("table.keepUnchanged")}</option>
+              {CRITICALITIES.map((c) => (
+                <option key={c} value={c}>
+                  {t(`crit.${c}` as TKey)}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label={t("assets.f.sensitivity")}>
+            <select
+              className={inputClass}
+              value={bulkSens}
+              onChange={(e) => setBulkSens(e.target.value)}
+            >
+              <option value="">{t("table.keepUnchanged")}</option>
+              {SENSITIVITIES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label={t("assets.f.owner")}>
+            <select
+              className={inputClass}
+              value={bulkOwner}
+              onChange={(e) => setBulkOwner(e.target.value)}
+            >
+              <option value="">{t("table.keepUnchanged")}</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.email}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label={t("assets.f.vlan")}>
+            <select
+              className={inputClass}
+              value={bulkVlan}
+              onChange={(e) => setBulkVlan(e.target.value)}
+            >
+              <option value="">{t("table.keepUnchanged")}</option>
+              {vlans.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <div className="flex justify-end">
+            <Button type="submit">{t("table.apply")}</Button>
           </div>
         </form>
       </Modal>

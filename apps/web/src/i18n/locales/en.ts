@@ -428,6 +428,11 @@ export const en = {
   "table.clear": "Clear",
   "table.confirmBulkDelete": "Delete {count} selected items? This cannot be undone.",
   "table.bulkDeleteDone": "Deleted {count}.",
+  "table.editSelected": "Edit selected",
+  "table.bulkEditTitle": "Edit {count} selected",
+  "table.keepUnchanged": "Keep unchanged",
+  "table.apply": "Apply",
+  "table.bulkUpdateDone": "Updated {count}.",
   "common.active": "Active",
   "common.inactive": "Inactive",
 
