@@ -423,6 +423,11 @@ export const en = {
     "Follow the getting-started checklist on the Dashboard to go from zero to your first scan. Reopen this tour anytime from the ? button in the top bar.",
   "common.search": "Search…",
   "common.filter": "Filter…",
+  "table.selected": "{count} selected",
+  "table.deleteSelected": "Delete selected",
+  "table.clear": "Clear",
+  "table.confirmBulkDelete": "Delete {count} selected items? This cannot be undone.",
+  "table.bulkDeleteDone": "Deleted {count}.",
   "common.active": "Active",
   "common.inactive": "Inactive",
 

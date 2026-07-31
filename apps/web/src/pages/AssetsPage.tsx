@@ -9,6 +9,7 @@ import {
   type CurrentUser,
   type DataSensitivity,
   type Vlan,
+  bulkDeleteAssets,
   createAsset,
   deleteAsset,
   downloadAssetImportTemplate,
@@ -31,7 +32,14 @@ import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
-import { type Column, TableHead, processRows, useColumnFilters } from "../components/tableView";
+import {
+  CHECKBOX_CLS,
+  type Column,
+  TableHead,
+  processRows,
+  useColumnFilters,
+  useTableSelection,
+} from "../components/tableView";
 import { useSort } from "../components/useSort";
 import { useToast } from "../components/Toast";
 import { type TKey } from "../i18n/locales/en";
@@ -91,6 +99,7 @@ export default function AssetsPage() {
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
   const [search, setSearch] = useState("");
+  const selection = useTableSelection();
 
   async function reload() {
     setLoading(true);
@@ -186,6 +195,20 @@ export default function AssetsPage() {
     try {
       await deleteAsset(id);
       toast.success(t("assets.deleted"));
+      await reload();
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
+
+  async function onBulkDelete() {
+    const ips = assets.filter((a) => selection.selected.has(a.id)).map((a) => a.ip);
+    if (ips.length === 0) return;
+    if (!window.confirm(t("table.confirmBulkDelete", { count: ips.length }))) return;
+    try {
+      const res = await bulkDeleteAssets(ips);
+      toast.success(t("table.bulkDeleteDone", { count: res.succeeded }));
+      selection.clear();
       await reload();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -407,7 +430,28 @@ export default function AssetsPage() {
         />
       ) : (
         <>
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {canWrite && selection.selected.size > 0 ? (
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-slate-300">
+              {t("table.selected", { count: selection.selected.size })}
+            </span>
+            <button
+              onClick={onBulkDelete}
+              className="rounded-md bg-red-900/60 px-3 py-1 text-xs font-medium text-red-300 hover:bg-red-900"
+            >
+              {t("table.deleteSelected")}
+            </button>
+            <button
+              onClick={selection.clear}
+              className="text-xs text-slate-400 hover:text-slate-200"
+            >
+              {t("table.clear")}
+            </button>
+          </div>
+        ) : (
+          <span />
+        )}
         <SearchInput value={search} onChange={setSearch} />
       </div>
 
@@ -420,17 +464,31 @@ export default function AssetsPage() {
             filters={filters}
             setFilter={onFilter}
             trailing
+            selection={
+              canWrite
+                ? {
+                    allChecked:
+                      processed.length > 0 &&
+                      processed.every((a) => selection.selected.has(a.id)),
+                    onToggleAll: (on) =>
+                      selection.setMany(
+                        processed.map((a) => a.id),
+                        on,
+                      ),
+                  }
+                : undefined
+            }
           />
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={7}>
+                <td className="px-4 py-3 text-slate-500" colSpan={canWrite ? 8 : 7}>
                   {t("common.loading")}
                 </td>
               </tr>
             ) : processed.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={7}>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={canWrite ? 8 : 7}>
                   {t("common.noData")}
                 </td>
               </tr>
@@ -441,6 +499,16 @@ export default function AssetsPage() {
                   onClick={() => navigate(`/assets/${a.id}`)}
                   className="cursor-pointer bg-slate-950 hover:bg-slate-900"
                 >
+                  {canWrite && (
+                    <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className={CHECKBOX_CLS}
+                        checked={selection.selected.has(a.id)}
+                        onChange={() => selection.toggle(a.id)}
+                      />
+                    </td>
+                  )}
                   <td className="px-4 py-2 font-mono text-emerald-400">{a.ip}</td>
                   <td className="px-4 py-2 text-slate-300">{a.hostname ?? "-"}</td>
                   <td className="px-4 py-2 text-slate-300">{vlanName(a.vlan_id)}</td>

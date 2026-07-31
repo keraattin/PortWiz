@@ -424,6 +424,11 @@ export const es: Partial<Record<TKey, string>> = {
     "Sigue la lista de primeros pasos en el Panel para pasar de cero a tu primer escaneo. Reabre este tour cuando quieras con el botón ? de la barra superior.",
   "common.search": "Buscar…",
   "common.filter": "Filtrar…",
+  "table.selected": "{count} seleccionado(s)",
+  "table.deleteSelected": "Eliminar seleccionados",
+  "table.clear": "Limpiar",
+  "table.confirmBulkDelete": "¿Eliminar {count} elementos seleccionados? Esta acción no se puede deshacer.",
+  "table.bulkDeleteDone": "{count} eliminado(s).",
   "common.active": "Activo",
   "common.inactive": "Inactivo",
 

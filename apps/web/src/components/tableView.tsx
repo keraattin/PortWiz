@@ -31,6 +31,40 @@ export function useColumnFilters() {
   return { filters, setFilter };
 }
 
+/** Row-selection state for bulk actions: a set of selected row ids plus toggles.
+ * Ids are the caller's stable keys (usually the row id). */
+export function useTableSelection() {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const toggle = useCallback((id: string) => {
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  // Add or remove a batch of ids at once (drives the header select-all).
+  const setMany = useCallback((ids: string[], on: boolean) => {
+    setSelected((s) => {
+      const next = new Set(s);
+      for (const id of ids) {
+        if (on) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+  const clear = useCallback(() => setSelected(new Set()), []);
+  return { selected, toggle, setMany, clear };
+}
+
+export interface HeadSelection {
+  allChecked: boolean;
+  onToggleAll: (on: boolean) => void;
+}
+
+export const CHECKBOX_CLS = "h-4 w-4 rounded border-slate-600 bg-slate-800 accent-emerald-500";
+
 /** Apply an optional free-text search (across every column) and per-column
  * filters, then sort. Enum columns match by equality, text columns by
  * case-insensitive substring. Pure; returns a new array. */
@@ -114,6 +148,7 @@ export function TableHead<T>({
   filters,
   setFilter,
   trailing = false,
+  selection,
 }: {
   columns: Column<T>[];
   sort: SortState;
@@ -121,11 +156,23 @@ export function TableHead<T>({
   filters: Record<string, string>;
   setFilter: (key: string, value: string) => void;
   trailing?: boolean;
+  // When set, a leading checkbox column drives bulk row selection.
+  selection?: HeadSelection;
 }) {
   const hasFilters = columns.some((c) => c.filter);
   return (
     <thead className="bg-slate-900 text-slate-400">
       <tr>
+        {selection && (
+          <th className="px-4 py-2">
+            <input
+              type="checkbox"
+              className={CHECKBOX_CLS}
+              checked={selection.allChecked}
+              onChange={(e) => selection.onToggleAll(e.target.checked)}
+            />
+          </th>
+        )}
         {columns.map((c) =>
           c.sortable === false ? (
             <th key={c.key} className="px-4 py-2 font-medium">
@@ -149,6 +196,7 @@ export function TableHead<T>({
       </tr>
       {hasFilters && (
         <tr>
+          {selection && <th className="px-2 pb-2"></th>}
           {columns.map((c) => (
             <FilterCell
               key={c.key}

@@ -275,6 +275,22 @@ export function deleteAsset(id: string): Promise<void> {
   return request<void>(`/assets/${id}`, { method: "DELETE" });
 }
 
+// Shared bulk-operation result (assets, VLANs, IP ranges).
+export interface BulkResult {
+  total: number;
+  succeeded: number;
+  skipped: number;
+  errors: number;
+  errors_detail: string[];
+}
+
+export function bulkDeleteAssets(ips: string[]): Promise<BulkResult> {
+  return request<BulkResult>("/assets/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify({ ips }),
+  });
+}
+
 // Bulk import (CSV / Excel)
 export interface AssetImportRowResult {
   row: number;

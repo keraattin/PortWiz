@@ -425,6 +425,11 @@ export const fr: Partial<Record<TKey, string>> = {
     "Suivez la liste de démarrage sur le Tableau de bord pour passer de zéro à votre première analyse. Rouvrez cette visite à tout moment via le bouton ? de la barre supérieure.",
   "common.search": "Rechercher…",
   "common.filter": "Filtrer…",
+  "table.selected": "{count} sélectionné(s)",
+  "table.deleteSelected": "Supprimer la sélection",
+  "table.clear": "Effacer",
+  "table.confirmBulkDelete": "Supprimer {count} éléments sélectionnés ? Cette action est irréversible.",
+  "table.bulkDeleteDone": "{count} supprimé(s).",
   "common.active": "Actif",
   "common.inactive": "Inactif",
 

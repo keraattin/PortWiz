@@ -425,6 +425,11 @@ export const de: Partial<Record<TKey, string>> = {
     "Folgen Sie der Erste-Schritte-Checkliste auf dem Dashboard, um von null zum ersten Scan zu gelangen. Öffnen Sie diese Tour jederzeit über die Schaltfläche ? in der oberen Leiste erneut.",
   "common.search": "Suchen…",
   "common.filter": "Filtern…",
+  "table.selected": "{count} ausgewählt",
+  "table.deleteSelected": "Ausgewählte löschen",
+  "table.clear": "Leeren",
+  "table.confirmBulkDelete": "{count} ausgewählte Elemente löschen? Dies kann nicht rückgängig gemacht werden.",
+  "table.bulkDeleteDone": "{count} gelöscht.",
   "common.active": "Aktiv",
   "common.inactive": "Inaktiv",
 

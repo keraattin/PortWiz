@@ -423,6 +423,11 @@ export const tr: Partial<Record<TKey, string>> = {
     "İlk taramanıza ulaşmak için Panodaki başlangıç kontrol listesini izleyin. Bu turu üst çubuktaki ? düğmesinden istediğiniz zaman yeniden açabilirsiniz.",
   "common.search": "Ara…",
   "common.filter": "Filtrele…",
+  "table.selected": "{count} seçildi",
+  "table.deleteSelected": "Seçilenleri sil",
+  "table.clear": "Temizle",
+  "table.confirmBulkDelete": "{count} seçili öğe silinsin mi? Bu işlem geri alınamaz.",
+  "table.bulkDeleteDone": "{count} silindi.",
   "common.active": "Aktif",
   "common.inactive": "Pasif",
 
