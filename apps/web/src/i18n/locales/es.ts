@@ -619,6 +619,7 @@ export const es: Partial<Record<TKey, string>> = {
   "ranges.empty": "Aún no hay rangos de IP.",
   "ranges.addFirst": "Añade tu primer rango de IP",
   "ranges.unassigned": "Rangos sin VLAN",
+  "ranges.syncTitle": "Sincronizar rangos desde NetBox",
   "segments.title": "Segmentos de red",
   "segments.subtitle": "Agentes y perfiles de escaneo agrupados por el segmento al que sirven.",
   "segments.unsegmented": "Pool sin segmento",

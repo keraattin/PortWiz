@@ -45,6 +45,7 @@ from ...schemas.asset import (
     IPRangeBulkUpdate,
     IPRangeCreate,
     IPRangeRead,
+    IPRangeSyncReport,
     IPRangeUpdate,
     VlanBulkCreate,
     VlanBulkDelete,
@@ -510,6 +511,91 @@ async def bulk_update_vlans(
 
 # IP ranges
 ip_ranges_router = APIRouter(prefix="/ip-ranges", tags=["inventory"])
+
+
+@ip_ranges_router.post("/sync", response_model=IPRangeSyncReport)
+async def sync_ip_ranges(
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    source: InventorySource = Depends(get_inventory_source),
+) -> IPRangeSyncReport:
+    """Pull IP ranges (prefixes) from the configured source (NetBox) and upsert
+    them by CIDR, attaching each to its VLAN by name when present. Gated by the
+    same toggle as VLANs (ranges travel with them). Audited as ip_range.synced."""
+    if source.name == "none":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No inventory source is configured.")
+    eff = await effective_settings(session)
+    if not eff.netbox_import_vlans:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "VLAN and range import from NetBox is disabled."
+        )
+    try:
+        items = await source.fetch_ranges()
+    except Exception as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Inventory source unavailable: {exc}"
+        ) from exc
+
+    vlan_by_name = {
+        v.name.lower(): v.id for v in (await session.execute(select(VLAN))).scalars()
+    }
+    by_cidr = {r.cidr: r for r in (await session.execute(select(IPRange))).scalars()}
+
+    created = updated = skipped = errors = 0
+    errors_detail: list[str] = []
+    for item in items:
+        try:
+            cidr = str(ipaddress.ip_network(item.cidr, strict=False))
+        except ValueError:
+            errors += 1
+            errors_detail.append(f"Invalid CIDR '{item.cidr}'")
+            continue
+        # An unknown VLAN name imports the range unassigned rather than failing.
+        vlan_id = vlan_by_name.get(item.vlan_name.lower()) if item.vlan_name else None
+        existing = by_cidr.get(cidr)
+        if existing is not None:
+            if on_conflict == "skip":
+                skipped += 1
+                continue
+            if vlan_id is not None:
+                existing.vlan_id = vlan_id
+            if item.description:
+                existing.description = item.description
+            updated += 1
+        else:
+            ip_range = IPRange(cidr=cidr, vlan_id=vlan_id, description=item.description)
+            session.add(ip_range)
+            await session.flush()
+            by_cidr[cidr] = ip_range
+            created += 1
+
+    await append_audit(
+        session,
+        action="ip_range.synced",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="ip_range",
+        target_id=None,
+        payload={
+            "source": source.name,
+            "total": len(items),
+            "created": created,
+            "updated": updated,
+            "skipped": skipped,
+            "errors": errors,
+        },
+    )
+    await session.commit()
+    return IPRangeSyncReport(
+        source=source.name,
+        total=len(items),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        errors_detail=errors_detail[:50],
+    )
 
 
 @ip_ranges_router.get("", response_model=list[IPRangeRead])

@@ -616,6 +616,7 @@ export const en = {
   "ranges.empty": "No IP ranges yet.",
   "ranges.addFirst": "Add your first IP range",
   "ranges.unassigned": "Ranges without a VLAN",
+  "ranges.syncTitle": "Sync ranges from NetBox",
 
   // Network segments
   "segments.title": "Network segments",

@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import {
   type IpRange,
+  type IpRangeSyncReport,
   type Vlan,
   type VlanImportReport,
   type VlanSyncReport,
@@ -17,6 +18,7 @@ import {
   importVlans,
   listIpRanges,
   listVlans,
+  syncIpRanges,
   syncVlans,
 } from "../api/client";
 import { inputClass } from "../components/formStyles";
@@ -75,8 +77,10 @@ export default function VlansPage() {
   const [importing, setImporting] = useState(false);
 
   const [syncReport, setSyncReport] = useState<VlanSyncReport | null>(null);
+  const [rangeSyncReport, setRangeSyncReport] = useState<IpRangeSyncReport | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [rangeSyncing, setRangeSyncing] = useState(false);
   const [netboxOn, setNetboxOn] = useState(false);
   // VLAN import can be disabled in Settings while NetBox stays connected.
   const [vlanImportOn, setVlanImportOn] = useState(false);
@@ -92,6 +96,20 @@ export default function VlansPage() {
       setSyncError(errorMessage(err));
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function onSyncRanges() {
+    setSyncError(null);
+    setRangeSyncReport(null);
+    setRangeSyncing(true);
+    try {
+      setRangeSyncReport(await syncIpRanges(onConflict));
+      await reload();
+    } catch (err) {
+      setSyncError(errorMessage(err));
+    } finally {
+      setRangeSyncing(false);
     }
   }
 
@@ -428,13 +446,22 @@ export default function VlansPage() {
             {netboxOn && !vlanImportOn && (
               <p className="text-xs text-amber-400">{t("vlans.importOff")}</p>
             )}
-            <Button
-              variant="outline"
-              onClick={onSync}
-              disabled={syncing || !netboxOn || !vlanImportOn}
-            >
-              {syncing ? t("vlans.syncing") : t("vlans.syncTitle")}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={onSync}
+                disabled={syncing || !netboxOn || !vlanImportOn}
+              >
+                {syncing ? t("vlans.syncing") : t("vlans.syncTitle")}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onSyncRanges}
+                disabled={rangeSyncing || !netboxOn || !vlanImportOn}
+              >
+                {rangeSyncing ? t("vlans.syncing") : t("ranges.syncTitle")}
+              </Button>
+            </div>
             {syncError && <p className="text-sm text-red-400">{syncError}</p>}
             {syncReport && (
               <p className="text-sm text-slate-300">
@@ -453,6 +480,27 @@ export default function VlansPage() {
                 ,{" "}
                 <span className="text-red-400">
                   {syncReport.errors} {t("assets.errors")}
+                </span>
+                .
+              </p>
+            )}
+            {rangeSyncReport && (
+              <p className="text-sm text-slate-300">
+                {rangeSyncReport.source}: {rangeSyncReport.total} {t("ranges.title")}.{" "}
+                <span className="text-emerald-400">
+                  {rangeSyncReport.created} {t("assets.created")}
+                </span>
+                ,{" "}
+                <span className="text-sky-400">
+                  {rangeSyncReport.updated} {t("assets.updated")}
+                </span>
+                ,{" "}
+                <span className="text-slate-400">
+                  {rangeSyncReport.skipped} {t("assets.skipped")}
+                </span>
+                ,{" "}
+                <span className="text-red-400">
+                  {rangeSyncReport.errors} {t("assets.errors")}
                 </span>
                 .
               </p>

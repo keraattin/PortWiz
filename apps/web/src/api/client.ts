@@ -458,6 +458,24 @@ export function syncVlans(onConflict: "update" | "skip" = "update"): Promise<Vla
   });
 }
 
+export interface IpRangeSyncReport {
+  source: string;
+  total: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  errors_detail: string[];
+}
+
+export function syncIpRanges(
+  onConflict: "update" | "skip" = "update",
+): Promise<IpRangeSyncReport> {
+  return request<IpRangeSyncReport>(`/ip-ranges/sync?on_conflict=${onConflict}`, {
+    method: "POST",
+  });
+}
+
 // Write PortWiz's scan-discovered hosts back to NetBox.
 export interface AssetPushReport {
   source: string;

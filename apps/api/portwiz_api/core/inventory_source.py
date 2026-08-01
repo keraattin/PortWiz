@@ -41,6 +41,15 @@ class SourceVlan:
 
 
 @dataclass
+class SourceRange:
+    """An IP range (prefix) pulled from an external source, normalized."""
+
+    cidr: str
+    vlan_name: str | None = None
+    description: str | None = None
+
+
+@dataclass
 class PushResult:
     """Outcome of writing hosts back to an external source."""
 
@@ -55,6 +64,7 @@ class InventorySource(Protocol):
 
     async def fetch_assets(self) -> list[SourceAsset]: ...
     async def fetch_vlans(self) -> list[SourceVlan]: ...
+    async def fetch_ranges(self) -> list[SourceRange]: ...
     async def push_assets(self, assets: list[SourceAsset]) -> PushResult: ...
     async def verify(self) -> tuple[bool, str]: ...
 
@@ -68,6 +78,9 @@ class NullSource:
         return []
 
     async def fetch_vlans(self) -> list[SourceVlan]:
+        return []
+
+    async def fetch_ranges(self) -> list[SourceRange]:
         return []
 
     async def push_assets(self, assets: list[SourceAsset]) -> PushResult:
@@ -134,6 +147,33 @@ class NetBoxSource:
                     )
                 url = data.get("next")
         return vlans
+
+    async def fetch_ranges(self) -> list[SourceRange]:
+        import httpx
+
+        ranges: list[SourceRange] = []
+        url: str | None = f"{self._base}/api/ipam/prefixes/?limit=500"
+        async with httpx.AsyncClient(timeout=30) as client:
+            while url:
+                resp = await client.get(url, headers=self._headers)
+                resp.raise_for_status()
+                data = resp.json()
+                for record in data.get("results", []):
+                    cidr = (record.get("prefix") or "").strip()
+                    if not cidr:
+                        continue
+                    # A prefix's VLAN is a nested object (or null) in NetBox.
+                    vlan = record.get("vlan")
+                    vlan_name = vlan.get("name") if isinstance(vlan, dict) else None
+                    ranges.append(
+                        SourceRange(
+                            cidr=cidr,
+                            vlan_name=(vlan_name or None),
+                            description=(record.get("description") or None),
+                        )
+                    )
+                url = data.get("next")
+        return ranges
 
     async def push_assets(self, assets: list[SourceAsset]) -> PushResult:
         """Create the given hosts in NetBox as IP addresses, skipping any whose

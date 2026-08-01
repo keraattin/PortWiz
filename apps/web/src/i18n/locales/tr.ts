@@ -618,6 +618,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "ranges.empty": "Henüz IP aralığı yok.",
   "ranges.addFirst": "İlk IP aralığını ekle",
   "ranges.unassigned": "VLAN'ı olmayan aralıklar",
+  "ranges.syncTitle": "Aralıkları NetBox'tan eşitle",
   "segments.title": "Ağ segmentleri",
   "segments.subtitle": "Ajanlar ve tarama profilleri, hizmet verdikleri segmente göre gruplanmıştır.",
   "segments.unsegmented": "Segmentsiz havuz",

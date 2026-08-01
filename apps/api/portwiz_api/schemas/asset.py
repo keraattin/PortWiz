@@ -264,6 +264,16 @@ class VlanSyncReport(BaseModel):
     errors_detail: list[str]
 
 
+class IPRangeSyncReport(BaseModel):
+    source: str
+    total: int
+    created: int
+    updated: int
+    skipped: int
+    errors: int
+    errors_detail: list[str]
+
+
 class AssetPushReport(BaseModel):
     source: str
     total: int  # discovered assets considered for writeback
