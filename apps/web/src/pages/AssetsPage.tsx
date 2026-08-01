@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import {
   type Asset,
   type AssetImportReport,
+  type AssetPreviewItem,
   type AssetPushReport,
+  type AssetSyncApplyItem,
   type AssetSyncReport,
   type Criticality,
   type CurrentUser,
   type DataSensitivity,
   type Vlan,
+  applyAssetSync,
   bulkDeleteAssets,
   bulkUpdateAssets,
   createAsset,
@@ -19,8 +22,8 @@ import {
   listAssets,
   listUsers,
   listVlans,
+  previewAssetSync,
   pushAssetsToNetbox,
-  syncAssets,
 } from "../api/client";
 import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
@@ -89,6 +92,14 @@ export default function AssetsPage() {
   const [syncReport, setSyncReport] = useState<AssetSyncReport | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  // NetBox sync staging: preview the source, pick rows, set attributes, apply.
+  const [syncStagingOpen, setSyncStagingOpen] = useState(false);
+  const [preview, setPreview] = useState<AssetPreviewItem[]>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const previewSel = useTableSelection();
+  const [stagingCrit, setStagingCrit] = useState("");
+  const [stagingSens, setStagingSens] = useState("");
+  const [stagingOwner, setStagingOwner] = useState("");
 
   const [pushReport, setPushReport] = useState<AssetPushReport | null>(null);
   const [pushError, setPushError] = useState<string | null>(null);
@@ -270,13 +281,51 @@ export default function AssetsPage() {
     }
   }
 
-  async function onSync() {
+  async function openSyncStaging() {
+    setSyncError(null);
+    setSyncReport(null);
+    setStagingCrit("");
+    setStagingSens("");
+    setStagingOwner("");
+    previewSel.clear();
+    setPreview([]);
+    setPreviewLoading(true);
+    setSyncStagingOpen(true);
+    try {
+      const items = await previewAssetSync();
+      setPreview(items);
+      // Pre-select the hosts that are new to PortWiz (the common intent).
+      previewSel.setMany(
+        items.filter((p) => !p.exists).map((p) => p.ip),
+        true,
+      );
+    } catch (err) {
+      setSyncError(errorMessage(err));
+      setSyncStagingOpen(false);
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
+  async function onApplyStaging() {
+    const items: AssetSyncApplyItem[] = preview
+      .filter((p) => previewSel.selected.has(p.ip))
+      .map((p) => {
+        const item: AssetSyncApplyItem = { ip: p.ip, hostname: p.hostname };
+        if (stagingCrit) item.criticality = stagingCrit as Criticality;
+        if (stagingSens) item.data_sensitivity = stagingSens as DataSensitivity;
+        if (stagingOwner) item.owner_id = stagingOwner;
+        return item;
+      });
+    if (items.length === 0) return;
     setSyncError(null);
     setSyncReport(null);
     setSyncing(true);
     try {
-      const report = await syncAssets(onConflict);
+      const report = await applyAssetSync(items, onConflict);
       setSyncReport(report);
+      setSyncStagingOpen(false);
+      previewSel.clear();
       await reload();
     } catch (err) {
       setSyncError(errorMessage(err));
@@ -400,10 +449,10 @@ export default function AssetsPage() {
           )}
           <Button
             variant="outline"
-            onClick={onSync}
-            disabled={syncing || !netboxOn || !assetImportOn}
+            onClick={openSyncStaging}
+            disabled={previewLoading || !netboxOn || !assetImportOn}
           >
-            {syncing ? t("assets.syncing") : t("assets.syncTitle")}
+            {previewLoading ? t("assets.syncing") : t("assets.syncTitle")}
           </Button>
           {syncError && <p className="text-sm text-red-400">{syncError}</p>}
           {syncReport && (
@@ -731,6 +780,130 @@ export default function AssetsPage() {
             <Button type="submit">{t("table.apply")}</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        open={syncStagingOpen}
+        onClose={() => setSyncStagingOpen(false)}
+        title={t("assets.syncStagingTitle")}
+        wide
+      >
+        {previewLoading ? (
+          <p className="py-6 text-center text-sm text-slate-500">{t("common.loading")}</p>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-xs text-slate-500">{t("assets.syncStagingHint")}</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <FormField label={t("assets.f.criticality")}>
+                <select
+                  className={inputClass}
+                  value={stagingCrit}
+                  onChange={(e) => setStagingCrit(e.target.value)}
+                >
+                  <option value="">{t("assets.syncKeepDefault")}</option>
+                  {CRITICALITIES.map((c) => (
+                    <option key={c} value={c}>
+                      {t(`crit.${c}` as TKey)}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label={t("assets.f.sensitivity")}>
+                <select
+                  className={inputClass}
+                  value={stagingSens}
+                  onChange={(e) => setStagingSens(e.target.value)}
+                >
+                  <option value="">{t("assets.syncKeepDefault")}</option>
+                  {SENSITIVITIES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label={t("assets.f.owner")}>
+                <select
+                  className={inputClass}
+                  value={stagingOwner}
+                  onChange={(e) => setStagingOwner(e.target.value)}
+                >
+                  <option value="">{t("assets.syncKeepDefault")}</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.email}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
+
+            {preview.length === 0 ? (
+              <p className="py-6 text-center text-sm text-slate-500">{t("assets.syncNothing")}</p>
+            ) : (
+              <div className="max-h-80 overflow-y-auto rounded-lg border border-slate-800">
+                <table className="w-full text-left text-sm">
+                  <thead className="sticky top-0 bg-slate-900 text-slate-400">
+                    <tr>
+                      <th className="px-4 py-2">
+                        <input
+                          type="checkbox"
+                          className={CHECKBOX_CLS}
+                          checked={preview.every((p) => previewSel.selected.has(p.ip))}
+                          onChange={(e) =>
+                            previewSel.setMany(
+                              preview.map((p) => p.ip),
+                              e.target.checked,
+                            )
+                          }
+                        />
+                      </th>
+                      <th className="px-4 py-2 font-medium">{t("assets.col.ip")}</th>
+                      <th className="px-4 py-2 font-medium">{t("assets.col.hostname")}</th>
+                      <th className="px-4 py-2 font-medium">{t("assets.syncStatus")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {preview.map((p) => (
+                      <tr key={p.ip} className="bg-slate-950">
+                        <td className="px-4 py-2">
+                          <input
+                            type="checkbox"
+                            className={CHECKBOX_CLS}
+                            checked={previewSel.selected.has(p.ip)}
+                            onChange={() => previewSel.toggle(p.ip)}
+                          />
+                        </td>
+                        <td className="px-4 py-2 font-mono text-emerald-400">{p.ip}</td>
+                        <td className="px-4 py-2 text-slate-300">{p.hostname ?? "-"}</td>
+                        <td className="px-4 py-2">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs ${
+                              p.exists
+                                ? "bg-slate-700 text-slate-300"
+                                : "bg-emerald-900 text-emerald-300"
+                            }`}
+                          >
+                            {p.exists ? t("assets.syncExists") : t("assets.syncNew")}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3">
+              <span className="text-xs text-slate-500">
+                {t("table.selected", { count: previewSel.selected.size })}
+              </span>
+              <Button onClick={onApplyStaging} disabled={syncing || previewSel.selected.size === 0}>
+                {syncing ? t("assets.importing") : t("assets.syncImportSelected")}
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -35,8 +35,10 @@ from ...schemas.asset import (
     AssetCreate,
     AssetImportReport,
     AssetImportRowResult,
+    AssetPreviewItem,
     AssetPushReport,
     AssetRead,
+    AssetSyncApply,
     AssetSyncReport,
     AssetUpdate,
     BulkReport,
@@ -1139,6 +1141,115 @@ async def sync_assets(
     return AssetSyncReport(
         source=source.name,
         total=len(items),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        errors_detail=errors_detail[:50],
+    )
+
+
+@assets_router.get("/sync/preview", response_model=list[AssetPreviewItem])
+async def sync_preview_assets(
+    _: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    source: InventorySource = Depends(get_inventory_source),
+) -> list[AssetPreviewItem]:
+    """Show what a NetBox asset sync would bring in, without applying anything, so
+    the staging UI can let the user select rows and set attributes first."""
+    if source.name == "none":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No inventory source is configured.")
+    eff = await effective_settings(session)
+    if not eff.netbox_import_assets:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "Asset import from NetBox is disabled."
+        )
+    try:
+        items = await source.fetch_assets()
+    except Exception as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Inventory source unavailable: {exc}"
+        ) from exc
+    existing = set(
+        (await session.execute(select(Asset.ip))).scalars().all()
+    )
+    preview: list[AssetPreviewItem] = []
+    for item in items:
+        try:
+            ipaddress.ip_address(item.ip)
+        except ValueError:
+            continue  # invalid IPs are simply not offered
+        preview.append(
+            AssetPreviewItem(ip=item.ip, hostname=item.hostname, exists=item.ip in existing)
+        )
+    return preview
+
+
+@assets_router.post("/sync/apply", response_model=AssetSyncReport)
+async def sync_apply_assets(
+    payload: AssetSyncApply,
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> AssetSyncReport:
+    """Apply a chosen subset of a sync preview, with attributes (criticality,
+    owner, ...) set in the staging UI. Upserts by IP; one asset.synced audit."""
+    # Validate every referenced VLAN/owner once before touching anything.
+    for vlan_id in {i.vlan_id for i in payload.items if i.vlan_id}:
+        if await session.get(VLAN, vlan_id) is None:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced VLAN does not exist")
+    for owner_id in {i.owner_id for i in payload.items if i.owner_id}:
+        if await session.get(User, owner_id) is None:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced owner does not exist")
+
+    created = updated = skipped = errors = 0
+    errors_detail: list[str] = []
+    for item in payload.items:
+        try:
+            ipaddress.ip_address(item.ip)
+        except ValueError:
+            errors += 1
+            errors_detail.append(f"Invalid IP '{item.ip}'")
+            continue
+        fields: dict[str, object] = {}
+        if item.hostname:
+            fields["hostname"] = item.hostname
+        if item.criticality is not None:
+            fields["criticality"] = item.criticality
+        if item.data_sensitivity is not None:
+            fields["data_sensitivity"] = item.data_sensitivity
+        if item.owner_id is not None:
+            fields["owner_id"] = item.owner_id
+        if item.vlan_id is not None:
+            fields["vlan_id"] = item.vlan_id
+        outcome = await upsert_asset(session, item.ip, fields, on_conflict)
+        if outcome == "created":
+            created += 1
+        elif outcome == "updated":
+            updated += 1
+        else:
+            skipped += 1
+
+    await append_audit(
+        session,
+        action="asset.synced",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=None,
+        payload={
+            "source": "netbox",
+            "total": len(payload.items),
+            "created": created,
+            "updated": updated,
+            "skipped": skipped,
+            "errors": errors,
+        },
+    )
+    await session.commit()
+    return AssetSyncReport(
+        source="netbox",
+        total=len(payload.items),
         created=created,
         updated=updated,
         skipped=skipped,

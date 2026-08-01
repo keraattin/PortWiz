@@ -141,3 +141,68 @@ async def test_sync_skips_hostname_when_disabled(client, admin_headers) -> None:
     asset = (await client.get("/api/v1/assets", headers=admin_headers)).json()[0]
     assert asset["hostname"] is None
     assert asset["description"] == "owned"
+
+
+# --- interactive sync (preview + apply) ---
+
+
+async def test_sync_preview_flags_existing(client, admin_headers) -> None:
+    await client.post("/api/v1/assets", json={"ip": "10.0.0.5"}, headers=admin_headers)
+    _use_source([_src("10.0.0.5", hostname="web01"), _src("10.0.0.6")])
+    resp = await client.get("/api/v1/assets/sync/preview", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    by_ip = {p["ip"]: p for p in resp.json()}
+    assert by_ip["10.0.0.5"]["exists"] is True
+    assert by_ip["10.0.0.6"]["exists"] is False
+    assert by_ip["10.0.0.5"]["hostname"] == "web01"
+
+
+async def test_sync_preview_not_configured_returns_400(client, admin_headers) -> None:
+    # No source override: hermetic env yields a NullSource.
+    resp = await client.get("/api/v1/assets/sync/preview", headers=admin_headers)
+    assert resp.status_code == 400
+
+
+async def test_sync_apply_creates_with_attributes(client, admin_headers) -> None:
+    resp = await client.post(
+        "/api/v1/assets/sync/apply",
+        json={
+            "items": [
+                {"ip": "10.1.0.1", "hostname": "h1", "criticality": "high"},
+                {"ip": "10.1.0.2"},
+            ]
+        },
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["created"] == 2
+    listed = (await client.get("/api/v1/assets", headers=admin_headers)).json()
+    h1 = next(a for a in listed if a["ip"] == "10.1.0.1")
+    assert h1["criticality"] == "high" and h1["hostname"] == "h1"
+
+
+async def test_sync_apply_validates_vlan(client, admin_headers) -> None:
+    import uuid
+
+    resp = await client.post(
+        "/api/v1/assets/sync/apply",
+        json={"items": [{"ip": "10.1.0.3", "vlan_id": str(uuid.uuid4())}]},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 400  # referenced VLAN does not exist
+
+
+async def test_sync_apply_requires_write(client, admin_headers) -> None:
+    await client.post(
+        "/api/v1/users",
+        json={"email": "sa-aud@test.local", "password": "Secret123!", "role": "auditor"},
+        headers=admin_headers,
+    )
+    login = await client.post(
+        "/api/v1/auth/login", data={"username": "sa-aud@test.local", "password": "Secret123!"}
+    )
+    aud = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    resp = await client.post(
+        "/api/v1/assets/sync/apply", json={"items": [{"ip": "10.1.0.9"}]}, headers=aud
+    )
+    assert resp.status_code == 403

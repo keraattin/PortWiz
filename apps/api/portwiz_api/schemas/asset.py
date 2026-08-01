@@ -281,3 +281,24 @@ class AssetPushReport(BaseModel):
     skipped: int
     errors: int
     errors_detail: list[str]
+
+
+# Interactive sync: preview what the source offers, then apply a chosen subset
+# with per-import attributes set in the staging UI.
+class AssetPreviewItem(BaseModel):
+    ip: str
+    hostname: str | None = None
+    exists: bool  # already an asset in PortWiz
+
+
+class AssetSyncApplyItem(BaseModel):
+    ip: str
+    hostname: str | None = None
+    criticality: Criticality | None = None
+    data_sensitivity: DataSensitivity | None = None
+    owner_id: uuid.UUID | None = None
+    vlan_id: uuid.UUID | None = None
+
+
+class AssetSyncApply(BaseModel):
+    items: list[AssetSyncApplyItem]

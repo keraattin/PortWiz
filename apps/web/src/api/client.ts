@@ -442,6 +442,36 @@ export function syncAssets(onConflict: "update" | "skip" = "update"): Promise<As
   });
 }
 
+// Interactive sync: preview the source, then apply a chosen subset with attrs.
+export interface AssetPreviewItem {
+  ip: string;
+  hostname: string | null;
+  exists: boolean;
+}
+
+export interface AssetSyncApplyItem {
+  ip: string;
+  hostname?: string | null;
+  criticality?: Criticality;
+  data_sensitivity?: DataSensitivity;
+  owner_id?: string | null;
+  vlan_id?: string | null;
+}
+
+export function previewAssetSync(): Promise<AssetPreviewItem[]> {
+  return request<AssetPreviewItem[]>("/assets/sync/preview");
+}
+
+export function applyAssetSync(
+  items: AssetSyncApplyItem[],
+  onConflict: "update" | "skip" = "update",
+): Promise<AssetSyncReport> {
+  return request<AssetSyncReport>(`/assets/sync/apply?on_conflict=${onConflict}`, {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+}
+
 export interface VlanSyncReport {
   source: string;
   total: number;

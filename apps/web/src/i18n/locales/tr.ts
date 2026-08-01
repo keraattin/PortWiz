@@ -548,6 +548,14 @@ export const tr: Partial<Record<TKey, string>> = {
   "assets.syncHint":
     "Yapılandırılmış NetBox'tan ana makineleri çeker ve IP'ye göre ekler/günceller.",
   "assets.syncing": "Eşitleniyor…",
+  "assets.syncStagingTitle": "NetBox eşitlemesini gözden geçir",
+  "assets.syncStagingHint": "İçe aktarılacak ana makineleri seçin ve seçilenler için öznitelikleri ayarlayın.",
+  "assets.syncKeepDefault": "Varsayılanı koru",
+  "assets.syncStatus": "Durum",
+  "assets.syncNew": "Yeni",
+  "assets.syncExists": "Mevcut",
+  "assets.syncNothing": "İçe aktarılacak bir şey yok.",
+  "assets.syncImportSelected": "Seçilenleri içe aktar",
   "assets.hosts": "ana makine",
   "assets.pushTitle": "Keşfedilenleri NetBox'a gönder",
   "assets.pushHint":

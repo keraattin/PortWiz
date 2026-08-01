@@ -550,6 +550,14 @@ export const de: Partial<Record<TKey, string>> = {
   "assets.syncHint":
     "Holt Hosts aus Ihrem konfigurierten NetBox und legt sie anhand der IP an oder aktualisiert sie.",
   "assets.syncing": "Wird synchronisiert…",
+  "assets.syncStagingTitle": "NetBox-Synchronisierung prüfen",
+  "assets.syncStagingHint": "Wählen Sie aus, welche Hosts importiert werden sollen, und legen Sie Attribute für die ausgewählten fest.",
+  "assets.syncKeepDefault": "Standard beibehalten",
+  "assets.syncStatus": "Status",
+  "assets.syncNew": "Neu",
+  "assets.syncExists": "Vorhanden",
+  "assets.syncNothing": "Nichts zu importieren.",
+  "assets.syncImportSelected": "Ausgewählte importieren",
   "assets.hosts": "Hosts",
   "assets.pushTitle": "Erkannte zu NetBox senden",
   "assets.pushHint":
