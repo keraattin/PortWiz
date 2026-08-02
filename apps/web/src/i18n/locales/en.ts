@@ -433,6 +433,11 @@ export const en = {
   "table.keepUnchanged": "Keep unchanged",
   "table.apply": "Apply",
   "table.bulkUpdateDone": "Updated {count}.",
+  "table.stagingStatus": "Status",
+  "table.stagingNew": "New",
+  "table.stagingExists": "Exists",
+  "table.stagingNothing": "Nothing to import.",
+  "table.stagingImport": "Import selected",
   "common.active": "Active",
   "common.inactive": "Inactive",
 
@@ -597,6 +602,7 @@ export const en = {
   "vlans.noRanges": "No ranges yet",
   "vlans.rangesFailed": "Could not add: {cidrs}",
   "vlans.syncTitle": "Sync from NetBox",
+  "vlans.syncStagingTitle": "Review VLAN sync",
   "vlans.syncHint": "Pulls VLANs from your configured NetBox and upserts them by name.",
   "vlans.importOff": "VLAN import is turned off in Settings.",
   "vlans.syncing": "Syncing…",
@@ -625,6 +631,7 @@ export const en = {
   "ranges.addFirst": "Add your first IP range",
   "ranges.unassigned": "Ranges without a VLAN",
   "ranges.syncTitle": "Sync ranges from NetBox",
+  "ranges.syncStagingTitle": "Review range sync",
 
   // Network segments
   "segments.title": "Network segments",

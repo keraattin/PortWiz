@@ -100,3 +100,32 @@ async def test_range_sync_requires_write(client, admin_headers) -> None:
     )
     aud = await _login(client, "raud@test.local")
     assert (await client.post("/api/v1/ip-ranges/sync", headers=aud)).status_code == 403
+
+
+# --- interactive sync (preview + apply) ---
+
+
+async def test_range_sync_preview_flags_existing(client, admin_headers) -> None:
+    await client.post("/api/v1/ip-ranges", json={"cidr": "10.0.0.0/24"}, headers=admin_headers)
+    _use_source([_range("10.0.0.0/24"), _range("10.5.0.0/24")])
+    resp = await client.get("/api/v1/ip-ranges/sync/preview", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    by_cidr = {p["cidr"]: p for p in resp.json()}
+    assert by_cidr["10.0.0.0/24"]["exists"] is True
+    assert by_cidr["10.5.0.0/24"]["exists"] is False
+
+
+async def test_range_sync_apply_creates_with_vlan(client, admin_headers) -> None:
+    vlan = (
+        await client.post("/api/v1/vlans", json={"name": "prod"}, headers=admin_headers)
+    ).json()
+    resp = await client.post(
+        "/api/v1/ip-ranges/sync/apply",
+        json={"items": [{"cidr": "10.6.0.0/24", "vlan_name": "prod"}, {"cidr": "10.7.0.5/24"}]},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["created"] == 2
+    ranges = (await client.get("/api/v1/ip-ranges", headers=admin_headers)).json()
+    prod_range = next(r for r in ranges if r["cidr"] == "10.6.0.0/24")
+    assert prod_range["vlan_id"] == vlan["id"]

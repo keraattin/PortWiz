@@ -1,10 +1,14 @@
 import { type FormEvent, useEffect, useState } from "react";
 import {
   type IpRange,
+  type IpRangePreviewItem,
   type IpRangeSyncReport,
   type Vlan,
   type VlanImportReport,
+  type VlanPreviewItem,
   type VlanSyncReport,
+  applyIpRangeSync,
+  applyVlanSync,
   bulkDeleteIpRanges,
   bulkDeleteVlans,
   bulkUpdateIpRanges,
@@ -18,8 +22,8 @@ import {
   importVlans,
   listIpRanges,
   listVlans,
-  syncIpRanges,
-  syncVlans,
+  previewIpRangeSync,
+  previewVlanSync,
 } from "../api/client";
 import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
@@ -32,6 +36,7 @@ import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
+import SyncStagingModal from "../components/SyncStagingModal";
 import { CHECKBOX_CLS, useTableSelection } from "../components/tableView";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../i18n/I18nContext";
@@ -79,37 +84,98 @@ export default function VlansPage() {
   const [syncReport, setSyncReport] = useState<VlanSyncReport | null>(null);
   const [rangeSyncReport, setRangeSyncReport] = useState<IpRangeSyncReport | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [syncing, setSyncing] = useState(false);
-  const [rangeSyncing, setRangeSyncing] = useState(false);
+  // NetBox sync staging (preview then apply a chosen subset).
+  const [vlanStagingOpen, setVlanStagingOpen] = useState(false);
+  const [vlanPreview, setVlanPreview] = useState<VlanPreviewItem[]>([]);
+  const [vlanStagingLoading, setVlanStagingLoading] = useState(false);
+  const [vlanApplying, setVlanApplying] = useState(false);
+  const vlanPreviewSel = useTableSelection();
+  const [rangeStagingOpen, setRangeStagingOpen] = useState(false);
+  const [rangePreview, setRangePreview] = useState<IpRangePreviewItem[]>([]);
+  const [rangeStagingLoading, setRangeStagingLoading] = useState(false);
+  const [rangeApplying, setRangeApplying] = useState(false);
+  const rangePreviewSel = useTableSelection();
   const [netboxOn, setNetboxOn] = useState(false);
   // VLAN import can be disabled in Settings while NetBox stays connected.
   const [vlanImportOn, setVlanImportOn] = useState(false);
 
-  async function onSync() {
+  async function openVlanStaging() {
     setSyncError(null);
     setSyncReport(null);
-    setSyncing(true);
+    vlanPreviewSel.clear();
+    setVlanPreview([]);
+    setVlanStagingLoading(true);
+    setVlanStagingOpen(true);
     try {
-      setSyncReport(await syncVlans(onConflict));
-      await reload();
+      const items = await previewVlanSync();
+      setVlanPreview(items);
+      vlanPreviewSel.setMany(
+        items.filter((v) => !v.exists).map((v) => v.name),
+        true,
+      );
     } catch (err) {
       setSyncError(errorMessage(err));
+      setVlanStagingOpen(false);
     } finally {
-      setSyncing(false);
+      setVlanStagingLoading(false);
     }
   }
 
-  async function onSyncRanges() {
-    setSyncError(null);
-    setRangeSyncReport(null);
-    setRangeSyncing(true);
+  async function onApplyVlanStaging() {
+    const items = vlanPreview
+      .filter((v) => vlanPreviewSel.selected.has(v.name))
+      .map((v) => ({ name: v.name, vlan_tag: v.vlan_tag, description: v.description }));
+    if (items.length === 0) return;
+    setVlanApplying(true);
     try {
-      setRangeSyncReport(await syncIpRanges(onConflict));
+      setSyncReport(await applyVlanSync(items, onConflict));
+      setVlanStagingOpen(false);
+      vlanPreviewSel.clear();
       await reload();
     } catch (err) {
       setSyncError(errorMessage(err));
     } finally {
-      setRangeSyncing(false);
+      setVlanApplying(false);
+    }
+  }
+
+  async function openRangeStaging() {
+    setSyncError(null);
+    setRangeSyncReport(null);
+    rangePreviewSel.clear();
+    setRangePreview([]);
+    setRangeStagingLoading(true);
+    setRangeStagingOpen(true);
+    try {
+      const items = await previewIpRangeSync();
+      setRangePreview(items);
+      rangePreviewSel.setMany(
+        items.filter((r) => !r.exists).map((r) => r.cidr),
+        true,
+      );
+    } catch (err) {
+      setSyncError(errorMessage(err));
+      setRangeStagingOpen(false);
+    } finally {
+      setRangeStagingLoading(false);
+    }
+  }
+
+  async function onApplyRangeStaging() {
+    const items = rangePreview
+      .filter((r) => rangePreviewSel.selected.has(r.cidr))
+      .map((r) => ({ cidr: r.cidr, vlan_name: r.vlan_name, description: r.description }));
+    if (items.length === 0) return;
+    setRangeApplying(true);
+    try {
+      setRangeSyncReport(await applyIpRangeSync(items, onConflict));
+      setRangeStagingOpen(false);
+      rangePreviewSel.clear();
+      await reload();
+    } catch (err) {
+      setSyncError(errorMessage(err));
+    } finally {
+      setRangeApplying(false);
     }
   }
 
@@ -449,17 +515,17 @@ export default function VlansPage() {
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
-                onClick={onSync}
-                disabled={syncing || !netboxOn || !vlanImportOn}
+                onClick={openVlanStaging}
+                disabled={vlanStagingLoading || !netboxOn || !vlanImportOn}
               >
-                {syncing ? t("vlans.syncing") : t("vlans.syncTitle")}
+                {vlanStagingLoading ? t("vlans.syncing") : t("vlans.syncTitle")}
               </Button>
               <Button
                 variant="outline"
-                onClick={onSyncRanges}
-                disabled={rangeSyncing || !netboxOn || !vlanImportOn}
+                onClick={openRangeStaging}
+                disabled={rangeStagingLoading || !netboxOn || !vlanImportOn}
               >
-                {rangeSyncing ? t("vlans.syncing") : t("ranges.syncTitle")}
+                {rangeStagingLoading ? t("vlans.syncing") : t("ranges.syncTitle")}
               </Button>
             </div>
             {syncError && <p className="text-sm text-red-400">{syncError}</p>}
@@ -777,6 +843,56 @@ export default function VlansPage() {
           </div>
         </form>
       </Modal>
+
+      <SyncStagingModal
+        open={vlanStagingOpen}
+        onClose={() => setVlanStagingOpen(false)}
+        title={t("vlans.syncStagingTitle")}
+        loading={vlanStagingLoading}
+        items={vlanPreview}
+        rowKey={(v) => v.name}
+        isExisting={(v) => v.exists}
+        columns={[
+          { key: "name", label: t("vlans.col.name"), get: (v) => v.name },
+          { key: "tag", label: t("vlans.col.tag"), get: (v) => v.vlan_tag ?? "-" },
+          { key: "description", label: t("vlans.col.description"), get: (v) => v.description ?? "-" },
+        ]}
+        selected={vlanPreviewSel.selected}
+        onToggle={vlanPreviewSel.toggle}
+        onToggleAll={(on) =>
+          vlanPreviewSel.setMany(
+            vlanPreview.map((v) => v.name),
+            on,
+          )
+        }
+        applying={vlanApplying}
+        onApply={onApplyVlanStaging}
+      />
+
+      <SyncStagingModal
+        open={rangeStagingOpen}
+        onClose={() => setRangeStagingOpen(false)}
+        title={t("ranges.syncStagingTitle")}
+        loading={rangeStagingLoading}
+        items={rangePreview}
+        rowKey={(r) => r.cidr}
+        isExisting={(r) => r.exists}
+        columns={[
+          { key: "cidr", label: t("ranges.col.cidr"), get: (r) => r.cidr },
+          { key: "vlan", label: t("ranges.col.vlan"), get: (r) => r.vlan_name ?? "-" },
+          { key: "description", label: t("ranges.col.description"), get: (r) => r.description ?? "-" },
+        ]}
+        selected={rangePreviewSel.selected}
+        onToggle={rangePreviewSel.toggle}
+        onToggleAll={(on) =>
+          rangePreviewSel.setMany(
+            rangePreview.map((r) => r.cidr),
+            on,
+          )
+        }
+        applying={rangeApplying}
+        onApply={onApplyRangeStaging}
+      />
     </div>
   );
 }

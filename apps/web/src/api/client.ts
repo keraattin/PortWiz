@@ -488,6 +488,27 @@ export function syncVlans(onConflict: "update" | "skip" = "update"): Promise<Vla
   });
 }
 
+export interface VlanPreviewItem {
+  name: string;
+  vlan_tag: number | null;
+  description: string | null;
+  exists: boolean;
+}
+
+export function previewVlanSync(): Promise<VlanPreviewItem[]> {
+  return request<VlanPreviewItem[]>("/vlans/sync/preview");
+}
+
+export function applyVlanSync(
+  items: { name: string; vlan_tag?: number | null; description?: string | null }[],
+  onConflict: "update" | "skip" = "update",
+): Promise<VlanSyncReport> {
+  return request<VlanSyncReport>(`/vlans/sync/apply?on_conflict=${onConflict}`, {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+}
+
 export interface IpRangeSyncReport {
   source: string;
   total: number;
@@ -503,6 +524,27 @@ export function syncIpRanges(
 ): Promise<IpRangeSyncReport> {
   return request<IpRangeSyncReport>(`/ip-ranges/sync?on_conflict=${onConflict}`, {
     method: "POST",
+  });
+}
+
+export interface IpRangePreviewItem {
+  cidr: string;
+  vlan_name: string | null;
+  description: string | null;
+  exists: boolean;
+}
+
+export function previewIpRangeSync(): Promise<IpRangePreviewItem[]> {
+  return request<IpRangePreviewItem[]>("/ip-ranges/sync/preview");
+}
+
+export function applyIpRangeSync(
+  items: { cidr: string; vlan_name?: string | null; description?: string | null }[],
+  onConflict: "update" | "skip" = "update",
+): Promise<IpRangeSyncReport> {
+  return request<IpRangeSyncReport>(`/ip-ranges/sync/apply?on_conflict=${onConflict}`, {
+    method: "POST",
+    body: JSON.stringify({ items }),
   });
 }
 

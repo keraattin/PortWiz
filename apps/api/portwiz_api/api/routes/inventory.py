@@ -46,7 +46,9 @@ from ...schemas.asset import (
     IPRangeBulkDelete,
     IPRangeBulkUpdate,
     IPRangeCreate,
+    IPRangePreviewItem,
     IPRangeRead,
+    IPRangeSyncApply,
     IPRangeSyncReport,
     IPRangeUpdate,
     VlanBulkCreate,
@@ -55,7 +57,9 @@ from ...schemas.asset import (
     VLANCreate,
     VLANImportReport,
     VLANImportRowResult,
+    VlanPreviewItem,
     VLANRead,
+    VlanSyncApply,
     VlanSyncReport,
     VLANUpdate,
 )
@@ -329,6 +333,103 @@ async def sync_vlans(
     )
 
 
+@vlans_router.get("/sync/preview", response_model=list[VlanPreviewItem])
+async def sync_preview_vlans(
+    _: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    source: InventorySource = Depends(get_inventory_source),
+) -> list[VlanPreviewItem]:
+    """Show what a NetBox VLAN sync would bring in, without applying it."""
+    if source.name == "none":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No inventory source is configured.")
+    eff = await effective_settings(session)
+    if not eff.netbox_import_vlans:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "VLAN import from NetBox is disabled."
+        )
+    try:
+        items = await source.fetch_vlans()
+    except Exception as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Inventory source unavailable: {exc}"
+        ) from exc
+    existing = {n.lower() for n in (await session.execute(select(VLAN.name))).scalars().all()}
+    return [
+        VlanPreviewItem(
+            name=i.name,
+            vlan_tag=i.tag,
+            description=i.description,
+            exists=i.name.lower() in existing,
+        )
+        for i in items
+    ]
+
+
+@vlans_router.post("/sync/apply", response_model=VlanSyncReport)
+async def sync_apply_vlans(
+    payload: VlanSyncApply,
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> VlanSyncReport:
+    """Apply a chosen subset of a VLAN sync preview, upserting by name."""
+    by_name = {
+        v.name.lower(): v for v in (await session.execute(select(VLAN))).scalars()
+    }
+    created = updated = skipped = errors = 0
+    errors_detail: list[str] = []
+    for item in payload.items:
+        if item.vlan_tag is not None and not (1 <= item.vlan_tag <= 4094):
+            errors += 1
+            errors_detail.append(f"VLAN '{item.name}' has out-of-range tag {item.vlan_tag}")
+            continue
+        fields: dict[str, object] = {"name": item.name}
+        if item.vlan_tag is not None:
+            fields["vlan_tag"] = item.vlan_tag
+        if item.description:
+            fields["description"] = item.description
+        existing = by_name.get(item.name.lower())
+        if existing is not None:
+            if on_conflict == "skip":
+                skipped += 1
+                continue
+            for key, value in fields.items():
+                setattr(existing, key, value)
+            updated += 1
+        else:
+            vlan = VLAN(**fields)
+            session.add(vlan)
+            await session.flush()
+            by_name[item.name.lower()] = vlan
+            created += 1
+    await append_audit(
+        session,
+        action="vlan.synced",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="vlan",
+        target_id=None,
+        payload={
+            "source": "netbox",
+            "total": len(payload.items),
+            "created": created,
+            "updated": updated,
+            "skipped": skipped,
+            "errors": errors,
+        },
+    )
+    await session.commit()
+    return VlanSyncReport(
+        source="netbox",
+        total=len(payload.items),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        errors_detail=errors_detail[:50],
+    )
+
+
 @vlans_router.patch("/{vlan_id}", response_model=VLANRead)
 async def update_vlan(
     vlan_id: uuid.UUID,
@@ -592,6 +693,111 @@ async def sync_ip_ranges(
     return IPRangeSyncReport(
         source=source.name,
         total=len(items),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        errors_detail=errors_detail[:50],
+    )
+
+
+@ip_ranges_router.get("/sync/preview", response_model=list[IPRangePreviewItem])
+async def sync_preview_ip_ranges(
+    _: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+    source: InventorySource = Depends(get_inventory_source),
+) -> list[IPRangePreviewItem]:
+    """Show what a NetBox range sync would bring in, without applying it."""
+    if source.name == "none":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No inventory source is configured.")
+    eff = await effective_settings(session)
+    if not eff.netbox_import_vlans:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "VLAN and range import from NetBox is disabled."
+        )
+    try:
+        items = await source.fetch_ranges()
+    except Exception as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Inventory source unavailable: {exc}"
+        ) from exc
+    existing = set((await session.execute(select(IPRange.cidr))).scalars().all())
+    preview: list[IPRangePreviewItem] = []
+    for item in items:
+        try:
+            cidr = str(ipaddress.ip_network(item.cidr, strict=False))
+        except ValueError:
+            continue
+        preview.append(
+            IPRangePreviewItem(
+                cidr=cidr,
+                vlan_name=item.vlan_name,
+                description=item.description,
+                exists=cidr in existing,
+            )
+        )
+    return preview
+
+
+@ip_ranges_router.post("/sync/apply", response_model=IPRangeSyncReport)
+async def sync_apply_ip_ranges(
+    payload: IPRangeSyncApply,
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> IPRangeSyncReport:
+    """Apply a chosen subset of a range sync preview, upserting by CIDR and
+    attaching each to its VLAN by name."""
+    vlan_by_name = {
+        v.name.lower(): v.id for v in (await session.execute(select(VLAN))).scalars()
+    }
+    by_cidr = {r.cidr: r for r in (await session.execute(select(IPRange))).scalars()}
+    created = updated = skipped = errors = 0
+    errors_detail: list[str] = []
+    for item in payload.items:
+        try:
+            cidr = str(ipaddress.ip_network(item.cidr, strict=False))
+        except ValueError:
+            errors += 1
+            errors_detail.append(f"Invalid CIDR '{item.cidr}'")
+            continue
+        vlan_id = vlan_by_name.get(item.vlan_name.lower()) if item.vlan_name else None
+        existing = by_cidr.get(cidr)
+        if existing is not None:
+            if on_conflict == "skip":
+                skipped += 1
+                continue
+            if vlan_id is not None:
+                existing.vlan_id = vlan_id
+            if item.description:
+                existing.description = item.description
+            updated += 1
+        else:
+            ip_range = IPRange(cidr=cidr, vlan_id=vlan_id, description=item.description)
+            session.add(ip_range)
+            await session.flush()
+            by_cidr[cidr] = ip_range
+            created += 1
+    await append_audit(
+        session,
+        action="ip_range.synced",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="ip_range",
+        target_id=None,
+        payload={
+            "source": "netbox",
+            "total": len(payload.items),
+            "created": created,
+            "updated": updated,
+            "skipped": skipped,
+            "errors": errors,
+        },
+    )
+    await session.commit()
+    return IPRangeSyncReport(
+        source="netbox",
+        total=len(payload.items),
         created=created,
         updated=updated,
         skipped=skipped,

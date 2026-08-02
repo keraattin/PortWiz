@@ -274,6 +274,29 @@ class IPRangeSyncReport(BaseModel):
     errors_detail: list[str]
 
 
+# Interactive VLAN/range sync: preview then apply a chosen subset.
+class VlanPreviewItem(BaseModel):
+    name: str
+    vlan_tag: int | None = None
+    description: str | None = None
+    exists: bool  # a VLAN with this name already exists
+
+
+class VlanSyncApply(BaseModel):
+    items: list[VlanBulkItem]
+
+
+class IPRangePreviewItem(BaseModel):
+    cidr: str
+    vlan_name: str | None = None
+    description: str | None = None
+    exists: bool  # a range with this CIDR already exists
+
+
+class IPRangeSyncApply(BaseModel):
+    items: list[IPRangeBulkItem]
+
+
 class AssetPushReport(BaseModel):
     source: str
     total: int  # discovered assets considered for writeback

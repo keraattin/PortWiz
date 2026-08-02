@@ -115,3 +115,29 @@ async def test_vlan_sync_disabled_returns_400(client, admin_headers) -> None:
     resp = await client.post("/api/v1/vlans/sync", headers=admin_headers)
     assert resp.status_code == 400
     assert "disabled" in resp.json()["detail"].lower()
+
+
+# --- interactive sync (preview + apply) ---
+
+
+async def test_vlan_sync_preview_flags_existing(client, admin_headers) -> None:
+    await client.post("/api/v1/vlans", json={"name": "prod"}, headers=admin_headers)
+    _use_source([_vlan("prod", tag=10), _vlan("dmz", tag=20)])
+    resp = await client.get("/api/v1/vlans/sync/preview", headers=admin_headers)
+    assert resp.status_code == 200, resp.text
+    by_name = {p["name"]: p for p in resp.json()}
+    assert by_name["prod"]["exists"] is True
+    assert by_name["dmz"]["exists"] is False
+    assert by_name["dmz"]["vlan_tag"] == 20
+
+
+async def test_vlan_sync_apply_creates(client, admin_headers) -> None:
+    resp = await client.post(
+        "/api/v1/vlans/sync/apply",
+        json={"items": [{"name": "a", "vlan_tag": 5}, {"name": "b"}]},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["created"] == 2
+    listed = (await client.get("/api/v1/vlans", headers=admin_headers)).json()
+    assert {"a", "b"} <= {v["name"] for v in listed}
