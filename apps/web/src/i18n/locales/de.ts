@@ -543,6 +543,7 @@ export const de: Partial<Record<TKey, string>> = {
   "assets.skipExisting": "Vorhandene überspringen",
   "assets.import": "Importieren",
   "assets.importing": "Wird importiert…",
+  "assets.importStagingTitle": "Import prüfen",
   "assets.rows": "Zeilen",
   "assets.created": "erstellt",
   "assets.updated": "aktualisiert",

@@ -141,6 +141,34 @@ class AssetImportReport(BaseModel):
     results: list[AssetImportRowResult]
 
 
+# Interactive file import: preview parsed rows, then apply a chosen subset.
+class AssetImportPreviewRow(BaseModel):
+    row: int
+    ip: str | None = None
+    hostname: str | None = None
+    vlan: str | None = None  # VLAN name from the file
+    owner: str | None = None  # owner email from the file
+    criticality: str | None = None
+    data_sensitivity: str | None = None
+    description: str | None = None
+    exists: bool = False
+    error: str | None = None
+
+
+class AssetImportApplyItem(BaseModel):
+    ip: str
+    hostname: str | None = None
+    vlan: str | None = None  # VLAN name, resolved on apply
+    owner: str | None = None  # owner email, resolved on apply
+    criticality: Criticality | None = None
+    data_sensitivity: DataSensitivity | None = None
+    description: str | None = None
+
+
+class AssetImportApply(BaseModel):
+    items: list[AssetImportApplyItem]
+
+
 class VLANImportRowResult(BaseModel):
     row: int
     name: str | None = None

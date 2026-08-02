@@ -381,6 +381,55 @@ export async function importAssets(
   return data as AssetImportReport;
 }
 
+export interface AssetImportPreviewRow {
+  row: number;
+  ip: string | null;
+  hostname: string | null;
+  vlan: string | null;
+  owner: string | null;
+  criticality: string | null;
+  data_sensitivity: string | null;
+  description: string | null;
+  exists: boolean;
+  error: string | null;
+}
+
+export async function previewAssetImport(file: File): Promise<AssetImportPreviewRow[]> {
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_V1}/assets/import/preview`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    if (res.status === 401) handleUnauthorized();
+    const detail = data && typeof data.detail === "string" ? data.detail : res.statusText;
+    throw new ApiError(res.status, detail);
+  }
+  return data as AssetImportPreviewRow[];
+}
+
+export function applyAssetImport(
+  items: {
+    ip: string;
+    hostname?: string | null;
+    vlan?: string | null;
+    owner?: string | null;
+    criticality?: string | null;
+    data_sensitivity?: string | null;
+    description?: string | null;
+  }[],
+  onConflict: "update" | "skip" = "update",
+): Promise<AssetImportReport> {
+  return request<AssetImportReport>(`/assets/import/apply?on_conflict=${onConflict}`, {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+}
+
 export interface VlanImportRowResult {
   row: number;
   name: string | null;

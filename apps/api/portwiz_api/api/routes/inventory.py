@@ -33,6 +33,8 @@ from ...schemas.asset import (
     AssetBulkReport,
     AssetBulkUpdate,
     AssetCreate,
+    AssetImportApply,
+    AssetImportPreviewRow,
     AssetImportReport,
     AssetImportRowResult,
     AssetPreviewItem,
@@ -1266,6 +1268,138 @@ async def import_assets(
     await session.commit()
     return AssetImportReport(
         total=len(rows),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        results=results,
+    )
+
+
+@assets_router.post("/import/preview", response_model=list[AssetImportPreviewRow])
+async def import_preview_assets(
+    file: UploadFile = File(...),
+    _: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> list[AssetImportPreviewRow]:
+    """Parse an upload and return its rows (with an exists flag and any per-row
+    parse error) without applying anything, so the user can pick which to import."""
+    content = await file.read()
+    if len(content) > MAX_IMPORT_BYTES:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File too large (max 5 MB)"
+        )
+    try:
+        rows = parse_asset_file(content, file.filename or "")
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    existing = set((await session.execute(select(Asset.ip))).scalars().all())
+    preview: list[AssetImportPreviewRow] = []
+    for parsed in rows:
+        v = parsed.values
+        ip = v.get("ip")
+        preview.append(
+            AssetImportPreviewRow(
+                row=parsed.row,
+                ip=ip,
+                hostname=v.get("hostname"),
+                vlan=v.get("vlan"),
+                owner=v.get("owner"),
+                criticality=v.get("criticality"),
+                data_sensitivity=v.get("data_sensitivity"),
+                description=v.get("description"),
+                exists=bool(ip) and ip in existing,
+                error=parsed.error,
+            )
+        )
+    return preview
+
+
+@assets_router.post("/import/apply", response_model=AssetImportReport)
+async def import_apply_assets(
+    payload: AssetImportApply,
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> AssetImportReport:
+    """Apply a chosen subset of an import preview, resolving VLAN names and owner
+    emails and upserting by IP. An unknown reference fails just that row."""
+    vlan_by_name = {
+        v.name.lower(): v.id for v in (await session.execute(select(VLAN))).scalars()
+    }
+    user_by_email = {
+        u.email.lower(): u.id for u in (await session.execute(select(User))).scalars()
+    }
+    results: list[AssetImportRowResult] = []
+    created = updated = skipped = errors = 0
+    for idx, item in enumerate(payload.items, start=1):
+        try:
+            ipaddress.ip_address(item.ip)
+        except ValueError:
+            errors += 1
+            results.append(
+                AssetImportRowResult(row=idx, ip=item.ip, status="error", error="Invalid IP")
+            )
+            continue
+        fields: dict[str, object] = {}
+        if item.hostname:
+            fields["hostname"] = item.hostname
+        if item.vlan:
+            vlan_id = vlan_by_name.get(item.vlan.lower())
+            if vlan_id is None:
+                errors += 1
+                results.append(
+                    AssetImportRowResult(
+                        row=idx, ip=item.ip, status="error",
+                        error=f"Unknown VLAN '{item.vlan}'",
+                    )
+                )
+                continue
+            fields["vlan_id"] = vlan_id
+        if item.owner:
+            owner_id = user_by_email.get(item.owner.lower())
+            if owner_id is None:
+                errors += 1
+                results.append(
+                    AssetImportRowResult(
+                        row=idx, ip=item.ip, status="error",
+                        error=f"Unknown owner '{item.owner}'",
+                    )
+                )
+                continue
+            fields["owner_id"] = owner_id
+        if item.criticality is not None:
+            fields["criticality"] = item.criticality
+        if item.data_sensitivity is not None:
+            fields["data_sensitivity"] = item.data_sensitivity
+        if item.description:
+            fields["description"] = item.description
+        outcome = await upsert_asset(session, item.ip, fields, on_conflict)
+        if outcome == "created":
+            created += 1
+        elif outcome == "updated":
+            updated += 1
+        else:
+            skipped += 1
+        results.append(AssetImportRowResult(row=idx, ip=item.ip, status=outcome))
+    await append_audit(
+        session,
+        action="asset.imported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="asset",
+        target_id=None,
+        payload={
+            "total": len(payload.items),
+            "created": created,
+            "updated": updated,
+            "skipped": skipped,
+            "errors": errors,
+        },
+    )
+    await session.commit()
+    return AssetImportReport(
+        total=len(payload.items),
         created=created,
         updated=updated,
         skipped=skipped,

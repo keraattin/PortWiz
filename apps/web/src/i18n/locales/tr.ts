@@ -541,6 +541,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "assets.skipExisting": "Mevcudu atla",
   "assets.import": "İçe aktar",
   "assets.importing": "İçe aktarılıyor…",
+  "assets.importStagingTitle": "İçe aktarmayı gözden geçir",
   "assets.rows": "satır",
   "assets.created": "oluşturuldu",
   "assets.updated": "güncellendi",

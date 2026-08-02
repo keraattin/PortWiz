@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   type Asset,
+  type AssetImportPreviewRow,
   type AssetImportReport,
   type AssetPreviewItem,
   type AssetPushReport,
@@ -11,6 +12,7 @@ import {
   type CurrentUser,
   type DataSensitivity,
   type Vlan,
+  applyAssetImport,
   applyAssetSync,
   bulkDeleteAssets,
   bulkUpdateAssets,
@@ -18,10 +20,10 @@ import {
   deleteAsset,
   downloadAssetImportTemplate,
   fetchSettings,
-  importAssets,
   listAssets,
   listUsers,
   listVlans,
+  previewAssetImport,
   previewAssetSync,
   pushAssetsToNetbox,
 } from "../api/client";
@@ -36,6 +38,7 @@ import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import Pagination, { usePagination } from "../components/Pagination";
 import SearchInput from "../components/SearchInput";
+import SyncStagingModal from "../components/SyncStagingModal";
 import {
   CHECKBOX_CLS,
   type Column,
@@ -88,6 +91,11 @@ export default function AssetsPage() {
   const [importReport, setImportReport] = useState<AssetImportReport | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  // File-import staging: preview parsed rows, pick which to import.
+  const [importStagingOpen, setImportStagingOpen] = useState(false);
+  const [importPreview, setImportPreview] = useState<AssetImportPreviewRow[]>([]);
+  const importPreviewSel = useTableSelection();
+  const [importApplying, setImportApplying] = useState(false);
 
   const [syncReport, setSyncReport] = useState<AssetSyncReport | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -269,15 +277,50 @@ export default function AssetsPage() {
     if (!importFile) return;
     setImportError(null);
     setImportReport(null);
+    importPreviewSel.clear();
+    setImportPreview([]);
     setImporting(true);
+    setImportStagingOpen(true);
     try {
-      const report = await importAssets(importFile, onConflict);
+      const rows = await previewAssetImport(importFile);
+      setImportPreview(rows);
+      // Pre-select the rows that parsed cleanly.
+      importPreviewSel.setMany(
+        rows.filter((r) => !r.error && r.ip).map((r) => String(r.row)),
+        true,
+      );
+    } catch (err) {
+      setImportError(errorMessage(err));
+      setImportStagingOpen(false);
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  async function onApplyImport() {
+    const items = importPreview
+      .filter((r) => importPreviewSel.selected.has(String(r.row)) && r.ip)
+      .map((r) => ({
+        ip: r.ip as string,
+        hostname: r.hostname,
+        vlan: r.vlan,
+        owner: r.owner,
+        criticality: r.criticality,
+        data_sensitivity: r.data_sensitivity,
+        description: r.description,
+      }));
+    if (items.length === 0) return;
+    setImportApplying(true);
+    try {
+      const report = await applyAssetImport(items, onConflict);
       setImportReport(report);
+      setImportStagingOpen(false);
+      importPreviewSel.clear();
       await reload();
     } catch (err) {
       setImportError(errorMessage(err));
     } finally {
-      setImporting(false);
+      setImportApplying(false);
     }
   }
 
@@ -905,6 +948,42 @@ export default function AssetsPage() {
           </div>
         )}
       </Modal>
+
+      <SyncStagingModal
+        open={importStagingOpen}
+        onClose={() => setImportStagingOpen(false)}
+        title={t("assets.importStagingTitle")}
+        loading={importing}
+        items={importPreview}
+        rowKey={(r) => String(r.row)}
+        isExisting={(r) => r.exists}
+        columns={[
+          {
+            key: "ip",
+            label: t("assets.col.ip"),
+            get: (r) =>
+              r.error ? <span className="text-red-400">{r.error}</span> : (r.ip ?? "-"),
+          },
+          { key: "hostname", label: t("assets.col.hostname"), get: (r) => r.hostname ?? "-" },
+          { key: "vlan", label: t("assets.col.vlan"), get: (r) => r.vlan ?? "-" },
+          { key: "owner", label: t("assets.col.owner"), get: (r) => r.owner ?? "-" },
+          {
+            key: "criticality",
+            label: t("assets.col.criticality"),
+            get: (r) => r.criticality ?? "-",
+          },
+        ]}
+        selected={importPreviewSel.selected}
+        onToggle={importPreviewSel.toggle}
+        onToggleAll={(on) =>
+          importPreviewSel.setMany(
+            importPreview.map((r) => String(r.row)),
+            on,
+          )
+        }
+        applying={importApplying}
+        onApply={onApplyImport}
+      />
     </div>
   );
 }

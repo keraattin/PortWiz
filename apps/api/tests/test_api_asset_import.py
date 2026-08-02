@@ -158,3 +158,59 @@ async def test_import_is_audited(client, admin_headers) -> None:
     await client.post("/api/v1/assets/import", files=_file(CSV), headers=admin_headers)
     audit = (await client.get("/api/v1/audit", headers=admin_headers)).json()
     assert any(e["action"] == "asset.imported" for e in audit["events"])
+
+
+# --- interactive import (preview + apply) ---
+
+
+async def test_import_preview_flags_and_parses(client, admin_headers) -> None:
+    await client.post("/api/v1/assets", json={"ip": "10.0.0.5"}, headers=admin_headers)
+    resp = await client.post(
+        "/api/v1/assets/import/preview", files=_file(CSV), headers=admin_headers
+    )
+    assert resp.status_code == 200, resp.text
+    by_ip = {r["ip"]: r for r in resp.json()}
+    assert by_ip["10.0.0.5"]["exists"] is True
+    assert by_ip["10.0.0.6"]["exists"] is False
+    assert by_ip["10.0.0.5"]["hostname"] == "web01"
+    assert by_ip["10.0.0.6"]["criticality"] == "critical"
+
+
+async def test_import_apply_creates_with_vlan(client, admin_headers) -> None:
+    vlan = (
+        await client.post("/api/v1/vlans", json={"name": "prod"}, headers=admin_headers)
+    ).json()
+    resp = await client.post(
+        "/api/v1/assets/import/apply",
+        json={
+            "items": [
+                {"ip": "10.9.0.1", "hostname": "h1", "vlan": "prod", "criticality": "high"},
+                {"ip": "10.9.0.2"},
+            ]
+        },
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["created"] == 2
+    listed = (await client.get("/api/v1/assets", headers=admin_headers)).json()
+    h1 = next(a for a in listed if a["ip"] == "10.9.0.1")
+    assert h1["criticality"] == "high" and h1["vlan_id"] == vlan["id"]
+
+
+async def test_import_apply_unknown_vlan_errors_that_row(client, admin_headers) -> None:
+    resp = await client.post(
+        "/api/v1/assets/import/apply",
+        json={"items": [{"ip": "10.9.1.1", "vlan": "ghost"}, {"ip": "10.9.1.2"}]},
+        headers=admin_headers,
+    )
+    body = resp.json()
+    assert body["created"] == 1 and body["errors"] == 1
+
+
+async def test_import_preview_requires_write(client, db) -> None:
+    headers = await _auditor_headers(client, db)
+    resp = await client.post(
+        "/api/v1/assets/import/preview", files=_file(CSV), headers=headers
+    )
+    assert resp.status_code == 403

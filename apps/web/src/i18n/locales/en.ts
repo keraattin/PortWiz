@@ -541,6 +541,7 @@ export const en = {
   "assets.skipExisting": "Skip existing",
   "assets.import": "Import",
   "assets.importing": "Importing…",
+  "assets.importStagingTitle": "Review import",
   "assets.rows": "rows",
   "assets.created": "created",
   "assets.updated": "updated",
