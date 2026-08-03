@@ -96,3 +96,63 @@ async def test_vlan_import_requires_write(client, db) -> None:
     headers = await _auditor_headers(client, db)
     resp = await client.post("/api/v1/vlans/import", files=_file(CSV), headers=headers)
     assert resp.status_code == 403
+
+
+# --- interactive import (preview + apply) ---
+
+
+async def test_vlan_import_preview_flags_and_parses(client, admin_headers) -> None:
+    await client.post("/api/v1/vlans", json={"name": "DMZ"}, headers=admin_headers)
+    csv = b"name,tag,cidr\nDMZ,10,10.0.0.0/24\nServers,20,\n"
+    resp = await client.post(
+        "/api/v1/vlans/import/preview", files=_file(csv), headers=admin_headers
+    )
+    assert resp.status_code == 200, resp.text
+    by_name = {r["name"]: r for r in resp.json()}
+    assert by_name["DMZ"]["exists"] is True
+    assert by_name["DMZ"]["cidr"] == "10.0.0.0/24"
+    assert by_name["Servers"]["exists"] is False
+    assert by_name["Servers"]["vlan_tag"] == 20
+
+
+async def test_vlan_import_apply_creates_with_ranges(client, admin_headers) -> None:
+    resp = await client.post(
+        "/api/v1/vlans/import/apply",
+        json={
+            "items": [
+                {"name": "DMZ", "vlan_tag": 10, "cidr": "10.0.0.0/24"},
+                {"name": "DMZ", "cidr": "10.0.1.0/24"},
+                {"name": "Servers", "vlan_tag": 20},
+            ]
+        },
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["created"] == 2  # DMZ + Servers
+    assert body["ranges_created"] == 2
+    ranges = (await client.get("/api/v1/ip-ranges", headers=admin_headers)).json()
+    vlans = (await client.get("/api/v1/vlans", headers=admin_headers)).json()
+    dmz = next(v for v in vlans if v["name"] == "DMZ")
+    for r in ranges:
+        if r["cidr"] in ("10.0.0.0/24", "10.0.1.0/24"):
+            assert r["vlan_id"] == dmz["id"]
+
+
+async def test_vlan_import_apply_bad_tag_errors_row(client, admin_headers) -> None:
+    resp = await client.post(
+        "/api/v1/vlans/import/apply",
+        json={"items": [{"name": "Ok"}, {"name": "Bad", "vlan_tag": 99999}]},
+        headers=admin_headers,
+    )
+    body = resp.json()
+    assert body["created"] == 1 and body["errors"] == 1
+
+
+async def test_vlan_import_preview_requires_write(client, db) -> None:
+    headers = await _auditor_headers(client, db)
+    csv = b"name\nX\n"
+    resp = await client.post(
+        "/api/v1/vlans/import/preview", files=_file(csv), headers=headers
+    )
+    assert resp.status_code == 403

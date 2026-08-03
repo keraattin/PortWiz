@@ -57,6 +57,8 @@ from ...schemas.asset import (
     VlanBulkDelete,
     VlanBulkUpdate,
     VLANCreate,
+    VlanImportApply,
+    VlanImportPreviewRow,
     VLANImportReport,
     VLANImportRowResult,
     VlanPreviewItem,
@@ -243,6 +245,150 @@ async def import_vlans(
     await session.commit()
     return VLANImportReport(
         total=len(rows),
+        created=created,
+        updated=updated,
+        skipped=skipped,
+        errors=errors,
+        ranges_created=ranges_created,
+        ranges_skipped=ranges_skipped,
+        results=results,
+    )
+
+
+@vlans_router.post("/import/preview", response_model=list[VlanImportPreviewRow])
+async def import_preview_vlans(
+    file: UploadFile = File(...),
+    _: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> list[VlanImportPreviewRow]:
+    """Parse a VLAN upload and return its rows (with an exists flag and any parse
+    error) without applying anything, so the user can pick which to import."""
+    content = await file.read()
+    if len(content) > MAX_IMPORT_BYTES:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "File too large (max 5 MB)"
+        )
+    try:
+        rows = parse_vlan_file(content, file.filename or "")
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    existing = {n.lower() for n in (await session.execute(select(VLAN.name))).scalars().all()}
+    preview: list[VlanImportPreviewRow] = []
+    for parsed in rows:
+        v = parsed.values
+        name = v.get("name")
+        preview.append(
+            VlanImportPreviewRow(
+                row=parsed.row,
+                name=name,
+                vlan_tag=int(v["tag"]) if "tag" in v else None,
+                description=v.get("description"),
+                cidr=v.get("cidr"),
+                exists=bool(name) and name.lower() in existing,
+                error=parsed.error,
+            )
+        )
+    return preview
+
+
+@vlans_router.post("/import/apply", response_model=VLANImportReport)
+async def import_apply_vlans(
+    payload: VlanImportApply,
+    on_conflict: str = Query("update", pattern="^(update|skip)$"),
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> VLANImportReport:
+    """Apply a chosen subset of a VLAN import preview: upsert VLANs by name and
+    attach their IP ranges by CIDR (VLAN + ranges as one unit)."""
+    by_name = {
+        v.name.lower(): v for v in (await session.execute(select(VLAN))).scalars()
+    }
+    existing_ranges = {r.cidr for r in (await session.execute(select(IPRange))).scalars()}
+    results: list[VLANImportRowResult] = []
+    created = updated = skipped = errors = 0
+    ranges_created = ranges_skipped = 0
+    for idx, item in enumerate(payload.items, start=1):
+        if not item.name.strip():
+            errors += 1
+            results.append(VLANImportRowResult(row=idx, status="error", error="Missing name"))
+            continue
+        if item.vlan_tag is not None and not (1 <= item.vlan_tag <= 4094):
+            errors += 1
+            results.append(
+                VLANImportRowResult(
+                    row=idx, name=item.name, cidr=item.cidr, status="error",
+                    error=f"VLAN tag out of range (1-4094): '{item.vlan_tag}'",
+                )
+            )
+            continue
+        cidr: str | None = None
+        if item.cidr:
+            try:
+                cidr = str(ipaddress.ip_network(item.cidr, strict=False))
+            except ValueError:
+                errors += 1
+                results.append(
+                    VLANImportRowResult(
+                        row=idx, name=item.name, cidr=item.cidr, status="error",
+                        error=f"Invalid CIDR '{item.cidr}'",
+                    )
+                )
+                continue
+
+        fields: dict[str, object] = {"name": item.name}
+        if item.vlan_tag is not None:
+            fields["vlan_tag"] = item.vlan_tag
+        if item.description:
+            fields["description"] = item.description
+        existing = by_name.get(item.name.lower())
+        if existing is not None:
+            vlan = existing
+            if on_conflict == "skip":
+                skipped += 1
+                status_label = "skipped"
+            else:
+                for key, value in fields.items():
+                    setattr(existing, key, value)
+                updated += 1
+                status_label = "updated"
+        else:
+            vlan = VLAN(**fields)
+            session.add(vlan)
+            await session.flush()
+            by_name[item.name.lower()] = vlan
+            created += 1
+            status_label = "created"
+
+        if cidr:
+            if cidr in existing_ranges:
+                ranges_skipped += 1
+            else:
+                session.add(IPRange(cidr=cidr, vlan_id=vlan.id))
+                existing_ranges.add(cidr)
+                ranges_created += 1
+
+        results.append(
+            VLANImportRowResult(row=idx, name=item.name, cidr=cidr, status=status_label)
+        )
+
+    await append_audit(
+        session,
+        action="vlan.imported",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="vlan",
+        target_id=None,
+        payload={
+            "total": len(payload.items),
+            "created": created,
+            "updated": updated,
+            "errors": errors,
+            "ranges_created": ranges_created,
+        },
+    )
+    await session.commit()
+    return VLANImportReport(
+        total=len(payload.items),
         created=created,
         updated=updated,
         skipped=skipped,

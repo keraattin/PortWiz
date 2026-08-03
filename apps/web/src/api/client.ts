@@ -469,6 +469,49 @@ export async function importVlans(
   return data as VlanImportReport;
 }
 
+export interface VlanImportPreviewRow {
+  row: number;
+  name: string | null;
+  vlan_tag: number | null;
+  description: string | null;
+  cidr: string | null;
+  exists: boolean;
+  error: string | null;
+}
+
+export async function previewVlanImport(file: File): Promise<VlanImportPreviewRow[]> {
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_V1}/vlans/import/preview`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    if (res.status === 401) handleUnauthorized();
+    const detail = data && typeof data.detail === "string" ? data.detail : res.statusText;
+    throw new ApiError(res.status, detail);
+  }
+  return data as VlanImportPreviewRow[];
+}
+
+export function applyVlanImport(
+  items: {
+    name: string;
+    vlan_tag?: number | null;
+    description?: string | null;
+    cidr?: string | null;
+  }[],
+  onConflict: "update" | "skip" = "update",
+): Promise<VlanImportReport> {
+  return request<VlanImportReport>(`/vlans/import/apply?on_conflict=${onConflict}`, {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+}
+
 export async function downloadVlanImportTemplate(): Promise<void> {
   const res = await authedFetch("/vlans/import-template");
   triggerDownload(await res.blob(), "portwiz-vlans-template.csv");

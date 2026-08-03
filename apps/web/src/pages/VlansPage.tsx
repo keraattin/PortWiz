@@ -4,10 +4,12 @@ import {
   type IpRangePreviewItem,
   type IpRangeSyncReport,
   type Vlan,
+  type VlanImportPreviewRow,
   type VlanImportReport,
   type VlanPreviewItem,
   type VlanSyncReport,
   applyIpRangeSync,
+  applyVlanImport,
   applyVlanSync,
   bulkDeleteIpRanges,
   bulkDeleteVlans,
@@ -19,10 +21,10 @@ import {
   deleteVlan,
   downloadVlanImportTemplate,
   fetchSettings,
-  importVlans,
   listIpRanges,
   listVlans,
   previewIpRangeSync,
+  previewVlanImport,
   previewVlanSync,
 } from "../api/client";
 import { inputClass } from "../components/formStyles";
@@ -79,6 +81,11 @@ export default function VlansPage() {
   const [onConflict, setOnConflict] = useState<"update" | "skip">("update");
   const [importReport, setImportReport] = useState<VlanImportReport | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  // VLAN file-import staging.
+  const [importStagingOpen, setImportStagingOpen] = useState(false);
+  const [importPreview, setImportPreview] = useState<VlanImportPreviewRow[]>([]);
+  const importPreviewSel = useTableSelection();
+  const [importApplying, setImportApplying] = useState(false);
   const [importing, setImporting] = useState(false);
 
   const [syncReport, setSyncReport] = useState<VlanSyncReport | null>(null);
@@ -184,15 +191,45 @@ export default function VlansPage() {
     if (!importFile) return;
     setImportError(null);
     setImportReport(null);
+    importPreviewSel.clear();
+    setImportPreview([]);
     setImporting(true);
+    setImportStagingOpen(true);
     try {
-      const report = await importVlans(importFile, onConflict);
-      setImportReport(report);
+      const rows = await previewVlanImport(importFile);
+      setImportPreview(rows);
+      importPreviewSel.setMany(
+        rows.filter((r) => !r.error && r.name).map((r) => String(r.row)),
+        true,
+      );
+    } catch (err) {
+      setImportError(errorMessage(err));
+      setImportStagingOpen(false);
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  async function onApplyImport() {
+    const items = importPreview
+      .filter((r) => importPreviewSel.selected.has(String(r.row)) && r.name)
+      .map((r) => ({
+        name: r.name as string,
+        vlan_tag: r.vlan_tag,
+        description: r.description,
+        cidr: r.cidr,
+      }));
+    if (items.length === 0) return;
+    setImportApplying(true);
+    try {
+      setImportReport(await applyVlanImport(items, onConflict));
+      setImportStagingOpen(false);
+      importPreviewSel.clear();
       await reload();
     } catch (err) {
       setImportError(errorMessage(err));
     } finally {
-      setImporting(false);
+      setImportApplying(false);
     }
   }
 
@@ -892,6 +929,41 @@ export default function VlansPage() {
         }
         applying={rangeApplying}
         onApply={onApplyRangeStaging}
+      />
+
+      <SyncStagingModal
+        open={importStagingOpen}
+        onClose={() => setImportStagingOpen(false)}
+        title={t("vlans.importStagingTitle")}
+        loading={importing}
+        items={importPreview}
+        rowKey={(r) => String(r.row)}
+        isExisting={(r) => r.exists}
+        columns={[
+          {
+            key: "name",
+            label: t("vlans.col.name"),
+            get: (r) =>
+              r.error ? <span className="text-red-400">{r.error}</span> : (r.name ?? "-"),
+          },
+          { key: "tag", label: t("vlans.col.tag"), get: (r) => r.vlan_tag ?? "-" },
+          { key: "cidr", label: t("ranges.col.cidr"), get: (r) => r.cidr ?? "-" },
+          {
+            key: "description",
+            label: t("vlans.col.description"),
+            get: (r) => r.description ?? "-",
+          },
+        ]}
+        selected={importPreviewSel.selected}
+        onToggle={importPreviewSel.toggle}
+        onToggleAll={(on) =>
+          importPreviewSel.setMany(
+            importPreview.map((r) => String(r.row)),
+            on,
+          )
+        }
+        applying={importApplying}
+        onApply={onApplyImport}
       />
     </div>
   );

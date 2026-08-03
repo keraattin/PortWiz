@@ -608,6 +608,7 @@ export const de: Partial<Record<TKey, string>> = {
   "vlans.rangesFailed": "Konnte nicht hinzugefügt werden: {cidrs}",
   "vlans.syncTitle": "Aus NetBox synchronisieren",
   "vlans.syncStagingTitle": "VLAN-Synchronisierung prüfen",
+  "vlans.importStagingTitle": "VLAN-Import prüfen",
   "vlans.syncHint": "Holt VLANs aus Ihrem konfigurierten NetBox und legt sie per Name an bzw. aktualisiert sie.",
   "vlans.importOff": "Der VLAN-Import ist in den Einstellungen deaktiviert.",
   "vlans.syncing": "Wird synchronisiert…",

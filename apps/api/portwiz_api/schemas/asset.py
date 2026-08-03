@@ -189,6 +189,28 @@ class VLANImportReport(BaseModel):
     results: list[VLANImportRowResult]
 
 
+# Interactive VLAN file import: preview parsed rows, then apply a chosen subset.
+class VlanImportPreviewRow(BaseModel):
+    row: int
+    name: str | None = None
+    vlan_tag: int | None = None
+    description: str | None = None
+    cidr: str | None = None  # a range attached on this row, if any
+    exists: bool = False  # a VLAN with this name already exists
+    error: str | None = None
+
+
+class VlanImportApplyItem(BaseModel):
+    name: str
+    vlan_tag: int | None = None
+    description: str | None = None
+    cidr: str | None = None
+
+
+class VlanImportApply(BaseModel):
+    items: list[VlanImportApplyItem]
+
+
 class AssetSyncReport(BaseModel):
     source: str
     total: int

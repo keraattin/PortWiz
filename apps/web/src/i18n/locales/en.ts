@@ -604,6 +604,7 @@ export const en = {
   "vlans.rangesFailed": "Could not add: {cidrs}",
   "vlans.syncTitle": "Sync from NetBox",
   "vlans.syncStagingTitle": "Review VLAN sync",
+  "vlans.importStagingTitle": "Review VLAN import",
   "vlans.syncHint": "Pulls VLANs from your configured NetBox and upserts them by name.",
   "vlans.importOff": "VLAN import is turned off in Settings.",
   "vlans.syncing": "Syncing…",

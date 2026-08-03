@@ -606,6 +606,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "vlans.rangesFailed": "Eklenemedi: {cidrs}",
   "vlans.syncTitle": "NetBox'tan eşitle",
   "vlans.syncStagingTitle": "VLAN eşitlemesini gözden geçir",
+  "vlans.importStagingTitle": "VLAN içe aktarmayı gözden geçir",
   "vlans.syncHint": "Yapılandırılmış NetBox'tan VLAN'ları çeker ve isme göre ekler/günceller.",
   "vlans.importOff": "VLAN içe aktarma Ayarlar'da kapalı.",
   "vlans.syncing": "Eşitleniyor…",
