@@ -1005,6 +1005,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "scans.f.cronHint":
     "Optionnel. Expression cron pour une exécution automatique, p. ex. 0 2 * * * = tous les jours à 02:00.",
   "scans.ports.top1000": "Top 1000 ports (recommandé)",
+  "scans.ports.top100": "Analyse rapide (top 100 ports)",
+  "scans.ports.db": "Bases de données et caches (3306, 5432, 6379…)",
   "scans.ports.full": "Tous les ports (1-65535)",
   "scans.ports.web": "Web courant (80, 443, 8080, 8443)",
   "scans.ports.custom": "Personnalisé…",

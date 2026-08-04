@@ -84,17 +84,19 @@ const SCAN_SOURCES: ScanSource[] = [
 ];
 
 // Common port selections so users rarely need the raw "ports" syntax.
-const PORT_PRESETS = ["top1000", "full", "web", "custom"] as const;
+const PORT_PRESETS = ["top1000", "top100", "web", "db", "full", "custom"] as const;
 type PortPreset = (typeof PORT_PRESETS)[number];
 const PRESET_PORTS: Record<Exclude<PortPreset, "custom">, string> = {
   top1000: "top-1000",
-  full: "1-65535",
+  top100: "top-100",
   web: "80,443,8080,8443",
+  db: "3306,5432,1433,1521,6379,27017,9200,11211,5984,9042,2181,5672,9092",
+  full: "1-65535",
 };
 
 // Map a raw default port spec back to a preset (or "custom" with the raw value).
 function presetFor(ports: string): { preset: PortPreset; custom: string } {
-  for (const p of ["top1000", "full", "web"] as const) {
+  for (const p of ["top1000", "top100", "web", "db", "full"] as const) {
     if (PRESET_PORTS[p] === ports) return { preset: p, custom: "" };
   }
   return { preset: "custom", custom: ports };

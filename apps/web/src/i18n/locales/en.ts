@@ -1003,6 +1003,8 @@ export const en = {
   "scans.f.cronHint":
     "Optional. Cron expression to run automatically, e.g. 0 2 * * * = every day at 02:00.",
   "scans.ports.top1000": "Top 1000 ports (recommended)",
+  "scans.ports.top100": "Quick scan (top 100 ports)",
+  "scans.ports.db": "Databases and caches (3306, 5432, 6379…)",
   "scans.ports.full": "All ports (1-65535)",
   "scans.ports.web": "Common web (80, 443, 8080, 8443)",
   "scans.ports.custom": "Custom…",
