@@ -189,6 +189,7 @@ async def ingest_scan_results(
                     if confidence is None:
                         confidence = PORT_MAP_CONFIDENCE
 
+            cert = port.tls
             obs = Observation(
                 ts=received_at,
                 scan_run_id=run.id,
@@ -203,6 +204,14 @@ async def ingest_scan_results(
                 banner_sha256=banner_hash,
                 fingerprint_confidence=confidence,
                 fingerprint_source=fp_source,
+                cert_subject_cn=cert.subject_cn if cert else None,
+                cert_issuer=cert.issuer if cert else None,
+                cert_sans=cert.sans if cert else None,
+                cert_not_before=cert.not_before if cert else None,
+                cert_not_after=cert.not_after if cert else None,
+                cert_self_signed=cert.self_signed if cert else None,
+                cert_serial=cert.serial if cert else None,
+                cert_sig_alg=cert.sig_alg if cert else None,
             )
             session.add(obs)
             count += 1

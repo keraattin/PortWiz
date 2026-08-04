@@ -148,6 +148,28 @@ class ScanJobOut(BaseModel):
 
 
 # Scan result ingest (mirrors packages/contracts/scan_result.schema.json)
+class TLSCertIn(BaseModel):
+    """Leaf certificate summary a TLS port presented. Fields are bounded because
+    the certificate comes from the scanned host and is only semi-trusted."""
+
+    subject_cn: str | None = Field(default=None, max_length=256)
+    issuer: str | None = Field(default=None, max_length=256)
+    # A certificate can carry many SANs; bound both the count and each entry.
+    sans: list[str] | None = Field(default=None, max_length=512)
+    not_before: dt.datetime | None = None
+    not_after: dt.datetime | None = None
+    self_signed: bool | None = None
+    serial: str | None = Field(default=None, max_length=128)
+    sig_alg: str | None = Field(default=None, max_length=64)
+
+    @field_validator("sans")
+    @classmethod
+    def _bound_sans(cls, v: list[str] | None) -> list[str] | None:
+        if v is None:
+            return v
+        return [s[:253] for s in v]
+
+
 class PortIn(BaseModel):
     port: int = Field(ge=1, le=65535)
     protocol: str = Field(pattern="^(tcp|udp)$")
@@ -160,6 +182,7 @@ class PortIn(BaseModel):
     banner: str | None = Field(default=None, max_length=8192)
     banner_sha256: str | None = None
     fingerprint_confidence: float | None = Field(default=None, ge=0, le=1)
+    tls: TLSCertIn | None = None
 
 
 class HostIn(BaseModel):
@@ -201,3 +224,11 @@ class ObservationRead(BaseModel):
     banner_sha256: str | None
     fingerprint_confidence: float | None
     fingerprint_source: str | None
+    cert_subject_cn: str | None = None
+    cert_issuer: str | None = None
+    cert_sans: list[str] | None = None
+    cert_not_before: dt.datetime | None = None
+    cert_not_after: dt.datetime | None = None
+    cert_self_signed: bool | None = None
+    cert_serial: str | None = None
+    cert_sig_alg: str | None = None

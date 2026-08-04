@@ -11,7 +11,7 @@ import datetime as dt
 import enum
 import uuid
 
-from sqlalchemy import JSON, Column, DateTime, Float, Integer, String
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
@@ -165,3 +165,21 @@ class Observation(SQLModel, table=True):
     # Where the service/version came from: "agent" (edge nmap probe), "heuristic"
     # (server-side banner table), or "ai" (LLM enrichment). None when unresolved.
     fingerprint_source: str | None = Field(default=None, sa_column=Column(String(16)))
+    # Leaf TLS certificate captured when the port completed a handshake. All
+    # null for non-TLS ports. not_after is a real timestamp so expiry can be
+    # queried in SQL; sans is the list of subject alternative names.
+    cert_subject_cn: str | None = Field(default=None, sa_column=Column(String(256)))
+    cert_issuer: str | None = Field(default=None, sa_column=Column(String(256)))
+    cert_sans: list[str] | None = Field(
+        default=None,
+        sa_column=Column(JSON().with_variant(JSONB(), "postgresql"), nullable=True),
+    )
+    cert_not_before: dt.datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True))
+    )
+    cert_not_after: dt.datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True))
+    )
+    cert_self_signed: bool | None = Field(default=None, sa_column=Column(Boolean))
+    cert_serial: str | None = Field(default=None, sa_column=Column(String(128)))
+    cert_sig_alg: str | None = Field(default=None, sa_column=Column(String(64)))

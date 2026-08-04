@@ -330,6 +330,85 @@ async def test_ingest_confident_fingerprint_marked_agent(client, admin_headers, 
     assert obs.fingerprint_source == "agent"
 
 
+def _tls_payload(run_id: str, ip: str) -> dict:
+    return {
+        "version": 1,
+        "job_id": str(uuid.uuid4()),
+        "scan_run_id": run_id,
+        "agent_id": "a",
+        "started_at": "2026-08-05T10:00:00Z",
+        "finished_at": "2026-08-05T10:05:00Z",
+        "status": "completed",
+        "hosts": [
+            {
+                "ip": ip,
+                "ports": [
+                    {
+                        "port": 443,
+                        "protocol": "tcp",
+                        "state": "open",
+                        "service": "https",
+                        "tls": {
+                            "subject_cn": "example.com",
+                            "issuer": "Let's Encrypt R3",
+                            "sans": ["example.com", "www.example.com"],
+                            "not_before": "2026-06-01T00:00:00Z",
+                            "not_after": "2026-09-01T00:00:00Z",
+                            "self_signed": False,
+                            "serial": "0a1b2c",
+                            "sig_alg": "SHA256-RSA",
+                        },
+                    }
+                ],
+            }
+        ],
+    }
+
+
+async def test_ingest_persists_tls_certificate(client, admin_headers, db) -> None:
+    # A TLS port carries a certificate summary; ingest stores it on the
+    # observation so expiry monitoring and the UI can read it back.
+    token = await _enroll(client, admin_headers)
+    ip = "10.0.0.64"
+    run_id = await _run(client, admin_headers, ip)
+    resp = await client.post(
+        "/api/v1/ingest/scan-results",
+        json=_tls_payload(run_id, ip),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 202, resp.text
+
+    obs = await _observation(db, run_id)
+    assert obs is not None
+    assert obs.cert_subject_cn == "example.com"
+    assert obs.cert_issuer == "Let's Encrypt R3"
+    assert obs.cert_sans == ["example.com", "www.example.com"]
+    assert obs.cert_self_signed is False
+    assert obs.cert_serial == "0a1b2c"
+    assert obs.cert_sig_alg == "SHA256-RSA"
+    assert obs.cert_not_after is not None
+    assert obs.cert_not_after.year == 2026
+    assert obs.cert_not_after.month == 9
+
+
+async def test_ingest_without_tls_leaves_cert_null(client, admin_headers, db) -> None:
+    # A plain (non-TLS) port stores null certificate fields.
+    token = await _enroll(client, admin_headers)
+    ip = "10.0.0.65"
+    run_id = await _run(client, admin_headers, ip)
+    resp = await client.post(
+        "/api/v1/ingest/scan-results",
+        json=_payload_host(run_id, ip, None),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 202, resp.text
+
+    obs = await _observation(db, run_id)
+    assert obs is not None
+    assert obs.cert_subject_cn is None
+    assert obs.cert_not_after is None
+
+
 class _FakeSource:
     name = "netbox"
 
