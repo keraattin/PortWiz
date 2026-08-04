@@ -19,15 +19,30 @@ type ScanJob struct {
 
 // Port is a single observed port on a host.
 type Port struct {
-	Port                  int      `json:"port"`
-	Protocol              string   `json:"protocol"`
-	State                 string   `json:"state"`
-	Service               *string  `json:"service,omitempty"`
-	Version               *string  `json:"version,omitempty"`
-	Product               *string  `json:"product,omitempty"`
-	Banner                *string  `json:"banner,omitempty"`
-	BannerSHA256          *string  `json:"banner_sha256,omitempty"`
-	FingerprintConfidence *float64 `json:"fingerprint_confidence,omitempty"`
+	Port                  int          `json:"port"`
+	Protocol              string       `json:"protocol"`
+	State                 string       `json:"state"`
+	Service               *string      `json:"service,omitempty"`
+	Version               *string      `json:"version,omitempty"`
+	Product               *string      `json:"product,omitempty"`
+	Banner                *string      `json:"banner,omitempty"`
+	BannerSHA256          *string      `json:"banner_sha256,omitempty"`
+	FingerprintConfidence *float64     `json:"fingerprint_confidence,omitempty"`
+	TLS                   *TLSCertInfo `json:"tls,omitempty"`
+}
+
+// TLSCertInfo summarizes the leaf certificate presented on a TLS port. Trust is
+// not asserted here: an expired or self-signed certificate is still recorded,
+// since surfacing exactly those is the point of monitoring.
+type TLSCertInfo struct {
+	SubjectCN  string   `json:"subject_cn,omitempty"`
+	Issuer     string   `json:"issuer,omitempty"`
+	SANs       []string `json:"sans,omitempty"`
+	NotBefore  string   `json:"not_before,omitempty"` // RFC3339
+	NotAfter   string   `json:"not_after,omitempty"`  // RFC3339
+	SelfSigned bool     `json:"self_signed"`
+	Serial     string   `json:"serial,omitempty"`
+	SigAlg     string   `json:"sig_alg,omitempty"`
 }
 
 // Host is a responding host with its open ports.

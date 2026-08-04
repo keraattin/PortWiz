@@ -50,8 +50,18 @@
                 "fingerprint_confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
                 "tls": {
                   "type": ["object", "null"],
-                  "additionalProperties": true,
-                  "description": "Optional TLS certificate summary (subject, issuer, SAN, notAfter)."
+                  "additionalProperties": false,
+                  "description": "Leaf TLS certificate summary, present when the port completed a TLS handshake. Trust is not asserted; expired/self-signed certs are still reported.",
+                  "properties": {
+                    "subject_cn": { "type": "string" },
+                    "issuer": { "type": "string" },
+                    "sans": { "type": "array", "items": { "type": "string" } },
+                    "not_before": { "type": "string", "format": "date-time" },
+                    "not_after": { "type": "string", "format": "date-time" },
+                    "self_signed": { "type": "boolean" },
+                    "serial": { "type": "string" },
+                    "sig_alg": { "type": "string" }
+                  }
                 }
               }
             }

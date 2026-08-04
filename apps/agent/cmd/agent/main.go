@@ -179,6 +179,11 @@ func executeJob(ctx context.Context, job contracts.ScanJob, agentID string) cont
 		hosts = nil
 	} else if job.ServiceDetection {
 		scan.EnrichWithNmap(ctx, hosts)
+		// Capture TLS certificates (expiry, issuer, SANs) on the ports that
+		// speak TLS. Gated by service detection so a bare connect scan stays
+		// bare; the nmap pass above also supplies the service hints used to
+		// spot TLS on non-standard ports.
+		scan.EnrichWithTLS(ctx, hosts)
 	}
 
 	return contracts.ScanResult{
