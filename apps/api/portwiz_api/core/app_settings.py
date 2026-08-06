@@ -39,6 +39,7 @@ EDITABLE_KEYS: list[str] = [
     "smtp_username",
     "smtp_password",
     "smtp_use_tls",
+    "smtp_tls_verify",
     "notification_recipients",
     "email_min_severity",
     "email_scan_profiles",

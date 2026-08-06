@@ -1389,6 +1389,7 @@ export interface SettingsConfig {
   smtp_from: string;
   smtp_username: string | null;
   smtp_use_tls: boolean;
+  smtp_tls_verify: boolean;
   smtp_password_set: boolean;
   notification_recipients: string[];
   email_min_severity: string;
@@ -1472,6 +1473,7 @@ export type SettingsConfigUpdate = Partial<{
   smtp_username: string;
   smtp_password: string;
   smtp_use_tls: boolean;
+  smtp_tls_verify: boolean;
   notification_recipients: string[];
   email_min_severity: string;
   email_scan_profiles: string[];

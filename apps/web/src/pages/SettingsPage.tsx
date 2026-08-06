@@ -88,6 +88,7 @@ interface FormState {
   smtp_username: string;
   smtp_password: string;
   smtp_use_tls: boolean;
+  smtp_tls_verify: boolean;
   notification_recipients: string;
   email_min_severity: string;
   email_scan_profiles: string[];
@@ -171,6 +172,7 @@ function fromConfig(c: SettingsConfig): FormState {
     smtp_username: c.smtp_username ?? "",
     smtp_password: "",
     smtp_use_tls: c.smtp_use_tls,
+    smtp_tls_verify: c.smtp_tls_verify,
     notification_recipients: c.notification_recipients.join(", "),
     email_min_severity: c.email_min_severity,
     email_scan_profiles: c.email_scan_profiles,
@@ -930,6 +932,12 @@ export default function SettingsPage() {
             checked={form.smtp_use_tls}
             onChange={(v) => set("smtp_use_tls", v)}
           />
+          <Toggle
+            label={t("settings.email.verifyTls")}
+            checked={form.smtp_tls_verify}
+            onChange={(v) => set("smtp_tls_verify", v)}
+          />
+          <p className="text-xs text-slate-500">{t("settings.email.verifyTlsHint")}</p>
           <FormField label={t("settings.email.recipients")} hint={t("settings.email.recipientsHint")}>
             <input
               className={inputClass}
@@ -959,6 +967,7 @@ export default function SettingsPage() {
                   smtp_username: form.smtp_username,
                   smtp_password: form.smtp_password,
                   smtp_use_tls: form.smtp_use_tls,
+                  smtp_tls_verify: form.smtp_tls_verify,
                   email_min_severity: form.email_min_severity,
                   email_scan_profiles: form.email_scan_profiles,
                   notification_recipients: form.notification_recipients

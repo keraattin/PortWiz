@@ -1327,6 +1327,9 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.email.usernameHint": "İsteğe bağlı, SMTP sunucunuz kimlik doğrulama gerektiriyorsa.",
   "settings.email.password": "Parola",
   "settings.email.useTls": "TLS kullan",
+  "settings.email.verifyTls": "TLS sertifikasını doğrula",
+  "settings.email.verifyTlsHint":
+    "Self-signed veya iç-CA sertifikası sunan şirket-içi relay için kapatın (CERTIFICATE_VERIFY_FAILED hatasını önler).",
   "settings.email.recipients": "Alıcılar",
   "settings.email.recipientsHint": "Virgülle ayrılır. Teyitli değişiklikler buraya e-postalanır.",
   "settings.email.testRecipient": "Test alıcısı (isteğe bağlı)",

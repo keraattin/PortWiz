@@ -1329,6 +1329,9 @@ export const en = {
   "settings.email.usernameHint": "Optional, if your SMTP server requires auth.",
   "settings.email.password": "Password",
   "settings.email.useTls": "Use TLS",
+  "settings.email.verifyTls": "Verify TLS certificate",
+  "settings.email.verifyTlsHint":
+    "Turn off for an internal relay that presents a self-signed or internal-CA certificate (avoids CERTIFICATE_VERIFY_FAILED).",
   "settings.email.recipients": "Recipients",
   "settings.email.recipientsHint": "Comma-separated. Confirmed changes are emailed here.",
   "settings.email.testRecipient": "Test recipient (optional)",

@@ -66,6 +66,7 @@ def _config_from(s: Settings) -> SettingsConfig:
         smtp_from=s.smtp_from,
         smtp_username=s.smtp_username,
         smtp_use_tls=s.smtp_use_tls,
+        smtp_tls_verify=s.smtp_tls_verify,
         smtp_password_set=bool(s.smtp_password),
         notification_recipients=list(s.notification_recipients),
         email_min_severity=s.email_min_severity,

@@ -81,6 +81,7 @@ class EmailNotifier:
         use_tls: bool,
         username: str | None,
         password: str | None,
+        verify: bool = True,
     ) -> None:
         self._host = host
         self._port = port
@@ -88,6 +89,7 @@ class EmailNotifier:
         self._use_tls = use_tls
         self._username = username
         self._password = password
+        self._verify = verify
 
     async def send(self, subject: str, body: str, recipients: list[str]) -> None:
         import aiosmtplib  # imported lazily
@@ -97,6 +99,8 @@ class EmailNotifier:
         message["To"] = ", ".join(recipients)
         message["Subject"] = subject
         message.set_content(body)
+        # validate_certs=False lets an internal relay with a self-signed or
+        # internal-CA certificate work; it covers implicit TLS and STARTTLS.
         await aiosmtplib.send(
             message,
             hostname=self._host,
@@ -104,6 +108,7 @@ class EmailNotifier:
             use_tls=self._use_tls,
             username=self._username or None,
             password=self._password or None,
+            validate_certs=self._verify,
         )
 
 
@@ -237,6 +242,7 @@ def build_notifier(settings) -> Notifier:
         use_tls=settings.smtp_use_tls,
         username=settings.smtp_username,
         password=settings.smtp_password,
+        verify=settings.smtp_tls_verify,
     )
 
 

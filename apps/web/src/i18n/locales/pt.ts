@@ -1332,6 +1332,9 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.email.usernameHint": "Opcional, se o seu servidor SMTP exigir autenticação.",
   "settings.email.password": "Senha",
   "settings.email.useTls": "Usar TLS",
+  "settings.email.verifyTls": "Verificar o certificado TLS",
+  "settings.email.verifyTlsHint":
+    "Desative para um relay interno que apresenta um certificado autoassinado ou de CA interna (evita CERTIFICATE_VERIFY_FAILED).",
   "settings.email.recipients": "Destinatários",
   "settings.email.recipientsHint":
     "Separados por vírgulas. Alterações confirmadas são enviadas por e-mail para aqui.",

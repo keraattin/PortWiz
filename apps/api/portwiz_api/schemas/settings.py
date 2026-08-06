@@ -109,6 +109,7 @@ class SettingsConfig(BaseModel):
     smtp_from: str
     smtp_username: str | None
     smtp_use_tls: bool
+    smtp_tls_verify: bool
     smtp_password_set: bool
     notification_recipients: list[str]
     email_min_severity: str
@@ -201,6 +202,7 @@ class SettingsConfigUpdate(BaseModel):
     smtp_username: str | None = None
     smtp_password: str | None = None
     smtp_use_tls: bool | None = None
+    smtp_tls_verify: bool | None = None
     notification_recipients: list[str] | None = None
     email_min_severity: str | None = None
     email_scan_profiles: list[str] | None = None

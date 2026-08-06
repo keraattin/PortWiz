@@ -41,6 +41,7 @@ def _settings(**overrides):
         smtp_port=25,
         smtp_from="portwiz@local",
         smtp_use_tls=False,
+        smtp_tls_verify=True,
         smtp_username=None,
         smtp_password=None,
         notification_recipients=[],
@@ -150,6 +151,33 @@ def test_build_channels_carries_per_channel_rules() -> None:
 def test_webhook_enabled_without_url_is_skipped() -> None:
     assert build_channels(_settings(slack_enabled=True)) == []
     assert build_channels(_settings(teams_enabled=True)) == []
+
+
+def test_build_notifier_carries_tls_verify() -> None:
+    # An internal relay with a self-signed cert is reached by turning verify off.
+    from portwiz_api.core.notifications import EmailNotifier, build_notifier
+
+    n = build_notifier(
+        _settings(notifications_enabled=True, smtp_host="mail", smtp_tls_verify=False)
+    )
+    assert isinstance(n, EmailNotifier)
+    assert n._verify is False
+
+
+async def test_email_notifier_passes_validate_certs(monkeypatch) -> None:
+    aiosmtplib = pytest.importorskip("aiosmtplib")
+    from portwiz_api.core.notifications import EmailNotifier
+
+    captured: dict = {}
+
+    async def fake_send(message, **kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.setattr(aiosmtplib, "send", fake_send)
+    await EmailNotifier("mail", 25, "from@x", False, None, None, verify=False).send(
+        "Subj", "body", ["to@x"]
+    )
+    assert captured["validate_certs"] is False
 
 
 def test_slack_bot_transport_uses_api_notifier() -> None:

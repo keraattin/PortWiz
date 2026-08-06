@@ -123,6 +123,11 @@ class Settings(BaseSettings):
     smtp_username: str | None = None
     smtp_password: str | None = None
     smtp_use_tls: bool = False
+    # Verify the SMTP server's TLS certificate. Turn off for an internal relay
+    # that presents a self-signed or internal-CA certificate (verification would
+    # otherwise fail with CERTIFICATE_VERIFY_FAILED). Off skips validation for
+    # both implicit TLS and STARTTLS.
+    smtp_tls_verify: bool = True
     notification_recipients: list[str] = []
     # Per-channel delivery rules: a channel only fires at or above its own
     # min severity, and only for the listed scan profiles (empty = all). "low"
