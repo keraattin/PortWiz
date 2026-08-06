@@ -166,6 +166,9 @@ class SettingsConfig(BaseModel):
     cve_recheck_hours: int
     cve_api_key_set: bool
 
+    cert_expiry_warn_days: int
+    cert_expiry_recheck_hours: int
+
     change_confirmations: int
     agent_online_seconds: int
     agent_poll_seconds: int
@@ -253,6 +256,9 @@ class SettingsConfigUpdate(BaseModel):
     cve_api_key: str | None = None
     cve_min_cvss: float | None = None
     cve_recheck_hours: int | None = None
+
+    cert_expiry_warn_days: int | None = None
+    cert_expiry_recheck_hours: int | None = None
 
     change_confirmations: int | None = None
     agent_online_seconds: int | None = None

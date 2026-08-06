@@ -118,6 +118,8 @@ def _config_from(s: Settings) -> SettingsConfig:
         cve_min_cvss=s.cve_min_cvss,
         cve_recheck_hours=s.cve_recheck_hours,
         cve_api_key_set=bool(s.cve_api_key),
+        cert_expiry_warn_days=s.cert_expiry_warn_days,
+        cert_expiry_recheck_hours=s.cert_expiry_recheck_hours,
         change_confirmations=s.change_confirmations,
         agent_online_seconds=s.agent_online_seconds,
         agent_poll_seconds=s.agent_poll_seconds,

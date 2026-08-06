@@ -93,6 +93,9 @@ EDITABLE_KEYS: list[str] = [
     "cve_api_url",
     "cve_min_cvss",
     "cve_recheck_hours",
+    # TLS certificate expiry monitoring
+    "cert_expiry_warn_days",
+    "cert_expiry_recheck_hours",
     # Operational (system)
     "change_confirmations",
     "agent_online_seconds",

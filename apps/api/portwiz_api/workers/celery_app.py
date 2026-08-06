@@ -94,6 +94,31 @@ def recheck_cves_due() -> dict[str, int] | None:
     return asyncio.run(_run())
 
 
+@celery_app.task(name="portwiz.check_cert_expiry_due")
+def check_cert_expiry_due() -> dict[str, int] | None:
+    """Beat tick: alert on expired/expiring TLS certificates when the cadence is
+    due. Certificates are captured during scans; cert_expiry_recheck_hours (not
+    this poll interval) sets the real cadence."""
+    import asyncio
+
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from ..core.app_settings import effective_settings
+    from ..core.scheduler import run_due_cert_expiry_check
+
+    async def _run() -> dict[str, int] | None:
+        engine = create_async_engine(settings.database_url)
+        maker = async_sessionmaker(engine, expire_on_commit=False)
+        try:
+            async with maker() as session:
+                eff = await effective_settings(session)
+                return await run_due_cert_expiry_check(session, eff)
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(_run())
+
+
 @celery_app.task(name="portwiz.flush_notifications_due")
 def flush_notifications_due() -> int | None:
     """Beat tick: send deferred change notifications (digest batches and
@@ -131,5 +156,9 @@ celery_app.conf.beat_schedule = {
     "flush-notifications-due": {
         "task": "portwiz.flush_notifications_due",
         "schedule": 300.0,  # poll every 5 min; notify_mode/quiet hours set timing
+    },
+    "check-cert-expiry-due": {
+        "task": "portwiz.check_cert_expiry_due",
+        "schedule": 3600.0,  # poll hourly; cert_expiry_recheck_hours sets cadence
     },
 }

@@ -23,6 +23,7 @@ from .audit import append_audit
 # them. One tracks the last automatic CVE re-check, the other the last digest.
 _CVE_CURSOR_KEY = "cve_last_recheck_at"
 _DIGEST_CURSOR_KEY = "notify_last_digest_at"
+_CERT_CURSOR_KEY = "cert_expiry_last_check_at"
 
 
 def _utcnow() -> dt.datetime:
@@ -284,6 +285,58 @@ async def flush_due_notifications(
     ]
     await notify_changes(summaries, settings)
     return len(rows)
+
+
+async def run_due_cert_expiry_check(
+    session: AsyncSession,
+    settings,
+    now: dt.datetime | None = None,
+) -> dict[str, int] | None:
+    """Alert on expired/expiring TLS certificates when the cadence is due.
+
+    Returns a count summary, or ``None`` when skipped: ``cert_expiry_recheck_hours``
+    is 0 (off) or the interval has not elapsed. A global cursor paces it
+    independently of the beat poll and is claimed before sending so overlapping
+    ticks never double-alert. The current-cert view the UI reads is unaffected by
+    this cadence.
+    """
+    from .cert_monitor import (
+        current_certificates,
+        expiring_certificates,
+        notify_cert_expiry,
+    )
+
+    hours = settings.cert_expiry_recheck_hours
+    if hours <= 0:
+        return None
+
+    now = _utcnow() if now is None else _aware(now)
+    last = await _get_cursor(session, _CERT_CURSOR_KEY)
+    if last is not None and now - last < dt.timedelta(hours=hours):
+        return None
+
+    # Claim the cadence slot before sending, so a later tick skips.
+    await _set_cursor(session, _CERT_CURSOR_KEY, now)
+    await session.commit()
+
+    certs = expiring_certificates(
+        await current_certificates(session, now, settings.cert_expiry_warn_days)
+    )
+    if not certs:
+        return {"expiring": 0, "expired": 0, "notified": 0}
+
+    notified = await notify_cert_expiry(certs, settings)
+    expired = sum(1 for c in certs if c.status == "expired")
+    await append_audit(
+        session,
+        action="cert.expiry_checked",
+        actor_email="system:scheduler",
+        target_type="certificate",
+        target_id="*",
+        payload={"expiring": len(certs), "expired": expired, "notified": notified},
+    )
+    await session.commit()
+    return {"expiring": len(certs), "expired": expired, "notified": notified}
 
 
 async def prune_observations(

@@ -189,6 +189,14 @@ class Settings(BaseSettings):
     cve_min_cvss: float = 0.0  # ignore findings below this CVSS base score
     cve_recheck_hours: int = 0  # 0 = manual only; >0 auto re-checks on this cadence
 
+    # TLS certificate expiry monitoring. A periodic job alerts (over the
+    # configured notification channels) on certificates captured during scans
+    # that are expired or expiring within cert_expiry_warn_days. The cadence is
+    # cert_expiry_recheck_hours (0 = off); the current-cert view the UI reads is
+    # always available regardless of these.
+    cert_expiry_warn_days: int = 30
+    cert_expiry_recheck_hours: int = 24
+
     # NetBox (IPAM) inventory source. Disabled unless fully configured.
     netbox_enabled: bool = False
     netbox_url: str | None = None  # e.g. https://netbox.example.com
