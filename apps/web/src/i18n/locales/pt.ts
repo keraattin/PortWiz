@@ -9,6 +9,7 @@ export const pt: Partial<Record<TKey, string>> = {
   "nav.scanning": "Varredura",
   "nav.scans": "Varreduras",
   "nav.ports": "Portas",
+  "nav.certificates": "Certificados",
   "ports.title": "Portas abertas",
   "ports.subtitle": "Quais hosts expõem quais portas no momento.",
   "ports.info":
@@ -861,6 +862,22 @@ export const pt: Partial<Record<TKey, string>> = {
   "severity.low": "baixa",
   "severity.critical": "crítica",
   "severity.unknown": "desconhecida",
+  "certs.title": "Certificados TLS",
+  "certs.subtitle":
+    "Certificados capturados em portas TLS durante as varreduras, com o respetivo estado de validade. Os certificados expirados e prestes a expirar são destacados.",
+  "certs.col.host": "Host",
+  "certs.col.name": "Certificado",
+  "certs.col.issuer": "Emissor",
+  "certs.col.expires": "Expira",
+  "certs.col.status": "Estado",
+  "certs.status.expired": "Expirado",
+  "certs.status.expiring": "A expirar",
+  "certs.status.valid": "Válido",
+  "certs.selfSigned": "autoassinado",
+  "certs.empty":
+    "Ainda não foram capturados certificados. Execute uma varredura com deteção de serviços num host TLS (443, 8443, …).",
+  "certs.expiredAgo": "há {days}d",
+  "certs.expiresIn": "em {days}d",
   "cve.title": "Vulnerabilidades (CVE)",
   "cve.subtitle":
     "CVEs conhecidas associadas aos serviços descobertos nos seus ativos. Os dados vêm da fonte CVE configurada; a severidade é a pontuação CVSS.",
@@ -1261,6 +1278,13 @@ export const pt: Partial<Record<TKey, string>> = {
   "settings.system.retentionObservationDays": "Retenção de observações (dias)",
   "settings.system.retentionObservationDaysHint":
     "Exclui observações brutas de varredura mais antigas que esse número de dias. 0 mantém tudo. Execuções de varredura, eventos de alteração e o log de auditoria nunca são excluídos.",
+  "settings.system.certExpiry": "Validade do certificado TLS",
+  "settings.system.certWarnDays": "Janela de aviso de validade (dias)",
+  "settings.system.certWarnDaysHint":
+    "Tratar um certificado como a expirar quando estiver a este número de dias da validade.",
+  "settings.system.certRecheckHours": "Intervalo de verificação de validade (horas)",
+  "settings.system.certRecheckHoursHint":
+    "Com que frequência verificar certificados a expirar e alertar através dos canais de notificação. 0 desativa os alertas.",
   "settings.system.onlineSeconds": "Limite de online do agente (segundos)",
   "settings.system.onlineSecondsHint":
     "Um agente é considerado online se enviou um heartbeat dentro deste número de segundos.",

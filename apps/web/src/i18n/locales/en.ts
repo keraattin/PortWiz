@@ -9,6 +9,7 @@ export const en = {
   "nav.scanning": "Scanning",
   "nav.scans": "Scans",
   "nav.ports": "Ports",
+  "nav.certificates": "Certificates",
   "ports.title": "Open ports",
   "ports.subtitle": "Which hosts currently expose which ports.",
   "ports.info":
@@ -859,6 +860,22 @@ export const en = {
   "severity.low": "low",
   "severity.critical": "critical",
   "severity.unknown": "unknown",
+  "certs.title": "TLS Certificates",
+  "certs.subtitle":
+    "Certificates captured on TLS ports during scans, with their expiry status. Expired and soon-to-expire certificates are highlighted.",
+  "certs.col.host": "Host",
+  "certs.col.name": "Certificate",
+  "certs.col.issuer": "Issuer",
+  "certs.col.expires": "Expires",
+  "certs.col.status": "Status",
+  "certs.status.expired": "Expired",
+  "certs.status.expiring": "Expiring",
+  "certs.status.valid": "Valid",
+  "certs.selfSigned": "self-signed",
+  "certs.empty":
+    "No certificates captured yet. Run a scan with service detection on a TLS host (443, 8443, …).",
+  "certs.expiredAgo": "{days}d ago",
+  "certs.expiresIn": "in {days}d",
   "cve.title": "Vulnerabilities (CVE)",
   "cve.subtitle":
     "Known CVEs matched to the services discovered on your assets. Data comes from the configured CVE source; severity is its CVSS score.",
@@ -1258,6 +1275,13 @@ export const en = {
   "settings.system.retentionObservationDays": "Observation retention (days)",
   "settings.system.retentionObservationDaysHint":
     "Delete raw scan observations older than this many days. 0 keeps everything. Scan runs, change events and the audit log are never deleted.",
+  "settings.system.certExpiry": "TLS certificate expiry",
+  "settings.system.certWarnDays": "Expiry warning window (days)",
+  "settings.system.certWarnDaysHint":
+    "Treat a certificate as expiring when it is within this many days of expiry.",
+  "settings.system.certRecheckHours": "Expiry check interval (hours)",
+  "settings.system.certRecheckHoursHint":
+    "How often to check for expiring certificates and alert over the notification channels. 0 disables the alerts.",
   "settings.system.onlineSeconds": "Agent online cut-off (seconds)",
   "settings.system.onlineSecondsHint":
     "An agent counts as online if it heartbeat within this many seconds.",

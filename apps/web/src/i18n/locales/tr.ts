@@ -9,6 +9,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "nav.scanning": "Tarama",
   "nav.scans": "Taramalar",
   "nav.ports": "Portlar",
+  "nav.certificates": "Sertifikalar",
   "ports.title": "Açık portlar",
   "ports.subtitle": "Şu an hangi host hangi portları açık tutuyor.",
   "ports.info":
@@ -857,6 +858,22 @@ export const tr: Partial<Record<TKey, string>> = {
   "severity.low": "düşük",
   "severity.critical": "kritik",
   "severity.unknown": "bilinmiyor",
+  "certs.title": "TLS Sertifikaları",
+  "certs.subtitle":
+    "Taramalar sırasında TLS portlarında yakalanan sertifikalar ve son kullanma durumları. Süresi dolmuş ve yakında dolacak sertifikalar vurgulanır.",
+  "certs.col.host": "Host",
+  "certs.col.name": "Sertifika",
+  "certs.col.issuer": "Veren",
+  "certs.col.expires": "Bitiş",
+  "certs.col.status": "Durum",
+  "certs.status.expired": "Süresi doldu",
+  "certs.status.expiring": "Süresi doluyor",
+  "certs.status.valid": "Geçerli",
+  "certs.selfSigned": "kendinden imzalı",
+  "certs.empty":
+    "Henüz sertifika yakalanmadı. Bir TLS host üzerinde servis tespiti ile bir tarama çalıştırın (443, 8443, …).",
+  "certs.expiredAgo": "{days}g önce",
+  "certs.expiresIn": "{days}g içinde",
   "cve.title": "Zafiyetler (CVE)",
   "cve.subtitle":
     "Varlıklarınızda keşfedilen servislere eşlenen bilinen CVE'ler. Veri yapılandırılan CVE kaynağından gelir; önem CVSS puanıdır.",
@@ -1256,6 +1273,13 @@ export const tr: Partial<Record<TKey, string>> = {
   "settings.system.retentionObservationDays": "Gözlem saklama (gün)",
   "settings.system.retentionObservationDaysHint":
     "Bu kadar günden eski ham tarama gözlemlerini siler. 0 her şeyi saklar. Tarama çalıştırmaları, değişiklik olayları ve audit log asla silinmez.",
+  "settings.system.certExpiry": "TLS sertifika süresi",
+  "settings.system.certWarnDays": "Süre dolma uyarı penceresi (gün)",
+  "settings.system.certWarnDaysHint":
+    "Bir sertifikayı, süresinin dolmasına bu kadar gün kaldığında süresi doluyor olarak değerlendir.",
+  "settings.system.certRecheckHours": "Süre dolma kontrol aralığı (saat)",
+  "settings.system.certRecheckHoursHint":
+    "Süresi dolan sertifikaların ne sıklıkta kontrol edileceği ve bildirim kanalları üzerinden uyarı verileceği. 0 uyarıları devre dışı bırakır.",
   "settings.system.onlineSeconds": "Agent online eşiği (saniye)",
   "settings.system.onlineSecondsHint":
     "Bir agent bu kadar saniye içinde heartbeat attıysa online sayılır.",

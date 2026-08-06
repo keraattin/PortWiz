@@ -139,6 +139,8 @@ interface FormState {
   cve_api_key: string;
   cve_min_cvss: string;
   cve_recheck_hours: string;
+  cert_expiry_warn_days: string;
+  cert_expiry_recheck_hours: string;
   change_confirmations: string;
   agent_online_seconds: string;
   agent_poll_seconds: string;
@@ -220,6 +222,8 @@ function fromConfig(c: SettingsConfig): FormState {
     cve_api_key: "",
     cve_min_cvss: String(c.cve_min_cvss ?? 0),
     cve_recheck_hours: String(c.cve_recheck_hours ?? 0),
+    cert_expiry_warn_days: String(c.cert_expiry_warn_days ?? 30),
+    cert_expiry_recheck_hours: String(c.cert_expiry_recheck_hours ?? 24),
     change_confirmations: String(c.change_confirmations),
     agent_online_seconds: String(c.agent_online_seconds),
     agent_poll_seconds: String(c.agent_poll_seconds),
@@ -1860,6 +1864,34 @@ export default function SettingsPage() {
             />
           </FormField>
 
+          <p className="pt-2 text-sm font-medium text-slate-300">
+            {t("settings.system.certExpiry")}
+          </p>
+          <FormField
+            label={t("settings.system.certWarnDays")}
+            hint={t("settings.system.certWarnDaysHint")}
+          >
+            <input
+              className={inputClass}
+              type="number"
+              min={1}
+              value={form.cert_expiry_warn_days}
+              onChange={(e) => set("cert_expiry_warn_days", e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label={t("settings.system.certRecheckHours")}
+            hint={t("settings.system.certRecheckHoursHint")}
+          >
+            <input
+              className={inputClass}
+              type="number"
+              min={0}
+              value={form.cert_expiry_recheck_hours}
+              onChange={(e) => set("cert_expiry_recheck_hours", e.target.value)}
+            />
+          </FormField>
+
           <div ref={updatesRef} className="pt-2 scroll-mt-4">
             <p className="text-sm font-medium text-slate-300">
               {t("settings.system.updates")}
@@ -1951,6 +1983,14 @@ export default function SettingsPage() {
                   retention_observation_days: Math.max(
                     0,
                     parseInt(form.retention_observation_days, 10) || 0,
+                  ),
+                  cert_expiry_warn_days: Math.max(
+                    1,
+                    parseInt(form.cert_expiry_warn_days, 10) || 30,
+                  ),
+                  cert_expiry_recheck_hours: Math.max(
+                    0,
+                    parseInt(form.cert_expiry_recheck_hours, 10) || 0,
                   ),
                   update_check_enabled: form.update_check_enabled,
                 })

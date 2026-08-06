@@ -14,6 +14,7 @@ const VlansPage = lazy(() => import("./pages/VlansPage"));
 const ScansPage = lazy(() => import("./pages/ScansPage"));
 const ScanRunDetailPage = lazy(() => import("./pages/ScanRunDetailPage"));
 const PortsPage = lazy(() => import("./pages/PortsPage"));
+const CertificatesPage = lazy(() => import("./pages/CertificatesPage"));
 const PortDetailPage = lazy(() => import("./pages/PortDetailPage"));
 const ChangesPage = lazy(() => import("./pages/ChangesPage"));
 const ChangeDetailPage = lazy(() => import("./pages/ChangeDetailPage"));
@@ -71,6 +72,7 @@ export default function App() {
           <Route path="/segments" element={<SegmentsPage />} />
           <Route path="/ports" element={<PortsPage />} />
           <Route path="/ports/:port" element={<PortDetailPage />} />
+          <Route path="/certificates" element={<CertificatesPage />} />
           <Route path="/changes" element={<ChangesPage />} />
           <Route path="/changes/:id" element={<ChangeDetailPage />} />
           <Route path="/tasks" element={<TasksPage />} />

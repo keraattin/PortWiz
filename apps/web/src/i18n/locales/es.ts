@@ -9,6 +9,7 @@ export const es: Partial<Record<TKey, string>> = {
   "nav.scanning": "Escaneo",
   "nav.scans": "Escaneos",
   "nav.ports": "Puertos",
+  "nav.certificates": "Certificados",
   "ports.title": "Puertos abiertos",
   "ports.subtitle": "Qué hosts exponen qué puertos en este momento.",
   "ports.info":
@@ -860,6 +861,22 @@ export const es: Partial<Record<TKey, string>> = {
   "severity.low": "baja",
   "severity.critical": "crítica",
   "severity.unknown": "desconocida",
+  "certs.title": "Certificados TLS",
+  "certs.subtitle":
+    "Certificados capturados en puertos TLS durante los escaneos, con su estado de caducidad. Los certificados caducados y próximos a caducar se resaltan.",
+  "certs.col.host": "Host",
+  "certs.col.name": "Certificado",
+  "certs.col.issuer": "Emisor",
+  "certs.col.expires": "Caduca",
+  "certs.col.status": "Estado",
+  "certs.status.expired": "Caducado",
+  "certs.status.expiring": "Por caducar",
+  "certs.status.valid": "Válido",
+  "certs.selfSigned": "autofirmado",
+  "certs.empty":
+    "Aún no se han capturado certificados. Ejecute un escaneo con detección de servicios en un host TLS (443, 8443, …).",
+  "certs.expiredAgo": "hace {days}d",
+  "certs.expiresIn": "en {days}d",
   "cve.title": "Vulnerabilidades (CVE)",
   "cve.subtitle":
     "CVE conocidas asociadas a los servicios descubiertos en tus activos. Los datos provienen de la fuente CVE configurada; la severidad es su puntuación CVSS.",
@@ -1260,6 +1277,13 @@ export const es: Partial<Record<TKey, string>> = {
   "settings.system.retentionObservationDays": "Retención de observaciones (días)",
   "settings.system.retentionObservationDaysHint":
     "Elimina las observaciones brutas de escaneo más antiguas que esta cantidad de días. 0 conserva todo. Los escaneos, los eventos de cambio y el registro de auditoría nunca se eliminan.",
+  "settings.system.certExpiry": "Caducidad del certificado TLS",
+  "settings.system.certWarnDays": "Ventana de aviso de caducidad (días)",
+  "settings.system.certWarnDaysHint":
+    "Considerar un certificado como próximo a caducar cuando le falten estos días para caducar.",
+  "settings.system.certRecheckHours": "Intervalo de comprobación de caducidad (horas)",
+  "settings.system.certRecheckHoursHint":
+    "Con qué frecuencia comprobar los certificados por caducar y alertar por los canales de notificación. 0 desactiva las alertas.",
   "settings.system.onlineSeconds": "Umbral de en línea del agente (segundos)",
   "settings.system.onlineSecondsHint":
     "Un agente se considera en línea si envió un latido dentro de estos segundos.",

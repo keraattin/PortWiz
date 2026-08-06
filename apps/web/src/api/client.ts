@@ -965,6 +965,35 @@ export function listOpenPorts(params?: {
   return request<OpenPort[]>(`/ports${qs ? `?${qs}` : ""}`);
 }
 
+export interface Certificate {
+  ip: string;
+  port: number;
+  protocol: string;
+  asset_id: string | null;
+  hostname: string | null;
+  subject_cn: string | null;
+  issuer: string | null;
+  sans: string[] | null;
+  not_before: string | null;
+  not_after: string | null;
+  self_signed: boolean | null;
+  serial: string | null;
+  sig_alg: string | null;
+  days_to_expiry: number | null;
+  status: string; // expired | expiring | valid
+}
+
+export function listCertificates(params?: {
+  status?: string;
+  ip?: string;
+}): Promise<Certificate[]> {
+  const q = new URLSearchParams();
+  if (params?.status) q.set("status", params.status);
+  if (params?.ip) q.set("ip", params.ip);
+  const qs = q.toString();
+  return request<Certificate[]>(`/certificates${qs ? `?${qs}` : ""}`);
+}
+
 // Audit log
 export interface AuditEvent {
   seq: number;
@@ -1412,6 +1441,8 @@ export interface SettingsConfig {
   cve_min_cvss: number;
   cve_recheck_hours: number;
   cve_api_key_set: boolean;
+  cert_expiry_warn_days: number;
+  cert_expiry_recheck_hours: number;
   change_confirmations: number;
   agent_online_seconds: number;
   agent_poll_seconds: number;
@@ -1492,6 +1523,8 @@ export type SettingsConfigUpdate = Partial<{
   cve_api_key: string;
   cve_min_cvss: number;
   cve_recheck_hours: number;
+  cert_expiry_warn_days: number;
+  cert_expiry_recheck_hours: number;
   change_confirmations: number;
   agent_online_seconds: number;
   agent_poll_seconds: number;

@@ -9,6 +9,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "nav.scanning": "Analyse",
   "nav.scans": "Analyses",
   "nav.ports": "Ports",
+  "nav.certificates": "Certificats",
   "ports.title": "Ports ouverts",
   "ports.subtitle": "Quels hôtes exposent actuellement quels ports.",
   "ports.info":
@@ -861,6 +862,22 @@ export const fr: Partial<Record<TKey, string>> = {
   "severity.low": "faible",
   "severity.critical": "critique",
   "severity.unknown": "inconnu",
+  "certs.title": "Certificats TLS",
+  "certs.subtitle":
+    "Certificats capturés sur les ports TLS lors des analyses, avec leur statut d'expiration. Les certificats expirés et bientôt expirés sont mis en évidence.",
+  "certs.col.host": "Hôte",
+  "certs.col.name": "Certificat",
+  "certs.col.issuer": "Émetteur",
+  "certs.col.expires": "Expire",
+  "certs.col.status": "Statut",
+  "certs.status.expired": "Expiré",
+  "certs.status.expiring": "Expire bientôt",
+  "certs.status.valid": "Valide",
+  "certs.selfSigned": "auto-signé",
+  "certs.empty":
+    "Aucun certificat capturé pour l'instant. Lancez une analyse avec détection de service sur un hôte TLS (443, 8443, …).",
+  "certs.expiredAgo": "il y a {days}j",
+  "certs.expiresIn": "dans {days}j",
   "cve.title": "Vulnérabilités (CVE)",
   "cve.subtitle":
     "CVE connues associées aux services découverts sur vos actifs. Les données proviennent de la source CVE configurée ; la gravité est son score CVSS.",
@@ -1261,6 +1278,13 @@ export const fr: Partial<Record<TKey, string>> = {
   "settings.system.retentionObservationDays": "Conservation des observations (jours)",
   "settings.system.retentionObservationDaysHint":
     "Supprime les observations brutes d'analyse plus anciennes que ce nombre de jours. 0 conserve tout. Les analyses, les événements de changement et le journal d'audit ne sont jamais supprimés.",
+  "settings.system.certExpiry": "Expiration du certificat TLS",
+  "settings.system.certWarnDays": "Fenêtre d'avertissement d'expiration (jours)",
+  "settings.system.certWarnDaysHint":
+    "Considérer un certificat comme expirant lorsqu'il se trouve à ce nombre de jours de son expiration.",
+  "settings.system.certRecheckHours": "Intervalle de vérification d'expiration (heures)",
+  "settings.system.certRecheckHoursHint":
+    "Fréquence de vérification des certificats sur le point d'expirer et d'alerte via les canaux de notification. 0 désactive les alertes.",
   "settings.system.onlineSeconds": "Seuil en ligne de l'agent (secondes)",
   "settings.system.onlineSecondsHint":
     "Un agent est considéré en ligne s'il a émis un battement dans ce nombre de secondes.",

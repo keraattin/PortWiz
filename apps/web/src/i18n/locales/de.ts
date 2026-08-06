@@ -9,6 +9,7 @@ export const de: Partial<Record<TKey, string>> = {
   "nav.scanning": "Scannen",
   "nav.scans": "Scans",
   "nav.ports": "Ports",
+  "nav.certificates": "Zertifikate",
   "ports.title": "Offene Ports",
   "ports.subtitle": "Welche Hosts derzeit welche Ports offen haben.",
   "ports.info":
@@ -861,6 +862,22 @@ export const de: Partial<Record<TKey, string>> = {
   "severity.low": "niedrig",
   "severity.critical": "kritisch",
   "severity.unknown": "unbekannt",
+  "certs.title": "TLS-Zertifikate",
+  "certs.subtitle":
+    "Zertifikate, die während der Scans auf TLS-Ports erfasst wurden, samt Ablaufstatus. Abgelaufene und bald ablaufende Zertifikate werden hervorgehoben.",
+  "certs.col.host": "Host",
+  "certs.col.name": "Zertifikat",
+  "certs.col.issuer": "Aussteller",
+  "certs.col.expires": "Läuft ab",
+  "certs.col.status": "Status",
+  "certs.status.expired": "Abgelaufen",
+  "certs.status.expiring": "Läuft ab",
+  "certs.status.valid": "Gültig",
+  "certs.selfSigned": "selbstsigniert",
+  "certs.empty":
+    "Noch keine Zertifikate erfasst. Führen Sie einen Scan mit Diensterkennung auf einem TLS-Host aus (443, 8443, …).",
+  "certs.expiredAgo": "vor {days}T",
+  "certs.expiresIn": "in {days}T",
   "cve.title": "Schwachstellen (CVE)",
   "cve.subtitle":
     "Bekannte CVEs, die den auf deinen Assets erkannten Diensten zugeordnet sind. Die Daten stammen aus der konfigurierten CVE-Quelle; der Schweregrad ist der CVSS-Wert.",
@@ -1261,6 +1278,13 @@ export const de: Partial<Record<TKey, string>> = {
   "settings.system.retentionObservationDays": "Beobachtungs-Aufbewahrung (Tage)",
   "settings.system.retentionObservationDaysHint":
     "Löscht rohe Scan-Beobachtungen, die älter als so viele Tage sind. 0 behält alles. Scan-Läufe, Änderungsereignisse und das Audit-Log werden nie gelöscht.",
+  "settings.system.certExpiry": "TLS-Zertifikatsablauf",
+  "settings.system.certWarnDays": "Warnfenster vor Ablauf (Tage)",
+  "settings.system.certWarnDaysHint":
+    "Ein Zertifikat als ablaufend behandeln, wenn es innerhalb dieser Anzahl von Tagen vor dem Ablauf liegt.",
+  "settings.system.certRecheckHours": "Prüfintervall für Ablauf (Stunden)",
+  "settings.system.certRecheckHoursHint":
+    "Wie oft auf ablaufende Zertifikate geprüft und über die Benachrichtigungskanäle gewarnt wird. 0 deaktiviert die Warnungen.",
   "settings.system.onlineSeconds": "Agent-Online-Schwelle (Sekunden)",
   "settings.system.onlineSecondsHint":
     "Ein Agent gilt als online, wenn er innerhalb dieser Sekunden ein Heartbeat gesendet hat.",
