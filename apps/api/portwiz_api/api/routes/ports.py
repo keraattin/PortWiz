@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.db import get_session
 from ...models.asset import Asset
-from ...models.change import PortState
+from ...models.change import PortState, PortSuppression
 from ...models.user import User
 from ...schemas.ports import OpenPortRead
 from ..deps import get_current_user
@@ -30,11 +30,25 @@ async def list_open_ports(
     protocol: str | None = None,
     service: str | None = None,
     asset_id: uuid.UUID | None = None,
+    include_suppressed: bool = False,
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> list[OpenPortRead]:
     """Every port confirmed open right now, one row per (ip, port, protocol),
-    joined to its asset. This is current state, independent of change events."""
+    joined to its asset. This is current state, independent of change events.
+
+    Ports marked as false positives are hidden by default; pass
+    ``include_suppressed=true`` to list them too (each flagged ``suppressed``)."""
+    suppressed = {
+        (s_ip, s_port, s_proto)
+        for s_ip, s_port, s_proto in (
+            await session.execute(
+                select(
+                    PortSuppression.ip, PortSuppression.port, PortSuppression.protocol
+                )
+            )
+        ).all()
+    }
     query = (
         select(PortState, Asset)
         .outerjoin(Asset, Asset.ip == PortState.ip)
@@ -64,6 +78,9 @@ async def list_open_ports(
         key = (state.ip, state.port, state.protocol)
         if key in seen:  # a host can sit in several scan profiles; keep the freshest
             continue
+        is_suppressed = key in suppressed
+        if is_suppressed and not include_suppressed:
+            continue  # false positive: hidden unless explicitly requested
         seen.add(key)
         out.append(
             OpenPortRead(
@@ -78,6 +95,7 @@ async def list_open_ports(
                 criticality=(
                     getattr(asset.criticality, "value", asset.criticality) if asset else None
                 ),
+                suppressed=is_suppressed,
             )
         )
     return out

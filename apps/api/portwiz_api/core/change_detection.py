@@ -22,7 +22,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.asset import Asset
-from ..models.change import ChangeEvent, PortState
+from ..models.change import ChangeEvent, PortState, PortSuppression
 from ..models.scan import Observation, ScanRun, ScanRunStatus
 from ..models.task import Task, TaskStatus
 
@@ -134,6 +134,18 @@ async def detect_changes(session: AsyncSession, run: ScanRun) -> list[ChangeEven
     ).all()
     known_ports = {(ip, port, proto, ctype) for ip, port, proto, ctype in ack_rows}
 
+    # Ports marked as false positives are absorbed silently: their state still
+    # tracks (so the machine stays consistent) but they never raise a change,
+    # open a task, or notify. Global across profiles, matching the ports view.
+    supp_rows = (
+        await session.execute(
+            select(
+                PortSuppression.ip, PortSuppression.port, PortSuppression.protocol
+            )
+        )
+    ).all()
+    suppressed = {(ip, port, proto) for ip, port, proto in supp_rows}
+
     prior_completed = (
         await session.execute(
             select(func.count())
@@ -219,48 +231,51 @@ async def detect_changes(session: AsyncSession, run: ScanRun) -> list[ChangeEven
         state.updated_at = now
 
         if state.candidate_count >= confirmations:
-            # A recurrence on a known port is recorded but pre-acknowledged and
-            # marked processed, so it never re-alarms or reopens a task.
-            known = (ip, port, protocol, change_type) in known_ports
-            event = ChangeEvent(
-                scan_profile_id=run.scan_profile_id,
-                scan_run_id=run.id,
-                asset_id=asset_map.get(ip),
-                ip=ip,
-                port=port,
-                protocol=protocol,
-                change_type=change_type,
-                before={
-                    "state": state.confirmed_state,
-                    "service": state.confirmed_service,
-                    "version": state.confirmed_version,
-                },
-                after={
-                    "state": desired.state,
-                    "service": desired.service,
-                    "version": desired.version,
-                },
-                severity=_SEVERITY.get(change_type, "medium"),
-                status="acknowledged" if known else "open",
-                notified_at=now if known else None,
-                detected_at=now,
-            )
-            session.add(event)
-            events.append(event)
-
-            # Open a follow-up task only for changes that still need triage.
-            if not known:
-                session.add(
-                    Task(
-                        title=f"Review {change_type} on {ip}:{port}/{protocol}",
-                        description=(
-                            f"Confirmed {change_type} change on {ip}:{port}/{protocol} "
-                            f"(severity {_SEVERITY.get(change_type, 'medium')})."
-                        ),
-                        status=TaskStatus.open,
-                        change_event_id=event.id,
-                    )
+            # A false-positive port confirms into its new state silently: no
+            # event, no task, no notification.
+            if key not in suppressed:
+                # A recurrence on a known port is recorded but pre-acknowledged and
+                # marked processed, so it never re-alarms or reopens a task.
+                known = (ip, port, protocol, change_type) in known_ports
+                event = ChangeEvent(
+                    scan_profile_id=run.scan_profile_id,
+                    scan_run_id=run.id,
+                    asset_id=asset_map.get(ip),
+                    ip=ip,
+                    port=port,
+                    protocol=protocol,
+                    change_type=change_type,
+                    before={
+                        "state": state.confirmed_state,
+                        "service": state.confirmed_service,
+                        "version": state.confirmed_version,
+                    },
+                    after={
+                        "state": desired.state,
+                        "service": desired.service,
+                        "version": desired.version,
+                    },
+                    severity=_SEVERITY.get(change_type, "medium"),
+                    status="acknowledged" if known else "open",
+                    notified_at=now if known else None,
+                    detected_at=now,
                 )
+                session.add(event)
+                events.append(event)
+
+                # Open a follow-up task only for changes that still need triage.
+                if not known:
+                    session.add(
+                        Task(
+                            title=f"Review {change_type} on {ip}:{port}/{protocol}",
+                            description=(
+                                f"Confirmed {change_type} change on {ip}:{port}/{protocol} "
+                                f"(severity {_SEVERITY.get(change_type, 'medium')})."
+                            ),
+                            status=TaskStatus.open,
+                            change_event_id=event.id,
+                        )
+                    )
 
             state.confirmed_state = desired.state
             state.confirmed_service = desired.service

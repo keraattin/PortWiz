@@ -20,3 +20,4 @@ class OpenPortRead(BaseModel):
     asset_id: uuid.UUID | None
     hostname: str | None
     criticality: str | None
+    suppressed: bool = False

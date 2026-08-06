@@ -57,6 +57,29 @@ class PortState(SQLModel, table=True):
     )
 
 
+class PortSuppression(SQLModel, table=True):
+    """A (host, port) marked as a false positive. A suppressed port is hidden
+    from the current-open-ports view and never raises a ChangeEvent again, until
+    the suppression is removed. Global across scan profiles: a false positive is
+    a false positive wherever it is seen."""
+
+    __tablename__ = "port_suppressions"
+    __table_args__ = (
+        UniqueConstraint("ip", "port", "protocol", name="uq_port_suppression_key"),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    ip: str = Field(sa_column=Column(String(45), nullable=False))
+    port: int = Field(sa_column=Column(Integer, nullable=False))
+    protocol: str = Field(sa_column=Column(String(8), nullable=False))
+    reason: str | None = Field(default=None, sa_column=Column(String(256)))
+    created_by: uuid.UUID | None = Field(default=None, foreign_key="users.id")
+    created_at: dt.datetime = Field(
+        default_factory=_utcnow,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+
+
 class ChangeEvent(SQLModel, table=True):
     __tablename__ = "change_events"
 

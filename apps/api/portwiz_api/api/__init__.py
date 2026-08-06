@@ -16,6 +16,7 @@ from .routes import (
     ports,
     settings,
     stats,
+    suppressions,
     tasks,
     update,
     users,
@@ -36,6 +37,7 @@ api_router.include_router(runs_router)
 api_router.include_router(changes.router)
 api_router.include_router(ports.router)
 api_router.include_router(certificates.router)
+api_router.include_router(suppressions.router)
 api_router.include_router(audit.router)
 api_router.include_router(evidence.router)
 api_router.include_router(tasks.router)
