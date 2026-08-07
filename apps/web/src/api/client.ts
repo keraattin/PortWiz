@@ -946,6 +946,7 @@ export interface OpenPort {
   asset_id: string | null;
   hostname: string | null;
   criticality: string | null;
+  suppressed: boolean;
 }
 
 export function listOpenPorts(params?: {
@@ -954,6 +955,7 @@ export function listOpenPorts(params?: {
   protocol?: string;
   service?: string;
   asset_id?: string;
+  include_suppressed?: boolean;
 }): Promise<OpenPort[]> {
   const q = new URLSearchParams();
   if (params?.ip) q.set("ip", params.ip);
@@ -961,8 +963,39 @@ export function listOpenPorts(params?: {
   if (params?.protocol) q.set("protocol", params.protocol);
   if (params?.service) q.set("service", params.service);
   if (params?.asset_id) q.set("asset_id", params.asset_id);
+  if (params?.include_suppressed) q.set("include_suppressed", "true");
   const qs = q.toString();
   return request<OpenPort[]>(`/ports${qs ? `?${qs}` : ""}`);
+}
+
+export interface Suppression {
+  id: string;
+  ip: string;
+  port: number;
+  protocol: string;
+  reason: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export function listSuppressions(): Promise<Suppression[]> {
+  return request<Suppression[]>("/suppressions");
+}
+
+export function createSuppression(payload: {
+  ip: string;
+  port: number;
+  protocol: string;
+  reason?: string;
+}): Promise<Suppression> {
+  return request<Suppression>("/suppressions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteSuppression(id: string): Promise<void> {
+  return request<void>(`/suppressions/${id}`, { method: "DELETE" });
 }
 
 export interface Certificate {
