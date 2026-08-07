@@ -435,6 +435,7 @@ export const fr: Partial<Record<TKey, string>> = {
   "common.filter": "Filtrer…",
   "table.selected": "{count} sélectionné(s)",
   "table.deleteSelected": "Supprimer la sélection",
+  "table.selectAll": "Tout sélectionner",
   "table.clear": "Effacer",
   "table.confirmBulkDelete": "Supprimer {count} éléments sélectionnés ? Cette action est irréversible.",
   "table.bulkDeleteDone": "{count} supprimé(s).",
@@ -603,6 +604,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "vlans.add": "Ajouter un VLAN",
   "vlans.added": "VLAN ajouté",
   "vlans.deleted": "VLAN supprimé",
+  "vlans.updated": "VLAN mis à jour",
+  "vlans.editTitle": "Modifier le VLAN",
   "vlans.confirmDelete": "Supprimer ce VLAN ?",
   "vlans.empty": "Aucun VLAN pour le moment.",
   "vlans.emptyBody":

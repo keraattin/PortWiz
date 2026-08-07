@@ -433,6 +433,7 @@ export const tr: Partial<Record<TKey, string>> = {
   "common.filter": "Filtrele…",
   "table.selected": "{count} seçildi",
   "table.deleteSelected": "Seçilenleri sil",
+  "table.selectAll": "Tümünü seç",
   "table.clear": "Temizle",
   "table.confirmBulkDelete": "{count} seçili öğe silinsin mi? Bu işlem geri alınamaz.",
   "table.bulkDeleteDone": "{count} silindi.",
@@ -601,6 +602,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "vlans.add": "VLAN ekle",
   "vlans.added": "VLAN eklendi",
   "vlans.deleted": "VLAN silindi",
+  "vlans.updated": "VLAN güncellendi",
+  "vlans.editTitle": "VLAN'ı düzenle",
   "vlans.confirmDelete": "Bu VLAN silinsin mi?",
   "vlans.empty": "Henüz VLAN yok.",
   "vlans.emptyBody":

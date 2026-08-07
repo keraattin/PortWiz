@@ -26,6 +26,7 @@ import {
   previewIpRangeSync,
   previewVlanImport,
   previewVlanSync,
+  updateVlan,
 } from "../api/client";
 import { inputClass } from "../components/formStyles";
 import { useErrorMessage } from "../i18n/useErrorMessage";
@@ -68,6 +69,11 @@ export default function VlansPage() {
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
   const [description, setDescription] = useState("");
+  // Per-VLAN edit modal: when set, the modal edits this VLAN instead of adding.
+  const [editVlanId, setEditVlanId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editTag, setEditTag] = useState("");
+  const [editDesc, setEditDesc] = useState("");
   // Ranges entered alongside the VLAN, so a VLAN and its ranges are created in
   // one flow (they are treated as one unit throughout the page).
   const [vlanRanges, setVlanRanges] = useState("");
@@ -326,6 +332,32 @@ export default function VlansPage() {
     }
   }
 
+  function openEditVlan(v: Vlan) {
+    setError(null);
+    setEditVlanId(v.id);
+    setEditName(v.name);
+    setEditTag(v.vlan_tag != null ? String(v.vlan_tag) : "");
+    setEditDesc(v.description ?? "");
+  }
+
+  async function onEditVlan(e: FormEvent) {
+    e.preventDefault();
+    if (!editVlanId) return;
+    setError(null);
+    try {
+      await updateVlan(editVlanId, {
+        name: editName,
+        vlan_tag: editTag ? Number(editTag) : null,
+        description: editDesc || null,
+      });
+      setEditVlanId(null);
+      toast.success(t("vlans.updated"));
+      await reload();
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+  }
+
   function openAddRange(vlanId = "") {
     setError(null);
     setCidr("");
@@ -363,6 +395,26 @@ export default function VlansPage() {
   }
 
   const selectedCount = vlanSel.selected.size + rangeSel.selected.size;
+
+  // "Select all" spans every VLAN and range currently visible (across pages of
+  // the filtered set), populating both independent selection sets at once.
+  const visibleRangeIds = [
+    ...filteredVlans.flatMap((v) => (rangesByVlan[v.id] ?? []).map((r) => r.id)),
+    ...unassignedRanges.map((r) => r.id),
+  ];
+  const allSelectable = filteredVlans.length + visibleRangeIds.length;
+  const allSelected =
+    allSelectable > 0 &&
+    filteredVlans.every((v) => vlanSel.selected.has(v.id)) &&
+    visibleRangeIds.every((id) => rangeSel.selected.has(id));
+
+  function selectAll(on: boolean) {
+    vlanSel.setMany(
+      filteredVlans.map((v) => v.id),
+      on,
+    );
+    rangeSel.setMany(visibleRangeIds, on);
+  }
 
   async function onBulkDelete() {
     const names = vlans.filter((v) => vlanSel.selected.has(v.id)).map((v) => v.name);
@@ -622,8 +674,19 @@ export default function VlansPage() {
       ) : (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <SearchInput value={search} onChange={setSearch} />
+              {canWrite && allSelectable > 0 && (
+                <label className="flex items-center gap-2 text-xs text-slate-400">
+                  <input
+                    type="checkbox"
+                    className={CHECKBOX_CLS}
+                    checked={allSelected}
+                    onChange={(e) => selectAll(e.target.checked)}
+                  />
+                  {t("table.selectAll")}
+                </label>
+              )}
               {canWrite && selectedCount > 0 && (
                 <>
                   <span className="text-sm text-slate-300">
@@ -679,7 +742,17 @@ export default function VlansPage() {
                           onChange={() => vlanSel.toggle(v.id)}
                         />
                       )}
-                      <span className="font-medium text-slate-100">{v.name}</span>
+                      {canWrite ? (
+                        <button
+                          onClick={() => openEditVlan(v)}
+                          className="font-medium text-slate-100 hover:text-emerald-300"
+                          title={t("common.edit")}
+                        >
+                          {v.name}
+                        </button>
+                      ) : (
+                        <span className="font-medium text-slate-100">{v.name}</span>
+                      )}
                       {v.vlan_tag != null && (
                         <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
                           {t("vlans.col.tag")} {v.vlan_tag}
@@ -690,6 +763,12 @@ export default function VlansPage() {
                       )}
                       {canWrite && (
                         <div className="ml-auto flex items-center gap-3">
+                          <button
+                            onClick={() => openEditVlan(v)}
+                            className="text-xs text-sky-400 hover:text-sky-300"
+                          >
+                            {t("common.edit")}
+                          </button>
                           <button
                             onClick={() => openAddRange(v.id)}
                             className="text-xs text-emerald-400 hover:text-emerald-300"
@@ -781,6 +860,44 @@ export default function VlansPage() {
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">
             <Button type="submit">{t("vlans.add")}</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={editVlanId !== null}
+        onClose={() => setEditVlanId(null)}
+        title={t("vlans.editTitle")}
+      >
+        <form onSubmit={onEditVlan} className="space-y-3">
+          <FormField label={t("vlans.f.name")} hint={t("vlans.f.nameHint")}>
+            <input
+              className={inputClass}
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              required
+            />
+          </FormField>
+          <FormField label={t("vlans.f.tag")} hint={t("vlans.f.tagHint")}>
+            <input
+              className={inputClass}
+              type="number"
+              min={1}
+              max={4094}
+              value={editTag}
+              onChange={(e) => setEditTag(e.target.value)}
+            />
+          </FormField>
+          <FormField label={t("vlans.f.description")} hint={t("vlans.f.descriptionHint")}>
+            <input
+              className={inputClass}
+              value={editDesc}
+              onChange={(e) => setEditDesc(e.target.value)}
+            />
+          </FormField>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <div className="flex justify-end">
+            <Button type="submit">{t("common.save")}</Button>
           </div>
         </form>
       </Modal>

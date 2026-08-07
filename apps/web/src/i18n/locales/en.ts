@@ -433,6 +433,7 @@ export const en = {
   "common.filter": "Filter…",
   "table.selected": "{count} selected",
   "table.deleteSelected": "Delete selected",
+  "table.selectAll": "Select all",
   "table.clear": "Clear",
   "table.confirmBulkDelete": "Delete {count} selected items? This cannot be undone.",
   "table.bulkDeleteDone": "Deleted {count}.",
@@ -598,6 +599,8 @@ export const en = {
   "vlans.add": "Add VLAN",
   "vlans.added": "VLAN added",
   "vlans.deleted": "VLAN deleted",
+  "vlans.updated": "VLAN updated",
+  "vlans.editTitle": "Edit VLAN",
   "vlans.confirmDelete": "Delete this VLAN?",
   "vlans.empty": "No VLANs yet.",
   "vlans.emptyBody":

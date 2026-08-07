@@ -211,6 +211,16 @@ export function createVlan(payload: {
   return request<Vlan>("/vlans", { method: "POST", body: JSON.stringify(payload) });
 }
 
+export function updateVlan(
+  id: string,
+  payload: { name?: string; vlan_tag?: number | null; description?: string | null },
+): Promise<Vlan> {
+  return request<Vlan>(`/vlans/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function deleteVlan(id: string): Promise<void> {
   return request<void>(`/vlans/${id}`, { method: "DELETE" });
 }
