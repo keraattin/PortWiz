@@ -998,6 +998,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "scans.col.started": "Démarré",
   "scans.col.finished": "Terminé",
   "scans.viewResults": "Voir les résultats",
+  "scans.confirmDeleteRun": "Supprimer cette exécution d'analyse et ses résultats ? Les changements confirmés sont conservés. Cette action est irréversible.",
+  "scans.runDeleted": "Exécution d'analyse supprimée",
   "scans.deletedProfile": "(supprimé)",
   "scans.adhoc": "(ad hoc)",
   "scans.addTitle": "Ajouter un profil d'analyse",

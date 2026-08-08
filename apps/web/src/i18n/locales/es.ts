@@ -997,6 +997,8 @@ export const es: Partial<Record<TKey, string>> = {
   "scans.col.started": "Iniciado",
   "scans.col.finished": "Finalizado",
   "scans.viewResults": "Ver resultados",
+  "scans.confirmDeleteRun": "¿Eliminar esta ejecución de escaneo y sus resultados? Los cambios confirmados se conservan. Esta acción no se puede deshacer.",
+  "scans.runDeleted": "Ejecución de escaneo eliminada",
   "scans.deletedProfile": "(eliminado)",
   "scans.adhoc": "(ad hoc)",
   "scans.addTitle": "Añadir perfil de escaneo",

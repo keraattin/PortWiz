@@ -127,3 +127,81 @@ async def test_poll_without_work_returns_204(client, admin_headers) -> None:
         "/api/v1/agents/jobs", headers={"Authorization": f"Bearer {token}"}
     )
     assert resp.status_code == 204
+
+
+async def test_delete_scan_run_removes_observations_keeps_changes(
+    client, admin_headers, db
+) -> None:
+    import datetime as dt
+    import uuid
+
+    from sqlalchemy import select
+
+    from portwiz_api.models.change import ChangeEvent
+    from portwiz_api.models.scan import Observation
+
+    profile = await _create_profile(client, admin_headers, name="del-profile")
+    resp = await client.post(
+        f"/api/v1/scan-profiles/{profile['id']}/run", headers=admin_headers
+    )
+    run_id = resp.json()["id"]
+
+    # A raw observation (a result) and a confirmed change event, both referencing
+    # the run.
+    async with db() as session:
+        session.add(
+            Observation(
+                ts=dt.datetime(2026, 8, 7, tzinfo=dt.timezone.utc),
+                scan_run_id=uuid.UUID(run_id),
+                ip="10.0.0.1",
+                port=22,
+                protocol="tcp",
+                state="open",
+            )
+        )
+        session.add(
+            ChangeEvent(
+                scan_profile_id=uuid.UUID(profile["id"]),
+                scan_run_id=uuid.UUID(run_id),
+                ip="10.0.0.1",
+                port=22,
+                protocol="tcp",
+                change_type="opened",
+                severity="high",
+            )
+        )
+        await session.commit()
+
+    resp = await client.delete(f"/api/v1/scan-runs/{run_id}", headers=admin_headers)
+    assert resp.status_code == 204, resp.text
+
+    # Run and its observations are gone.
+    assert (
+        await client.get(f"/api/v1/scan-runs/{run_id}", headers=admin_headers)
+    ).status_code == 404
+    async with db() as session:
+        obs = (
+            await session.execute(
+                select(Observation).where(Observation.scan_run_id == uuid.UUID(run_id))
+            )
+        ).scalars().all()
+        assert obs == []
+        # The change event survives, detached from the deleted run.
+        ce = (
+            await session.execute(
+                select(ChangeEvent).where(
+                    ChangeEvent.scan_profile_id == uuid.UUID(profile["id"])
+                )
+            )
+        ).scalars().first()
+        assert ce is not None
+        assert ce.scan_run_id is None
+
+
+async def test_delete_missing_scan_run_404(client, admin_headers) -> None:
+    import uuid
+
+    resp = await client.delete(
+        f"/api/v1/scan-runs/{uuid.uuid4()}", headers=admin_headers
+    )
+    assert resp.status_code == 404

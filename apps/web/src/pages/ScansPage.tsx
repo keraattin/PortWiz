@@ -13,6 +13,7 @@ import {
   type Vlan,
   createScanProfile,
   deleteScanProfile,
+  deleteScanRun,
   updateScanProfile,
   fetchFrameworkTemplates,
   fetchSettings,
@@ -222,6 +223,17 @@ export default function ScansPage() {
       setError(errorMessage(e));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onDeleteRun(id: string) {
+    if (!window.confirm(t("scans.confirmDeleteRun"))) return;
+    try {
+      await deleteScanRun(id);
+      toast.success(t("scans.runDeleted"));
+      await reload();
+    } catch (e) {
+      toast.error(errorMessage(e));
     }
   }
 
@@ -557,6 +569,14 @@ export default function ScansPage() {
                       >
                         {t("scans.viewResults")}
                       </button>
+                      {canWrite && (
+                        <button
+                          onClick={() => void onDeleteRun(r.id)}
+                          className="ml-3 text-xs font-medium text-red-400 hover:text-red-300"
+                        >
+                          {t("common.delete")}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

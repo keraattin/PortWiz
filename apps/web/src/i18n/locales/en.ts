@@ -996,6 +996,8 @@ export const en = {
   "scans.col.started": "Started",
   "scans.col.finished": "Finished",
   "scans.viewResults": "View results",
+  "scans.confirmDeleteRun": "Delete this scan run and its results? Confirmed changes are kept. This cannot be undone.",
+  "scans.runDeleted": "Scan run deleted",
   "scans.deletedProfile": "(deleted)",
   "scans.adhoc": "(ad-hoc)",
   "scans.addTitle": "Add scan profile",

@@ -776,6 +776,10 @@ export function getScanRun(runId: string): Promise<ScanRun> {
   return request<ScanRun>(`/scan-runs/${runId}`);
 }
 
+export function deleteScanRun(runId: string): Promise<void> {
+  return request<void>(`/scan-runs/${runId}`, { method: "DELETE" });
+}
+
 export function listRunObservations(runId: string): Promise<Observation[]> {
   return request<Observation[]>(`/scan-runs/${runId}/observations`);
 }

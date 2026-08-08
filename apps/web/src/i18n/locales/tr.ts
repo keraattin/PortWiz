@@ -994,6 +994,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "scans.col.started": "Başladı",
   "scans.col.finished": "Bitti",
   "scans.viewResults": "Sonuçları gör",
+  "scans.confirmDeleteRun": "Bu tarama çalıştırmasını ve sonuçlarını silmek istiyor musunuz? Onaylanan değişiklikler korunur. Bu işlem geri alınamaz.",
+  "scans.runDeleted": "Tarama çalıştırması silindi",
   "scans.deletedProfile": "(silindi)",
   "scans.adhoc": "(anlık)",
   "scans.addTitle": "Tarama profili ekle",

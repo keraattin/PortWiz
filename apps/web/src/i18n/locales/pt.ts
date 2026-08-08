@@ -998,6 +998,8 @@ export const pt: Partial<Record<TKey, string>> = {
   "scans.col.started": "Iniciado",
   "scans.col.finished": "Concluído",
   "scans.viewResults": "Ver resultados",
+  "scans.confirmDeleteRun": "Excluir esta execução de varredura e seus resultados? As alterações confirmadas são mantidas. Esta ação não pode ser desfeita.",
+  "scans.runDeleted": "Execução de varredura excluída",
   "scans.deletedProfile": "(excluído)",
   "scans.adhoc": "(ad hoc)",
   "scans.addTitle": "Adicionar perfil de varredura",

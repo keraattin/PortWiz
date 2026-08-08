@@ -10,7 +10,7 @@ import datetime as dt
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.app_settings import effective_settings
@@ -203,6 +203,46 @@ async def get_run(
     if run is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Scan run not found")
     return run
+
+
+@runs_router.delete("/{run_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_run(
+    run_id: uuid.UUID,
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Delete a scan run and its observations (the raw results). Confirmed change
+    events are kept but detached from the run, so change history stays intact."""
+    run = await session.get(ScanRun, run_id)
+    if run is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Scan run not found")
+    run_status = getattr(run.status, "value", run.status)
+    obs_count = (
+        await session.execute(
+            select(func.count())
+            .select_from(Observation)
+            .where(Observation.scan_run_id == run_id)
+        )
+    ).scalar_one()
+    # Detach change events (preserve the compliance record), then drop the raw
+    # observations and the run itself.
+    await session.execute(
+        update(ChangeEvent)
+        .where(ChangeEvent.scan_run_id == run_id)
+        .values(scan_run_id=None)
+    )
+    await session.execute(delete(Observation).where(Observation.scan_run_id == run_id))
+    await session.delete(run)
+    await append_audit(
+        session,
+        action="scan_run.deleted",
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        target_type="scan_run",
+        target_id=str(run_id),
+        payload={"observations_deleted": int(obs_count), "status": run_status},
+    )
+    await session.commit()
 
 
 @runs_router.get("/{run_id}/observations", response_model=list[ObservationRead])

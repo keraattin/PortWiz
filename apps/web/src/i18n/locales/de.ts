@@ -998,6 +998,8 @@ export const de: Partial<Record<TKey, string>> = {
   "scans.col.started": "Gestartet",
   "scans.col.finished": "Beendet",
   "scans.viewResults": "Ergebnisse anzeigen",
+  "scans.confirmDeleteRun": "Diesen Scan-Durchlauf und seine Ergebnisse löschen? Bestätigte Änderungen bleiben erhalten. Dies kann nicht rückgängig gemacht werden.",
+  "scans.runDeleted": "Scan-Durchlauf gelöscht",
   "scans.deletedProfile": "(gelöscht)",
   "scans.adhoc": "(ad hoc)",
   "scans.addTitle": "Scan-Profil hinzufügen",
