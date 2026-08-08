@@ -108,6 +108,10 @@ export default function AssetsPage() {
   const [stagingCrit, setStagingCrit] = useState("");
   const [stagingSens, setStagingSens] = useState("");
   const [stagingOwner, setStagingOwner] = useState("");
+  // Per-row overrides (keyed by ip): a row's own criticality/owner wins over the
+  // bulk defaults above; empty means inherit the bulk value (or the backend default).
+  const [rowCrit, setRowCrit] = useState<Record<string, string>>({});
+  const [rowOwner, setRowOwner] = useState<Record<string, string>>({});
 
   const [pushReport, setPushReport] = useState<AssetPushReport | null>(null);
   const [pushError, setPushError] = useState<string | null>(null);
@@ -330,6 +334,8 @@ export default function AssetsPage() {
     setStagingCrit("");
     setStagingSens("");
     setStagingOwner("");
+    setRowCrit({});
+    setRowOwner({});
     previewSel.clear();
     setPreview([]);
     setPreviewLoading(true);
@@ -355,9 +361,12 @@ export default function AssetsPage() {
       .filter((p) => previewSel.selected.has(p.ip))
       .map((p) => {
         const item: AssetSyncApplyItem = { ip: p.ip, hostname: p.hostname };
-        if (stagingCrit) item.criticality = stagingCrit as Criticality;
+        // Per-row override wins; otherwise fall back to the bulk default.
+        const crit = rowCrit[p.ip] || stagingCrit;
+        const owner = rowOwner[p.ip] || stagingOwner;
+        if (crit) item.criticality = crit as Criticality;
         if (stagingSens) item.data_sensitivity = stagingSens as DataSensitivity;
-        if (stagingOwner) item.owner_id = stagingOwner;
+        if (owner) item.owner_id = owner;
         return item;
       });
     if (items.length === 0) return;
@@ -904,6 +913,8 @@ export default function AssetsPage() {
                       <th className="px-4 py-2 font-medium">{t("assets.col.ip")}</th>
                       <th className="px-4 py-2 font-medium">{t("assets.col.hostname")}</th>
                       <th className="px-4 py-2 font-medium">{t("assets.syncStatus")}</th>
+                      <th className="px-4 py-2 font-medium">{t("assets.col.criticality")}</th>
+                      <th className="px-4 py-2 font-medium">{t("assets.col.owner")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
@@ -929,6 +940,38 @@ export default function AssetsPage() {
                           >
                             {p.exists ? t("assets.syncExists") : t("assets.syncNew")}
                           </span>
+                        </td>
+                        <td className="px-4 py-2">
+                          <select
+                            className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-500"
+                            value={rowCrit[p.ip] ?? ""}
+                            onChange={(e) =>
+                              setRowCrit((m) => ({ ...m, [p.ip]: e.target.value }))
+                            }
+                          >
+                            <option value="">{t("assets.syncKeepDefault")}</option>
+                            {CRITICALITIES.map((c) => (
+                              <option key={c} value={c}>
+                                {t(`crit.${c}` as TKey)}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-2">
+                          <select
+                            className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-500"
+                            value={rowOwner[p.ip] ?? ""}
+                            onChange={(e) =>
+                              setRowOwner((m) => ({ ...m, [p.ip]: e.target.value }))
+                            }
+                          >
+                            <option value="">{t("assets.syncKeepDefault")}</option>
+                            {users.map((u) => (
+                              <option key={u.id} value={u.id}>
+                                {u.email}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                       </tr>
                     ))}
