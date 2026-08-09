@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   type ChangeEvent,
@@ -81,6 +81,7 @@ export default function ScanRunDetailPage() {
   const { sort, toggleSort } = useSort();
   const { filters, setFilter } = useColumnFilters();
   const [search, setSearch] = useState("");
+  const [groupBy, setGroupBy] = useState<"none" | "host" | "port">("none");
 
   async function load() {
     setLoading(true);
@@ -156,6 +157,70 @@ export default function ScanRunDetailPage() {
     setFilter(key, v);
     obsPage.setPage(0);
   };
+
+  const obsRow = (o: Observation) => (
+    <tr key={o.id} className="bg-slate-950">
+      <td className="px-4 py-2 font-mono text-slate-100">
+        {o.asset_id ? (
+          <Link to={`/assets/${o.asset_id}`} className="text-emerald-400 hover:text-emerald-300">
+            {o.ip}
+          </Link>
+        ) : (
+          o.ip
+        )}
+      </td>
+      <td className="px-4 py-2 text-slate-300">
+        <Link
+          to={`/ports/${o.port}`}
+          className="font-mono text-emerald-400 hover:text-emerald-300"
+        >
+          {o.port}
+        </Link>
+        <span className="text-slate-500">/{o.protocol}</span>
+      </td>
+      <td className="px-4 py-2 text-emerald-400">{o.state}</td>
+      <td className="px-4 py-2 text-slate-300">
+        {o.service ?? "-"}
+        {PORT_INFO[o.port] && (
+          <InfoDot text={t(PORT_INFO[o.port].descKey as TKey)} className="ml-1.5" />
+        )}
+      </td>
+      <td className="px-4 py-2 text-slate-400">
+        {[o.product, o.version].filter(Boolean).join(" ") || "-"}
+      </td>
+      <td className="px-4 py-2">
+        {o.fingerprint_source ? (
+          <span
+            className={`rounded px-2 py-0.5 text-xs ${
+              SOURCE_CLASS[o.fingerprint_source] ?? "bg-slate-700 text-slate-300"
+            }`}
+          >
+            {t(`fingerprint.${o.fingerprint_source}` as TKey)}
+          </span>
+        ) : (
+          <span className="text-slate-600">-</span>
+        )}
+      </td>
+    </tr>
+  );
+
+  // Group the filtered/sorted observations by host or port (numeric-aware sort);
+  // "none" keeps the flat, paginated table.
+  const groups =
+    groupBy === "none"
+      ? []
+      : (() => {
+          const map = new Map<string, Observation[]>();
+          for (const o of processed) {
+            const key = groupBy === "host" ? o.ip : `${o.port}/${o.protocol}`;
+            const arr = map.get(key);
+            if (arr) arr.push(o);
+            else map.set(key, [o]);
+          }
+          return [...map.entries()]
+            .map(([key, items]) => ({ key, items }))
+            .sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+        })();
 
   const profileName = (id: string | null) =>
     id ? (profiles.find((p) => p.id === id)?.name ?? id.slice(0, 8)) : "-";
@@ -245,7 +310,21 @@ export default function ScanRunDetailPage() {
           <h2 className="text-sm font-medium text-slate-300">
             {t("scans.observationsTitle")} ({observations.length})
           </h2>
-          <SearchInput value={search} onChange={setSearch} />
+          <div className="flex flex-wrap items-center gap-2">
+            <SearchInput value={search} onChange={setSearch} />
+            <label className="flex items-center gap-2 text-xs text-slate-400">
+              {t("scans.groupBy")}
+              <select
+                value={groupBy}
+                onChange={(e) => setGroupBy(e.target.value as "none" | "host" | "port")}
+                className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-500"
+              >
+                <option value="none">{t("scans.groupNone")}</option>
+                <option value="host">{t("scans.groupHost")}</option>
+                <option value="port">{t("scans.groupPort")}</option>
+              </select>
+            </label>
+          </div>
         </div>
         <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full text-left text-sm">
@@ -263,76 +342,43 @@ export default function ScanRunDetailPage() {
                     {t("scans.noOpenPorts")}
                   </td>
                 </tr>
-              ) : obsPage.slice.length === 0 ? (
+              ) : processed.length === 0 ? (
                 <tr>
                   <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
                     {t("common.noData")}
                   </td>
                 </tr>
+              ) : groupBy === "none" ? (
+                obsPage.slice.map(obsRow)
               ) : (
-                obsPage.slice.map((o) => (
-                  <tr key={o.id} className="bg-slate-950">
-                    <td className="px-4 py-2 font-mono text-slate-100">
-                      {o.asset_id ? (
-                        <Link
-                          to={`/assets/${o.asset_id}`}
-                          className="text-emerald-400 hover:text-emerald-300"
-                        >
-                          {o.ip}
-                        </Link>
-                      ) : (
-                        o.ip
-                      )}
-                    </td>
-                    <td className="px-4 py-2 text-slate-300">
-                      <Link
-                        to={`/ports/${o.port}`}
-                        className="font-mono text-emerald-400 hover:text-emerald-300"
+                groups.map((g) => (
+                  <Fragment key={g.key}>
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="bg-slate-900/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-300"
                       >
-                        {o.port}
-                      </Link>
-                      <span className="text-slate-500">/{o.protocol}</span>
-                    </td>
-                    <td className="px-4 py-2 text-emerald-400">{o.state}</td>
-                    <td className="px-4 py-2 text-slate-300">
-                      {o.service ?? "-"}
-                      {PORT_INFO[o.port] && (
-                        <InfoDot
-                          text={t(PORT_INFO[o.port].descKey as TKey)}
-                          className="ml-1.5"
-                        />
-                      )}
-                    </td>
-                    <td className="px-4 py-2 text-slate-400">
-                      {[o.product, o.version].filter(Boolean).join(" ") || "-"}
-                    </td>
-                    <td className="px-4 py-2">
-                      {o.fingerprint_source ? (
-                        <span
-                          className={`rounded px-2 py-0.5 text-xs ${
-                            SOURCE_CLASS[o.fingerprint_source] ?? "bg-slate-700 text-slate-300"
-                          }`}
-                        >
-                          {t(`fingerprint.${o.fingerprint_source}` as TKey)}
-                        </span>
-                      ) : (
-                        <span className="text-slate-600">-</span>
-                      )}
-                    </td>
-                  </tr>
+                        {g.key}{" "}
+                        <span className="text-slate-500">({g.items.length})</span>
+                      </td>
+                    </tr>
+                    {g.items.map(obsRow)}
+                  </Fragment>
                 ))
               )}
             </tbody>
           </table>
         </div>
-        <Pagination
-          page={obsPage.page}
-          pageCount={obsPage.pageCount}
-          total={obsPage.total}
-          onPage={obsPage.setPage}
-          pageSize={obsPage.pageSize}
-          onPageSize={obsPage.setPageSize}
-        />
+        {groupBy === "none" && (
+          <Pagination
+            page={obsPage.page}
+            pageCount={obsPage.pageCount}
+            total={obsPage.total}
+            onPage={obsPage.setPage}
+            pageSize={obsPage.pageSize}
+            onPageSize={obsPage.setPageSize}
+          />
+        )}
       </section>
 
       <section className="space-y-3">
