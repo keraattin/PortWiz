@@ -355,6 +355,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "common.test": "Tester",
   "common.close": "Fermer",
   "common.edit": "Modifier",
+  "tags.label": "Étiquettes",
+  "tags.hint": "Étiquettes séparées par des virgules pour le regroupement et le filtrage, p. ex. prod, dmz.",
   "common.howTo": "Comment faire",
   "common.copy": "Copier",
   "common.copied": "Copié",

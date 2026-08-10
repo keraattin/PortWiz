@@ -50,6 +50,10 @@ const SEV_BADGE: Record<string, string> = {
   unknown: "bg-slate-700 text-slate-400",
 };
 
+// Comma-separated tag text <-> string list.
+const parseTags = (s: string): string[] =>
+  s.split(",").map((t) => t.trim()).filter(Boolean);
+
 export default function AssetDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
@@ -77,6 +81,7 @@ export default function AssetDetailPage() {
   const [criticality, setCriticality] = useState<Criticality>("medium");
   const [sensitivity, setSensitivity] = useState<DataSensitivity>("none");
   const [description, setDescription] = useState("");
+  const [tagsText, setTagsText] = useState("");
 
   async function load() {
     setLoading(true);
@@ -104,6 +109,7 @@ export default function AssetDetailPage() {
       setCriticality(a.criticality);
       setSensitivity(a.data_sensitivity);
       setDescription(a.description ?? "");
+      setTagsText((a.tags ?? []).join(", "));
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -133,6 +139,7 @@ export default function AssetDetailPage() {
         criticality,
         data_sensitivity: sensitivity,
         description: description || null,
+        tags: parseTags(tagsText),
       });
       setAsset(updated);
       toast.success(t("assetDetail.saved"));
@@ -312,6 +319,14 @@ export default function AssetDetailPage() {
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+              />
+            </FormField>
+            <FormField label={t("tags.label")} hint={t("tags.hint")}>
+              <input
+                className={inputClass}
+                placeholder="prod, dmz"
+                value={tagsText}
+                onChange={(e) => setTagsText(e.target.value)}
               />
             </FormField>
             <div className="flex justify-end">

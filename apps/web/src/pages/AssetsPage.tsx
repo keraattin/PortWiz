@@ -66,6 +66,10 @@ const CRIT_BADGE: Record<Criticality, string> = {
 // Rank so criticality sorts by severity, not alphabetically.
 const CRIT_RANK: Record<string, number> = { low: 0, medium: 1, high: 2, critical: 3 };
 
+// Comma-separated tag text <-> string list.
+const parseTags = (s: string): string[] =>
+  s.split(",").map((t) => t.trim()).filter(Boolean);
+
 export default function AssetsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -86,6 +90,7 @@ export default function AssetsPage() {
   const [ownerId, setOwnerId] = useState("");
   const [criticality, setCriticality] = useState<Criticality>("medium");
   const [sensitivity, setSensitivity] = useState<DataSensitivity>("none");
+  const [tagsText, setTagsText] = useState("");
 
   const [importFile, setImportFile] = useState<File | null>(null);
   const [onConflict, setOnConflict] = useState<"update" | "skip">("update");
@@ -183,6 +188,12 @@ export default function AssetsPage() {
       filter: SENSITIVITIES.map((s) => ({ value: s, label: s.toUpperCase() })),
       get: (a) => a.data_sensitivity,
     },
+    {
+      key: "tags",
+      label: t("tags.label"),
+      filter: "text",
+      get: (a) => (a.tags ?? []).join(" "),
+    },
   ];
   const processed = processRows(assets, columns, sort, filters, search);
   const assetsPage = usePagination(processed, 15);
@@ -199,6 +210,7 @@ export default function AssetsPage() {
     setOwnerId("");
     setCriticality("medium");
     setSensitivity("none");
+    setTagsText("");
     setAddOpen(true);
   }
 
@@ -213,6 +225,7 @@ export default function AssetsPage() {
         owner_id: ownerId || null,
         criticality,
         data_sensitivity: sensitivity,
+        tags: parseTags(tagsText),
       });
       setAddOpen(false);
       toast.success(t("assets.added"));
@@ -652,13 +665,13 @@ export default function AssetsPage() {
           <tbody className="divide-y divide-slate-800">
             {loading ? (
               <tr>
-                <td className="px-4 py-3 text-slate-500" colSpan={canWrite ? 8 : 7}>
+                <td className="px-4 py-3 text-slate-500" colSpan={canWrite ? 9 : 8}>
                   {t("common.loading")}
                 </td>
               </tr>
             ) : processed.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan={canWrite ? 8 : 7}>
+                <td className="px-4 py-6 text-center text-slate-500" colSpan={canWrite ? 9 : 8}>
                   {t("common.noData")}
                 </td>
               </tr>
@@ -689,6 +702,18 @@ export default function AssetsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-2 uppercase text-slate-400">{a.data_sensitivity}</td>
+                  <td className="px-4 py-2">
+                    <div className="flex flex-wrap gap-1">
+                      {(a.tags ?? []).map((tg) => (
+                        <span
+                          key={tg}
+                          className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400"
+                        >
+                          {tg}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
                   <td className="px-4 py-2 text-right">
                     {canWrite && (
                       <button
@@ -783,6 +808,14 @@ export default function AssetsPage() {
                 </option>
               ))}
             </select>
+          </FormField>
+          <FormField label={t("tags.label")} hint={t("tags.hint")}>
+            <input
+              className={inputClass}
+              placeholder="prod, dmz"
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+            />
           </FormField>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">

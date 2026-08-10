@@ -75,6 +75,7 @@ export interface Vlan {
   name: string;
   vlan_tag: number | null;
   description: string | null;
+  tags: string[] | null;
   created_at: string;
 }
 
@@ -87,6 +88,7 @@ export interface Asset {
   criticality: Criticality;
   data_sensitivity: DataSensitivity;
   description: string | null;
+  tags: string[] | null;
   discovered: boolean;
   created_at: string;
   updated_at: string;
@@ -207,13 +209,19 @@ export function createVlan(payload: {
   name: string;
   vlan_tag?: number | null;
   description?: string | null;
+  tags?: string[] | null;
 }): Promise<Vlan> {
   return request<Vlan>("/vlans", { method: "POST", body: JSON.stringify(payload) });
 }
 
 export function updateVlan(
   id: string,
-  payload: { name?: string; vlan_tag?: number | null; description?: string | null },
+  payload: {
+    name?: string;
+    vlan_tag?: number | null;
+    description?: string | null;
+    tags?: string[] | null;
+  },
 ): Promise<Vlan> {
   return request<Vlan>(`/vlans/${id}`, {
     method: "PATCH",
@@ -259,6 +267,7 @@ export interface AssetInput {
   criticality?: Criticality;
   data_sensitivity?: DataSensitivity;
   description?: string | null;
+  tags?: string[] | null;
 }
 
 export function listAssets(params?: { vlan_id?: string }): Promise<Asset[]> {

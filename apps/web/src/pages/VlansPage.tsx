@@ -44,6 +44,10 @@ import { CHECKBOX_CLS, useTableSelection } from "../components/tableView";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../i18n/I18nContext";
 
+// Comma-separated tag text <-> string list.
+const parseTags = (s: string): string[] =>
+  s.split(",").map((t) => t.trim()).filter(Boolean);
+
 export default function VlansPage() {
   const { user } = useAuth();
   const toast = useToast();
@@ -69,11 +73,13 @@ export default function VlansPage() {
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
   const [description, setDescription] = useState("");
+  const [tagsText, setTagsText] = useState("");
   // Per-VLAN edit modal: when set, the modal edits this VLAN instead of adding.
   const [editVlanId, setEditVlanId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editTag, setEditTag] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [editTagsText, setEditTagsText] = useState("");
   // Ranges entered alongside the VLAN, so a VLAN and its ranges are created in
   // one flow (they are treated as one unit throughout the page).
   const [vlanRanges, setVlanRanges] = useState("");
@@ -283,6 +289,7 @@ export default function VlansPage() {
     setName("");
     setTag("");
     setDescription("");
+    setTagsText("");
     setVlanRanges("");
     setVlanOpen(true);
   }
@@ -295,6 +302,7 @@ export default function VlansPage() {
         name,
         vlan_tag: tag ? Number(tag) : null,
         description: description || null,
+        tags: parseTags(tagsText),
       });
       // Attach any ranges entered in the same form to the new VLAN.
       const cidrs = vlanRanges
@@ -338,6 +346,7 @@ export default function VlansPage() {
     setEditName(v.name);
     setEditTag(v.vlan_tag != null ? String(v.vlan_tag) : "");
     setEditDesc(v.description ?? "");
+    setEditTagsText((v.tags ?? []).join(", "));
   }
 
   async function onEditVlan(e: FormEvent) {
@@ -349,6 +358,7 @@ export default function VlansPage() {
         name: editName,
         vlan_tag: editTag ? Number(editTag) : null,
         description: editDesc || null,
+        tags: parseTags(editTagsText),
       });
       setEditVlanId(null);
       toast.success(t("vlans.updated"));
@@ -761,6 +771,14 @@ export default function VlansPage() {
                       {v.description && (
                         <span className="text-sm text-slate-500">{v.description}</span>
                       )}
+                      {v.tags?.map((tg) => (
+                        <span
+                          key={tg}
+                          className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400"
+                        >
+                          {tg}
+                        </span>
+                      ))}
                       {canWrite && (
                         <div className="ml-auto flex items-center gap-3">
                           <button
@@ -848,6 +866,14 @@ export default function VlansPage() {
               onChange={(e) => setDescription(e.target.value)}
             />
           </FormField>
+          <FormField label={t("tags.label")} hint={t("tags.hint")}>
+            <input
+              className={inputClass}
+              placeholder="prod, dmz"
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+            />
+          </FormField>
           <FormField label={t("vlans.f.ranges")} hint={t("vlans.f.rangesHint")}>
             <textarea
               className={inputClass}
@@ -893,6 +919,14 @@ export default function VlansPage() {
               className={inputClass}
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
+            />
+          </FormField>
+          <FormField label={t("tags.label")} hint={t("tags.hint")}>
+            <input
+              className={inputClass}
+              placeholder="prod, dmz"
+              value={editTagsText}
+              onChange={(e) => setEditTagsText(e.target.value)}
             />
           </FormField>
           {error && <p className="text-sm text-red-400">{error}</p>}

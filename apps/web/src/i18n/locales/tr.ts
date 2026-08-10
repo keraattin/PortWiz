@@ -353,6 +353,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "common.test": "Test et",
   "common.close": "Kapat",
   "common.edit": "Düzenle",
+  "tags.label": "Etiketler",
+  "tags.hint": "Gruplama ve filtreleme için virgülle ayrılmış etiketler, örn. prod, dmz.",
   "common.howTo": "Nasıl yapılır",
   "common.copy": "Kopyala",
   "common.copied": "Kopyalandı",

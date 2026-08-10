@@ -353,6 +353,8 @@ export const en = {
   "common.test": "Test",
   "common.close": "Close",
   "common.edit": "Edit",
+  "tags.label": "Tags",
+  "tags.hint": "Comma-separated labels for grouping and filtering, e.g. prod, dmz.",
   "common.howTo": "How to",
   "common.copy": "Copy",
   "common.copied": "Copied",
