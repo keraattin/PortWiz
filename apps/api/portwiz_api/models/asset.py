@@ -49,6 +49,7 @@ class VLAN(SQLModel, table=True):
     vlan_tag: int | None = Field(default=None, sa_column=Column(Integer))
     description: str | None = None
     tags: list[str] | None = Field(default=None, sa_column=_tags_column())
+    owner_team_id: uuid.UUID | None = Field(default=None, foreign_key="teams.id")
     created_at: dt.datetime = Field(
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
@@ -76,6 +77,7 @@ class Asset(SQLModel, table=True):
     hostname: str | None = Field(default=None, sa_column=Column(String(255)))
     vlan_id: uuid.UUID | None = Field(default=None, foreign_key="vlans.id")
     owner_id: uuid.UUID | None = Field(default=None, foreign_key="users.id")
+    owner_team_id: uuid.UUID | None = Field(default=None, foreign_key="teams.id")
     criticality: Criticality = Field(
         default=Criticality.medium,
         sa_column=Column(String(16), nullable=False, server_default=Criticality.medium.value),

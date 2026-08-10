@@ -27,6 +27,7 @@ from ...core.inventory_source import (
 )
 from ...core.vlan_import import parse_vlan_file
 from ...models.asset import VLAN, Asset, IPRange
+from ...models.team import Team
 from ...models.user import User, UserRole
 from ...schemas.asset import (
     AssetBulkCreate,
@@ -106,6 +107,11 @@ async def create_vlan(
     ).scalar_one_or_none()
     if existing is not None:
         raise HTTPException(status.HTTP_409_CONFLICT, "VLAN name already exists")
+    if (
+        payload.owner_team_id is not None
+        and await session.get(Team, payload.owner_team_id) is None
+    ):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced team does not exist")
 
     vlan = VLAN(**payload.model_dump())
     session.add(vlan)
@@ -591,6 +597,9 @@ async def update_vlan(
     if vlan is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "VLAN not found")
     changes = payload.model_dump(exclude_unset=True)
+    team_id = changes.get("owner_team_id")
+    if team_id is not None and await session.get(Team, team_id) is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced team does not exist")
     before = {key: getattr(vlan, key) for key in changes}
     for key, value in changes.items():
         setattr(vlan, key, value)
@@ -1200,12 +1209,17 @@ assets_router = APIRouter(prefix="/assets", tags=["inventory"])
 
 
 async def _validate_asset_refs(
-    session: AsyncSession, vlan_id: uuid.UUID | None, owner_id: uuid.UUID | None
+    session: AsyncSession,
+    vlan_id: uuid.UUID | None,
+    owner_id: uuid.UUID | None,
+    owner_team_id: uuid.UUID | None = None,
 ) -> None:
     if vlan_id is not None and await session.get(VLAN, vlan_id) is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced VLAN does not exist")
     if owner_id is not None and await session.get(User, owner_id) is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced owner does not exist")
+    if owner_team_id is not None and await session.get(Team, owner_team_id) is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Referenced team does not exist")
 
 
 def _asset_kwargs(
@@ -1284,7 +1298,9 @@ async def create_asset(
     current_user: User = Depends(WriteDep),
     session: AsyncSession = Depends(get_session),
 ) -> Asset:
-    await _validate_asset_refs(session, payload.vlan_id, payload.owner_id)
+    await _validate_asset_refs(
+        session, payload.vlan_id, payload.owner_id, payload.owner_team_id
+    )
     data = payload.model_dump()
     # No VLAN given: place the asset in the VLAN whose IP range contains its IP.
     if data.get("vlan_id") is None:
@@ -1847,6 +1863,7 @@ async def update_asset(
         session,
         changes.get("vlan_id") if "vlan_id" in changes else None,
         changes.get("owner_id") if "owner_id" in changes else None,
+        changes.get("owner_team_id") if "owner_team_id" in changes else None,
     )
     before = {key: getattr(asset, key) for key in changes}
     for key, value in changes.items():

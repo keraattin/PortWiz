@@ -42,6 +42,7 @@ class VLANCreate(BaseModel):
     vlan_tag: int | None = Field(default=None, ge=1, le=4094)
     description: str | None = None
     tags: list[str] | None = None
+    owner_team_id: uuid.UUID | None = None
 
     @field_validator("tags")
     @classmethod
@@ -54,6 +55,7 @@ class VLANUpdate(BaseModel):
     vlan_tag: int | None = Field(default=None, ge=1, le=4094)
     description: str | None = None
     tags: list[str] | None = None
+    owner_team_id: uuid.UUID | None = None
 
     @field_validator("tags")
     @classmethod
@@ -69,6 +71,7 @@ class VLANRead(BaseModel):
     vlan_tag: int | None
     description: str | None
     tags: list[str] | None = None
+    owner_team_id: uuid.UUID | None = None
     created_at: dt.datetime
 
 
@@ -111,6 +114,7 @@ class AssetCreate(BaseModel):
     hostname: str | None = Field(default=None, max_length=255)
     vlan_id: uuid.UUID | None = None
     owner_id: uuid.UUID | None = None
+    owner_team_id: uuid.UUID | None = None
     criticality: Criticality = Criticality.medium
     data_sensitivity: DataSensitivity = DataSensitivity.none
     description: str | None = None
@@ -132,6 +136,7 @@ class AssetUpdate(BaseModel):
     hostname: str | None = Field(default=None, max_length=255)
     vlan_id: uuid.UUID | None = None
     owner_id: uuid.UUID | None = None
+    owner_team_id: uuid.UUID | None = None
     criticality: Criticality | None = None
     data_sensitivity: DataSensitivity | None = None
     description: str | None = None
@@ -156,6 +161,7 @@ class AssetRead(BaseModel):
     hostname: str | None
     vlan_id: uuid.UUID | None
     owner_id: uuid.UUID | None
+    owner_team_id: uuid.UUID | None = None
     criticality: Criticality
     data_sensitivity: DataSensitivity
     description: str | None

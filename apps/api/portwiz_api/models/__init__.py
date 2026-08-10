@@ -19,6 +19,7 @@ from .scan import (
     ScanType,
 )
 from .task import Task, TaskStatus
+from .team import Team, TeamMember
 from .user import User, UserRole
 
 __all__ = [
@@ -40,6 +41,8 @@ __all__ = [
     "ScanType",
     "Task",
     "TaskStatus",
+    "Team",
+    "TeamMember",
     "User",
     "UserRole",
     "VLAN",
