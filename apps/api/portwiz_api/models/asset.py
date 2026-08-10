@@ -11,8 +11,14 @@ import datetime as dt
 import enum
 import uuid
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
+
+
+def _tags_column() -> Column:
+    # Free-form labels, stored as a JSON string array (JSONB on PostgreSQL).
+    return Column(JSON().with_variant(JSONB(), "postgresql"), nullable=True)
 
 
 def _utcnow() -> dt.datetime:
@@ -42,6 +48,7 @@ class VLAN(SQLModel, table=True):
     )
     vlan_tag: int | None = Field(default=None, sa_column=Column(Integer))
     description: str | None = None
+    tags: list[str] | None = Field(default=None, sa_column=_tags_column())
     created_at: dt.datetime = Field(
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
@@ -84,6 +91,7 @@ class Asset(SQLModel, table=True):
         sa_column=Column(Boolean, nullable=False, server_default="false"),
     )
     description: str | None = None
+    tags: list[str] | None = Field(default=None, sa_column=_tags_column())
     created_at: dt.datetime = Field(
         default_factory=_utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),

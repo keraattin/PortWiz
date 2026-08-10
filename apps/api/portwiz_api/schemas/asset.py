@@ -21,17 +21,44 @@ def _validate_cidr(value: str) -> str:
     return value
 
 
+def _normalize_tags(tags: list[str] | None) -> list[str] | None:
+    """Trim, bound, and de-duplicate (case-insensitively) free-form tags. An
+    empty list is kept (it clears the tags); None means "leave unchanged"."""
+    if tags is None:
+        return None
+    seen: set[str] = set()
+    out: list[str] = []
+    for tag in tags:
+        cleaned = tag.strip()[:64]
+        if cleaned and cleaned.lower() not in seen:
+            seen.add(cleaned.lower())
+            out.append(cleaned)
+    return out[:32]
+
+
 # VLAN
 class VLANCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
     vlan_tag: int | None = Field(default=None, ge=1, le=4094)
     description: str | None = None
+    tags: list[str] | None = None
+
+    @field_validator("tags")
+    @classmethod
+    def _tags(cls, v: list[str] | None) -> list[str] | None:
+        return _normalize_tags(v)
 
 
 class VLANUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=128)
     vlan_tag: int | None = Field(default=None, ge=1, le=4094)
     description: str | None = None
+    tags: list[str] | None = None
+
+    @field_validator("tags")
+    @classmethod
+    def _tags(cls, v: list[str] | None) -> list[str] | None:
+        return _normalize_tags(v)
 
 
 class VLANRead(BaseModel):
@@ -41,6 +68,7 @@ class VLANRead(BaseModel):
     name: str
     vlan_tag: int | None
     description: str | None
+    tags: list[str] | None = None
     created_at: dt.datetime
 
 
@@ -86,11 +114,17 @@ class AssetCreate(BaseModel):
     criticality: Criticality = Criticality.medium
     data_sensitivity: DataSensitivity = DataSensitivity.none
     description: str | None = None
+    tags: list[str] | None = None
 
     @field_validator("ip")
     @classmethod
     def _ip(cls, v: str) -> str:
         return _validate_ip(v)
+
+    @field_validator("tags")
+    @classmethod
+    def _tags(cls, v: list[str] | None) -> list[str] | None:
+        return _normalize_tags(v)
 
 
 class AssetUpdate(BaseModel):
@@ -101,11 +135,17 @@ class AssetUpdate(BaseModel):
     criticality: Criticality | None = None
     data_sensitivity: DataSensitivity | None = None
     description: str | None = None
+    tags: list[str] | None = None
 
     @field_validator("ip")
     @classmethod
     def _ip(cls, v: str | None) -> str | None:
         return _validate_ip(v) if v is not None else v
+
+    @field_validator("tags")
+    @classmethod
+    def _tags(cls, v: list[str] | None) -> list[str] | None:
+        return _normalize_tags(v)
 
 
 class AssetRead(BaseModel):
@@ -119,6 +159,7 @@ class AssetRead(BaseModel):
     criticality: Criticality
     data_sensitivity: DataSensitivity
     description: str | None
+    tags: list[str] | None = None
     discovered: bool
     created_at: dt.datetime
     updated_at: dt.datetime
