@@ -27,6 +27,7 @@ const AgentEnrollPage = lazy(() => import("./pages/AgentEnrollPage"));
 const AgentDetailPage = lazy(() => import("./pages/AgentDetailPage"));
 const SegmentsPage = lazy(() => import("./pages/SegmentsPage"));
 const UsersPage = lazy(() => import("./pages/UsersPage"));
+const TeamsPage = lazy(() => import("./pages/TeamsPage"));
 const UserDetailPage = lazy(() => import("./pages/UserDetailPage"));
 const DocsPage = lazy(() => import("./pages/DocsPage"));
 
@@ -80,6 +81,7 @@ export default function App() {
           <Route path="/compliance" element={<CompliancePage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/users/:id" element={<UserDetailPage />} />
+          <Route path="/teams" element={<TeamsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/docs/:guideId" element={<DocsPage />} />

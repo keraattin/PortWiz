@@ -200,6 +200,55 @@ export function updateUser(id: string, payload: UserUpdateInput): Promise<Curren
   });
 }
 
+// Teams
+export interface Team {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+  member_count: number;
+}
+
+export interface TeamMember {
+  user_id: string;
+  email: string;
+  full_name: string | null;
+}
+
+export interface TeamDetail extends Team {
+  members: TeamMember[];
+}
+
+export function listTeams(): Promise<Team[]> {
+  return request<Team[]>("/teams");
+}
+
+export function getTeam(id: string): Promise<TeamDetail> {
+  return request<TeamDetail>(`/teams/${id}`);
+}
+
+export function createTeam(payload: {
+  name: string;
+  description?: string | null;
+}): Promise<Team> {
+  return request<Team>("/teams", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function deleteTeam(id: string): Promise<void> {
+  return request<void>(`/teams/${id}`, { method: "DELETE" });
+}
+
+export function addTeamMember(teamId: string, userId: string): Promise<TeamMember> {
+  return request<TeamMember>(`/teams/${teamId}/members`, {
+    method: "POST",
+    body: JSON.stringify({ user_id: userId }),
+  });
+}
+
+export function removeTeamMember(teamId: string, userId: string): Promise<void> {
+  return request<void>(`/teams/${teamId}/members/${userId}`, { method: "DELETE" });
+}
+
 // VLANs
 export function listVlans(): Promise<Vlan[]> {
   return request<Vlan[]>("/vlans");

@@ -67,6 +67,7 @@ const SECTIONS: Section[] = [
     roles: ["admin"],
     tabs: [
       { to: "/users", labelKey: "nav.users" },
+      { to: "/teams", labelKey: "nav.teams" },
       { to: "/settings", labelKey: "nav.settings" },
     ],
   },
