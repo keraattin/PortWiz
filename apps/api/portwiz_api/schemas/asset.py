@@ -356,6 +356,11 @@ class AssetPushReport(BaseModel):
     errors_detail: list[str]
 
 
+class VlanMatchReport(BaseModel):
+    matched: int  # assets assigned a VLAN by IP
+    checked: int  # assets with no VLAN that were considered
+
+
 # Interactive sync: preview what the source offers, then apply a chosen subset
 # with per-import attributes set in the staging UI.
 class AssetPreviewItem(BaseModel):

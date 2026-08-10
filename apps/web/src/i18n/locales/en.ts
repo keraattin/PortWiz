@@ -576,6 +576,11 @@ export const en = {
     "Write hosts PortWiz found during scans back to NetBox (skips ones already there).",
   "assets.pushing": "Pushing…",
   "assets.discoveredUnit": "discovered",
+  "assets.matchVlans": "Match VLANs to assets",
+  "assets.matchVlansHint":
+    "Assign each asset with no VLAN to the one whose IP range contains it.",
+  "assets.matching": "Matching…",
+  "assets.matchVlansDone": "Matched {matched} of {checked} assets to a VLAN",
   "assets.f.ip": "IP address",
   "assets.f.ipHint": "The host to scan. IPv4 or IPv6, e.g. 10.0.0.5",
   "assets.f.hostname": "Hostname",

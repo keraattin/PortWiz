@@ -579,6 +579,11 @@ export const pt: Partial<Record<TKey, string>> = {
     "Escreve no NetBox os hosts que o PortWiz encontrou nas varreduras (ignora os já existentes).",
   "assets.pushing": "Enviando…",
   "assets.discoveredUnit": "descobertos",
+  "assets.matchVlans": "Associar VLANs aos ativos",
+  "assets.matchVlansHint":
+    "Atribuir cada ativo sem VLAN àquela cujo intervalo de IP o contém.",
+  "assets.matching": "Associando…",
+  "assets.matchVlansDone": "{matched} de {checked} ativos associados a uma VLAN",
   "assets.f.ip": "Endereço IP",
   "assets.f.ipHint": "O host a varrer. IPv4 ou IPv6, ex.: 10.0.0.5",
   "assets.f.hostname": "Nome do host",

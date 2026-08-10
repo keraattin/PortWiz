@@ -577,6 +577,11 @@ export const tr: Partial<Record<TKey, string>> = {
     "PortWiz'in taramalarda bulduğu host'ları NetBox'a geri yazar (zaten olanları atlar).",
   "assets.pushing": "Gönderiliyor…",
   "assets.discoveredUnit": "keşfedilen",
+  "assets.matchVlans": "VLAN'ları varlıklarla eşleştir",
+  "assets.matchVlansHint":
+    "VLAN'ı olmayan her varlığı, IP aralığı onu içeren VLAN'a ata.",
+  "assets.matching": "Eşleştiriliyor…",
+  "assets.matchVlansDone": "{checked} varlıktan {matched} tanesi bir VLAN'a eşleştirildi",
   "assets.f.ip": "IP adresi",
   "assets.f.ipHint": "Taranacak ana makine. IPv4 veya IPv6, ör. 10.0.0.5",
   "assets.f.hostname": "Ana makine adı",

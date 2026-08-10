@@ -28,6 +28,7 @@ from ...core.audit import append_audit
 from ...core.change_detection import detect_changes
 from ...core.db import get_session
 from ...core.fingerprint import PORT_MAP_CONFIDENCE, match_banner, service_for_port
+from ...core.inventory_match import load_vlan_ranges, match_ip
 from ...core.inventory_source import (
     InventorySource,
     SourceAsset,
@@ -128,15 +129,18 @@ async def ingest_scan_results(
 
     # Auto-discovery: a scanned host with open ports that isn't a known asset
     # becomes a low-criticality asset (with its hostname if reported), so the
-    # inventory reflects what scans actually find.
+    # inventory reflects what scans actually find. Placed in the VLAN whose IP
+    # range contains it, matched from a single preload of the ranges.
     discovered = 0
     discovered_hosts: list[SourceAsset] = []
+    vlan_ranges = await load_vlan_ranges(session)
     for host in payload.hosts:
         if host.ip not in asset_map and host.ports:
             asset = Asset(
                 ip=host.ip,
                 hostname=host.hostname,
                 criticality=Criticality.low,
+                vlan_id=match_ip(vlan_ranges, host.ip),
                 discovered=True,
             )
             session.add(asset)

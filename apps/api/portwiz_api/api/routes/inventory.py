@@ -19,6 +19,7 @@ from ...core.asset_import import parse_asset_file
 from ...core.asset_store import upsert_asset
 from ...core.audit import append_audit, audit_value, field_diff
 from ...core.db import get_session
+from ...core.inventory_match import load_vlan_ranges, match_ip, match_vlan_for_ip
 from ...core.inventory_source import (
     InventorySource,
     SourceAsset,
@@ -61,6 +62,7 @@ from ...schemas.asset import (
     VlanImportPreviewRow,
     VLANImportReport,
     VLANImportRowResult,
+    VlanMatchReport,
     VlanPreviewItem,
     VLANRead,
     VlanSyncApply,
@@ -1283,7 +1285,11 @@ async def create_asset(
     session: AsyncSession = Depends(get_session),
 ) -> Asset:
     await _validate_asset_refs(session, payload.vlan_id, payload.owner_id)
-    asset = Asset(**payload.model_dump())
+    data = payload.model_dump()
+    # No VLAN given: place the asset in the VLAN whose IP range contains its IP.
+    if data.get("vlan_id") is None:
+        data["vlan_id"] = await match_vlan_for_ip(session, data["ip"])
+    asset = Asset(**data)
     session.add(asset)
     await session.flush()
     await append_audit(
@@ -1302,6 +1308,39 @@ async def create_asset(
     await session.commit()
     await session.refresh(asset)
     return asset
+
+
+@assets_router.post("/match-vlans", response_model=VlanMatchReport)
+async def match_asset_vlans(
+    current_user: User = Depends(WriteDep),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    """Assign a VLAN to every asset that has none, based on which VLAN's IP range
+    contains the asset's IP. Assets that already have a VLAN are left untouched."""
+    ranges = await load_vlan_ranges(session)
+    assets = (
+        (await session.execute(select(Asset).where(Asset.vlan_id.is_(None))))
+        .scalars()
+        .all()
+    )
+    matched = 0
+    for a in assets:
+        vlan_id = match_ip(ranges, a.ip)
+        if vlan_id is not None:
+            a.vlan_id = vlan_id
+            matched += 1
+    if matched:
+        await append_audit(
+            session,
+            action="asset.vlans_matched",
+            actor_id=current_user.id,
+            actor_email=current_user.email,
+            target_type="asset",
+            target_id="*",
+            payload={"matched": matched, "checked": len(assets)},
+        )
+        await session.commit()
+    return {"matched": matched, "checked": len(assets)}
 
 
 @assets_router.post("/import", response_model=AssetImportReport)

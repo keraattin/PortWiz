@@ -24,6 +24,7 @@ import {
   listUsers,
   listVlans,
   previewAssetImport,
+  matchAssetVlans,
   previewAssetSync,
   pushAssetsToNetbox,
 } from "../api/client";
@@ -116,6 +117,7 @@ export default function AssetsPage() {
   const [pushReport, setPushReport] = useState<AssetPushReport | null>(null);
   const [pushError, setPushError] = useState<string | null>(null);
   const [pushing, setPushing] = useState(false);
+  const [matching, setMatching] = useState(false);
   const [netboxOn, setNetboxOn] = useState(false);
   // Asset import can be turned off in Settings independently of NetBox being
   // connected (which still allows pushing discovered hosts back).
@@ -399,6 +401,19 @@ export default function AssetsPage() {
     }
   }
 
+  async function onMatchVlans() {
+    setMatching(true);
+    try {
+      const r = await matchAssetVlans();
+      toast.success(t("assets.matchVlansDone", { matched: r.matched, checked: r.checked }));
+      await reload();
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setMatching(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -556,6 +571,16 @@ export default function AssetsPage() {
               </p>
             )}
           </div>
+        </div>
+
+        <div className="space-y-2 border-t border-slate-800 pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm font-medium text-slate-200">{t("assets.matchVlans")}</span>
+            <span className="text-xs text-slate-500">{t("assets.matchVlansHint")}</span>
+          </div>
+          <Button variant="outline" onClick={onMatchVlans} disabled={matching}>
+            {matching ? t("assets.matching") : t("assets.matchVlans")}
+          </Button>
         </div>
       </section>
       )}

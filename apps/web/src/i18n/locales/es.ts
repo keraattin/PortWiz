@@ -578,6 +578,11 @@ export const es: Partial<Record<TKey, string>> = {
     "Escribe en NetBox los hosts que PortWiz encontró durante los escaneos (omite los que ya existen).",
   "assets.pushing": "Enviando…",
   "assets.discoveredUnit": "descubiertos",
+  "assets.matchVlans": "Asociar VLAN a los activos",
+  "assets.matchVlansHint":
+    "Asignar cada activo sin VLAN a la VLAN cuyo rango de IP lo contiene.",
+  "assets.matching": "Asociando…",
+  "assets.matchVlansDone": "{matched} de {checked} activos asociados a una VLAN",
   "assets.f.ip": "Dirección IP",
   "assets.f.ipHint": "El host a escanear. IPv4 o IPv6, p. ej. 10.0.0.5",
   "assets.f.hostname": "Nombre de host",

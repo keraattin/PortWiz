@@ -664,6 +664,12 @@ export function pushAssetsToNetbox(): Promise<AssetPushReport> {
   return request<AssetPushReport>("/assets/push-netbox", { method: "POST" });
 }
 
+export function matchAssetVlans(): Promise<{ matched: number; checked: number }> {
+  return request<{ matched: number; checked: number }>("/assets/match-vlans", {
+    method: "POST",
+  });
+}
+
 // Scans
 export type ScanType = "syn" | "connect" | "udp";
 export type ComplianceFramework = "pci" | "hipaa" | "soc2" | "iso27001" | "nist";

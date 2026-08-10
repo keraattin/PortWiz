@@ -579,6 +579,11 @@ export const de: Partial<Record<TKey, string>> = {
     "Schreibt von PortWiz bei Scans gefundene Hosts zurück nach NetBox (vorhandene werden übersprungen).",
   "assets.pushing": "Wird gesendet…",
   "assets.discoveredUnit": "erkannt",
+  "assets.matchVlans": "VLANs den Assets zuordnen",
+  "assets.matchVlansHint":
+    "Jedes Asset ohne VLAN dem VLAN zuordnen, dessen IP-Bereich es enthält.",
+  "assets.matching": "Wird zugeordnet…",
+  "assets.matchVlansDone": "{matched} von {checked} Assets einem VLAN zugeordnet",
   "assets.f.ip": "IP-Adresse",
   "assets.f.ipHint": "Der zu scannende Host. IPv4 oder IPv6, z. B. 10.0.0.5",
   "assets.f.hostname": "Hostname",
