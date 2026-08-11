@@ -365,6 +365,8 @@ export const fr: Partial<Record<TKey, string>> = {
   "teams.addMember": "Ajouter un membre…",
   "teams.f.name": "Nom",
   "teams.f.description": "Description",
+  "teams.field": "Équipe",
+  "teams.unassigned": "Aucune équipe",
   "common.save": "Enregistrer",
   "common.saving": "Enregistrement…",
   "common.cancel": "Annuler",

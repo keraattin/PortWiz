@@ -363,6 +363,8 @@ export const en = {
   "teams.addMember": "Add a member…",
   "teams.f.name": "Name",
   "teams.f.description": "Description",
+  "teams.field": "Team",
+  "teams.unassigned": "No team",
   "common.save": "Save",
   "common.saving": "Saving…",
   "common.cancel": "Cancel",

@@ -3,6 +3,7 @@ import {
   type IpRange,
   type IpRangePreviewItem,
   type IpRangeSyncReport,
+  type Team,
   type Vlan,
   type VlanImportPreviewRow,
   type VlanImportReport,
@@ -22,6 +23,7 @@ import {
   downloadVlanImportTemplate,
   fetchSettings,
   listIpRanges,
+  listTeams,
   listVlans,
   previewIpRangeSync,
   previewVlanImport,
@@ -56,6 +58,7 @@ export default function VlansPage() {
   const canWrite = user?.role === "admin" || user?.role === "operator";
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [ipRanges, setIpRanges] = useState<IpRange[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -74,12 +77,14 @@ export default function VlansPage() {
   const [tag, setTag] = useState("");
   const [description, setDescription] = useState("");
   const [tagsText, setTagsText] = useState("");
+  const [ownerTeamId, setOwnerTeamId] = useState("");
   // Per-VLAN edit modal: when set, the modal edits this VLAN instead of adding.
   const [editVlanId, setEditVlanId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editTag, setEditTag] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editTagsText, setEditTagsText] = useState("");
+  const [editOwnerTeamId, setEditOwnerTeamId] = useState("");
   // Ranges entered alongside the VLAN, so a VLAN and its ranges are created in
   // one flow (they are treated as one unit throughout the page).
   const [vlanRanges, setVlanRanges] = useState("");
@@ -248,9 +253,10 @@ export default function VlansPage() {
   async function reload() {
     setLoading(true);
     try {
-      const [v, r] = await Promise.all([listVlans(), listIpRanges()]);
+      const [v, r, tm] = await Promise.all([listVlans(), listIpRanges(), listTeams()]);
       setVlans(v);
       setIpRanges(r);
+      setTeams(tm);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -290,6 +296,7 @@ export default function VlansPage() {
     setTag("");
     setDescription("");
     setTagsText("");
+    setOwnerTeamId("");
     setVlanRanges("");
     setVlanOpen(true);
   }
@@ -303,6 +310,7 @@ export default function VlansPage() {
         vlan_tag: tag ? Number(tag) : null,
         description: description || null,
         tags: parseTags(tagsText),
+        owner_team_id: ownerTeamId || null,
       });
       // Attach any ranges entered in the same form to the new VLAN.
       const cidrs = vlanRanges
@@ -347,6 +355,7 @@ export default function VlansPage() {
     setEditTag(v.vlan_tag != null ? String(v.vlan_tag) : "");
     setEditDesc(v.description ?? "");
     setEditTagsText((v.tags ?? []).join(", "));
+    setEditOwnerTeamId(v.owner_team_id ?? "");
   }
 
   async function onEditVlan(e: FormEvent) {
@@ -359,6 +368,7 @@ export default function VlansPage() {
         vlan_tag: editTag ? Number(editTag) : null,
         description: editDesc || null,
         tags: parseTags(editTagsText),
+        owner_team_id: editOwnerTeamId || null,
       });
       setEditVlanId(null);
       toast.success(t("vlans.updated"));
@@ -771,6 +781,11 @@ export default function VlansPage() {
                       {v.description && (
                         <span className="text-sm text-slate-500">{v.description}</span>
                       )}
+                      {v.owner_team_id && (
+                        <span className="rounded-full bg-sky-900/60 px-2 py-0.5 text-[10px] text-sky-300">
+                          {teams.find((tm) => tm.id === v.owner_team_id)?.name ?? "-"}
+                        </span>
+                      )}
                       {v.tags?.map((tg) => (
                         <span
                           key={tg}
@@ -874,6 +889,20 @@ export default function VlansPage() {
               onChange={(e) => setTagsText(e.target.value)}
             />
           </FormField>
+          <FormField label={t("teams.field")}>
+            <select
+              className={inputClass}
+              value={ownerTeamId}
+              onChange={(e) => setOwnerTeamId(e.target.value)}
+            >
+              <option value="">{t("teams.unassigned")}</option>
+              {teams.map((tm) => (
+                <option key={tm.id} value={tm.id}>
+                  {tm.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
           <FormField label={t("vlans.f.ranges")} hint={t("vlans.f.rangesHint")}>
             <textarea
               className={inputClass}
@@ -928,6 +957,20 @@ export default function VlansPage() {
               value={editTagsText}
               onChange={(e) => setEditTagsText(e.target.value)}
             />
+          </FormField>
+          <FormField label={t("teams.field")}>
+            <select
+              className={inputClass}
+              value={editOwnerTeamId}
+              onChange={(e) => setEditOwnerTeamId(e.target.value)}
+            >
+              <option value="">{t("teams.unassigned")}</option>
+              {teams.map((tm) => (
+                <option key={tm.id} value={tm.id}>
+                  {tm.name}
+                </option>
+              ))}
+            </select>
           </FormField>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex justify-end">

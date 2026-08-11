@@ -9,6 +9,7 @@ import {
   type CurrentUser,
   type DataSensitivity,
   type OpenPort,
+  type Team,
   type Vlan,
   deleteAsset,
   downloadHostEvidenceJson,
@@ -17,6 +18,7 @@ import {
   getAsset,
   listChanges,
   listOpenPorts,
+  listTeams,
   listUsers,
   listVlans,
   updateAsset,
@@ -67,6 +69,7 @@ export default function AssetDetailPage() {
   const [asset, setAsset] = useState<Asset | null>(null);
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [users, setUsers] = useState<CurrentUser[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [ports, setPorts] = useState<OpenPort[]>([]);
   const [cves, setCves] = useState<CVEFinding[]>([]);
   const [changes, setChanges] = useState<ChangeEvent[]>([]);
@@ -82,6 +85,7 @@ export default function AssetDetailPage() {
   const [sensitivity, setSensitivity] = useState<DataSensitivity>("none");
   const [description, setDescription] = useState("");
   const [tagsText, setTagsText] = useState("");
+  const [ownerTeamId, setOwnerTeamId] = useState("");
 
   async function load() {
     setLoading(true);
@@ -89,9 +93,10 @@ export default function AssetDetailPage() {
       // The asset loads first so its IP can key the CVE lookup, then the rest
       // fans out in parallel.
       const a = await getAsset(id);
-      const [v, u, p, c, ch] = await Promise.all([
+      const [v, u, tm, p, c, ch] = await Promise.all([
         listVlans(),
         listUsers(),
+        listTeams(),
         listOpenPorts({ asset_id: id }),
         fetchCVEFindings({ ip: a.ip }),
         listChanges({ ip: a.ip }),
@@ -99,6 +104,7 @@ export default function AssetDetailPage() {
       setAsset(a);
       setVlans(v);
       setUsers(u);
+      setTeams(tm);
       setPorts(p);
       setCves(c);
       setChanges(ch);
@@ -106,6 +112,7 @@ export default function AssetDetailPage() {
       setHostname(a.hostname ?? "");
       setVlanId(a.vlan_id ?? "");
       setOwnerId(a.owner_id ?? "");
+      setOwnerTeamId(a.owner_team_id ?? "");
       setCriticality(a.criticality);
       setSensitivity(a.data_sensitivity);
       setDescription(a.description ?? "");
@@ -136,6 +143,7 @@ export default function AssetDetailPage() {
         hostname: hostname || null,
         vlan_id: vlanId || null,
         owner_id: ownerId || null,
+        owner_team_id: ownerTeamId || null,
         criticality,
         data_sensitivity: sensitivity,
         description: description || null,
@@ -283,6 +291,20 @@ export default function AssetDetailPage() {
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.email}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            <FormField label={t("teams.field")}>
+              <select
+                className={inputClass}
+                value={ownerTeamId}
+                onChange={(e) => setOwnerTeamId(e.target.value)}
+              >
+                <option value="">{t("teams.unassigned")}</option>
+                {teams.map((tm) => (
+                  <option key={tm.id} value={tm.id}>
+                    {tm.name}
                   </option>
                 ))}
               </select>

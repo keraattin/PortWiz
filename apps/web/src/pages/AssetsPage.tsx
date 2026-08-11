@@ -11,6 +11,7 @@ import {
   type Criticality,
   type CurrentUser,
   type DataSensitivity,
+  type Team,
   type Vlan,
   applyAssetImport,
   applyAssetSync,
@@ -21,6 +22,7 @@ import {
   downloadAssetImportTemplate,
   fetchSettings,
   listAssets,
+  listTeams,
   listUsers,
   listVlans,
   previewAssetImport,
@@ -80,6 +82,7 @@ export default function AssetsPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [users, setUsers] = useState<CurrentUser[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,6 +94,7 @@ export default function AssetsPage() {
   const [criticality, setCriticality] = useState<Criticality>("medium");
   const [sensitivity, setSensitivity] = useState<DataSensitivity>("none");
   const [tagsText, setTagsText] = useState("");
+  const [ownerTeamId, setOwnerTeamId] = useState("");
 
   const [importFile, setImportFile] = useState<File | null>(null);
   const [onConflict, setOnConflict] = useState<"update" | "skip">("update");
@@ -141,10 +145,16 @@ export default function AssetsPage() {
   async function reload() {
     setLoading(true);
     try {
-      const [a, v, u] = await Promise.all([listAssets(), listVlans(), listUsers()]);
+      const [a, v, u, tm] = await Promise.all([
+        listAssets(),
+        listVlans(),
+        listUsers(),
+        listTeams(),
+      ]);
       setAssets(a);
       setVlans(v);
       setUsers(u);
+      setTeams(tm);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -211,6 +221,7 @@ export default function AssetsPage() {
     setCriticality("medium");
     setSensitivity("none");
     setTagsText("");
+    setOwnerTeamId("");
     setAddOpen(true);
   }
 
@@ -226,6 +237,7 @@ export default function AssetsPage() {
         criticality,
         data_sensitivity: sensitivity,
         tags: parseTags(tagsText),
+        owner_team_id: ownerTeamId || null,
       });
       setAddOpen(false);
       toast.success(t("assets.added"));
@@ -779,6 +791,20 @@ export default function AssetsPage() {
               {users.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.email}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField label={t("teams.field")}>
+            <select
+              className={inputClass}
+              value={ownerTeamId}
+              onChange={(e) => setOwnerTeamId(e.target.value)}
+            >
+              <option value="">{t("teams.unassigned")}</option>
+              {teams.map((tm) => (
+                <option key={tm.id} value={tm.id}>
+                  {tm.name}
                 </option>
               ))}
             </select>

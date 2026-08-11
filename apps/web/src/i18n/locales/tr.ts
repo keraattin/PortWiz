@@ -363,6 +363,8 @@ export const tr: Partial<Record<TKey, string>> = {
   "teams.addMember": "Üye ekle…",
   "teams.f.name": "Ad",
   "teams.f.description": "Açıklama",
+  "teams.field": "Ekip",
+  "teams.unassigned": "Ekip yok",
   "common.save": "Kaydet",
   "common.saving": "Kaydediliyor…",
   "common.cancel": "İptal",
